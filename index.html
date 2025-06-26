@@ -28,8 +28,36 @@
 
     <!-- Main React Application -->
     <script type="text/babel">
-        window.addEventListener('load', () => {
-            const { useState, useEffect, Fragment } = React;
+        const { useState, useEffect, Fragment } = React;
+        
+        const AppContainer = () => {
+            const [libsLoaded, setLibsLoaded] = useState(false);
+
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    if (window.React && window.ReactDOM && window.Recharts) {
+                        setLibsLoaded(true);
+                        clearInterval(interval);
+                    }
+                }, 100);
+                return () => clearInterval(interval);
+            }, []);
+
+            if (!libsLoaded) {
+                 return (
+                    <div className="loader-container">
+                        <div className="loader"></div>
+                        <p className="text-gray-500 mt-4">Initializing Libraries...</p>
+                    </div>
+                 );
+            }
+            return <App />;
+        };
+
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('Dashboard');
+            
+            const { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } = window.Recharts;
             
             // --- Inline SVG Icon Components ---
             const createIcon = (path) => (props) => (
@@ -53,84 +81,18 @@
             const ExternalLink = createIcon(<><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></>);
             const ChevronDown = createIcon(<polyline points="6 9 12 15 18 9" />);
             const ChevronUp = createIcon(<polyline points="18 15 12 9 6 15" />);
+
+            // --- Reusable Components ---
+            const Card = ({ children, className = '' }) => (<div className={`bg-white rounded-xl shadow-md p-6 ${className}`}>{children}</div>);
+            const PageContent = ({ children }) => (<main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>);
             
-            const AppContainer = () => {
-                const [appData, setAppData] = useState(null);
-                const [loading, setLoading] = useState(true);
-                const [error, setError] = useState(null);
+            // --- Page Components (with placeholders) ---
+            const Dashboard = ({ setActiveTab }) => <PageContent><div className="p-8 text-center text-gray-500">Dashboard Content Placeholder</div></PageContent>;
+            const WebsiteStatsPage = () => <PageContent><div className="p-8 text-center text-gray-500">Website Stats Page Placeholder</div></PageContent>;
+            const GeogridMapsPage = () => <PageContent><div className="p-8 text-center text-gray-500">Geogrid Maps Page Placeholder</div></PageContent>;
+            const KeywordsPage = () => <PageContent><div className="p-8 text-center text-gray-500">Keywords Page Placeholder</div></PageContent>;
+            const BacklinksPage = () => <PageContent><div className="p-8 text-center text-gray-500">Backlinks Page Placeholder</div></PageContent>;
 
-                useEffect(() => {
-                    const params = new URLSearchParams(window.location.search);
-                    const workbookId = params.get('workbookId');
-                    if (!workbookId) {
-                        setError("No workbook ID provided in the URL. Please add '?workbookId=YOUR_ID' to the end of the URL.");
-                        setLoading(false);
-                        return;
-                    }
-
-                    const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
-                    
-                    fetch(scriptUrl, {
-                        method: 'POST',
-                        mode: 'cors',
-                        redirect: 'follow',
-                        body: ''
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.error) {
-                            throw new Error(`Script error: ${data.error}`);
-                        }
-                        setAppData(data);
-                        setLoading(false);
-                    })
-                    .catch(err => {
-                        console.error("Fetch Error:", err);
-                        setError(err.message);
-                        setLoading(false);
-                    });
-                }, []);
-
-                if (loading) {
-                    return (
-                        <div className="loader-container">
-                            <div className="loader"></div>
-                            <p className="text-gray-500 mt-4">Loading Live Data...</p>
-                        </div>
-                    );
-                }
-
-                if (error) {
-                    return <div className="p-8 text-center text-red-500">Error: {error}</div>;
-                }
-                
-                if (!appData) {
-                    return <div className="p-8 text-center text-gray-500">No data found.</div>;
-                }
-
-                return <App appData={appData} />;
-            };
-
-            const App = ({ appData }) => {
-                const [activeTab, setActiveTab] = useState('Dashboard');
-                
-                const renderContent = () => {
-                    if (activeTab === 'Keywords') return <div className="p-8">Keywords Page Coming Soon</div>;
-                    if (activeTab === 'Backlinks') return <div className="p-8">Backlinks Page Coming Soon</div>;
-                    if (activeTab === 'Geogrid Maps') return <div className="p-8">Geogrid Maps Page Coming Soon</div>;
-                    if (activeTab === 'Website Stats') return <div className="p-8">Website Stats Page Coming Soon</div>;
-                    if (activeTab === 'Tools') return <div className="p-8 text-center text-gray-500">Tools Page Coming Soon...</div>;
-                    return <Dashboard setActiveTab={setActiveTab} appData={appData} />;
-                };
-
-                return (
-                    <div className="min-h-screen bg-gray-50 font-sans">
-                        <Header activeTab={activeTab} setActiveTab={setActiveTab} />
-                        {renderContent()}
-                    </div>
-                );
-            };
-            
             const Header = ({ activeTab, setActiveTab }) => {
                 const tabs = ['Dashboard', 'Website Stats', 'Geogrid Maps', 'Keywords', 'Backlinks', 'Tools'];
                 return (
@@ -169,21 +131,26 @@
                     </header>
                 );
             };
-
-            const Dashboard = ({ setActiveTab, appData }) => {
-                const { dashboard } = appData;
-                return (
-                    <PageContent>
-                        <div className="grid grid-cols-12 gap-6">
-                            <p>Dashboard Content will be built here.</p>
-                        </div>
-                    </PageContent>
-                );
+            
+            const renderContent = () => {
+                if (activeTab === 'Keywords') return <KeywordsPage />;
+                if (activeTab === 'Backlinks') return <BacklinksPage />;
+                if (activeTab === 'Geogrid Maps') return <GeogridMapsPage />;
+                if (activeTab === 'Website Stats') return <WebsiteStatsPage />;
+                if (activeTab === 'Tools') return <div className="p-8 text-center text-gray-500">Tools Page Coming Soon...</div>;
+                return <Dashboard setActiveTab={setActiveTab} />;
             };
 
-            const root = ReactDOM.createRoot(document.getElementById('root'));
-            root.render(<AppContainer />);
-        });
+            return (
+                <div className="min-h-screen bg-gray-50 font-sans">
+                    <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+                    {renderContent()}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<AppContainer />);
     </script>
 </body>
 </html>
