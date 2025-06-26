@@ -28,37 +28,8 @@
 
     <!-- Main React Application -->
     <script type="text/babel">
-        const { useState, useEffect, Fragment } = React;
-        
-        const AppContainer = () => {
-            const [libsLoaded, setLibsLoaded] = useState(false);
-
-            useEffect(() => {
-                const interval = setInterval(() => {
-                    if (window.React && window.ReactDOM && window.Recharts) {
-                        setLibsLoaded(true);
-                        clearInterval(interval);
-                    }
-                }, 100);
-                return () => clearInterval(interval);
-            }, []);
-
-            if (!libsLoaded) {
-                 return (
-                    <div className="loader-container">
-                        <div className="loader"></div>
-                        <p className="text-gray-500 mt-4">Initializing Libraries...</p>
-                    </div>
-                 );
-            }
-            return <App />;
-        };
-
-        const App = () => {
-            const [activeTab, setActiveTab] = useState('Dashboard');
-            
-            // Destructure components from the global scope now that they are guaranteed to be loaded.
-            const { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } = window.Recharts;
+        document.addEventListener('DOMContentLoaded', () => {
+            const { useState, useEffect, Fragment } = React;
             
             // --- Inline SVG Icon Components ---
             const createIcon = (path) => (props) => (
@@ -133,25 +104,29 @@
                 );
             };
             
-            const renderContent = () => {
-                if (activeTab === 'Keywords') return <KeywordsPage />;
-                if (activeTab === 'Backlinks') return <BacklinksPage />;
-                if (activeTab === 'Geogrid Maps') return <GeogridMapsPage />;
-                if (activeTab === 'Website Stats') return <WebsiteStatsPage />;
-                if (activeTab === 'Tools') return <div className="p-8 text-center text-gray-500">Tools Page Coming Soon...</div>;
-                return <Dashboard setActiveTab={setActiveTab} />;
+            const App = () => {
+                const [activeTab, setActiveTab] = useState('Dashboard');
+                
+                const renderContent = () => {
+                    if (activeTab === 'Keywords') return <KeywordsPage />;
+                    if (activeTab === 'Backlinks') return <BacklinksPage />;
+                    if (activeTab === 'Geogrid Maps') return <GeogridMapsPage />;
+                    if (activeTab === 'Website Stats') return <WebsiteStatsPage />;
+                    if (activeTab === 'Tools') return <div className="p-8 text-center text-gray-500">Tools Page Coming Soon...</div>;
+                    return <Dashboard setActiveTab={setActiveTab} />;
+                };
+
+                return (
+                    <div className="min-h-screen bg-gray-50 font-sans">
+                        <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+                        {renderContent()}
+                    </div>
+                );
             };
 
-            return (
-                <div className="min-h-screen bg-gray-50 font-sans">
-                    <Header activeTab={activeTab} setActiveTab={setActiveTab} />
-                    {renderContent()}
-                </div>
-            );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<AppContainer />);
+            const root = ReactDOM.createRoot(document.getElementById('root'));
+            root.render(<App />);
+        });
     </script>
 </body>
 </html>
