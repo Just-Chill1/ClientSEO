@@ -18,15 +18,15 @@
     @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
   </style>
 
-  <!-- React (pinned) -->
-  <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>  <!-- ← CHANGED -->
-  <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script> <!-- ← CHANGED -->
+  <!-- React (jsDelivr, CORS-friendly) -->
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
 
   <!-- Babel for in-page JSX -->
-  <script src="https://unpkg.com/@babel/standalone@7.23.1/babel.min.js"></script> <!-- ← pinned -->
+  <script src="https://unpkg.com/@babel/standalone@7.23.1/babel.min.js"></script>
 
-  <!-- Recharts (pinned) -->
-  <script crossorigin src="https://unpkg.com/recharts@2.8.0/umd/Recharts.min.js"></script> <!-- ← CHANGED -->
+  <!-- Recharts (latest 2.x UMD build, no crossorigin needed) -->
+  <script src="https://cdn.jsdelivr.net/npm/recharts@2.15.4/umd/Recharts.min.js"></script>
 </head>
 
 <body class="bg-gray-50">
@@ -44,7 +44,7 @@
     /* -------------------- shell waits for libs -------------------- */
     const AppContainer = () => {
       const [libsLoaded, setLibsLoaded] = useState(false);
-      const [libError, setLibError]    = useState(null);
+      const [libError,  setLibError]   = useState(null);
 
       useEffect(() => {
         const start = Date.now();
@@ -52,7 +52,7 @@
           if (window.React && window.ReactDOM && window.Recharts) {
             setLibsLoaded(true);
             clearInterval(interval);
-          } else if (Date.now() - start > 10_000) {        // ← CHANGED (timeout safeguard)
+          } else if (Date.now() - start > 10_000) {
             setLibError('Failed to load libraries from CDN.');
             clearInterval(interval);
           }
@@ -79,7 +79,7 @@
     };
     /* --------------------   end shell   -------------------- */
 
-    /* ---------- helpers for SVG icons, cards, etc. (unchanged) ---------- */
+    /* ---------- helpers for SVG icons, cards, etc. ---------- */
     const createIcon = path => props => (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
            viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -88,19 +88,19 @@
       </svg>
     );
     const Info = createIcon(<><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></>);
-    // … keep the rest of your icon + component definitions unchanged …
+    /* … keep your other icon definitions exactly as before … */
 
     const Card        = ({children,className=''}) => <div className={`bg-white rounded-xl shadow-md p-6 ${className}`}>{children}</div>;
     const PageContent = ({children}) => <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>;
 
-    /* ----------------------   PAGES (placeholders)   --------------------- */
-    const Dashboard         = ({setActiveTab,appData})   => <PageContent><div className="p-8 text-center text-gray-500">Dashboard Content Placeholder</div></PageContent>;
-    const WebsiteStatsPage  = ({data})                   => <PageContent><div className="p-8 text-center text-gray-500">Website Stats Placeholder</div></PageContent>;
-    const GeogridMapsPage   = ({appData})                => <PageContent><div className="p-8 text-center text-gray-500">Geogrid Maps Placeholder</div></PageContent>;
-    const KeywordsPage      = ({data})                   => <PageContent><div className="p-8 text-center text-gray-500">Keywords Placeholder</div></PageContent>;
-    const BacklinksPage     = ({data})                   => <PageContent><div className="p-8 text-center text-gray-500">Backlinks Placeholder</div></PageContent>;
+    /* ------------------   PAGES (placeholders)   ----------------- */
+    const Dashboard        = ({setActiveTab,appData}) => <PageContent><div className="p-8 text-center text-gray-500">Dashboard Content Placeholder</div></PageContent>;
+    const WebsiteStatsPage = ({data})                  => <PageContent><div className="p-8 text-center text-gray-500">Website Stats Placeholder</div></PageContent>;
+    const GeogridMapsPage  = ({appData})               => <PageContent><div className="p-8 text-center text-gray-500">Geogrid Maps Placeholder</div></PageContent>;
+    const KeywordsPage     = ({data})                  => <PageContent><div className="p-8 text-center text-gray-500">Keywords Placeholder</div></PageContent>;
+    const BacklinksPage    = ({data})                  => <PageContent><div className="p-8 text-center text-gray-500">Backlinks Placeholder</div></PageContent>;
 
-    /* -----------------------   HEADER (tabs)   --------------------------- */
+    /* ------------------------   HEADER   ------------------------- */
     const Header = ({activeTab,setActiveTab}) => {
       const tabs = ['Dashboard','Website Stats','Geogrid Maps','Keywords','Backlinks','Tools'];
       return (
@@ -140,7 +140,7 @@
       );
     };
 
-    /* -------------------------   MAIN APP   ----------------------------- */
+    /* -------------------------   MAIN APP   ---------------------- */
     const App = () => {
       const [activeTab,setActiveTab] = useState('Dashboard');
       const [appData, setAppData]    = useState(null);
@@ -158,8 +158,7 @@
 
         const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
 
-        /* ---------------- fetch switched to GET ---------------- */
-        fetch(scriptUrl)                       /* ← CHANGED */
+        fetch(scriptUrl)                     /* GET (Apps-Script doGet) */
           .then(r => r.json())
           .then(data => {
             if (data.error) throw new Error(`Script error: ${data.error}`);
