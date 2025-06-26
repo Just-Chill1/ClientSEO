@@ -28,101 +28,186 @@
 
     <!-- Main React Application -->
     <script type="text/babel">
-        window.addEventListener('load', () => {
-            const { useState, useEffect, Fragment } = React;
-            
-            const AppContainer = () => {
-                const [libsLoaded, setLibsLoaded] = useState(false);
+        const { useState, useEffect, Fragment } = React;
 
-                useEffect(() => {
-                    const interval = setInterval(() => {
-                        if (window.React && window.ReactDOM && window.Recharts) {
-                            setLibsLoaded(true);
-                            clearInterval(interval);
-                        }
-                    }, 100);
-                    return () => clearInterval(interval);
-                }, []);
+        const AppContainer = () => {
+            const [libsLoaded, setLibsLoaded] = useState(false);
 
-                if (!libsLoaded) {
-                    return (
-                        <div className="loader-container">
-                            <div className="loader"></div>
-                            <p className="text-gray-500 mt-4">Initializing Libraries...</p>
-                        </div>
-                    );
-                }
-                return <App />;
-            };
-            
-            const App = () => {
-                const [activeTab, setActiveTab] = useState('Dashboard');
-                const [appData, setAppData] = useState(null);
-                const [loading, setLoading] = useState(true);
-                const [error, setError] = useState(null);
-
-                useEffect(() => {
-                    const params = new URLSearchParams(window.location.search);
-                    const workbookId = params.get('workbookId');
-                    if (!workbookId) {
-                        setError("No workbook ID provided in the URL. Please add '?workbookId=YOUR_ID' to the end of the URL.");
-                        setLoading(false);
-                        return;
+            useEffect(() => {
+                const interval = setInterval(() => {
+                    if (window.React && window.ReactDOM && window.Recharts) {
+                        setLibsLoaded(true);
+                        clearInterval(interval);
                     }
+                }, 100);
+                return () => clearInterval(interval);
+            }, []);
 
-                    const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
-                    
-                    fetch(scriptUrl, {
-                        method: 'POST',
-                        mode: 'cors',
-                        redirect: 'follow',
-                        body: ''
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.error) {
-                            throw new Error(`Script error: ${data.error}`);
-                        }
-                        setAppData(data);
-                        setLoading(false);
-                    })
-                    .catch(err => {
-                        console.error("Fetch Error:", err);
-                        setError(err.message);
-                        setLoading(false);
-                    });
-                }, []);
-                
-                const renderContent = () => {
-                    if (loading) {
-                        return <PageContent><div className="p-8 text-center text-gray-500">Loading live data from your workbook...</div></PageContent>;
-                    }
-                    if (error) {
-                        return <PageContent><div className="p-8 text-center text-red-500">Error: {error}</div></PageContent>;
-                    }
-                    if (!appData) {
-                         return <PageContent><div className="p-8 text-center text-gray-500">No data found.</div></PageContent>;
-                    }
-
-                    if (activeTab === 'Keywords') return <KeywordsPage data={appData} />;
-                    if (activeTab === 'Backlinks') return <BacklinksPage data={appData} />;
-                    if (activeTab === 'Geogrid Maps') return <GeogridMapsPage appData={appData} />;
-                    if (activeTab === 'Website Stats') return <WebsiteStatsPage data={appData.websiteStats} />;
-                    if (activeTab === 'Tools') return <div className="p-8 text-center text-gray-500">Tools Page Coming Soon...</div>;
-                    return <Dashboard setActiveTab={setActiveTab} appData={appData} />;
-                };
-
-                return (
-                    <div className="min-h-screen bg-gray-50 font-sans">
-                        <Header activeTab={activeTab} setActiveTab={setActiveTab} />
-                        {renderContent()}
+            if (!libsLoaded) {
+                 return (
+                    <div className="loader-container">
+                        <div className="loader"></div>
+                        <p className="text-gray-500 mt-4">Initializing Libraries...</p>
                     </div>
-                );
+                 );
+            }
+            return <App />;
+        };
+
+        // --- Inline SVG Icon Components ---
+        const createIcon = (path) => (props) => (
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                {...props}
+            >
+                {path}
+            </svg>
+        );
+
+        const Info = createIcon(<><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></>);
+        const ExternalLink = createIcon(<><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" y1="14" x2="21" y2="3" /></>);
+        const ChevronDown = createIcon(<polyline points="6 9 12 15 18 9" />);
+        const ChevronUp = createIcon(<polyline points="18 15 12 9 6 15" />);
+        const ArrowUp = createIcon(<><line x1="12" y1="19" x2="12" y2="5" /><polyline points="5 12 12 5 19 12" /></>);
+        const ArrowDown = createIcon(<><line x1="12" y1="5" x2="12" y2="19" /><polyline points="19 12 12 19 5 12" /></>);
+        const Sparkles = createIcon(<><path d="m12 3-1.9 4.8-4.8 1.9 4.8 1.9L12 21l1.9-4.8 4.8-1.9-4.8-1.9L12 3z" /><path d="M5 3v4" /><path d="M19 17v4" /></>);
+        const AlertCircle = createIcon(<><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></>);
+        const PieChartIcon = createIcon(<><path d="M21.21 15.89A10 10 0 1 1 8 2.83" /><path d="M22 12A10 10 0 0 0 12 2v10z" /></>);
+        const Globe = createIcon(<><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></>);
+        const Link2 = createIcon(<><path d="M9 17H7A5 5 0 0 1 7 7h2" /><path d="M15 7h2a5 5 0 0 1 0 10h-2" /><line x1="8" y1="12" x2="16" y2="12" /></>);
+        const PlusCircle = createIcon(<><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></>);
+        const MinusCircle = createIcon(<><circle cx="12" cy="12" r="10" /><line x1="8" y1="12" x2="16" y2="12" /></>);
+        const CheckCircle = createIcon(<><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></>);
+        const XCircle = createIcon(<><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></>);
+        const AlertTriangle = createIcon(<><path d="m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></>);
+        const ShieldCheck = createIcon(<><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></>);
+        const Search = createIcon(<><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></>);
+
+        // --- Reusable Components ---
+        const Card = ({ children, className = '' }) => (<div className={`bg-white rounded-xl shadow-md p-6 ${className}`}>{children}</div>);
+        const PageContent = ({ children }) => (<main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>);
+        
+        // --- Page Components ---
+        const Dashboard = ({ setActiveTab, appData }) => <PageContent><div className="p-8 text-center text-gray-500">Dashboard Content Placeholder</div></PageContent>;
+        const WebsiteStatsPage = ({data}) => <PageContent><div className="p-8 text-center text-gray-500">Website Stats Page Placeholder</div></PageContent>;
+        const GeogridMapsPage = ({appData}) => <PageContent><div className="p-8 text-center text-gray-500">Geogrid Maps Page Placeholder</div></PageContent>;
+        const KeywordsPage = ({data}) => <PageContent><div className="p-8 text-center text-gray-500">Keywords Page Placeholder</div></PageContent>;
+        const BacklinksPage = ({data}) => <PageContent><div className="p-8 text-center text-gray-500">Backlinks Page Placeholder</div></PageContent>;
+
+        const Header = ({ activeTab, setActiveTab }) => {
+            const tabs = ['Dashboard', 'Website Stats', 'Geogrid Maps', 'Keywords', 'Backlinks', 'Tools'];
+            return (
+                <header className="bg-white shadow-sm sticky top-0 z-20">
+                    <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-between h-16">
+                            <div className="flex items-center">
+                                <div className="flex-shrink-0">
+                                     <svg className="h-8 w-8" viewBox="0 0 24 24" fill="none" stroke="url(#logo-gradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <defs>
+                                            <linearGradient id="logo-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" style={{stopColor: '#3b82f6'}} />
+                                            <stop offset="100%" style={{stopColor: '#ec4899'}} />
+                                            </linearGradient>
+                                        </defs>
+                                        <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    </svg>
+                                </div>
+                                <h1 className="text-xl font-bold ml-3 bg-gradient-to-r from-blue-500 to-pink-500 bg-clip-text text-transparent">MedSpa SEO</h1>
+                            </div>
+                            <div className="hidden md:block">
+                                <div className="ml-10 flex items-baseline space-x-4">
+                                    {tabs.map(tab => (
+                                        <button
+                                            key={tab}
+                                            onClick={() => setActiveTab(tab)}
+                                            className={`px-3 py-2 rounded-md text-sm font-medium ${activeTab === tab ? 'bg-blue-600 text-white' : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}
+                                        >
+                                            {tab}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </nav>
+                </header>
+            );
+        };
+        
+        const App = () => {
+            const [activeTab, setActiveTab] = useState('Dashboard');
+            const [appData, setAppData] = useState(null);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
+
+            useEffect(() => {
+                const params = new URLSearchParams(window.location.search);
+                const workbookId = params.get('workbookId');
+                if (!workbookId) {
+                    setError("No workbook ID provided in the URL. Please add '?workbookId=YOUR_ID' to the end of the URL.");
+                    setLoading(false);
+                    return;
+                }
+
+                const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
+                
+                fetch(scriptUrl, {
+                    method: 'POST',
+                    mode: 'cors',
+                    redirect: 'follow',
+                    body: ''
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        throw new Error(`Script error: ${data.error}`);
+                    }
+                    setAppData(data);
+                    setLoading(false);
+                })
+                .catch(err => {
+                    console.error("Fetch Error:", err);
+                    setError(err.message);
+                    setLoading(false);
+                });
+            }, []);
+
+            const renderContent = () => {
+                if (loading) {
+                    return <PageContent><div className="p-8 text-center text-gray-500">Loading live data from your workbook...</div></PageContent>;
+                }
+                if (error) {
+                    return <PageContent><div className="p-8 text-center text-red-500">Error: {error}</div></PageContent>;
+                }
+                if (!appData) {
+                     return <PageContent><div className="p-8 text-center text-gray-500">No data found.</div></PageContent>;
+                }
+
+                if (activeTab === 'Keywords') return <KeywordsPage data={appData} />;
+                if (activeTab === 'Backlinks') return <BacklinksPage data={appData} />;
+                if (activeTab === 'Geogrid Maps') return <GeogridMapsPage appData={appData} />;
+                if (activeTab === 'Website Stats') return <WebsiteStatsPage data={appData.websiteStats} />;
+                if (activeTab === 'Tools') return <div className="p-8 text-center text-gray-500">Tools Page Coming Soon...</div>;
+                return <Dashboard setActiveTab={setActiveTab} appData={appData} />;
             };
 
-            const root = ReactDOM.createRoot(document.getElementById('root'));
-            root.render(<AppContainer />);
-        });
+            return (
+                <div className="min-h-screen bg-gray-50 font-sans">
+                    <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+                    {renderContent()}
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<AppContainer />);
     </script>
 </body>
 </html>
