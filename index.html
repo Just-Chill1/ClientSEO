@@ -20,11 +20,11 @@
 </head>
 
 <body class="bg-gray-50">
-<div id="root"><div class="loader-container"><div class="loader"></div><p class="text-gray-500 mt-4">Loading…</p></div></div>
+<div id="root"><div class="loader-container"><div class="loader"></div><p className="text-gray-500 mt-4">Loading…</p></div></div>
 
 <script type="text/babel">
 /* ------------------------------------------------------------------ */
-/* shared helpers, icons and generic components (unchanged from last) */
+/* shared helpers, icons and generic components                       */
 /* ------------------------------------------------------------------ */
 const {useState,useEffect}=React;
 const {ResponsiveContainer,BarChart,Bar,XAxis,YAxis,Tooltip,CartesianGrid,Cell}=Recharts;
@@ -40,56 +40,112 @@ const ArrowUp=createIcon(<><line x1="12" y1="19" x2="12" y2="5"/><polyline point
 const ArrowDown=createIcon(<><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></>);
 const Star=createIcon(<polygon points="12 2 15 8.5 22 9.3 17 14 18.3 21 12 17.7 5.7 21 7 14 2 9.3 9 8.5 12 2"/>);
 
-const Card        =({children,className=''})=><div className={`bg-white rounded-xl shadow-md p-6 ${className}`}>{children}</div>;
-const PageContent =({children})=><main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>;
-const InfoTooltip =({text})=>(
-  <div className="relative group ml-1">
-    <Info className="w-4 h-4 text-gray-400 cursor-help"/>
-    <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-72 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 pointer-events-none">
-      {text}
+const Card        =({children,className=''})=> <div className={`bg-white rounded-xl shadow-md p-6 ${className}`}>{children}</div>;
+const PageContent =({children})=> <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>;
+
+/* ------------------------------------------------------------------ */
+/* WEBSITE STATS PAGE                                                 */
+/* ------------------------------------------------------------------ */
+const StatCard=({label,value,icon})=>(
+  <div className="flex items-center space-x-3">
+    <div className="p-2 bg-blue-100 rounded-full">{icon}</div>
+    <div>
+      <p className="text-sm text-gray-500">{label}</p>
+      <p className="font-bold text-lg text-gray-800">{value}</p>
     </div>
   </div>
 );
 
-/* ------------------------------------------------------------------ */
-/* WEBSITE STATS PAGE (unchanged from last answer)                    */
-/* ------------------------------------------------------------------ */
-<!-- previous WebsiteStatsPage code not repeated here to save space (unchanged) -->
-/* (Paste the WebsiteStatsPage from the previous full file if needed) */
+const WebsiteStatsPage = ({ data }) => {
+  if (!data) return <PageContent><div className="p-8 text-center text-gray-500">No data.</div></PageContent>;
+
+  const { healthData, competitorPerfData, technicalSeoData } = data;
+
+  const cards=[
+    {label:'Health Score',value:`${healthData.pageScore.toFixed(0)}/100`,icon:<ShieldCheck className="w-5 h-5 text-blue-600"/>},
+    {label:'Site Speed',value:healthData.siteSpeed,icon:<TrendingUp className="w-5 h-5 text-blue-600"/>},
+    {label:'Broken Links',value:healthData.brokenLinks?'Yes':'0',icon:<Link2 className="w-5 h-5 text-blue-600"/>},
+    {label:'SSL',value:healthData.ssl?'Active':'Inactive',icon:<ShieldCheck className="w-5 h-5 text-blue-600"/>}
+  ];
+
+  const speedData=competitorPerfData.map(r=>({
+    name:r.name+(r.isClient?' (You)':''),
+    speed:parseFloat(String(r['Site Speed (s)']).replace(' sec.',''))
+  }));
+
+  return(
+    <PageContent>
+      {/* cards */}
+      <Card className="mb-8 grid grid-cols-2 sm:grid-cols-4 gap-6">
+        {cards.map(c=><StatCard key={c.label}{...c}/>)}
+      </Card>
+
+      {/* speed chart */}
+      <Card>
+        <h2 className="text-lg font-semibold mb-4">Site Speed (s) – you vs competitors</h2>
+        <ResponsiveContainer width="100%" height={260}>
+          <BarChart data={speedData}>
+            <CartesianGrid strokeDasharray="3 3"/>
+            <XAxis dataKey="name" tick={{fontSize:12}}/>
+            <YAxis/>
+            <Tooltip/>
+            <Bar dataKey="speed" fill="#3b82f6"/>
+          </BarChart>
+        </ResponsiveContainer>
+      </Card>
+
+      {/* technical SEO table – first 10 rows */}
+      <Card className="mt-8 overflow-x-auto">
+        <h2 className="text-lg font-semibold mb-4">Technical SEO checks (first 10)</h2>
+        <table className="min-w-[720px] text-sm">
+          <thead className="border-b">
+            <tr><th className="py-2 pr-4">URL</th><th className="py-2 pr-2">Title</th><th className="py-2 pr-2">Desc</th><th className="py-2 pr-2">H1</th><th className="py-2 pr-2">Schema</th><th className="py-2 pr-2">SSL</th></tr>
+          </thead>
+          <tbody>
+            {technicalSeoData.slice(0,10).map((r,i)=>(
+              <tr key={i} className="border-b last:border-0">
+                <td className="py-1 pr-4 whitespace-nowrap">{r.url}</td>
+                <td className="py-1 pr-2">{r.hasTitle?'✓':'✗'}</td>
+                <td className="py-1 pr-2">{r.hasDescription?'✓':'✗'}</td>
+                <td className="py-1 pr-2">{r.h1?'✓':'✗'}</td>
+                <td className="py-1 pr-2">{r.hasSchema?'✓':'✗'}</td>
+                <td className="py-1 pr-2">{r.hasSSL?'✓':'✗'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+    </PageContent>
+  );
+};
 
 /* ------------------------------------------------------------------ */
-/* KEYWORDS PAGE – NEW                                                */
+/* KEYWORDS PAGE                                                      */
 /* ------------------------------------------------------------------ */
 const KeywordsPage = ({ summary, table }) => {
   const siteNames = Object.keys(table);
   const clientName = siteNames.find(n => n.toLowerCase().includes('look') || n.toLowerCase().includes('client')) || siteNames[0];
   const [activeSite, setActiveSite] = useState(clientName);
-
   const rows = table[activeSite] || [];
-  const colorNum = n => n === 0 ? 'text-green-600' : n > 0 ? 'text-red-600' : 'text-gray-700';
 
-  /* summary cards */
-  const bucketCards = [
-    { label:'Total KW',  value: summary.totalKeywords },
-    { label:'Pos 1',     value: summary.pos1 },
-    { label:'Pos 2-3',   value: summary.pos2_3 },
-    { label:'Pos 4-10',  value: summary.pos4_10 },
-    { label:'Pos 11-20', value: summary.pos11_20 },
-    { label:'New',       value: summary.isNew,  color: summary.isNew?'text-blue-600':'' },
-    { label:'Up',        value: summary.isUp,   color: summary.isUp ?'text-green-600':''},
-    { label:'Down',      value: summary.isDown, color: summary.isDown?'text-red-600':'' },
-    { label:'Lost',      value: summary.isLost, color: summary.isLost?'text-red-600':'' },
-    { label:'ETV',       value: summary.etv.toFixed(2) },
-    { label:'Est. Cost', value: '$'+summary.estPaidCost.toFixed(2) }
+  const bucketCards=[
+    {label:'Total',value:summary.totalKeywords},
+    {label:'Pos 1',value:summary.pos1},
+    {label:'Pos 2-3',value:summary.pos2_3},
+    {label:'Pos 4-10',value:summary.pos4_10},
+    {label:'Pos 11-20',value:summary.pos11_20},
+    {label:'New',value:summary.isNew,color:summary.isNew?'text-blue-600':''},
+    {label:'Up',value:summary.isUp,color:summary.isUp?'text-green-600':''},
+    {label:'Down',value:summary.isDown,color:summary.isDown?'text-red-600':''},
+    {label:'Lost',value:summary.isLost,color:summary.isLost?'text-red-600':''},
+    {label:'ETV',value:summary.etv.toFixed(2)},
+    {label:'Est. Cost',value:'$'+summary.estPaidCost.toFixed(2)}
   ];
 
   return (
     <PageContent>
-      {/* Summary grid */}
       <Card className="mb-8">
-        <div className="flex items-center space-x-2 mb-4">
-          <h2 className="text-xl font-bold text-gray-800">Keyword Overview</h2>
-        </div>
+        <h2 className="text-xl font-bold mb-4">Keyword Overview</h2>
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
           {bucketCards.map(c=>(
             <div key={c.label} className="text-center">
@@ -100,39 +156,28 @@ const KeywordsPage = ({ summary, table }) => {
         </div>
       </Card>
 
-      {/* Competitor selector */}
       <div className="flex flex-wrap gap-2 mb-4">
-        {siteNames.map(name=>(
-          <button key={name}
-            onClick={()=>setActiveSite(name)}
-            className={`px-3 py-1 rounded-full text-sm border ${activeSite===name?'bg-blue-600 text-white border-blue-600':'bg-white text-gray-600 hover:bg-gray-100'}`}>
-            {name}
-          </button>
+        {siteNames.map(n=>(
+          <button key={n} onClick={()=>setActiveSite(n)}
+            className={`px-3 py-1 rounded-full text-sm border ${activeSite===n?'bg-blue-600 text-white border-blue-600':'bg-white text-gray-600 hover:bg-gray-100'}`}>{n}</button>
         ))}
       </div>
 
-      {/* Keyword table */}
       <Card className="overflow-x-auto">
         <table className="min-w-[860px] text-sm">
           <thead className="text-left border-b">
             <tr>
-              <th className="py-2 pr-4">Keyword</th>
-              <th className="py-2 pr-2">Rank</th>
-              <th className="py-2 pr-2">Prev</th>
-              <th className="py-2 pr-2">Δ</th>
-              <th className="py-2 pr-2">Vol</th>
-              <th className="py-2 pr-2">CPC</th>
-              <th className="py-2 pr-2">Intent</th>
+              <th className="py-2 pr-4">Keyword</th><th className="py-2 pr-2">Rank</th><th className="py-2 pr-2">Prev</th><th className="py-2 pr-2">Δ</th><th className="py-2 pr-2">Vol</th><th className="py-2 pr-2">CPC</th><th className="py-2 pr-2">Intent</th>
             </tr>
           </thead>
           <tbody>
             {rows.slice(0,50).map((r,i)=>{
-              const delta = r.rank_prev===''? null : r.rank_prev - r.rank_now;
-              return (
+              const delta=r.rank_prev===''?null:r.rank_prev-r.rank_now;
+              return(
                 <tr key={i} className="border-b last:border-0">
                   <td className="py-1 pr-4 whitespace-nowrap">{r.keyword}</td>
                   <td className="py-1 pr-2">{r.rank_now}</td>
-                  <td className="py-1 pr-2">{r.rank_prev || '–'}</td>
+                  <td className="py-1 pr-2">{r.rank_prev||'–'}</td>
                   <td className="py-1 pr-2">
                     {r.is_new && <Star className="w-4 h-4 text-blue-500 inline"/>}
                     {r.is_lost && <AlertTriangle className="w-4 h-4 text-red-500 inline"/>}
@@ -147,17 +192,17 @@ const KeywordsPage = ({ summary, table }) => {
             })}
           </tbody>
         </table>
-        {rows.length>50 && <p className="text-xs text-gray-400 mt-2">Showing first 50 rows of {rows.length}.</p>}
+        {rows.length>50 && <p className="text-xs text-gray-400 mt-2">Showing first 50 of {rows.length} rows.</p>}
       </Card>
     </PageContent>
   );
 };
 
 /* ------------------------------------------------------------------ */
-/* SIMPLE PLACEHOLDERS FOR OTHER TABS (unchanged)                     */
+/* Placeholders for other tabs                                         */
 /* ------------------------------------------------------------------ */
-const Dashboard=()=> <PageContent><div className="p-8 text-center text-gray-500">Dashboard Placeholder</div></PageContent>;
-const GeogridMaps=()=> <PageContent><div className="p-8 text-center text-gray-500">Geogrid Maps Placeholder</div></PageContent>;
+const Dashboard   =()=> <PageContent><div className="p-8 text-center text-gray-500">Dashboard Placeholder</div></PageContent>;
+const GeogridMaps =()=> <PageContent><div className="p-8 text-center text-gray-500">Geogrid Maps Placeholder</div></PageContent>;
 const BacklinksPage=()=> <PageContent><div className="p-8 text-center text-gray-500">Backlinks Placeholder</div></PageContent>;
 
 /* ------------------------------------------------------------------ */
@@ -178,7 +223,10 @@ const Header=({activeTab,setActiveTab})=>{
           </div>
           <div className="hidden md:block">
             <div className="ml-10 flex space-x-4">
-              {tabs.map(t=><button key={t} onClick={()=>setActiveTab(t)} className={`px-3 py-2 rounded-md text-sm font-medium ${activeTab===t?'bg-blue-600 text-white':'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>{t}</button>)}
+              {tabs.map(t=>(
+                <button key={t} onClick={()=>setActiveTab(t)}
+                  className={`px-3 py-2 rounded-md text-sm font-medium ${activeTab===t?'bg-blue-600 text-white':'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>{t}</button>
+              ))}
             </div>
           </div>
         </div>
@@ -191,28 +239,29 @@ const Header=({activeTab,setActiveTab})=>{
 /* ------------------------------------------------------------------ */
 const App=()=>{
   const [tab,setTab]=useState('Dashboard');
-  const [data,setData]=useState(null); const [load,setLoad]=useState(true); const [err,setErr]=useState(null);
+  const [data,setData]=useState(null);
+  const [load,setLoad]=useState(true);
+  const [err,setErr]=useState(null);
 
   useEffect(()=>{
     const id=new URLSearchParams(location.search).get('workbookId');
     if(!id){setErr('Add ?workbookId=YOUR_ID to the URL');setLoad(false);return;}
     fetch(`https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${id}`)
-      .then(r=>r.json()).then(j=>{if(j.error)throw new Error(j.error);setData(j);setLoad(false);})
-      .catch(e=>{console.error(e);setErr(e.message);setLoad(false);});
+      .then(r=>r.json())
+      .then(j=>{if(j.error) throw new Error(j.error); setData(j); setLoad(false);})
+      .catch(e=>{console.error(e); setErr(e.message); setLoad(false);});
   },[]);
 
   let body;
-  if(load)  body=<PageContent><div className="p-8 text-center text-gray-500">Loading…</div></PageContent>;
-  else if(err) body=<PageContent><div className="p-8 text-center text-red-500">{err}</div></PageContent>;
-  else{
-    switch(tab){
-      case 'Website Stats': body=<WebsiteStatsPage data={data.websiteStats}/>;break;
-      case 'Geogrid Maps':  body=<GeogridMaps/>;break;
-      case 'Keywords':      body=<KeywordsPage summary={data.keywordsSummary} table={data.keywordsTable}/>;break;
-      case 'Backlinks':     body=<BacklinksPage/>;break;
-      case 'Tools':         body=<PageContent><div className="p-8 text-center text-gray-500">Tools coming soon…</div></PageContent>;break;
-      default:              body=<Dashboard/>;
-    }
+  if(load)      body=<PageContent><div className="p-8 text-center text-gray-500">Loading…</div></PageContent>;
+  else if(err)  body=<PageContent><div className="p-8 text-center text-red-500">{err}</div></PageContent>;
+  else switch(tab){
+    case 'Website Stats': body=<WebsiteStatsPage data={data.websiteStats}/>;break;
+    case 'Geogrid Maps':  body=<GeogridMaps/>;break;
+    case 'Keywords':      body=<KeywordsPage summary={data.keywordsSummary} table={data.keywordsTable}/>;break;
+    case 'Backlinks':     body=<BacklinksPage/>;break;
+    case 'Tools':         body=<PageContent><div className="p-8 text-center text-gray-500">Tools coming soon…</div></PageContent>;break;
+    default:              body=<Dashboard/>;
   }
 
   return(<div className="min-h-screen bg-gray-50 font-sans">
