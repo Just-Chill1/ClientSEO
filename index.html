@@ -378,42 +378,78 @@ const Header = ({active,setActive}) => {
 /* MAIN APP – fetches data, routes tabs                               */
 /* ------------------------------------------------------------------ */
 const App = () => {
-  const [tab,setTab]   = useState('Dashboard');
-  const [data,setData] = useState(null);
-  const [err,setErr]   = useState(null);
-  const [load,setLoad] = useState(true);
+  const [tab, setTab]   = useState('Dashboard');
+  const [data, setData] = useState(null);
+  const [err,  setErr]  = useState(null);
+  const [load, setLoad] = useState(true);
 
-  useEffect(()=>{
-    const id=new URLSearchParams(location.search).get('workbookId');
-    if(!id){setErr('Add ?workbookId=YOUR_ID to the URL');setLoad(false);return;}
+  useEffect(() => {
+    const id = new URLSearchParams(location.search).get('workbookId');
+    if (!id) { setErr('Add ?workbookId=YOUR_ID to the URL'); setLoad(false); return; }
+
     fetch(`https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${id}`)
-      .then(r=>r.json())
-      .then(j=>{if(j.error) throw new Error(j.error); setData(j); setLoad(false);})
-      .catch(e=>{console.error(e); setErr(e.message); setLoad(false);});
-  },[]);
+      .then(r => r.json())
+      .then(j => { if (j.error) throw new Error(j.error); setData(j); setLoad(false); })
+      .catch(e => { console.error(e); setErr(e.message); setLoad(false); });
+  }, []);
 
   /* routing */
   let body;
-  if(load)          body=<PageContent><div className="p-8 text-center text-gray-500">Loading data…</div></PageContent>;
-  else if(err)      body=<PageContent><div className="p-8 text-center text-red-500">{err}</div></PageContent>;
-  else switch(tab){
-    case 'Dashboard':      body=<Dashboard data={data.dashboard}/>;break;
-    case 'Website Stats':  body={<WebsiteStats  data={data.websiteStats}/>};break;     // TODO replace placeholder
-    case 'Geogrid Maps':   body={<GeogridMaps   data={data.geogridData}/>};break;      // TODO replace placeholder
-    case 'Keywords':       body={<Keywords      summary={data.keywordsSummary} table={data.keywordsTable}/>};break; // TODO replace placeholder
-    case 'Backlinks':      body={<Backlinks     data={data.backlinksSummary} table={data.backlinksTable}/>};break; // TODO replace placeholder
-    default:               body=<ToolsPage/>;
+  if (load) {
+    body = (
+      <PageContent>
+        <div className="p-8 text-center text-gray-500">Loading data…</div>
+      </PageContent>
+    );
+  } else if (err) {
+    body = (
+      <PageContent>
+        <div className="p-8 text-center text-red-500">{err}</div>
+      </PageContent>
+    );
+  } else {
+    switch (tab) {
+      case 'Dashboard':
+        body = <Dashboard data={data.dashboard} />;
+        break;
+      case 'Website Stats':
+        body = <WebsiteStats data={data.websiteStats} />;
+        break;
+      case 'Geogrid Maps':
+        body = <GeogridMaps data={data.geogridData} />;
+        break;
+      case 'Keywords':
+        body = (
+          <Keywords
+            summary={data.keywordsSummary}
+            table={data.keywordsTable}
+          />
+        );
+        break;
+      case 'Backlinks':
+        body = (
+          <Backlinks
+            data={data.backlinksSummary}
+            table={data.backlinksTable}
+          />
+        );
+        break;
+      default:
+        body = <ToolsPage />;
+    }
   }
 
+  /* ----- render ----- */
   return (
     <div className="min-h-screen bg-gray-50 font-sans">
-      <Header active={tab} setActive={setTab}/>
+      <Header active={tab} setActive={setTab} />
       {body}
     </div>
   );
 };
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+/* mount React app */
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
 </body>
 </html>
