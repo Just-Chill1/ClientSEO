@@ -110,81 +110,116 @@ const Dashboard     = () => <PageContent><h2 className="text-center text-gray-50
 /* ------------------------------------------------------------------ */
 /* WEBSITE STATS – improved version                                   */
 /* ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ */
+/* WEBSITE STATS – centred score, colour rules, tool-tips fixed       */
+/* ------------------------------------------------------------------ */
 const WebsiteStats = ({ data }) => {
-  const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } = window.Recharts;
-  if (!data) return <PageContent><div className="p-8 text-center text-gray-500">No data.</div></PageContent>;
+  const {
+    ResponsiveContainer,
+    BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
+  } = window.Recharts;
 
-  const { healthData, competitorPerfData, technicalSeoData } = data;
+  if (!data) {
+    return (
+      <PageContent>
+        <div className="p-8 text-center text-gray-500">No data.</div>
+      </PageContent>
+    );
+  }
+
+  const { healthData, competitorPerfData } = data;
 
   /* ---------- colour helpers ---------- */
-  const gaugeColor =
-    healthData.pageScore >= 90 ? '#16a34a' : healthData.pageScore >= 70 ? '#eab308' : '#dc2626';
+  const gaugeColour =
+    healthData.pageScore >= 90 ? '#16a34a'
+      : healthData.pageScore >= 70 ? '#eab308'
+      : '#dc2626';
 
-  const speedSec   = parseFloat(String(healthData.siteSpeed).replace(/[^\d.]/g,''));
-  const speedColor = speedSec < 1.5 ? 'text-green-600'
-                   : speedSec < 3   ? 'text-yellow-600' : 'text-red-600';
+  const speedSec   = parseFloat(String(healthData.siteSpeed).replace(/[^\d.]/g, '')) || 0;
+  const speedCol   = speedSec < 1.5 ? 'text-green-600'
+                 : speedSec < 3   ? 'text-yellow-600'
+                 :                  'text-red-600';
 
-  const linkColor  = healthData.brokenLinks===0 ? 'text-green-600'
-                   : healthData.brokenLinks===1 ? 'text-yellow-600' : 'text-red-600';
+  const linkCol    = healthData.brokenLinks === 0 ? 'text-green-600'
+                 : healthData.brokenLinks === 1 ? 'text-yellow-600'
+                 :                               'text-red-600';
 
-  const sslColor   = healthData.ssl ? 'text-green-600' : 'text-red-600';
+  const sslCol     = healthData.ssl ? 'text-green-600' : 'text-red-600';
 
-  /* ---------- stat cards ---------- */
-  const StatCard = ({label,value,icon,className=''}) => (
-    <div className={`flex items-center space-x-3 ${className}`}>
+  /* ---------- small helpers ---------- */
+  const StatCard = ({ label, value, icon }) => (
+    <div className="flex items-center space-x-3">
       <div className="p-2 bg-blue-100 rounded-full">{icon}</div>
       <div>
         <p className="text-sm text-gray-500">{label}</p>
-        <p className={`font-bold text-lg ${value.color||'text-gray-800'}`}>{value.text}</p>
+        <p className={`font-bold text-lg ${value.color || 'text-gray-800'}`}>{value.text}</p>
       </div>
     </div>
   );
 
-  const cards = [
-    { label:'Site Speed', value:{text:healthData.siteSpeed,color:speedColor},
-      icon:<TrendingUp className="w-5 h-5 text-blue-600"/> },
-
-    { label:'Broken Links', value:{text:healthData.brokenLinks?healthData.brokenLinks:'0',color:linkColor},
-      icon:<Link2 className="w-5 h-5 text-blue-600"/> },
-
-    { label:'SSL', value:{text:healthData.ssl?'Active':'Inactive',color:sslColor},
-      icon:<ShieldCheck className="w-5 h-5 text-blue-600"/> },
-
-    { label:'Checks Passed', value:{text:`${healthData.checks.checksPassed}/${healthData.checks.totalChecks}`},
-      icon:<CheckCircle className="w-5 h-5 text-blue-600"/>,
-      tooltip:(
-        <div>
-          <h4 className="font-semibold mb-2 text-green-600">Passed ({healthData.checks.passedList.length})</h4>
-          <ul className="list-disc pl-4 mb-3 text-xs space-y-1 max-h-48 overflow-y-auto">
-            {healthData.checks.passedList.map(it=><li key={it}>{it}</li>)}
-          </ul>
-          <h4 className="font-semibold mb-2 text-red-600">Failed ({healthData.checks.failedList.length})</h4>
-          <ul className="list-disc pl-4 text-xs space-y-1 max-h-48 overflow-y-auto">
-            {healthData.checks.failedList.map(it=><li key={it}>{it}</li>)}
-          </ul>
-        </div>
-      )}
-    }
-  ];
-
-  /* ---------- bar-chart data ---------- */
-  const speedData = competitorPerfData.map(r=>({
-    name:r.name+(r.isClient?' (You)':''),
-    speed:parseFloat(String(r['Site Speed (s)']).replace(/[^\d.]/g,''))
-  }));
-
-  /* ---------- tooltip wrapper ---------- */
-  const WithTooltip = ({children,content}) => (
+  const TooltipWrap = ({ children, content }) => (
     <div className="relative group">
       {children}
       {content && (
-        <div className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-80 bg-white border border-gray-200 rounded-xl shadow-lg text-gray-800 text-xs
-                        opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
-          <div className="p-4">{content}</div>
+        <div className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-80 bg-white border border-gray-200 rounded-xl shadow-lg
+                        text-gray-800 text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-20">
+          <div className="p-4 max-h-60 overflow-y-auto">{content}</div>
         </div>
       )}
     </div>
   );
+
+  /* ---------- data for top cards ---------- */
+  const cards = [
+    {
+      label: 'Site Speed',
+      value: { text: healthData.siteSpeed, color: speedCol },
+      icon: <TrendingUp className="w-5 h-5 text-blue-600" />,
+    },
+    {
+      label: 'Broken Links',
+      value: { text: healthData.brokenLinks ? healthData.brokenLinks : '0', color: linkCol },
+      icon: <Link2 className="w-5 h-5 text-blue-600" />,
+    },
+    {
+      label: 'SSL',
+      value: { text: healthData.ssl ? 'Active' : 'Inactive', color: sslCol },
+      icon: <ShieldCheck className="w-5 h-5 text-blue-600" />,
+    },
+    {
+      label: 'Checks Passed',
+      value: {
+        text: `${healthData.checks.checksPassed}/${healthData.checks.totalChecks}`,
+      },
+      icon: <CheckCircle className="w-5 h-5 text-blue-600" />,
+      tooltip: (
+        <>
+          <h4 className="font-semibold mb-2 text-green-600">
+            Passed ({healthData.checks.passedList.length})
+          </h4>
+          <ul className="list-disc pl-4 space-y-1 mb-3">
+            {healthData.checks.passedList.map((it) => (
+              <li key={it}>{it}</li>
+            ))}
+          </ul>
+          <h4 className="font-semibold mb-2 text-red-600">
+            Failed ({healthData.checks.failedList.length})
+          </h4>
+          <ul className="list-disc pl-4 space-y-1">
+            {healthData.checks.failedList.map((it) => (
+              <li key={it}>{it}</li>
+            ))}
+          </ul>
+        </>
+      ),
+    },
+  ];
+
+  /* ---------- bar-chart prep ---------- */
+  const speedData = competitorPerfData.map((r) => ({
+    name: r.name + (r.isClient ? ' (You)' : ''),
+    speed: parseFloat(String(r['Site Speed (s)']).replace(/[^\d.]/g, '')) || 0,
+  }));
 
   /* ---------- JSX ---------- */
   return (
@@ -193,62 +228,94 @@ const WebsiteStats = ({ data }) => {
       {/* --- health section --- */}
       <Card className="mb-8">
         <h2 className="text-xl font-bold mb-4">Website Health</h2>
+
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
-          {/* score gauge */}
+          {/* gauge ------------------------ */}
           <div className="flex flex-col items-center">
             <div className="relative">
               <svg className="w-32 h-32">
-                <circle r="54" cx="64" cy="64" strokeWidth="8" stroke="currentColor"
-                        fill="transparent" className="text-gray-200"/>
-                <circle r="54" cx="64" cy="64" strokeWidth="8"
-                        strokeDasharray={2*Math.PI*54}
-                        strokeDashoffset={(2*Math.PI*54)*(1-healthData.pageScore/100)}
-                        strokeLinecap="round"
-                        stroke={gaugeColor} fill="transparent"
-                        style={{transform:'rotate(-90deg)',transformOrigin:'50% 50%'}}/>
+                <circle
+                  r="54" cx="64" cy="64"
+                  fill="transparent" stroke="currentColor" strokeWidth="8"
+                  className="text-gray-200"
+                />
+                <circle
+                  r="54" cx="64" cy="64"
+                  fill="transparent" stroke={gaugeColour} strokeWidth="8"
+                  strokeDasharray={2 * Math.PI * 54}
+                  strokeDashoffset={(2 * Math.PI * 54) * (1 - healthData.pageScore / 100)}
+                  strokeLinecap="round"
+                  style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }}
+                />
               </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-3xl font-bold"
-                    style={{color:gaugeColor}}>
+              <span
+                className="absolute inset-0 flex items-center justify-center text-3xl font-bold"
+                style={{ color: gaugeColour }}
+              >
                 {healthData.pageScore.toFixed(1)}
               </span>
             </div>
+
             <p className="text-gray-600 mt-2 font-semibold">Page Score</p>
 
-            {/* Warnings / Errors counts (warnings first) */}
+            {/* warnings first, errors second */}
             <div className="flex space-x-6 mt-4">
-              <HealthCheckItem icon={<AlertTriangle className="w-5 h-5 text-yellow-500"/>}
-                               color="text-yellow-500"
-                               title="Warnings"
-                               items={healthData.warnings}/>
-              <HealthCheckItem icon={<XCircle className="w-5 h-5 text-red-500"/>}
-                               color="text-red-500"
-                               title="Errors"
-                               items={healthData.errors}/>
+              <TooltipWrap
+                content={
+                  healthData.warnings.length
+                    ? healthData.warnings.map((w) => <p key={w.id}>• {w.description}</p>)
+                    : 'No warnings'
+                }
+              >
+                <div className="flex items-center space-x-2">
+                  <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                  <span className="font-bold text-lg text-yellow-500">
+                    {healthData.warnings.length}
+                  </span>
+                </div>
+              </TooltipWrap>
+
+              <TooltipWrap
+                content={
+                  healthData.errors.length
+                    ? healthData.errors.map((e) => <p key={e.id}>• {e.description}</p>)
+                    : 'No errors'
+                }
+              >
+                <div className="flex items-center space-x-2">
+                  <XCircle className="w-5 h-5 text-red-500" />
+                  <span className="font-bold text-lg text-red-500">
+                    {healthData.errors.length}
+                  </span>
+                </div>
+              </TooltipWrap>
             </div>
           </div>
 
-          {/* stat cards */}
+          {/* stat cards ------------------- */}
           <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {cards.map(c=>(
-              <WithTooltip key={c.label} content={c.tooltip}>
-                <StatCard {...c}/>
-              </WithTooltip>
+            {cards.map((c) => (
+              <TooltipWrap key={c.label} content={c.tooltip}>
+                <StatCard {...c} />
+              </TooltipWrap>
             ))}
           </div>
         </div>
       </Card>
 
-      {/* --- speed chart --- */}
+      {/* --- speed bar chart --- */}
       <Card>
-        <h2 className="text-lg font-semibold mb-4">Site Speed (seconds) – you vs competitors</h2>
+        <h2 className="text-lg font-semibold mb-4">
+          Site Speed (seconds) – you vs competitors
+        </h2>
         <ResponsiveContainer width="100%" height={260}>
           <BarChart data={speedData}>
-            <CartesianGrid strokeDasharray="3 3"/>
-            <XAxis dataKey="name" tick={{fontSize:12}}/>
-            <YAxis/>
-            <Tooltip/>
-            <Bar dataKey="speed" fill="#3b82f6"/>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" tick={{ fontSize: 12 }} />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="speed" fill="#3b82f6" />
           </BarChart>
         </ResponsiveContainer>
       </Card>
