@@ -1295,7 +1295,7 @@ const WebsiteStats = ({ data }) => {
     const CHART_COLORS = ['#3b82f6', '#16a34a', '#eab308', '#a855f7', '#ec4899', '#0ea5e9'];
 
     /* ---------- helpers ---------- */
-    const StatCard = ({ label, value, icon, tooltipContent }) => {
+    const StatCard = ({ label, value, icon, tooltip }) => {
         const content = (
             <div className="flex items-center space-x-3">
                 <div className="p-2 bg-blue-100 rounded-full">{icon}</div>
@@ -1305,12 +1305,12 @@ const WebsiteStats = ({ data }) => {
                 </div>
             </div>
         );
-        if (tooltipContent) {
+        if (tooltip) {
             return (
-                <div className="relative group">
+                <div className="relative group cursor-help">
                     {content}
-                    <div className="absolute left-0 bottom-full mb-2 w-72 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
-                       {tooltipContent}
+                    <div className="absolute left-0 bottom-full mb-2 w-[500px] p-4 bg-gray-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50 pointer-events-none">
+                       {tooltip}
                     </div>
                 </div>
             )
@@ -1353,9 +1353,21 @@ const WebsiteStats = ({ data }) => {
 
     /* ---------- stat-cards data ---------- */
     const cards = [
-        { label: 'Site Speed', value: { text: healthData.siteSpeed, color: speedCol }, icon: <TrendingUp className="w-5 h-5 text-blue-600" /> },
-        { label: 'Broken Links', value: { text: healthData.brokenLinks ?? '0', color: linkCol }, icon: <Link2 className="w-5 h-5 text-blue-600" /> },
-        { label: 'SSL', value: { text: healthData.ssl ? 'Active' : 'Inactive', color: sslCol }, icon: <ShieldCheck className="w-5 h-5 text-blue-600" /> },
+        { 
+            label: 'Site Speed', 
+            value: { text: healthData.siteSpeed, color: speedCol }, 
+            icon: <TrendingUp className="w-5 h-5 text-blue-600" /> 
+        },
+        { 
+            label: 'Broken Links', 
+            value: { text: healthData.brokenLinks ?? '0', color: linkCol }, 
+            icon: <Link2 className="w-5 h-5 text-blue-600" /> 
+        },
+        { 
+            label: 'SSL', 
+            value: { text: healthData.ssl ? 'Active' : 'Inactive', color: sslCol }, 
+            icon: <ShieldCheck className="w-5 h-5 text-blue-600" /> 
+        },
         {
             label: 'Checks Passed',
             value: { text: `${healthData.checks.checksPassed}/${healthData.checks.totalChecks}`, color: passCol },
@@ -1415,12 +1427,20 @@ const WebsiteStats = ({ data }) => {
                         </div>
                         <p className="text-gray-600 mt-2 font-semibold">Page Score</p>
                         <div className="flex space-x-6 mt-4">
-                            <HealthCheckItem icon={<XCircle className="w-5 h-5 text-red-500" />} color="text-red-500" title="Errors" items={healthData.errors}/>
                             <HealthCheckItem icon={<AlertTriangle className="w-5 h-5 text-yellow-500" />} color="text-yellow-500" title="Warnings" items={healthData.warnings}/>
+                            <HealthCheckItem icon={<XCircle className="w-5 h-5 text-red-500" />} color="text-red-500" title="Errors" items={healthData.errors}/>
                         </div>
                     </div>
                     <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        {cards.map((c) => <StatCard key={c.label} {...c} />)}
+                        {cards.map((c) => (
+                            <StatCard 
+                                key={c.label} 
+                                label={c.label}
+                                value={c.value}
+                                icon={c.icon}
+                                tooltip={c.tooltip}
+                            />
+                        ))}
                     </div>
                 </div>
             </Card>
