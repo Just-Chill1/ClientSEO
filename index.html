@@ -270,7 +270,7 @@ const Dashboard = ({ setActiveTab }) => {
                     </div>
                      <span className="font-semibold text-gray-700">{geogridData.date}</span>
                 </div>
-                                    <div className="relative w-full h-[400px] mb-4">
+                                    <div className="relative w-[90%] mx-auto h-[500px] mb-4">
                         <iframe 
                             src={geogridData.mapLink}
                             className="w-full h-full rounded-lg border border-gray-200"
@@ -366,8 +366,27 @@ const Dashboard = ({ setActiveTab }) => {
                 <div>
                     {Object.entries(censusData).map(([key, value]) => {
                         if (!value) return null;
+                        
+                        // Special formatting for Age Ranges and Ethnicity
+                        if (key === 'Age Ranges' || key === 'Ethnicity') {
+                            const items = value.split(' ');
+                            return (
+                                <div key={key} className="py-3 border-t border-gray-100 first:border-t-0 first:pt-0 space-y-2">
+                                    <span className="font-medium text-gray-600 block">{key}</span>
+                                    <div className="pl-4 space-y-1">
+                                        {items.map((item, idx) => (
+                                            <div key={idx} className="text-sm text-gray-800">
+                                                {item}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        }
+                        
+                        // Default display for other fields
                         return (
-                             <div key={key} className="flex justify-between items-center text-sm py-3 border-t border-gray-100 first:border-t-0 first:pt-0">
+                            <div key={key} className="flex justify-between items-center text-sm py-3 border-t border-gray-100 first:border-t-0 first:pt-0">
                                 <span className="font-medium text-gray-600">{key}</span>
                                 <span className="font-semibold text-gray-800 text-right">{value}</span>
                             </div>
@@ -464,13 +483,81 @@ const Dashboard = ({ setActiveTab }) => {
                         {overviewData.map(c => (
                             <tr key={c.id} className={`border-b border-gray-100 ${c.isClient ? 'bg-blue-50' : ''}`}>
                                 <td className="py-3 px-3">
-                                    <div className="font-semibold text-gray-800">{c.name}</div>
-                                    <div className="text-xs text-gray-600">{c.score} ⭐ ({c.reviews} reviews)</div>
+                                    <div className="font-semibold text-gray-800">{c.name.split(' (')[0]}</div>
+                                    <div className="text-xs text-gray-600 flex items-center gap-1">
+                                        <span>{c.score}</span>
+                                        <svg className="w-3 h-3 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                        </svg>
+                                        <span>({c.reviews} reviews)</span>
+                                    </div>
                                 </td>
                                 <td className="py-3 px-3 text-center font-medium">{c.speed}</td>
                                 <td className="py-3 px-3 text-center font-medium">{c.kwPos1}</td>
                                 <td className="py-3 px-3 text-center font-medium">{c.backlinks.toLocaleString()}</td>
-                                <td className="py-3 px-3 text-gray-600">{c.hours}</td>
+                                <td className="py-3 px-3 text-gray-600">
+                                    {(() => {
+                                        const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+                                        const hoursMap = {};
+                                        const closedDays = [];
+                                        
+                                        // Parse the hours string
+                                        c.hours.split(', ').forEach(dayHours => {
+                                            const [day, hours] = dayHours.split(': ');
+                                            if (hours === 'Closed') {
+                                                closedDays.push(day.substring(0, 3));
+                                            } else {
+                                                hoursMap[day.substring(0, 3)] = hours;
+                                            }
+                                        });
+                                        
+                                        // Group consecutive days with same hours
+                                        const groupedHours = [];
+                                        let currentGroup = { days: [], hours: '' };
+                                        
+                                        days.forEach(day => {
+                                            if (closedDays.includes(day)) return;
+                                            
+                                            const hours = hoursMap[day];
+                                            if (!hours) return;
+                                            
+                                            if (currentGroup.hours === hours) {
+                                                currentGroup.days.push(day);
+                                            } else {
+                                                if (currentGroup.days.length > 0) {
+                                                    groupedHours.push({ ...currentGroup });
+                                                }
+                                                currentGroup = { days: [day], hours };
+                                            }
+                                        });
+                                        
+                                        if (currentGroup.days.length > 0) {
+                                            groupedHours.push(currentGroup);
+                                        }
+                                        
+                                        return (
+                                            <div className="text-xs space-y-1">
+                                                {groupedHours.map((group, idx) => (
+                                                    <div key={idx}>
+                                                        <span className="font-medium">
+                                                            {group.days.length === 1 
+                                                                ? group.days[0] 
+                                                                : `${group.days[0]}-${group.days[group.days.length-1]}`
+                                                            }:
+                                                        </span>
+                                                        {' '}
+                                                        <span>{group.hours}</span>
+                                                    </div>
+                                                ))}
+                                                {closedDays.length > 0 && (
+                                                    <div className="text-red-500">
+                                                        Closed: {closedDays.join(', ')}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })()}
+                                </td>
                                 <td className="py-3 px-3 text-center"><AdIndicator hasAd={c.gAds} /></td>
                                 <td className="py-3 px-3 text-center"><AdIndicator hasAd={c.fbAds} /></td>
                             </tr>
