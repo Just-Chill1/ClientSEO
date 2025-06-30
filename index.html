@@ -1097,238 +1097,239 @@ const GeogridMaps = ({data}) =>
 /* WEBSITE STATS – polished gauge, colour rules, horizontal bars      */
 /* ------------------------------------------------------------------ */
 const WebsiteStats = ({ data }) => {
-  const {
-    ResponsiveContainer,
-    BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell,
-  } = window.Recharts;
+    /* pull Recharts only in this page */
+    const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } = window.Recharts;
 
-  if (!data) {
-    return (
-      <PageContent>
-        <div className="p-8 text-center text-gray-500">No data.</div>
-      </PageContent>
+    /* fallback if no data yet */
+    if (!data) {
+        return <PageContent><div className="p-8 text-center text-gray-500">No Website Stats data available.</div></PageContent>;
+    }
+
+    const { healthData, competitorPerfData, technicalSeoData } = data;
+
+    /* ---------- colour helpers ---------- */
+    const gaugeColour =
+        healthData.pageScore >= 90 ? '#16a34a'
+        : healthData.pageScore >= 70 ? '#eab308'
+        : '#dc2626';
+
+    const speedSec = parseFloat(String(healthData.siteSpeed).replace(/[^\d.]/g, '')) || 0;
+    const speedCol = speedSec < 1.5 ? 'text-green-600'
+                    : speedSec < 3   ? 'text-yellow-600'
+                    :                  'text-red-600';
+
+    const linkCol  = healthData.brokenLinks === 0 ? 'text-green-600'
+                    : healthData.brokenLinks === 1 ? 'text-yellow-600'
+                    :                              'text-red-600';
+
+    const sslCol   = healthData.ssl ? 'text-green-600' : 'text-red-600';
+
+    const passPct  = healthData.checks.checksPassed / healthData.checks.totalChecks * 100;
+    const passCol  = passPct >= 88 ? 'text-green-600'
+                    : passPct >= 69  ? 'text-yellow-600'
+                    :                  'text-red-600';
+    
+    const CHART_COLORS = ['#3b82f6', '#16a34a', '#eab308', '#a855f7', '#ec4899', '#0ea5e9'];
+
+    /* ---------- helpers ---------- */
+    const StatCard = ({ label, value, icon, tooltipContent }) => {
+        const content = (
+            <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-100 rounded-full">{icon}</div>
+                <div>
+                    <p className="text-sm text-gray-500">{label}</p>
+                    <p className={`font-bold text-lg ${value.color || 'text-gray-800'}`}>{value.text}</p>
+                </div>
+            </div>
+        );
+        if (tooltipContent) {
+            return (
+                <div className="relative group">
+                    {content}
+                    <div className="absolute left-0 bottom-full mb-2 w-72 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
+                       {tooltipContent}
+                    </div>
+                </div>
+            )
+        }
+        return content;
+    };
+
+    const HealthCheckItem = ({ icon, color, title, items }) => (
+        <div className="relative group flex items-center space-x-2">
+            {icon}
+            <div>
+                <p className={`font-bold text-lg ${color}`}>{items.length}</p>
+                <p className="text-xs text-gray-500">{title}</p>
+            </div>
+            <div className="absolute left-0 bottom-full mb-2 w-72 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
+                <h4 className="font-bold mb-2 border-b border-gray-600 pb-1">{title} Found</h4>
+                <ul className="space-y-1">
+                    {items.map((item, index) => <li key={index}>- {item.description}</li>)}
+                </ul>
+                {items.length === 0 && <p className="text-gray-400">No issues found.</p>}
+            </div>
+        </div>
     );
-  }
 
-  const { healthData, competitorPerfData } = data;
-
-  /* ---------- colour helpers ---------- */
-  const gaugeColour =
-    healthData.pageScore >= 90 ? '#16a34a'
-      : healthData.pageScore >= 70 ? '#eab308'
-      : '#dc2626';
-
-  const speedSec = parseFloat(String(healthData.siteSpeed).replace(/[^\d.]/g, '')) || 0;
-  const speedCol = speedSec < 1.5 ? 'text-green-600'
-                : speedSec < 3   ? 'text-yellow-600'
-                :                  'text-red-600';
-
-  const linkCol  = healthData.brokenLinks === 0 ? 'text-green-600'
-                : healthData.brokenLinks === 1 ? 'text-yellow-600'
-                :                               'text-red-600';
-
-  const sslCol   = healthData.ssl ? 'text-green-600' : 'text-red-600';
-
-  const passPct  = healthData.checks.checksPassed / healthData.checks.totalChecks * 100;
-  const passCol  = passPct >= 88 ? 'text-green-600'
-                : passPct >= 69  ? 'text-yellow-600'
-                :                 'text-red-600';
-
-  /* ---------- helpers ---------- */
-  const StatCard = ({ label, value, icon }) => (
-    <div className="flex items-center space-x-3">
-      <div className="p-2 bg-blue-100 rounded-full">{icon}</div>
-      <div>
-        <p className="text-sm text-gray-500">{label}</p>
-        <p className={`font-bold text-lg ${value.color || 'text-gray-800'}`}>{value.text}</p>
-      </div>
-    </div>
-  );
-
-  const TooltipWrap = ({ children, content }) => (
-    <div className="relative group">
-      {children}
-      {content && (
-        <div className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-80 bg-white border
-                        border-gray-200 rounded-xl shadow-lg text-gray-800 text-xs opacity-0
-                        group-hover:opacity-100 transition-opacity duration-200 z-20">
-          <div className="p-4 max-h-60 overflow-y-auto">{content}</div>
-        </div>
-      )}
-    </div>
-  );
-
-  /* ---------- stat-cards ---------- */
-  const cards = [
-    {
-      label: 'Site Speed',
-      value: { text: healthData.siteSpeed, color: speedCol },
-      icon: <TrendingUp className="w-5 h-5 text-blue-600" />,
-    },
-    {
-      label: 'Broken Links',
-      value: { text: healthData.brokenLinks ?? '0', color: linkCol },
-      icon: <Link2 className="w-5 h-5 text-blue-600" />,
-    },
-    {
-      label: 'SSL',
-      value: { text: healthData.ssl ? 'Active' : 'Inactive', color: sslCol },
-      icon: <ShieldCheck className="w-5 h-5 text-blue-600" />,
-    },
-    {
-      label: 'Checks Passed',
-      value: {
-        text: `${healthData.checks.checksPassed}/${healthData.checks.totalChecks}`,
-        color: passCol,
-      },
-      icon: <CheckCircle className="w-5 h-5 text-blue-600" />,
-      tooltip: (
-        <>
-          <h4 className="font-semibold mb-2 text-green-600">
-            Passed ({healthData.checks.passedList.length})
-          </h4>
-          <ul className="list-disc pl-4 space-y-1 mb-3">
-            {healthData.checks.passedList.map((it) => (
-              <li key={it}>{it}</li>
-            ))}
-          </ul>
-          <h4 className="font-semibold mb-2 text-red-600">
-            Failed ({healthData.checks.failedList.length})
-          </h4>
-          <ul className="list-disc pl-4 space-y-1">
-            {healthData.checks.failedList.map((it) => (
-              <li key={it}>{it}</li>
-            ))}
-          </ul>
-        </>
-      ),
-    },
-  ];
-
-  /* ---------- bar-chart data ---------- */
-  const CHART_COLS = ['#3b82f6', '#16a34a', '#eab308', '#a855f7', '#ec4899', '#0ea5e9'];
-  const speedData = competitorPerfData.map((r, idx) => ({
-    name: r.name + (r.isClient ? ' (You)' : ''),
-    speed: parseFloat(String(r['Site Speed (s)']).replace(/[^\d.]/g, '')) || 0,
-    fill: r.isClient ? '#0ea5e9' : CHART_COLS[idx % CHART_COLS.length],
-  }));
-
-  /* ---------- JSX ---------- */
-  return (
-    <PageContent>
-
-      {/* --- health section --- */}
-      <Card className="mb-8">
-        <h2 className="text-xl font-bold mb-4">Website Health</h2>
-
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-
-          {/* gauge ------------------------ */}
-          <div className="flex flex-col items-center">
-            <div className="relative">
-              <svg className="w-32 h-32">
-                {/* grey track */}
-                <circle r="54" cx="64" cy="64"
-                        fill="transparent" stroke="currentColor" strokeWidth="8"
-                        className="text-gray-200" />
-                {/* coloured arc */}
-                <circle r="54" cx="64" cy="64"
-                        fill="transparent" stroke={gaugeColour} strokeWidth="8"
-                        strokeDasharray={2 * Math.PI * 54}
-                        strokeDashoffset={healthData.pageScore >= 99.9
-                          ? 0                                  // 100% closes the gap
-                          : 2 * Math.PI * 54 * (1 - healthData.pageScore / 100)}
-                        strokeLinecap="butt"
-                        style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }}
-                />
-              </svg>
-              <span
-                className="absolute inset-0 flex items-center justify-center text-3xl font-bold text-black">
-                {healthData.pageScore.toFixed(1)}
-              </span>
-            </div>
-
-            <p className="text-gray-600 mt-2 font-semibold">Page Score</p>
-
-            {/* warnings first, errors second */}
-            <div className="flex space-x-6 mt-4">
-              <TooltipWrap
-                content={
-                  healthData.warnings.length
-                    ? healthData.warnings.map((w) => <p key={w.id}>• {w.description}</p>)
-                    : 'No warnings'
-                }
-              >
-                <div className="flex items-center space-x-2">
-                  <AlertTriangle className="w-5 h-5 text-yellow-500" />
-                  <span className="font-bold text-lg text-yellow-500">
-                    {healthData.warnings.length}
-                  </span>
+    const BooleanCheck = ({ value, tooltipContent }) => {
+        const check = value ? <CheckCircle className="w-5 h-5 text-green-500 mx-auto" /> : <XCircle className="w-5 h-5 text-red-500 mx-auto" />;
+        const ContentTooltip = ({ content, children }) => (
+             <div className="relative group flex justify-center">
+                {children}
+                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-80 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
+                    {content ? content : <span className="text-gray-400">Not Found</span>}
                 </div>
-              </TooltipWrap>
-
-              <TooltipWrap
-                content={
-                  healthData.errors.length
-                    ? healthData.errors.map((e) => <p key={e.id}>• {e.description}</p>)
-                    : 'No errors'
-                }
-              >
-                <div className="flex items-center space-x-2">
-                  <XCircle className="w-5 h-5 text-red-500" />
-                  <span className="font-bold text-lg text-red-500">
-                    {healthData.errors.length}
-                  </span>
-                </div>
-              </TooltipWrap>
             </div>
-          </div>
+        );
+        if (tooltipContent) {
+            return <ContentTooltip content={tooltipContent}>{check}</ContentTooltip>
+        }
+        return check;
+    };
 
-          {/* stat cards ------------------- */}
-          <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {cards.map((c) => (
-              <TooltipWrap key={c.label} content={c.tooltip}>
-                <StatCard {...c} />
-              </TooltipWrap>
-            ))}
-          </div>
-        </div>
-      </Card>
+    /* ---------- stat-cards data ---------- */
+    const cards = [
+        { label: 'Site Speed', value: { text: healthData.siteSpeed, color: speedCol }, icon: <TrendingUp className="w-5 h-5 text-blue-600" /> },
+        { label: 'Broken Links', value: { text: healthData.brokenLinks ?? '0', color: linkCol }, icon: <Link2 className="w-5 h-5 text-blue-600" /> },
+        { label: 'SSL', value: { text: healthData.ssl ? 'Active' : 'Inactive', color: sslCol }, icon: <ShieldCheck className="w-5 h-5 text-blue-600" /> },
+        {
+            label: 'Checks Passed',
+            value: { text: `${healthData.checks.checksPassed}/${healthData.checks.totalChecks}`, color: passCol },
+            icon: <CheckCircle className="w-5 h-5 text-blue-600" />,
+            tooltip: (
+                <>
+                    <h4 className="font-semibold mb-2 text-green-600">Passed ({healthData.checks.passedList.length})</h4>
+                    <ul className="list-disc pl-4 space-y-1 mb-3 max-h-48 overflow-y-auto">{healthData.checks.passedList.map((it) => <li key={it}>{it}</li>)}</ul>
+                    <h4 className="font-semibold mb-2 text-red-600">Failed ({healthData.checks.failedList.length})</h4>
+                    <ul className="list-disc pl-4 space-y-1 max-h-48 overflow-y-auto">{healthData.checks.failedList.map((it) => <li key={it}>{it}</li>)}</ul>
+                </>
+            ),
+        },
+    ];
 
-      {/* --- horizontal bar chart --- */}
-      <Card>
-        <h2 className="text-lg font-semibold mb-4">
-          Site Speed (s) – lower is better
-        </h2>
-        <ResponsiveContainer width="100%" height={260}>
-          <BarChart
-            data={speedData}
-            layout="vertical"
-            margin={{ left: 80, right: 20, top: 5, bottom: 5 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-            <XAxis
-              type="number"
-              tick={{ fontSize: 12 }}
-              domain={[0, (dataMax) => Math.round(dataMax * 1.2)]}
-            />
-            <YAxis
-              dataKey="name"
-              type="category"
-              width={120}
-              tick={{ fontSize: 12 }}
-            />
-            <Tooltip />
-            <Bar dataKey="speed" barSize={18}>
-              {speedData.map((entry, idx) => (
-                <Cell key={idx} fill={entry.fill} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </Card>
-    </PageContent>
-  );
+    return (
+        <PageContent>
+            <Card className="mb-8">
+                <h2 className="text-xl font-bold mb-4">Website Health</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    <div className="flex flex-col items-center">
+                        <div className="relative">
+                            <svg className="w-32 h-32">
+                                <circle r="54" cx="64" cy="64" fill="transparent" stroke="currentColor" strokeWidth="8" className="text-gray-200" />
+                                <circle r="54" cx="64" cy="64" fill="transparent" stroke={gaugeColour} strokeWidth="8" strokeDasharray={2 * Math.PI * 54} strokeDashoffset={healthData.pageScore >= 99.9 ? 0 : 2 * Math.PI * 54 * (1 - healthData.pageScore / 100)} strokeLinecap="butt" style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }} />
+                            </svg>
+                            <span className="absolute inset-0 flex items-center justify-center text-3xl font-bold text-black">{healthData.pageScore.toFixed(1)}</span>
+                        </div>
+                        <p className="text-gray-600 mt-2 font-semibold">Page Score</p>
+                        <div className="flex space-x-6 mt-4">
+                            <HealthCheckItem icon={<XCircle className="w-5 h-5 text-red-500" />} color="text-red-500" title="Errors" items={healthData.errors}/>
+                            <HealthCheckItem icon={<AlertTriangle className="w-5 h-5 text-yellow-500" />} color="text-yellow-500" title="Warnings" items={healthData.warnings}/>
+                        </div>
+                    </div>
+                    <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        {cards.map((c) => <StatCard key={c.label} {...c} />)}
+                    </div>
+                </div>
+            </Card>
+
+            <Card className="mb-8">
+                <h2 className="text-lg font-semibold mb-4">Performance vs. Competitors</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-12">
+                    <div>
+                        <h3 className="text-lg font-semibold text-center text-gray-700 mb-2">Site Speed (s)</h3>
+                        <p className="text-xs text-gray-500 text-center mb-2">(Lower is better)</p>
+                        <ResponsiveContainer width="100%" height={260}>
+                            <BarChart data={competitorPerfData} layout="vertical" margin={{ left: 80, right: 20, top: 5, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                <XAxis type="number" tick={{ fontSize: 12 }} domain={[0, (dataMax) => Math.round(dataMax * 1.2)]} />
+                                <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 12 }} />
+                                <Tooltip />
+                                <Bar dataKey="Site Speed (s)" barSize={18}>
+                                    {competitorPerfData.map((entry, idx) => <Cell key={idx} fill={entry.isClient ? '#0ea5e9' : CHART_COLORS[idx % CHART_COLORS.length]} />)}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-semibold text-center text-gray-700 mb-2">Est. Monthly Traffic</h3>
+                        <p className="text-xs text-gray-500 text-center mb-2">(Higher is better)</p>
+                        <ResponsiveContainer width="100%" height={260}>
+                             <BarChart data={competitorPerfData} margin={{ top: 5, right: 20, left: 0, bottom: 50 }}>
+                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                 <XAxis dataKey="name" type="category" tick={{ fontSize: 10 }} interval={0} angle={-45} textAnchor="end"/>
+                                 <YAxis type="number" domain={[0, dataMax => Math.round(dataMax * 1.1)]} />
+                                 <Tooltip cursor={{fill: 'rgba(241, 245, 249, 0.7)'}} contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.9)', borderColor: 'rgba(255,255,255,0.2)', borderRadius: '0.5rem' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff', fontWeight: 'bold' }} />
+                                 <Bar dataKey='Est. Monthly Traffic' barSize={35}>
+                                     {competitorPerfData.map((entry, index) => <Cell key={`cell-${entry.name}`} fill={entry.isClient ? '#0ea5e9' : CHART_COLORS[index % CHART_COLORS.length]} /> )}
+                                 </Bar>
+                             </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                    <div>
+                         <h3 className="text-lg font-semibold text-center text-gray-700 mb-2">Referring Domains</h3>
+                         <p className="text-xs text-gray-500 text-center mb-2">(Higher is better)</p>
+                         <ResponsiveContainer width="100%" height={260}>
+                             <BarChart data={competitorPerfData} margin={{ top: 5, right: 20, left: 0, bottom: 50 }}>
+                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                 <XAxis dataKey="name" type="category" tick={{ fontSize: 10 }} interval={0} angle={-45} textAnchor="end"/>
+                                 <YAxis type="number" domain={[0, dataMax => Math.round(dataMax * 1.1)]} />
+                                 <Tooltip cursor={{fill: 'rgba(241, 245, 249, 0.7)'}} contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.9)', borderColor: 'rgba(255,255,255,0.2)', borderRadius: '0.5rem' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff', fontWeight: 'bold' }} />
+                                 <Bar dataKey='Referring Domains' barSize={35}>
+                                     {competitorPerfData.map((entry, index) => <Cell key={`cell-${entry.name}`} fill={entry.isClient ? '#0ea5e9' : CHART_COLORS[index % CHART_COLORS.length]} /> )}
+                                 </Bar>
+                             </BarChart>
+                         </ResponsiveContainer>
+                     </div>
+                      <div>
+                         <h3 className="text-lg font-semibold text-center text-gray-700 mb-2">Total Backlinks</h3>
+                         <p className="text-xs text-gray-500 text-center mb-2">(Higher is better)</p>
+                         <ResponsiveContainer width="100%" height={260}>
+                            <BarChart data={competitorPerfData} margin={{ top: 5, right: 20, left: 0, bottom: 50 }}>
+                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                 <XAxis dataKey="name" type="category" tick={{ fontSize: 10 }} interval={0} angle={-45} textAnchor="end"/>
+                                 <YAxis type="number" domain={[0, dataMax => Math.round(dataMax * 1.1)]} />
+                                 <Tooltip cursor={{fill: 'rgba(241, 245, 249, 0.7)'}} contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.9)', borderColor: 'rgba(255,255,255,0.2)', borderRadius: '0.5rem' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff', fontWeight: 'bold' }} />
+                                 <Bar dataKey='Total Backlinks' barSize={35}>
+                                     {competitorPerfData.map((entry, index) => <Cell key={`cell-${entry.name}`} fill={entry.isClient ? '#0ea5e9' : CHART_COLORS[index % CHART_COLORS.length]} /> )}
+                                 </Bar>
+                             </BarChart>
+                         </ResponsiveContainer>
+                     </div>
+                </div>
+            </Card>
+            
+            <Card>
+                <h2 className="text-lg font-semibold mb-4">Technical SEO Checklist</h2>
+                <div className="overflow-x-auto">
+                    <table className="min-w-[640px] text-sm">
+                        <thead className="text-left border-b">
+                            <tr>
+                                <th className="py-2 pr-4">Website</th>
+                                <th className="py-2 text-center">SSL</th>
+                                <th className="py-2 text-center">Schema</th>
+                                <th className="py-2">H1</th>
+                                <th className="py-2">Title</th>
+                                <th className="py-2">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {technicalSeoData.map(site => (
+                                <tr key={site.name} className="border-b last:border-0">
+                                    <td className="py-2 pr-4 font-semibold">{site.name}</td>
+                                    <td className="py-2 text-center"><BooleanCheck value={site.hasSSL} /></td>
+                                    <td className="py-2 text-center"><BooleanCheck value={site.hasSchema} /></td>
+                                    <td className="py-2"><BooleanCheck value={site.h1} tooltipContent={site.h1} /></td>
+                                    <td className="py-2"><BooleanCheck value={site.title} tooltipContent={site.title} /></td>
+                                    <td className="py-2"><BooleanCheck value={site.description} tooltipContent={site.description} /></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </Card>
+        </PageContent>
+    );
 };
 
 /* ------------------------------------------------------------------ */
