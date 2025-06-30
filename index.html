@@ -187,15 +187,19 @@ const Dashboard = ({ setActiveTab }) => {
     const ChevronUp = createIcon(<polyline points="18 15 12 9 6 15" />);
 
     // --- Reusable Components for this page ---
-    const AdIndicator = ({ hasAd, link }) => {
-        if (hasAd) {
+    const AdIndicator = ({ status, link }) => {
+        if (status === 'No Ads Found') {
+            return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">No Ads</span>;
+        }
+        if (status === '1 Ad Found' || status === 'Multiple Ads Found') {
             return (
-                <a href={link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full hover:bg-green-200 transition-colors">
-                    Active <ExternalLink className="w-3 h-3 ml-1.5" />
+                <a href={link} target="_blank" rel="noopener noreferrer" 
+                   className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full hover:bg-green-200 transition-colors">
+                    {status === '1 Ad Found' ? '1 Ad' : 'Multiple'} <ExternalLink className="w-3 h-3 ml-1.5" />
                 </a>
             );
         }
-        return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">None</span>;
+        return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Unknown</span>;
     };
 
     // --- Sub-components for Dashboard ---
@@ -270,13 +274,14 @@ const Dashboard = ({ setActiveTab }) => {
                     </div>
                      <span className="font-semibold text-gray-700">{geogridData.date}</span>
                 </div>
-                                    <div className="relative w-[90%] mx-auto h-[500px] mb-4">
+                                    <div className="relative w-[90%] mx-auto h-[500px] mb-4 overflow-hidden">
                         <iframe 
                             src={geogridData.mapLink}
                             className="w-full h-full rounded-lg border border-gray-200"
                             style={{ background: '#f9fafb' }}
                             loading="lazy"
                             allowFullScreen
+                            scrolling="no"
                         />
                         <a 
                             href={geogridData.mapLink} 
@@ -371,13 +376,11 @@ const Dashboard = ({ setActiveTab }) => {
                         if (key === 'Age Ranges' || key === 'Ethnicity') {
                             const items = value.split(' ');
                             return (
-                                <div key={key} className="py-3 border-t border-gray-100 first:border-t-0 first:pt-0 space-y-2">
-                                    <span className="font-medium text-gray-600 block">{key}</span>
-                                    <div className="pl-4 space-y-1">
+                                <div key={key} className="flex justify-between text-sm py-3 border-t border-gray-100 first:border-t-0 first:pt-0">
+                                    <span className="text-gray-600">{key}</span>
+                                    <div className="text-right text-gray-600 space-y-1">
                                         {items.map((item, idx) => (
-                                            <div key={idx} className="text-sm text-gray-800">
-                                                {item}
-                                            </div>
+                                            <div key={idx}>{item}</div>
                                         ))}
                                     </div>
                                 </div>
@@ -387,8 +390,8 @@ const Dashboard = ({ setActiveTab }) => {
                         // Default display for other fields
                         return (
                             <div key={key} className="flex justify-between items-center text-sm py-3 border-t border-gray-100 first:border-t-0 first:pt-0">
-                                <span className="font-medium text-gray-600">{key}</span>
-                                <span className="font-semibold text-gray-800 text-right">{value}</span>
+                                <span className="text-gray-600">{key}</span>
+                                <span className="text-gray-600 text-right">{value}</span>
                             </div>
                         )
                     })}
@@ -483,13 +486,18 @@ const Dashboard = ({ setActiveTab }) => {
                         {overviewData.map(c => (
                             <tr key={c.id} className={`border-b border-gray-100 ${c.isClient ? 'bg-blue-50' : ''}`}>
                                 <td className="py-3 px-3">
-                                    <div className="font-semibold text-gray-800">{c.name.split(' (')[0]}</div>
-                                    <div className="text-xs text-gray-600 flex items-center gap-1">
-                                        <span>{c.score}</span>
-                                        <svg className="w-3 h-3 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                                        </svg>
-                                        <span>({c.reviews} reviews)</span>
+                                    <div>
+                                        <div className="font-semibold text-gray-800">
+                                            {c.name.split(' (')[0]}
+                                        </div>
+                                        <div className="text-sm text-gray-600 flex items-center gap-1">
+                                            {c.score}
+                                            <svg className="w-3 h-3 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                            </svg>
+                                            ({c.reviews} reviews)
+                                        </div>
+                                        <div className="text-xs text-gray-500">{c.name.split(' (')[1]?.replace(')', '')}</div>
                                     </div>
                                 </td>
                                 <td className="py-3 px-3 text-center font-medium">{c.speed}</td>
@@ -558,8 +566,8 @@ const Dashboard = ({ setActiveTab }) => {
                                         );
                                     })()}
                                 </td>
-                                <td className="py-3 px-3 text-center"><AdIndicator hasAd={c.gAds} /></td>
-                                <td className="py-3 px-3 text-center"><AdIndicator hasAd={c.fbAds} /></td>
+                                <td className="py-3 px-3 text-center"><AdIndicator status={c.gAds} link={c.gAdsLink} /></td>
+                                <td className="py-3 px-3 text-center"><AdIndicator status={c.fbAds} link={c.fbAdsLink} /></td>
                             </tr>
                         ))}
                     </tbody>
