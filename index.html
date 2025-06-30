@@ -169,10 +169,75 @@ const Dashboard = ({ setActiveTab }) => {
         return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">None</span>;
     };
 
+    // --- Helper function to fetch data with CORS workaround ---
+    const fetchWithCorsWorkaround = (url, callback) => {
+        // Try regular fetch first
+        fetch(url, {
+            method: 'GET',
+            mode: 'cors'
+        })
+        .then(response => response.json())
+        .then(data => callback(null, data))
+        .catch(err => {
+            console.log('Regular fetch failed, trying JSONP approach...');
+            // Fallback to JSONP-style request
+            const script = document.createElement('script');
+            const callbackName = 'jsonpCallback_' + Math.random().toString(36).substr(2, 9);
+            window[callbackName] = (data) => {
+                callback(null, data);
+                document.head.removeChild(script);
+                delete window[callbackName];
+            };
+            script.src = `${url}&callback=${callbackName}`;
+            script.onerror = () => {
+                callback(new Error('Failed to load data'), null);
+                document.head.removeChild(script);
+                delete window[callbackName];
+            };
+            document.head.appendChild(script);
+        });
+    };
 
     // --- Sub-components for Dashboard ---
-    const GeogridSection = ({ setActiveTab, geogridForDashboard }) => {
-        if (!geogridForDashboard) {
+    const GeogridSection = ({ setActiveTab }) => {
+        const [geogridData, setGeogridData] = useState(null);
+        const [loading, setLoading] = useState(true);
+        const [error, setError] = useState(null);
+
+        useEffect(() => {
+            const params = new URLSearchParams(window.location.search);
+            const workbookId = params.get('workbookId');
+            if (!workbookId) {
+                setError("No workbook ID provided");
+                setLoading(false);
+                return;
+            }
+
+            const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
+            
+            fetchWithCorsWorkaround(scriptUrl, (err, data) => {
+                if (err) {
+                    setError(err.message);
+                    setLoading(false);
+                    return;
+                }
+                if (data.error) {
+                    setError(`Script error: ${data.error}`);
+                    setLoading(false);
+                    return;
+                }
+                setGeogridData(data.dashboard?.geogridForDashboard);
+                setLoading(false);
+            });
+        }, []);
+
+        if (loading) {
+            return <Card className="col-span-12 lg:col-span-8 flex items-center justify-center"><p className="text-gray-500">Loading Geogrid data...</p></Card>;
+        }
+        if (error) {
+            return <Card className="col-span-12 lg:col-span-8 flex items-center justify-center"><p className="text-red-500">Geogrid Error: {error}</p></Card>;
+        }
+        if (!geogridData) {
             return <Card className="col-span-12 lg:col-span-8 flex items-center justify-center"><p className="text-gray-500">No Geogrid data to display for 'medspa near me'.</p></Card>;
         }
         
@@ -184,10 +249,10 @@ const Dashboard = ({ setActiveTab }) => {
                         <InfoTooltip text="A snapshot of your latest Geogrid map for the keyword 'medspa near me'." />
                         <button onClick={() => setActiveTab('Geogrid Maps')} className="text-xs font-normal text-blue-600 hover:text-blue-800">(See More)</button>
                     </div>
-                     <span className="font-semibold text-gray-700">{geogridForDashboard.date}</span>
+                     <span className="font-semibold text-gray-700">{geogridData.date}</span>
                 </div>
-                <a href={geogridForDashboard.mapLink} target="_blank" rel="noopener noreferrer">
-                    <img src={geogridForDashboard.mapLink} alt={`Geogrid Map for Medspa Near Me`} className="w-full rounded-lg mb-4 border border-gray-200" 
+                <a href={geogridData.mapLink} target="_blank" rel="noopener noreferrer">
+                    <img src={geogridData.mapLink} alt={`Geogrid Map for Medspa Near Me`} className="w-full rounded-lg mb-4 border border-gray-200" 
                         onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/800x400/EFEFEF/333333?text=Map+Not+Available'; }}
                     />
                 </a>
@@ -195,7 +260,48 @@ const Dashboard = ({ setActiveTab }) => {
         );
     };
 
-    const CensusInfo = ({censusData}) => {
+    const CensusInfo = () => {
+        const [censusData, setCensusData] = useState(null);
+        const [loading, setLoading] = useState(true);
+        const [error, setError] = useState(null);
+
+        useEffect(() => {
+            const params = new URLSearchParams(window.location.search);
+            const workbookId = params.get('workbookId');
+            if (!workbookId) {
+                setError("No workbook ID provided");
+                setLoading(false);
+                return;
+            }
+
+            const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
+            
+            fetchWithCorsWorkaround(scriptUrl, (err, data) => {
+                if (err) {
+                    setError(err.message);
+                    setLoading(false);
+                    return;
+                }
+                if (data.error) {
+                    setError(`Script error: ${data.error}`);
+                    setLoading(false);
+                    return;
+                }
+                setCensusData(data.dashboard?.censusData);
+                setLoading(false);
+            });
+        }, []);
+
+        if (loading) {
+            return <Card className="col-span-12 lg:col-span-4 h-full flex items-center justify-center"><p className="text-gray-500">Loading Census data...</p></Card>;
+        }
+        if (error) {
+            return <Card className="col-span-12 lg:col-span-4 h-full flex items-center justify-center"><p className="text-red-500">Census Error: {error}</p></Card>;
+        }
+        if (!censusData) {
+            return <Card className="col-span-12 lg:col-span-4 h-full flex items-center justify-center"><p className="text-gray-500">No census data available.</p></Card>;
+        }
+
         return (
             <Card className="col-span-12 lg:col-span-4 h-full">
                  <div className="flex items-center space-x-2 mb-4">
@@ -217,7 +323,48 @@ const Dashboard = ({ setActiveTab }) => {
         );
     };
 
-    const OverviewTable = ({overviewData}) => {
+    const OverviewTable = () => {
+        const [overviewData, setOverviewData] = useState(null);
+        const [loading, setLoading] = useState(true);
+        const [error, setError] = useState(null);
+
+        useEffect(() => {
+            const params = new URLSearchParams(window.location.search);
+            const workbookId = params.get('workbookId');
+            if (!workbookId) {
+                setError("No workbook ID provided");
+                setLoading(false);
+                return;
+            }
+
+            const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
+            
+            fetchWithCorsWorkaround(scriptUrl, (err, data) => {
+                if (err) {
+                    setError(err.message);
+                    setLoading(false);
+                    return;
+                }
+                if (data.error) {
+                    setError(`Script error: ${data.error}`);
+                    setLoading(false);
+                    return;
+                }
+                setOverviewData(data.dashboard?.overviewData);
+                setLoading(false);
+            });
+        }, []);
+
+        if (loading) {
+            return <Card className="col-span-12 overflow-x-auto flex items-center justify-center"><p className="text-gray-500">Loading Overview data...</p></Card>;
+        }
+        if (error) {
+            return <Card className="col-span-12 overflow-x-auto flex items-center justify-center"><p className="text-red-500">Overview Error: {error}</p></Card>;
+        }
+        if (!overviewData || overviewData.length === 0) {
+            return <Card className="col-span-12 overflow-x-auto flex items-center justify-center"><p className="text-gray-500">No overview data available.</p></Card>;
+        }
+
         return (
             <Card className="col-span-12 overflow-x-auto">
                 <div className="flex justify-between items-center mb-4">
@@ -260,8 +407,49 @@ const Dashboard = ({ setActiveTab }) => {
         );
     };
     
-    const AIReport = ({ reportText }) => {
+    const AIReport = () => {
+        const [reportText, setReportText] = useState(null);
+        const [loading, setLoading] = useState(true);
+        const [error, setError] = useState(null);
         const [isExpanded, setIsExpanded] = useState(false);
+
+        useEffect(() => {
+            const params = new URLSearchParams(window.location.search);
+            const workbookId = params.get('workbookId');
+            if (!workbookId) {
+                setError("No workbook ID provided");
+                setLoading(false);
+                return;
+            }
+
+            const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
+            
+            fetchWithCorsWorkaround(scriptUrl, (err, data) => {
+                if (err) {
+                    setError(err.message);
+                    setLoading(false);
+                    return;
+                }
+                if (data.error) {
+                    setError(`Script error: ${data.error}`);
+                    setLoading(false);
+                    return;
+                }
+                setReportText(data.dashboard?.aiReport);
+                setLoading(false);
+            });
+        }, []);
+
+        if (loading) {
+            return <Card className="col-span-12 relative flex items-center justify-center"><p className="text-gray-500">Loading AI Report...</p></Card>;
+        }
+        if (error) {
+            return <Card className="col-span-12 relative flex items-center justify-center"><p className="text-red-500">AI Report Error: {error}</p></Card>;
+        }
+        if (!reportText) {
+            return <Card className="col-span-12 relative flex items-center justify-center"><p className="text-gray-500">No AI report available.</p></Card>;
+        }
+
         return (
             <Card className="col-span-12 relative">
                  <div className="flex items-center space-x-2 mb-1">
@@ -291,24 +479,26 @@ const Dashboard = ({ setActiveTab }) => {
         useEffect(() => {
             const scriptUrl = `https://script.google.com/macros/s/AKfycbys_HQL8HQdyL_-DoS0Aakvj-IzDWWW5HtNJDiFhbUwgCuKEYJ7N6iZGC-F62I7uZlV/exec?location=${selectedLocation}`;
             setLoading(true);
-            fetch(scriptUrl, {
-                method: 'POST',
-                mode: 'cors',
-                redirect: 'follow',
-                body: ''
-            }).then(res => res.json()).then(data => {
-                if (data.error) throw new Error(data.error);
+            
+            fetchWithCorsWorkaround(scriptUrl, (err, data) => {
+                if (err) {
+                    setError(err.message);
+                    setLoading(false);
+                    return;
+                }
+                if (data.error) {
+                    setError(data.error);
+                    setLoading(false);
+                    return;
+                }
                 setServiceData(dataSet === 'topServices' ? data.topServices : data.newServices);
-                setLoading(false);
-            }).catch(err => {
-                setError(err.message);
                 setLoading(false);
             });
         }, [selectedLocation, dataSet]);
 
-        if (loading) return <Card className="col-span-12 md:col-span-6"><p>Loading Service Data...</p></Card>;
-        if (error) return <Card className="col-span-12 md:col-span-6"><p className="text-red-500">Error: {error}</p></Card>;
-        if (!serviceData || serviceData.length === 0) return <Card className="col-span-12 md:col-span-6"><p>No service data found for {selectedLocation}.</p></Card>;
+        if (loading) return <Card className="col-span-12 md:col-span-6 flex items-center justify-center"><p className="text-gray-500">Loading Service Data...</p></Card>;
+        if (error) return <Card className="col-span-12 md:col-span-6 flex items-center justify-center"><p className="text-red-500">Service Error: {error}</p></Card>;
+        if (!serviceData || serviceData.length === 0) return <Card className="col-span-12 md:col-span-6 flex items-center justify-center"><p className="text-gray-500">No service data found for {selectedLocation}.</p></Card>;
         
         return (
             <Card className="col-span-12 md:col-span-6">
@@ -387,60 +577,13 @@ const Dashboard = ({ setActiveTab }) => {
         );
     };
     
-    const [appData, setAppData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const workbookId = params.get('workbookId');
-        if (!workbookId) {
-            setError("No workbook ID provided in the URL. Please add '?workbookId=YOUR_ID' to the end of the URL.");
-            setLoading(false);
-            return;
-        }
-
-        const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
-        
-        fetch(scriptUrl, {
-            method: 'POST',
-            mode: 'cors',
-            redirect: 'follow',
-            body: ''
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                throw new Error(`Script error: ${data.error}`);
-            }
-            setAppData(data);
-            setLoading(false);
-        })
-        .catch(err => {
-            console.error("Fetch Error:", err);
-            setError(err.message);
-            setLoading(false);
-        });
-    }, []);
-
-    if (loading) {
-        return <PageContent><div className="p-8 text-center text-gray-500">Loading live data from your workbook...</div></PageContent>;
-    }
-    if (error) {
-        return <PageContent><div className="p-8 text-center text-red-500">Error: {error}</div></PageContent>;
-    }
-    if (!appData) {
-         return <PageContent><div className="p-8 text-center text-gray-500">No data found.</div></PageContent>;
-    }
-    
-    const { dashboard } = appData;
     return (
         <PageContent>
             <div className="grid grid-cols-12 gap-6">
-                <GeogridSection setActiveTab={setActiveTab} geogridForDashboard={dashboard.geogridForDashboard}/>
-                <CensusInfo censusData={dashboard.censusData}/>
-                <OverviewTable overviewData={dashboard.overviewData}/>
-                <AIReport reportText={dashboard.aiReport} />
+                <GeogridSection setActiveTab={setActiveTab} />
+                <CensusInfo />
+                <OverviewTable />
+                <AIReport />
                 <ServiceList title="Services by Search Volume" dataSet="topServices" tooltipText="Lists the most popular, established MedSpa services based on monthly search volume in the selected geographic area." />
                 <ServiceList title="New Services by Search Volume" dataSet="newServices" tooltipText="Highlights emerging or newer services with growing search interest, indicating potential new market opportunities." />
             </div>
