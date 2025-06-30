@@ -40,6 +40,34 @@
 /* ------------------------------------------------------------------ */
 const {useState,useEffect} = React;
 
+// --- Helper function to fetch data with CORS workaround ---
+const fetchWithCorsWorkaround = (url, callback) => {
+    // Try regular fetch first
+    fetch(url, {
+        method: 'GET',
+        mode: 'cors'
+    })
+    .then(response => response.json())
+    .then(data => callback(null, data))
+    .catch(err => {
+        console.log('Regular fetch failed, trying JSONP approach...');
+        // Fallback to JSONP-style request
+        const script = document.createElement('script');
+        const callbackName = 'jsonpCallback_' + Math.random().toString(36).substr(2, 9);
+        window[callbackName] = (data) => {
+            callback(null, data);
+            document.head.removeChild(script);
+            delete window[callbackName];
+        };
+        script.src = `${url}&callback=${callbackName}`;
+        script.onerror = () => {
+            callback(new Error('Failed to load data'), null);
+            document.head.removeChild(script);
+            delete window[callbackName];
+        };
+        document.head.appendChild(script);
+    });
+};
 
 /* ------------------------------------------------------------------ */
 /* helpers  – icon factory  +  shared icons                           */
@@ -130,6 +158,16 @@ const Card        = ({children,className=''}) => (
 const PageContent = ({children}) => (
   <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>);
 
+// --- Reusable Components ---
+const InfoTooltip = ({ text }) => (
+    <div className="relative flex items-center group">
+        <Info className="w-4 h-4 text-gray-400" />
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none">
+            {text}
+            <svg className="absolute text-gray-800 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255"><polygon className="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
+        </div>
+    </div>
+);
 
 /* ------------------------------------------------------------------ */
 /* PLACEHOLDER PAGES – replace each later with real JSX               */
@@ -149,16 +187,7 @@ const Dashboard = ({ setActiveTab }) => {
     const ChevronUp = createIcon(<polyline points="18 15 12 9 6 15" />);
 
     // --- Reusable Components for this page ---
-    const InfoTooltip = ({ text }) => (
-        <div className="relative flex items-center group">
-            <Info className="w-4 h-4 text-gray-400" />
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none">
-                {text}
-                <svg className="absolute text-gray-800 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255"><polygon className="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
-            </div>
-        </div>
-    );
-     const AdIndicator = ({ hasAd, link }) => {
+    const AdIndicator = ({ hasAd, link }) => {
         if (hasAd) {
             return (
                 <a href={link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full hover:bg-green-200 transition-colors">
@@ -167,35 +196,6 @@ const Dashboard = ({ setActiveTab }) => {
             );
         }
         return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">None</span>;
-    };
-
-    // --- Helper function to fetch data with CORS workaround ---
-    const fetchWithCorsWorkaround = (url, callback) => {
-        // Try regular fetch first
-        fetch(url, {
-            method: 'GET',
-            mode: 'cors'
-        })
-        .then(response => response.json())
-        .then(data => callback(null, data))
-        .catch(err => {
-            console.log('Regular fetch failed, trying JSONP approach...');
-            // Fallback to JSONP-style request
-            const script = document.createElement('script');
-            const callbackName = 'jsonpCallback_' + Math.random().toString(36).substr(2, 9);
-            window[callbackName] = (data) => {
-                callback(null, data);
-                document.head.removeChild(script);
-                delete window[callbackName];
-            };
-            script.src = `${url}&callback=${callbackName}`;
-            script.onerror = () => {
-                callback(new Error('Failed to load data'), null);
-                document.head.removeChild(script);
-                delete window[callbackName];
-            };
-            document.head.appendChild(script);
-        });
     };
 
     // --- Sub-components for Dashboard ---
@@ -789,7 +789,288 @@ const Keywords = ({ summary, table }) => {
   );
 };
 
-const Backlinks     = () => <PageContent><h2 className="text-center text-gray-500">Backlinks – TODO</h2></PageContent>;
+const Backlinks = () => {
+    // Destructure chart components here, as they are only used in this component.
+    const { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } = window.Recharts;
+
+    // --- Additional Icon Components for this page ---
+    const PlusCircle = createIcon(
+      <>
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="16" />
+        <line x1="8" y1="12" x2="16" y2="12" />
+      </>
+    );
+    const MinusCircle = createIcon(
+      <>
+        <circle cx="12" cy="12" r="10" />
+        <line x1="8" y1="12" x2="16" y2="12" />
+      </>
+    );
+    const Search = createIcon(
+      <>
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </>
+    );
+
+    // --- Component State and Data ---
+    const [backlinksData, setBacklinksData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [activeTableTab, setActiveTableTab] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const workbookId = params.get('workbookId');
+        if (!workbookId) {
+            setError("No workbook ID provided");
+            setLoading(false);
+            return;
+        }
+
+        // Check cache first
+        const cacheKey = `backlinks_${workbookId}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+        if (cachedData) {
+            try {
+                const parsed = JSON.parse(cachedData);
+                setBacklinksData(parsed);
+                setActiveTableTab(Object.keys(parsed.backlinksTable)[0] || '');
+                setLoading(false);
+                return;
+            } catch (e) {
+                // Invalid cache, continue with fresh fetch
+            }
+        }
+
+        const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
+        
+        fetchWithCorsWorkaround(scriptUrl, (err, data) => {
+            if (err) {
+                setError(err.message);
+                setLoading(false);
+                return;
+            }
+            if (data.error) {
+                setError(`Script error: ${data.error}`);
+                setLoading(false);
+                return;
+            }
+            
+            const backlinks = {
+                backlinksSummary: data.backlinksSummary,
+                backlinksTable: data.backlinksTable
+            };
+            
+            if (backlinks.backlinksSummary && backlinks.backlinksTable) {
+                sessionStorage.setItem(cacheKey, JSON.stringify(backlinks));
+                setActiveTableTab(Object.keys(backlinks.backlinksTable)[0] || '');
+            }
+            setBacklinksData(backlinks);
+            setLoading(false);
+        });
+    }, []);
+
+    if (loading) {
+        return <PageContent><div className="p-8 text-center text-gray-500">Loading backlinks data...</div></PageContent>;
+    }
+    if (error) {
+        return <PageContent><div className="p-8 text-center text-red-500">Backlinks Error: {error}</div></PageContent>;
+    }
+    if (!backlinksData || !backlinksData.backlinksSummary || !backlinksData.backlinksTable) {
+        return <PageContent><div className="p-8 text-center text-gray-500">No backlinks data available.</div></PageContent>;
+    }
+
+    const { backlinksSummary, backlinksTable } = backlinksData;
+    const competitors = Object.keys(backlinksTable);
+    const followData = [
+        { name: 'Dofollow', value: backlinksSummary.totalDofollow, color: '#3b82f6' },
+        { name: 'Nofollow', value: backlinksSummary.totalNofollow, color: '#9ca3af' },
+    ];
+    const filteredBacklinks = (backlinksTable[activeTableTab] || []).filter(row =>
+        row.backlinkUrl.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        row.title.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return (
+        <PageContent>
+            <h1 className="text-3xl font-bold text-gray-800 mb-6">Backlinks Analysis</h1>
+
+            <Card className="mb-6">
+                <div className="flex items-center space-x-2 mb-4">
+                    <h2 className="text-xl font-bold text-gray-800">Your Backlinks Summary</h2>
+                    <InfoTooltip text="An overview of your website's backlink profile, showing link types, quality metrics, and recent changes." />
+                </div>
+                
+                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="p-4 bg-slate-50 rounded-lg">
+                        <p className="text-sm text-gray-500">Total Backlinks</p>
+                        <p className="text-4xl font-bold text-gray-800">{backlinksSummary.totalBacklinks.toLocaleString()}</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                            <span className={backlinksSummary.backlinksChange >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                {backlinksSummary.backlinksChange >= 0 ? '+' : ''}{backlinksSummary.backlinksChange}
+                            </span> last month
+                        </p>
+                    </div>
+                     <div className="p-4 bg-slate-50 rounded-lg">
+                        <p className="text-sm text-gray-500">Referring Domains</p>
+                        <p className="text-4xl font-bold text-gray-800">{backlinksSummary.topReferringDomains}</p>
+                    </div>
+                     <div className="p-4 bg-slate-50 rounded-lg">
+                        <p className="text-sm text-gray-500">Avg. Spam Score</p>
+                        <p className="text-4xl font-bold text-gray-800">{backlinksSummary.avgSpamScore}%</p>
+                          <p className="text-sm text-gray-500 mt-1">
+                            <span className={backlinksSummary.spamScoreChange > 0 ? 'text-red-600' : 'text-green-600'}>
+                                {backlinksSummary.spamScoreChange > 0 ? '+' : ''}{backlinksSummary.spamScoreChange.toFixed(1)}%
+                            </span> last month
+                        </p>
+                    </div>
+                    <div className="p-4 bg-slate-50 rounded-lg">
+                        <p className="text-sm text-gray-500">Avg. Reffer Rank</p>
+                        <p className="text-4xl font-bold text-gray-800">{backlinksSummary.avgRefferRank}</p>
+                     </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                     <div className="p-4 bg-slate-50 rounded-lg flex items-center justify-center space-x-3">
+                        <PlusCircle className="w-8 h-8 text-green-500 flex-shrink-0" />
+                        <div>
+                            <p className="text-sm text-gray-500">New Links</p>
+                            <p className="text-2xl font-bold text-green-600">{backlinksSummary.newLinks}</p>
+                            <p className="text-xs text-gray-500">This Run</p>
+                        </div>
+                     </div>
+                      <div className="p-4 bg-slate-50 rounded-lg flex items-center justify-center space-x-3">
+                        <MinusCircle className="w-8 h-8 text-red-500 flex-shrink-0" />
+                        <div>
+                            <p className="text-sm text-gray-500">Lost Links</p>
+                            <p className="text-2xl font-bold text-red-600">{backlinksSummary.lostLinks}</p>
+                             <p className="text-xs text-gray-500">This Run</p>
+                        </div>
+                     </div>
+                     <div className="p-4 bg-slate-50 rounded-lg flex flex-col items-center justify-center">
+                         <div style={{ width: '100%', height: 80 }}>
+                            <ResponsiveContainer>
+                                <PieChart>
+                                    <Tooltip contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.8)', borderColor: 'rgba(255,255,255,0.2)', borderRadius: '0.5rem' }} itemStyle={{ color: '#fff' }} />
+                                    <Pie data={followData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={25} outerRadius={40} paddingAngle={2}>
+                                        {followData.map((entry) => <Cell key={entry.name} fill={entry.color} />)}
+                                    </Pie>
+                                </PieChart>
+                            </ResponsiveContainer>
+                        </div>
+                         <div className="flex justify-center flex-wrap gap-x-4 gap-y-1 mt-2">
+                            {followData.map(entry => (
+                                <div key={entry.name} className="flex items-center text-xs">
+                                    <span className="w-2.5 h-2.5 rounded-full mr-1.5" style={{ backgroundColor: entry.color }}></span>
+                                    <span>{entry.name}: <strong>{entry.value}</strong></span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </Card>
+
+             <Card>
+                <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center space-x-2">
+                        <h2 className="text-xl font-bold text-gray-800">Backlinks</h2>
+                        <InfoTooltip text="Explore the backlinks your competitors have acquired. Use the tabs to switch between different sites." />
+                    </div>
+                     <button
+                        onClick={() => alert('Webhook for Backlinks refresh triggered!')}
+                        className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-1 px-3 rounded-lg text-xs transition-colors duration-300"
+                    >
+                        Refresh
+                    </button>
+                </div>
+
+                <div className="mb-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Search by URL or Title..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                </div>
+
+                <div className="border-b border-gray-200">
+                    <nav className="-mb-px flex space-x-6 overflow-x-auto">
+                        {competitors.map(name => (
+                            <button
+                                key={name}
+                                onClick={() => {
+                                    setActiveTableTab(name);
+                                    setSearchTerm('');
+                                }}
+                                className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm ${
+                                    activeTableTab === name
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                }`}
+                            >
+                                {name}
+                            </button>
+                        ))}
+                    </nav>
+                </div>
+
+                <div className="mt-4 overflow-x-auto">
+                    <table className="w-full text-left text-sm whitespace-nowrap">
+                        <thead>
+                            <tr className="border-b-2 border-gray-200 bg-gray-50">
+                                <th className="py-2 px-3">Backlink URL</th>
+                                <th className="py-2 px-3 text-center">Status</th>
+                                <th className="py-2 px-3 text-center">Spam Score</th>
+                                <th className="py-2 px-3 text-center">Rank</th>
+                                <th className="py-2 px-3 text-center">Type</th>
+                                <th className="py-2 px-3">Title</th>
+                                <th className="py-2 px-3 text-center">Link</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredBacklinks.map((row, index) => (
+                                <tr key={index} className="border-b border-gray-100 hover:bg-slate-50">
+                                    <td className="py-3 px-3 font-medium text-blue-600 hover:underline">
+                                        <a href={`http://${row.backlinkUrl}`} target="_blank" rel="noopener noreferrer">{row.backlinkUrl}</a>
+                                    </td>
+                                    <td className="py-3 px-3 text-center">
+                                        {row.isNew ? <span className="text-xs font-semibold px-2 py-1 bg-green-100 text-green-800 rounded-full">New</span> :
+                                         row.isLost ? <span className="text-xs font-semibold px-2 py-1 bg-red-100 text-red-800 rounded-full">Lost</span> :
+                                         <span className="text-gray-400">-</span>
+                                        }
+                                    </td>
+                                    <td className="py-3 px-3 text-center">{row.spamScore}%</td>
+                                    <td className="py-3 px-3 text-center">{row.rank}</td>
+                                    <td className="py-3 px-3 text-center">
+                                         <span className={`text-xs font-semibold px-2 py-1 rounded-full ${row.following ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
+                                            {row.following ? 'Dofollow' : 'Nofollow'}
+                                         </span>
+                                    </td>
+                                    <td className="py-3 px-3 text-gray-600">{row.title}</td>
+                                    <td className="py-3 px-3 text-center">
+                                         <a href={row.linkUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 inline-block">
+                                            <ExternalLink className="w-4 h-4" />
+                                         </a>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                     {filteredBacklinks.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">No matching backlinks found for "{searchTerm}".</div>
+                    )}
+                </div>
+            </Card>
+        </PageContent>
+    );
+};
+
 const ToolsPage     = () => <PageContent><h2 className="text-center text-gray-500">Tools – coming soon</h2></PageContent>;
 const GeogridMaps = ({data}) =>
   <PageContent>
@@ -1128,12 +1409,7 @@ const App = () => {
         );
         break;
       case 'Backlinks':
-        body = (
-          <Backlinks
-            data={data.backlinksSummary}
-            table={data.backlinksTable}
-          />
-        );
+        body = <Backlinks />;
         break;
       default:
         body = <ToolsPage />;
