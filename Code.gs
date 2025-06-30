@@ -331,27 +331,70 @@ function getBacklinkTableData(sheet) {
 }
 
 function getGeogridData(spreadsheet) {
-    const sheetName = 'Geogrid Maps';
-    const sheet = spreadsheet.getSheetByName(sheetName);
-    if (!sheet || sheet.getLastRow() < 2) return {};
-    const values = sheet.getDataRange().getValues().slice(1);
-    const groupedByKeyword = {};
-    values.forEach(row => {
-        const keyword = row[7];
-        if (!keyword) return;
-        if (!groupedByKeyword[keyword]) groupedByKeyword[keyword] = [];
-        const runDate = new Date(row[0]);
-        const formattedDate = runDate.toLocaleString('default', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-        const competitors = [];
-        for (let i = 1; i <= 5; i++) {
-            const name = row[9 + (i-1)*3 + 1];
-            const rank = row[9 + (i-1)*3 + 3];
-            if (name && rank) competitors.push({ name: name, rank: parseFloat(rank) });
-        }
-        groupedByKeyword[keyword].push({ date: formattedDate, mapLink: row[9], competitors: competitors });
-    });
-    for (const keyword in groupedByKeyword) {
-        groupedByKeyword[keyword].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const geogridSheet = spreadsheet.getSheetByName('GeoGrid Maps');
+    if (!geogridSheet) return {};
+
+    const data = geogridSheet.getDataRange().getValues();
+    const headers = data[0];
+    const rows = data.slice(1);
+
+    // Get column indices
+    const dateIndex = headers.indexOf('Run Date');
+    const keywordIndex = headers.indexOf('Keyword');
+    const mapLinkIndex = headers.indexOf('Map Link');
+
+    // Get position column indices
+    const positionIndices = [];
+    for (let i = 1; i <= 5; i++) {
+        positionIndices.push({
+            name: headers.indexOf(`Position ${i} Name`),
+            domain: headers.indexOf(`Position ${i} Domain`),
+            rank: headers.indexOf(`Position ${i} Average Rank`)
+        });
     }
-    return groupedByKeyword;
+
+    // Group data by keyword
+    const keywordGroups = {};
+    rows.forEach(row => {
+        if (!row[keywordIndex]) return; // Skip if no keyword
+
+        const keyword = row[keywordIndex];
+        if (!keywordGroups[keyword]) {
+            keywordGroups[keyword] = [];
+        }
+
+        // Format competitors data
+        const competitors = positionIndices.map(pos => ({
+            name: row[pos.name] || '',
+            domain: row[pos.domain] || '',
+            rank: parseFloat(row[pos.rank]) || 0
+        })).filter(comp => comp.name || comp.domain); // Only include competitors with data
+
+        keywordGroups[keyword].push({
+            date: formatDate(row[dateIndex]),
+            mapLink: row[mapLinkIndex] || '',
+            competitors: competitors
+        });
+    });
+
+    // Sort each keyword's data by date
+    Object.keys(keywordGroups).forEach(keyword => {
+        keywordGroups[keyword].sort((a, b) => new Date(b.date) - new Date(a.date));
+    });
+
+    return keywordGroups;
+}
+
+function formatDate(date) {
+    if (!date) return '';
+    try {
+        const d = new Date(date);
+        return d.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+        });
+    } catch (e) {
+        return String(date);
+    }
 } 
