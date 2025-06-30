@@ -342,6 +342,7 @@ function getGeogridData(spreadsheet) {
     const dateIndex = headers.indexOf('Run Date');
     const keywordIndex = headers.indexOf('Keyword');
     const mapLinkIndex = headers.indexOf('Map Link');
+    const mapTypeIndex = headers.indexOf('Map Type');
 
     // Get position column indices
     const positionIndices = [];
@@ -358,7 +359,7 @@ function getGeogridData(spreadsheet) {
     rows.forEach(row => {
         if (!row[keywordIndex]) return; // Skip if no keyword
 
-        const keyword = row[keywordIndex];
+        const keyword = String(row[keywordIndex]).toLowerCase().trim();
         if (!keywordGroups[keyword]) {
             keywordGroups[keyword] = [];
         }
@@ -370,11 +371,15 @@ function getGeogridData(spreadsheet) {
             rank: parseFloat(row[pos.rank]) || 0
         })).filter(comp => comp.name || comp.domain); // Only include competitors with data
 
-        keywordGroups[keyword].push({
-            date: formatDate(row[dateIndex]),
-            mapLink: row[mapLinkIndex] || '',
-            competitors: competitors
-        });
+        // Only include rows that have either a map link or competitor data
+        if (row[mapLinkIndex] || competitors.length > 0) {
+            keywordGroups[keyword].push({
+                date: formatDate(row[dateIndex]),
+                mapLink: row[mapLinkIndex] || '',
+                mapType: row[mapTypeIndex] || '',
+                competitors: competitors
+            });
+        }
     });
 
     // Sort each keyword's data by date

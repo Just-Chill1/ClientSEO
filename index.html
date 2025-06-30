@@ -1281,11 +1281,17 @@ const GeogridMaps = () => {
                 return;
             }
             
+            // Get geogrid data from the correct path
             const geogrid = data.geogridData;
             if (geogrid) {
-                sessionStorage.setItem(cacheKey, JSON.stringify(geogrid));
+                // Convert all keywords to lowercase for consistent matching
+                const normalizedData = {};
+                Object.entries(geogrid).forEach(([key, value]) => {
+                    normalizedData[key.toLowerCase().trim()] = value;
+                });
+                sessionStorage.setItem(cacheKey, JSON.stringify(normalizedData));
+                setGeogridData(normalizedData);
             }
-            setGeogridData(geogrid);
             setLoading(false);
         });
     }, []);
@@ -1486,7 +1492,7 @@ const GeogridMaps = () => {
                     <GeogridMapCard 
                         key={keyword} 
                         keyword={keyword} 
-                        monthlyData={geogridData[keyword] || []} 
+                        monthlyData={geogridData[keyword.toLowerCase().trim()] || []} 
                     />
                 ))}
             </div>
