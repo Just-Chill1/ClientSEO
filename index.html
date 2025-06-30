@@ -299,22 +299,26 @@ const Dashboard = ({ setActiveTab }) => {
                             </a>
                         </div>
                         
-                        {/* Competitor Rankings Chart */}
-                        <div className="w-[80%] mx-auto h-[300px]">
+                        {/* Competitor Rankings */}
+                        <div className="w-[80%] mx-auto">
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">Competitor Rankings</h3>
-                            <ResponsiveContainer width="100%" height="100%">
-                                <BarChart data={geogridData.competitors}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="name" />
-                                    <YAxis />
-                                    <Tooltip />
-                                    <Bar dataKey="rank" fill="#3b82f6">
-                                        {geogridData.competitors.map((entry, index) => (
-                                            <Cell key={index} fill={index === 0 ? '#3b82f6' : '#93c5fd'} />
-                                        ))}
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
+                            <div className="grid grid-cols-2 gap-4">
+                                {geogridData.competitors.map((comp, index) => (
+                                    <div key={index} className="flex items-center space-x-3">
+                                        <div className={`
+                                            w-10 h-10 rounded-full flex items-center justify-center text-black font-semibold
+                                            ${comp.rank <= 1 ? 'bg-emerald-500' : 
+                                              comp.rank <= 2 ? 'bg-emerald-400' :
+                                              comp.rank <= 4 ? 'bg-emerald-300' :
+                                              comp.rank <= 6 ? 'bg-emerald-200' :
+                                              'bg-yellow-200'}
+                                        `} style={{ textShadow: '0 0 3px rgba(255,255,255,0.5)' }}>
+                                            {comp.rank.toFixed(1)}
+                                        </div>
+                                        <span className="text-gray-700">{comp.name}</span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
             </Card>
@@ -507,13 +511,21 @@ const Dashboard = ({ setActiveTab }) => {
                             <tr key={c.id} className={`border-b border-gray-100 ${c.isClient ? 'bg-blue-50' : ''}`}>
                                 <td className="py-3 px-3">
                                     <div>
-                                        <div className="font-semibold text-gray-800">
-                                            {c.name.split(' (')[0]}
+                                        <div className="flex items-baseline gap-2">
+                                            <span className="font-semibold text-gray-800">{c.clinicName}</span>
+                                            <span className="text-sm text-gray-600">
+                                                {c.reviewScore} <span className="text-yellow-400">★</span> ({c.reviewCount} reviews)
+                                            </span>
                                         </div>
-                                        <div className="text-sm text-gray-600">
-                                            {c.score} <span className="text-yellow-400">★</span> ({c.reviews} reviews)
+                                        <div className="text-xs text-gray-500">
+                                            {[c.address, c.borough, c.city].filter(Boolean).join(', ')}
                                         </div>
-                                        <div className="text-xs text-gray-500">{c.name.split(' (')[1]?.replace(')', '')}</div>
+                                        {c.website && (
+                                            <a href={c.website} target="_blank" rel="noopener noreferrer" 
+                                               className="text-xs text-blue-600 hover:text-blue-800 hover:underline">
+                                                {c.website.replace(/^https?:\/\//i, '')}
+                                            </a>
+                                        )}
                                     </div>
                                 </td>
                                 <td className="py-3 px-3 text-center font-medium">{c.speed}</td>
