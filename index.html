@@ -1304,8 +1304,7 @@ const WebsiteStats = ({ data }) => {
                 const updatePosition = () => {
                     const rect = cardRef.current.getBoundingClientRect();
                     const spaceAbove = rect.top;
-                    const spaceBelow = window.innerHeight - rect.bottom;
-                    setTooltipPosition(spaceAbove > 300 ? 'top' : 'bottom');
+                    setTooltipPosition(spaceAbove > 250 ? 'top' : 'bottom');
                 };
                 
                 updatePosition();
@@ -1332,16 +1331,61 @@ const WebsiteStats = ({ data }) => {
         if (tooltip) {
             return (
                 <div ref={cardRef} className="relative group cursor-help">
+                    {/* Extended hover area */}
+                    <div className={`absolute w-full h-full ${tooltipPosition === 'top' ? 'top-[-20px]' : 'bottom-[-20px]'}`} />
                     {content}
                     <div className={`
-                        absolute left-0 w-[500px] p-4 bg-gray-800 text-white text-sm rounded-lg shadow-lg 
+                        absolute left-0 w-[400px] bg-gray-800 text-white text-sm rounded-lg shadow-lg 
                         opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50 pointer-events-none
                         ${tooltipPosition === 'top' 
                             ? 'bottom-full mb-2' 
                             : 'top-full mt-2'
                         }
                     `}>
-                        {tooltip}
+                        {/* Tooltip Header */}
+                        <div className="px-4 py-2 bg-gray-700 rounded-t-lg font-semibold border-b border-gray-600">
+                            Health Check Results
+                        </div>
+                        
+                        {/* Tooltip Content - Grid Layout */}
+                        <div className="p-4 grid grid-cols-2 gap-4">
+                            {Object.entries(checkCategories).map(([category, categoryData]) => {
+                                // Get checks for this category
+                                const categoryChecks = Object.entries(categoryData.checks)
+                                    .filter(([checkName]) => 
+                                        healthData.checks.passedList.includes(checkName) ||
+                                        healthData.checks.failedList.includes(checkName)
+                                    );
+                                
+                                if (categoryChecks.length === 0) return null;
+
+                                return (
+                                    <div key={category} className="space-y-2">
+                                        <h4 className="font-semibold flex items-center text-gray-300">
+                                            <span className="mr-2">{categoryData.icon}</span>
+                                            {categoryData.title}
+                                        </h4>
+                                        <ul className="space-y-1.5">
+                                            {categoryChecks.map(([checkName, description]) => {
+                                                const isPassed = healthData.checks.passedList.includes(checkName);
+                                                return (
+                                                    <li key={checkName} className="flex items-start text-xs">
+                                                        <span className="mr-2 flex-shrink-0">
+                                                            {isPassed ? '✅' : '❌'}
+                                                        </span>
+                                                        <span className={isPassed ? 'text-green-300' : 'text-red-300'}>
+                                                            {description}
+                                                        </span>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Tooltip Arrow */}
                         <div className={`
                             absolute left-4 w-3 h-3 bg-gray-800 transform rotate-45
                             ${tooltipPosition === 'top'
