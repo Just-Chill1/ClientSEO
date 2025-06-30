@@ -134,8 +134,7 @@ const PageContent = ({children}) => (
 /* ------------------------------------------------------------------ */
 /* PLACEHOLDER PAGES – replace each later with real JSX               */
 /* ------------------------------------------------------------------ */
-const Dashboard = ({ data, setActiveTab }) => {
-    // Destructure chart components here, as they are only used in this component.
+const Dashboard = ({ setActiveTab }) => {
     const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, PieChart, Pie, Legend } = window.Recharts;
     
     // --- Additional Icon Components for this page ---
@@ -172,42 +171,31 @@ const Dashboard = ({ data, setActiveTab }) => {
 
 
     // --- Sub-components for Dashboard ---
-    const GeogridSection = ({ setActiveTab }) => {
-        const geogridData = { 'June 2025': { imageUrl: 'https://placehold.co/800x400/A7D7C5/333333?text=Geogrid+Map+-+June+2025' }, 'May 2025': { imageUrl: 'https://placehold.co/800x400/C5A7D7/333333?text=Geogrid+Map+-+May+2025' }, 'April 2025': { imageUrl: 'https://placehold.co/800x400/D7C5A7/333333?text=Geogrid+Map+-+April+2025' }, };
-        const availableMonths = Object.keys(geogridData);
-        const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
-
-        const handleDateChange = (direction) => {
-            const newIndex = currentMonthIndex + direction;
-            if (newIndex >= 0 && newIndex < availableMonths.length) {
-                setCurrentMonthIndex(newIndex);
-            }
-        };
+    const GeogridSection = ({ setActiveTab, geogridForDashboard }) => {
+        if (!geogridForDashboard) {
+            return <Card className="col-span-12 lg:col-span-8 flex items-center justify-center"><p className="text-gray-500">No Geogrid data to display for 'medspa near me'.</p></Card>;
+        }
         
-        const currentMonth = availableMonths[currentMonthIndex];
-        const data = geogridData[currentMonth];
-
         return (
             <Card className="col-span-12 lg:col-span-8">
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center space-x-2">
-                        <h2 className="text-xl font-bold text-gray-800">Geogrid Map</h2>
-                        <InfoTooltip text="Visualizes your clinic's ranking on Google Maps for a specific search term across a geographic area. Each point on the grid represents a search from that location." />
+                        <h2 className="text-xl font-bold text-gray-800">Geogrid Map: Medspa Near Me</h2>
+                        <InfoTooltip text="A snapshot of your latest Geogrid map for the keyword 'medspa near me'." />
                         <button onClick={() => setActiveTab('Geogrid Maps')} className="text-xs font-normal text-blue-600 hover:text-blue-800">(See More)</button>
                     </div>
-                    <div className="flex items-center space-x-4">
-                        <button onClick={() => handleDateChange(1)} disabled={currentMonthIndex >= availableMonths.length - 1} className="p-1 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">&lt;</button>
-                        <span className="font-semibold text-gray-700">{currentMonth}</span>
-                        <button onClick={() => handleDateChange(-1)} disabled={currentMonthIndex <= 0} className="p-1 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">&gt;</button>
-                    </div>
+                     <span className="font-semibold text-gray-700">{geogridForDashboard.date}</span>
                 </div>
-                <img src={data.imageUrl} alt="Geogrid Map" className="w-full rounded-lg mb-4 border border-gray-200" />
+                <a href={geogridForDashboard.mapLink} target="_blank" rel="noopener noreferrer">
+                    <img src={geogridForDashboard.mapLink} alt={`Geogrid Map for Medspa Near Me`} className="w-full rounded-lg mb-4 border border-gray-200" 
+                        onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/800x400/EFEFEF/333333?text=Map+Not+Available'; }}
+                    />
+                </a>
             </Card>
         );
     };
 
-    const CensusInfo = () => {
-        const censusData = { 'Location': 'Polk County, Florida', 'Population': '736,229', 'MedSpas (10 Miles)': '~30', 'Median Income': '$60,901', 'Gender': [ { label: 'Male', value: '49.3%' }, { label: 'Female', value: '50.7%' } ], 'Age Ranges': [ { label: '0-17', value: '18%' }, { label: '18-34', value: '19.4%' }, { label: '35-54', value: '24.2%' }, { label: '55-74', value: '23.2%' }, { label: '75+', value: '8.8%' } ], 'Ethnicity': [ { label: 'White', value: '54.4%' }, { label: 'Black', value: '14.4%' }, { label: 'Hispanic', value: '26.2%' }, { label: 'Asian', value: '1.7%' } ], 'Languages': [ { label: 'English Only', value: '74.9%' }, { label: 'Spanish', value: '20.8%' } ], };
+    const CensusInfo = ({censusData}) => {
         return (
             <Card className="col-span-12 lg:col-span-4 h-full">
                  <div className="flex items-center space-x-2 mb-4">
@@ -216,36 +204,20 @@ const Dashboard = ({ data, setActiveTab }) => {
                  </div>
                 <div>
                     {Object.entries(censusData).map(([key, value]) => {
-                        if (Array.isArray(value)) {
-                            return (
-                                <div key={key} className="flex justify-between items-start text-sm py-3 border-t border-gray-100 first:border-t-0 first:pt-0">
-                                    <span className="font-medium text-gray-600 pt-0.5">{key}</span>
-                                    <div className="text-right">
-                                        {value.map(item => (
-                                            <div key={item.label}>
-                                                <span className="text-gray-600">{item.label}: </span>
-                                                <span className="font-semibold text-gray-800">{item.value}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            );
-                        }
+                        if (!value) return null;
                         return (
-                            <div key={key} className="flex justify-between items-center text-sm py-3 border-t border-gray-100 first:border-t-0 first:pt-0">
+                             <div key={key} className="flex justify-between items-center text-sm py-3 border-t border-gray-100 first:border-t-0 first:pt-0">
                                 <span className="font-medium text-gray-600">{key}</span>
                                 <span className="font-semibold text-gray-800 text-right">{value}</span>
                             </div>
-                        );
+                        )
                     })}
                 </div>
             </Card>
         );
     };
 
-    const OverviewTable = () => {
-        const overviewData = [ { id: 0, name: 'Clique Medspa', score: 5.0, reviews: 139, speed: '1.2s', hours: 'Mon-Fri 9am-6pm, Sat 10am-4pm, Sun Closed', kwPos1: 15, backlinks: 155, gAds: true, gAdLink: '#', fbAds: false, fbAdLink: null, isClient: true }, { id: 1, name: 'Aesthetic Solutions', score: 4.8, reviews: 450, speed: '1.5s', hours: 'Mon-Fri 10am-7pm, Sat 10am-2pm, Sun Closed', kwPos1: 22, backlinks: 120, gAds: true, gAdLink: '#', fbAds: true, fbAdLink: '#', isClient: false }, { id: 2, name: 'Radiant You', score: 4.7, reviews: 250, speed: '2.1s', hours: 'Mon-Thu 9am-5pm, Fri-Sun Closed', kwPos1: 8, backlinks: 85, gAds: false, gAdLink: null, fbAds: true, fbAdLink: '#', isClient: false }, { id: 3, name: 'The Glow Up Clinic', score: 4.9, reviews: 510, speed: '0.9s', hours: 'Mon-Sat 9am-8pm, Sun 11am-5pm', kwPos1: 5, backlinks: 168, gAds: true, gAdLink: '#', fbAds: false, fbAdLink: null, isClient: false }, { id: 4, name: 'Timeless Beauty', score: 4.6, reviews: 180, speed: '1.8s', hours: 'Mon-Fri 10am-8pm, Sat 10am-6pm, Sun Closed', kwPos1: 2, backlinks: 45, gAds: false, gAdLink: null, fbAds: false, fbAdLink: null, isClient: false }, ];
-
+    const OverviewTable = ({overviewData}) => {
         return (
             <Card className="col-span-12 overflow-x-auto">
                 <div className="flex justify-between items-center mb-4">
@@ -272,14 +244,14 @@ const Dashboard = ({ data, setActiveTab }) => {
                             <tr key={c.id} className={`border-b border-gray-100 ${c.isClient ? 'bg-blue-50' : ''}`}>
                                 <td className="py-3 px-3">
                                     <div className="font-semibold text-gray-800">{c.name}</div>
-                                    <div className="text-xs text-gray-600">{c.score.toFixed(1)} ⭐ ({c.reviews} reviews)</div>
+                                    <div className="text-xs text-gray-600">{c.score} ⭐ ({c.reviews} reviews)</div>
                                 </td>
                                 <td className="py-3 px-3 text-center font-medium">{c.speed}</td>
                                 <td className="py-3 px-3 text-center font-medium">{c.kwPos1}</td>
                                 <td className="py-3 px-3 text-center font-medium">{c.backlinks.toLocaleString()}</td>
                                 <td className="py-3 px-3 text-gray-600">{c.hours}</td>
-                                <td className="py-3 px-3 text-center"><AdIndicator hasAd={c.gAds} link={c.gAdLink} /></td>
-                                <td className="py-3 px-3 text-center"><AdIndicator hasAd={c.fbAds} link={c.fbAdLink} /></td>
+                                <td className="py-3 px-3 text-center"><AdIndicator hasAd={c.gAds} /></td>
+                                <td className="py-3 px-3 text-center"><AdIndicator hasAd={c.fbAds} /></td>
                             </tr>
                         ))}
                     </tbody>
@@ -287,13 +259,190 @@ const Dashboard = ({ data, setActiveTab }) => {
             </Card>
         );
     };
+    
+    const AIReport = ({ reportText }) => {
+        const [isExpanded, setIsExpanded] = useState(false);
+        return (
+            <Card className="col-span-12 relative">
+                 <div className="flex items-center space-x-2 mb-1">
+                     <h2 className="text-xl font-bold text-gray-800">AI Report</h2>
+                     <InfoTooltip text="An automated SWOT (Strengths, Weaknesses, Opportunities, Threats) analysis based on the collected data, providing strategic insights and recommendations." />
+                 </div>
+                 <h3 className="text-md font-semibold text-gray-600 mb-3">SWOT Analysis</h3>
+                 <div className={`prose prose-sm max-w-none text-gray-600 overflow-hidden relative transition-all duration-300 ${isExpanded ? 'max-h-96' : 'max-h-24'}`}>
+                    <div dangerouslySetInnerHTML={{ __html: reportText?.replace(/\n/g, '<br />') }} />
+                     {!isExpanded && <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent"></div>}
+                 </div>
+                 <button onClick={() => setIsExpanded(!isExpanded)} className="mt-2 text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center">
+                     {isExpanded ? 'Show Less' : 'Show More'}
+                     {isExpanded ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+                 </button>
+            </Card>
+        );
+    }
 
+    const ServiceList = ({ title, dataSet, tooltipText }) => {
+        const [serviceData, setServiceData] = useState(null);
+        const [loading, setLoading] = useState(true);
+        const [error, setError] = useState(null);
+        const [selectedLocation, setSelectedLocation] = useState('USA');
+        const [expandedService, setExpandedService] = useState(null);
+
+        useEffect(() => {
+            const scriptUrl = `https://script.google.com/macros/s/AKfycbys_HQL8HQdyL_-DoS0Aakvj-IzDWWW5HtNJDiFhbUwgCuKEYJ7N6iZGC-F62I7uZlV/exec?location=${selectedLocation}`;
+            setLoading(true);
+            fetch(scriptUrl, {
+                method: 'POST',
+                mode: 'cors',
+                redirect: 'follow',
+                body: ''
+            }).then(res => res.json()).then(data => {
+                if (data.error) throw new Error(data.error);
+                setServiceData(dataSet === 'topServices' ? data.topServices : data.newServices);
+                setLoading(false);
+            }).catch(err => {
+                setError(err.message);
+                setLoading(false);
+            });
+        }, [selectedLocation, dataSet]);
+
+        if (loading) return <Card className="col-span-12 md:col-span-6"><p>Loading Service Data...</p></Card>;
+        if (error) return <Card className="col-span-12 md:col-span-6"><p className="text-red-500">Error: {error}</p></Card>;
+        if (!serviceData || serviceData.length === 0) return <Card className="col-span-12 md:col-span-6"><p>No service data found for {selectedLocation}.</p></Card>;
+        
+        return (
+            <Card className="col-span-12 md:col-span-6">
+                <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center space-x-2">
+                        <h2 className="text-xl font-bold text-gray-800">{title}</h2>
+                        <InfoTooltip text={tooltipText} />
+                    </div>
+                    <select 
+                        value={selectedLocation} 
+                        onChange={(e) => setSelectedLocation(e.target.value)}
+                        className="text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                    >
+                         <option value="USA">United States</option>
+                         <option value="Canada">Canada</option>
+                         <option value="Florida">Florida</option>
+                         <option value="Lakeland, FL">Lakeland, FL</option>
+                    </select>
+                </div>
+                 <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm whitespace-nowrap">
+                       <thead>
+                          <tr className="border-b-2 border-gray-200">
+                             <th className="py-2 px-3">Service</th>
+                             <th className="py-2 px-3 text-center">% of Search Vol</th>
+                             <th className="py-2 px-3 text-center">Avg. Comp.</th>
+                             <th className="py-2 px-3 text-center">Avg. CPC</th>
+                             <th className="py-2 px-3 text-center">Trend</th>
+                          </tr>
+                       </thead>
+                       <tbody>
+                          {serviceData.map(service => (
+                            <React.Fragment key={service.name}>
+                                <tr className="border-b border-gray-100 hover:bg-slate-50 cursor-pointer" onClick={() => setExpandedService(expandedService === service.name ? null : service.name)}>
+                                   <td className="py-3 px-3 font-medium text-gray-800">{service.name}</td>
+                                   <td className="py-3 px-3 text-center">{service.percentage}</td>
+                                   <td className="py-3 px-3 text-center">{service.avgCompetition}</td>
+                                   <td className="py-3 px-3 text-center">${service.avgCpc}</td>
+                                   <td className="py-3 px-3 text-center">
+                                      {service.trend === 1 && <ArrowUp className="w-4 h-4 text-green-500 mx-auto" />}
+                                      {service.trend === -1 && <ArrowDown className="w-4 h-4 text-red-500 mx-auto" />}
+                                      {service.trend === 0 && <span className="text-gray-400">-</span>}
+                                   </td>
+                                </tr>
+                                {expandedService === service.name && (
+                                    <tr>
+                                        <td colSpan="5" className="p-0">
+                                            <div className="bg-slate-50 p-3">
+                                                <h4 className="font-bold text-xs mb-2">Top Keywords for {service.name}</h4>
+                                                 <table className="w-full text-left text-xs">
+                                                     <thead>
+                                                        <tr className="border-b border-gray-300">
+                                                            <th className="py-1 px-2">Keyword</th>
+                                                            <th className="py-1 px-2 text-center">Volume</th>
+                                                        </tr>
+                                                     </thead>
+                                                     <tbody>
+                                                        {service.keywords.map(kw => (
+                                                            <tr key={kw.name} className="border-b border-gray-200">
+                                                                <td className="py-1 px-2">{kw.name}</td>
+                                                                <td className="py-1 px-2 text-center">{kw.volume.toLocaleString()}</td>
+                                                            </tr>
+                                                        ))}
+                                                     </tbody>
+                                                 </table>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                            </React.Fragment>
+                          ))}
+                       </tbody>
+                    </table>
+                 </div>
+            </Card>
+        );
+    };
+    
+    const [appData, setAppData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const workbookId = params.get('workbookId');
+        if (!workbookId) {
+            setError("No workbook ID provided in the URL. Please add '?workbookId=YOUR_ID' to the end of the URL.");
+            setLoading(false);
+            return;
+        }
+
+        const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
+        
+        fetch(scriptUrl, {
+            method: 'POST',
+            mode: 'cors',
+            redirect: 'follow',
+            body: ''
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                throw new Error(`Script error: ${data.error}`);
+            }
+            setAppData(data);
+            setLoading(false);
+        })
+        .catch(err => {
+            console.error("Fetch Error:", err);
+            setError(err.message);
+            setLoading(false);
+        });
+    }, []);
+
+    if (loading) {
+        return <PageContent><div className="p-8 text-center text-gray-500">Loading live data from your workbook...</div></PageContent>;
+    }
+    if (error) {
+        return <PageContent><div className="p-8 text-center text-red-500">Error: {error}</div></PageContent>;
+    }
+    if (!appData) {
+         return <PageContent><div className="p-8 text-center text-gray-500">No data found.</div></PageContent>;
+    }
+    
+    const { dashboard } = appData;
     return (
         <PageContent>
             <div className="grid grid-cols-12 gap-6">
-                <GeogridSection setActiveTab={setActiveTab} />
-                <CensusInfo />
-                <OverviewTable />
+                <GeogridSection setActiveTab={setActiveTab} geogridForDashboard={dashboard.geogridForDashboard}/>
+                <CensusInfo censusData={dashboard.censusData}/>
+                <OverviewTable overviewData={dashboard.overviewData}/>
+                <AIReport reportText={dashboard.aiReport} />
+                <ServiceList title="Services by Search Volume" dataSet="topServices" tooltipText="Lists the most popular, established MedSpa services based on monthly search volume in the selected geographic area." />
+                <ServiceList title="New Services by Search Volume" dataSet="newServices" tooltipText="Highlights emerging or newer services with growing search interest, indicating potential new market opportunities." />
             </div>
         </PageContent>
     );
@@ -723,7 +872,7 @@ const App = () => {
   } else {
     switch (tab) {
       case 'Dashboard':
-        body = <Dashboard data={data.dashboard} setActiveTab={setTab} />;
+        body = <Dashboard setActiveTab={setTab} />;
         break;
       case 'Website Stats':
         body = <WebsiteStats data={data.websiteStats} />;
