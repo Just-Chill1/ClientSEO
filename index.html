@@ -1146,6 +1146,130 @@ const WebsiteStats = ({ data }) => {
         description: site.description || ''
     }));
 
+    /* ---------- check descriptions and categories ---------- */
+    const checkCategories = {
+        performance: {
+            title: "Performance",
+            icon: "⚡",
+            checks: {
+                high_loading_time: "Page loads quickly",
+                high_waiting_time: "Server responds quickly",
+                has_render_blocking_resources: "No render-blocking resources",
+                size_greater_than_3mb: "Page size is optimized",
+                small_page_size: "Page is lightweight",
+                large_page_size: "Page size is reasonable"
+            }
+        },
+        security: {
+            title: "Security & Technical",
+            icon: "🔒",
+            checks: {
+                is_https: "Uses secure HTTPS connection",
+                is_http: "HTTP connection available",
+                is_www: "WWW configuration correct",
+                has_html_doctype: "Proper HTML structure",
+                no_doctype: "DOCTYPE declaration present",
+                canonical: "Canonical URL defined",
+                flash: "No Flash content (deprecated)",
+                frame: "No frame usage (outdated)",
+                has_favicon: "Favicon present"
+            }
+        },
+        content: {
+            title: "Content Quality",
+            icon: "📝",
+            checks: {
+                low_content_rate: "Sufficient content density",
+                high_content_rate: "Content not overly dense",
+                low_character_count: "Adequate content length",
+                high_character_count: "Content length appropriate",
+                low_readability_rate: "Content is readable",
+                lorem_ipsum: "No placeholder content"
+            }
+        },
+        seo: {
+            title: "SEO Optimization",
+            icon: "🎯",
+            checks: {
+                has_meta_title: "Meta title present",
+                title_too_long: "Title length optimal",
+                title_too_short: "Title length sufficient",
+                no_title: "Title tag implemented",
+                has_micromarkup: "Rich snippets implemented",
+                has_micromarkup_errors: "Rich snippets valid",
+                irrelevant_title: "Title is relevant",
+                irrelevant_description: "Description is relevant",
+                irrelevant_meta_keywords: "Keywords are relevant",
+                no_description: "Meta description present",
+                duplicate_meta_tag: "No duplicate meta tags",
+                duplicate_title_tag: "No duplicate titles",
+                seo_friendly_url: "URLs are SEO-friendly",
+                seo_friendly_url_characters_check: "URL characters valid",
+                seo_friendly_url_dynamic_check: "URLs not dynamic",
+                seo_friendly_url_keywords_check: "URLs contain keywords",
+                seo_friendly_url_relative_length_check: "URL length appropriate"
+            }
+        },
+        accessibility: {
+            title: "Accessibility",
+            icon: "♿",
+            checks: {
+                no_image_alt: "Images have alt text",
+                no_image_title: "Images have titles",
+                deprecated_html_tags: "Modern HTML used",
+                no_h1_tag: "Main heading present"
+            }
+        },
+        encoding: {
+            title: "Technical Standards",
+            icon: "🔧",
+            checks: {
+                no_encoding_meta_tag: "Character encoding defined",
+                meta_charset_consistency: "Character encoding consistent",
+                no_content_encoding: "Content encoding proper"
+            }
+        },
+        errors: {
+            title: "Error Handling",
+            icon: "⚠️",
+            checks: {
+                is_redirect: "No redirect issues",
+                is_4xx_code: "No client errors",
+                is_5xx_code: "No server errors",
+                is_broken: "Page loads properly",
+                https_to_http_links: "All resources secure",
+                has_meta_refresh_redirect: "No meta refreshes"
+            }
+        }
+    };
+
+    // Function to determine if a check result is positive or negative
+    const isPositiveCheck = (checkName, value) => {
+        // Checks where true means good
+        const positiveTrueChecks = [
+            'is_https', 'has_html_doctype', 'canonical', 'has_favicon',
+            'has_meta_title', 'has_micromarkup'
+        ];
+        
+        // Checks where false means good
+        const negativeFalseChecks = [
+            'high_loading_time', 'is_redirect', 'is_4xx_code', 'is_5xx_code',
+            'is_broken', 'no_doctype', 'no_encoding_meta_tag', 'no_h1_tag',
+            'https_to_http_links', 'size_greater_than_3mb', 'has_meta_refresh_redirect',
+            'has_render_blocking_resources', 'low_content_rate', 'high_content_rate',
+            'low_character_count', 'high_character_count', 'low_readability_rate',
+            'irrelevant_description', 'irrelevant_title', 'irrelevant_meta_keywords',
+            'title_too_long', 'title_too_short', 'deprecated_html_tags',
+            'duplicate_meta_tag', 'duplicate_title_tag', 'no_image_alt',
+            'no_image_title', 'no_description', 'no_title', 'flash', 'frame',
+            'lorem_ipsum'
+        ];
+
+        if (positiveTrueChecks.includes(checkName)) return value === true;
+        if (negativeFalseChecks.includes(checkName)) return value === false;
+        return value === true; // Default case
+    };
+
     /* ---------- colour helpers ---------- */
     const gaugeColour =
         healthData.pageScore >= 90 ? '#16a34a'
@@ -1237,12 +1361,41 @@ const WebsiteStats = ({ data }) => {
             value: { text: `${healthData.checks.checksPassed}/${healthData.checks.totalChecks}`, color: passCol },
             icon: <CheckCircle className="w-5 h-5 text-blue-600" />,
             tooltip: (
-                <>
-                    <h4 className="font-semibold mb-2 text-green-600">Passed ({healthData.checks.passedList.length})</h4>
-                    <ul className="list-disc pl-4 space-y-1 mb-3 max-h-48 overflow-y-auto">{healthData.checks.passedList.map((it) => <li key={it}>{it}</li>)}</ul>
-                    <h4 className="font-semibold mb-2 text-red-600">Failed ({healthData.checks.failedList.length})</h4>
-                    <ul className="list-disc pl-4 space-y-1 max-h-48 overflow-y-auto">{healthData.checks.failedList.map((it) => <li key={it}>{it}</li>)}</ul>
-                </>
+                <div className="space-y-4">
+                    {Object.entries(checkCategories).map(([category, categoryData]) => {
+                        // Get checks for this category
+                        const categoryChecks = Object.entries(categoryData.checks)
+                            .filter(([checkName]) => 
+                                healthData.checks.passedList.includes(checkName) ||
+                                healthData.checks.failedList.includes(checkName)
+                            );
+                        
+                        if (categoryChecks.length === 0) return null;
+
+                        return (
+                            <div key={category} className="pb-3 border-b border-gray-600 last:border-0">
+                                <h4 className="font-semibold mb-2 flex items-center">
+                                    <span className="mr-2">{categoryData.icon}</span>
+                                    {categoryData.title}
+                                </h4>
+                                <ul className="space-y-1">
+                                    {categoryChecks.map(([checkName, description]) => {
+                                        const isPassed = healthData.checks.passedList.includes(checkName);
+                                        const icon = isPassed ? '✅' : '❌';
+                                        return (
+                                            <li key={checkName} className="flex items-start">
+                                                <span className="mr-2 flex-shrink-0">{icon}</span>
+                                                <span className={isPassed ? 'text-green-300' : 'text-red-300'}>
+                                                    {description}
+                                                </span>
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            </div>
+                        );
+                    })}
+                </div>
             ),
         },
     ];
