@@ -169,6 +169,12 @@ const Dashboard = ({ setActiveTab }) => {
         return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">None</span>;
     };
 
+    // --- Centralized data management with caching ---
+    const [dashboardData, setDashboardData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [serviceData, setServiceData] = useState({});
+
     // --- Helper function to fetch data with CORS workaround ---
     const fetchWithCorsWorkaround = (url, callback) => {
         // Try regular fetch first
@@ -198,45 +204,124 @@ const Dashboard = ({ setActiveTab }) => {
         });
     };
 
-    // --- Sub-components for Dashboard ---
-    const GeogridSection = ({ setActiveTab }) => {
-        const [geogridData, setGeogridData] = useState(null);
-        const [loading, setLoading] = useState(true);
-        const [error, setError] = useState(null);
+    // --- Load main dashboard data once ---
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const workbookId = params.get('workbookId');
+        if (!workbookId) {
+            setError("No workbook ID provided");
+            setLoading(false);
+            return;
+        }
 
-        useEffect(() => {
-            const params = new URLSearchParams(window.location.search);
-            const workbookId = params.get('workbookId');
-            if (!workbookId) {
-                setError("No workbook ID provided");
+        // Check if we already have cached data
+        const cachedData = sessionStorage.getItem(`dashboard_${workbookId}`);
+        if (cachedData) {
+            try {
+                const parsed = JSON.parse(cachedData);
+                setDashboardData(parsed);
+                setLoading(false);
+                return;
+            } catch (e) {
+                // Invalid cache, continue with fresh fetch
+            }
+        }
+
+        const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
+        
+        fetchWithCorsWorkaround(scriptUrl, (err, data) => {
+            if (err) {
+                setError(err.message);
                 setLoading(false);
                 return;
             }
-
-            const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
-            
-            fetchWithCorsWorkaround(scriptUrl, (err, data) => {
-                if (err) {
-                    setError(err.message);
-                    setLoading(false);
-                    return;
-                }
-                if (data.error) {
-                    setError(`Script error: ${data.error}`);
-                    setLoading(false);
-                    return;
-                }
-                setGeogridData(data.dashboard?.geogridForDashboard);
+            if (data.error) {
+                setError(`Script error: ${data.error}`);
                 setLoading(false);
-            });
-        }, []);
+                return;
+            }
+            
+            // Cache the data for 5 minutes
+            sessionStorage.setItem(`dashboard_${workbookId}`, JSON.stringify(data));
+            setDashboardData(data);
+            setLoading(false);
+        });
+    }, []);
 
+    // --- Load service data in parallel ---
+    useEffect(() => {
+        if (!dashboardData) return;
+
+        const locations = ['USA', 'Canada', 'Florida', 'Lakeland, FL'];
+        const dataSets = ['topServices', 'newServices'];
+        
+        // Load all service data in parallel
+        const promises = [];
+        
+        locations.forEach(location => {
+            dataSets.forEach(dataSet => {
+                const cacheKey = `services_${location}_${dataSet}`;
+                const cachedData = sessionStorage.getItem(cacheKey);
+                
+                if (cachedData) {
+                    try {
+                        const parsed = JSON.parse(cachedData);
+                        setServiceData(prev => ({
+                            ...prev,
+                            [cacheKey]: parsed
+                        }));
+                        return;
+                    } catch (e) {
+                        // Invalid cache, continue with fresh fetch
+                    }
+                }
+
+                const scriptUrl = `https://script.google.com/macros/s/AKfycbys_HQL8HQdyL_-DoS0Aakvj-IzDWWW5HtNJDiFhbUwgCuKEYJ7N6iZGC-F62I7uZlV/exec?location=${location}`;
+                
+                const promise = new Promise((resolve) => {
+                    fetchWithCorsWorkaround(scriptUrl, (err, data) => {
+                        if (err || data.error) {
+                            resolve({ cacheKey, error: err?.message || data.error });
+                            return;
+                        }
+                        
+                        const serviceData = dataSet === 'topServices' ? data.topServices : data.newServices;
+                        
+                        // Cache the data for 5 minutes
+                        sessionStorage.setItem(cacheKey, JSON.stringify(serviceData));
+                        
+                        resolve({ cacheKey, data: serviceData });
+                    });
+                });
+                
+                promises.push(promise);
+            });
+        });
+
+        // Wait for all service data to load
+        Promise.all(promises).then(results => {
+            const newServiceData = {};
+            results.forEach(result => {
+                if (result.error) {
+                    newServiceData[result.cacheKey] = { error: result.error };
+                } else {
+                    newServiceData[result.cacheKey] = result.data;
+                }
+            });
+            setServiceData(newServiceData);
+        });
+    }, [dashboardData]);
+
+    // --- Sub-components for Dashboard ---
+    const GeogridSection = ({ setActiveTab }) => {
         if (loading) {
             return <Card className="col-span-12 lg:col-span-8 flex items-center justify-center"><p className="text-gray-500">Loading Geogrid data...</p></Card>;
         }
         if (error) {
             return <Card className="col-span-12 lg:col-span-8 flex items-center justify-center"><p className="text-red-500">Geogrid Error: {error}</p></Card>;
         }
+        
+        const geogridData = dashboardData?.dashboard?.geogridForDashboard;
         if (!geogridData) {
             return <Card className="col-span-12 lg:col-span-8 flex items-center justify-center"><p className="text-gray-500">No Geogrid data to display for 'medspa near me'.</p></Card>;
         }
@@ -261,43 +346,14 @@ const Dashboard = ({ setActiveTab }) => {
     };
 
     const CensusInfo = () => {
-        const [censusData, setCensusData] = useState(null);
-        const [loading, setLoading] = useState(true);
-        const [error, setError] = useState(null);
-
-        useEffect(() => {
-            const params = new URLSearchParams(window.location.search);
-            const workbookId = params.get('workbookId');
-            if (!workbookId) {
-                setError("No workbook ID provided");
-                setLoading(false);
-                return;
-            }
-
-            const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
-            
-            fetchWithCorsWorkaround(scriptUrl, (err, data) => {
-                if (err) {
-                    setError(err.message);
-                    setLoading(false);
-                    return;
-                }
-                if (data.error) {
-                    setError(`Script error: ${data.error}`);
-                    setLoading(false);
-                    return;
-                }
-                setCensusData(data.dashboard?.censusData);
-                setLoading(false);
-            });
-        }, []);
-
         if (loading) {
             return <Card className="col-span-12 lg:col-span-4 h-full flex items-center justify-center"><p className="text-gray-500">Loading Census data...</p></Card>;
         }
         if (error) {
             return <Card className="col-span-12 lg:col-span-4 h-full flex items-center justify-center"><p className="text-red-500">Census Error: {error}</p></Card>;
         }
+        
+        const censusData = dashboardData?.dashboard?.censusData;
         if (!censusData) {
             return <Card className="col-span-12 lg:col-span-4 h-full flex items-center justify-center"><p className="text-gray-500">No census data available.</p></Card>;
         }
@@ -324,43 +380,14 @@ const Dashboard = ({ setActiveTab }) => {
     };
 
     const OverviewTable = () => {
-        const [overviewData, setOverviewData] = useState(null);
-        const [loading, setLoading] = useState(true);
-        const [error, setError] = useState(null);
-
-        useEffect(() => {
-            const params = new URLSearchParams(window.location.search);
-            const workbookId = params.get('workbookId');
-            if (!workbookId) {
-                setError("No workbook ID provided");
-                setLoading(false);
-                return;
-            }
-
-            const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
-            
-            fetchWithCorsWorkaround(scriptUrl, (err, data) => {
-                if (err) {
-                    setError(err.message);
-                    setLoading(false);
-                    return;
-                }
-                if (data.error) {
-                    setError(`Script error: ${data.error}`);
-                    setLoading(false);
-                    return;
-                }
-                setOverviewData(data.dashboard?.overviewData);
-                setLoading(false);
-            });
-        }, []);
-
         if (loading) {
             return <Card className="col-span-12 overflow-x-auto flex items-center justify-center"><p className="text-gray-500">Loading Overview data...</p></Card>;
         }
         if (error) {
             return <Card className="col-span-12 overflow-x-auto flex items-center justify-center"><p className="text-red-500">Overview Error: {error}</p></Card>;
         }
+        
+        const overviewData = dashboardData?.dashboard?.overviewData;
         if (!overviewData || overviewData.length === 0) {
             return <Card className="col-span-12 overflow-x-auto flex items-center justify-center"><p className="text-gray-500">No overview data available.</p></Card>;
         }
@@ -408,37 +435,7 @@ const Dashboard = ({ setActiveTab }) => {
     };
     
     const AIReport = () => {
-        const [reportText, setReportText] = useState(null);
-        const [loading, setLoading] = useState(true);
-        const [error, setError] = useState(null);
         const [isExpanded, setIsExpanded] = useState(false);
-
-        useEffect(() => {
-            const params = new URLSearchParams(window.location.search);
-            const workbookId = params.get('workbookId');
-            if (!workbookId) {
-                setError("No workbook ID provided");
-                setLoading(false);
-                return;
-            }
-
-            const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
-            
-            fetchWithCorsWorkaround(scriptUrl, (err, data) => {
-                if (err) {
-                    setError(err.message);
-                    setLoading(false);
-                    return;
-                }
-                if (data.error) {
-                    setError(`Script error: ${data.error}`);
-                    setLoading(false);
-                    return;
-                }
-                setReportText(data.dashboard?.aiReport);
-                setLoading(false);
-            });
-        }, []);
 
         if (loading) {
             return <Card className="col-span-12 relative flex items-center justify-center"><p className="text-gray-500">Loading AI Report...</p></Card>;
@@ -446,6 +443,8 @@ const Dashboard = ({ setActiveTab }) => {
         if (error) {
             return <Card className="col-span-12 relative flex items-center justify-center"><p className="text-red-500">AI Report Error: {error}</p></Card>;
         }
+        
+        const reportText = dashboardData?.dashboard?.aiReport;
         if (!reportText) {
             return <Card className="col-span-12 relative flex items-center justify-center"><p className="text-gray-500">No AI report available.</p></Card>;
         }
@@ -470,35 +469,22 @@ const Dashboard = ({ setActiveTab }) => {
     }
 
     const ServiceList = ({ title, dataSet, tooltipText }) => {
-        const [serviceData, setServiceData] = useState(null);
-        const [loading, setLoading] = useState(true);
-        const [error, setError] = useState(null);
         const [selectedLocation, setSelectedLocation] = useState('USA');
         const [expandedService, setExpandedService] = useState(null);
 
-        useEffect(() => {
-            const scriptUrl = `https://script.google.com/macros/s/AKfycbys_HQL8HQdyL_-DoS0Aakvj-IzDWWW5HtNJDiFhbUwgCuKEYJ7N6iZGC-F62I7uZlV/exec?location=${selectedLocation}`;
-            setLoading(true);
-            
-            fetchWithCorsWorkaround(scriptUrl, (err, data) => {
-                if (err) {
-                    setError(err.message);
-                    setLoading(false);
-                    return;
-                }
-                if (data.error) {
-                    setError(data.error);
-                    setLoading(false);
-                    return;
-                }
-                setServiceData(dataSet === 'topServices' ? data.topServices : data.newServices);
-                setLoading(false);
-            });
-        }, [selectedLocation, dataSet]);
+        const cacheKey = `services_${selectedLocation}_${dataSet}`;
+        const serviceData = cacheKey in serviceData ? serviceData[cacheKey] : null;
+        const hasError = serviceData && serviceData.error;
 
-        if (loading) return <Card className="col-span-12 md:col-span-6 flex items-center justify-center"><p className="text-gray-500">Loading Service Data...</p></Card>;
-        if (error) return <Card className="col-span-12 md:col-span-6 flex items-center justify-center"><p className="text-red-500">Service Error: {error}</p></Card>;
-        if (!serviceData || serviceData.length === 0) return <Card className="col-span-12 md:col-span-6 flex items-center justify-center"><p className="text-gray-500">No service data found for {selectedLocation}.</p></Card>;
+        if (!serviceData && !hasError) {
+            return <Card className="col-span-12 md:col-span-6 flex items-center justify-center"><p className="text-gray-500">Loading Service Data...</p></Card>;
+        }
+        if (hasError) {
+            return <Card className="col-span-12 md:col-span-6 flex items-center justify-center"><p className="text-red-500">Service Error: {serviceData.error}</p></Card>;
+        }
+        if (!serviceData || serviceData.length === 0) {
+            return <Card className="col-span-12 md:col-span-6 flex items-center justify-center"><p className="text-gray-500">No service data found for {selectedLocation}.</p></Card>;
+        }
         
         return (
             <Card className="col-span-12 md:col-span-6">
