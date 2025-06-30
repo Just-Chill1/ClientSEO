@@ -1304,7 +1304,23 @@ const WebsiteStats = ({ data }) => {
                 const updatePosition = () => {
                     const rect = cardRef.current.getBoundingClientRect();
                     const spaceAbove = rect.top;
-                    setTooltipPosition(spaceAbove > 250 ? 'top' : 'bottom');
+                    const spaceBelow = window.innerHeight - rect.bottom;
+                    const minSpaceNeeded = 400; // Approximate height of tooltip
+                    
+                    // Default to bottom if we're too close to the top of the viewport
+                    if (spaceAbove < 100) {
+                        setTooltipPosition('bottom');
+                        return;
+                    }
+                    
+                    // Use bottom position if there's not enough space above but enough below
+                    if (spaceAbove < minSpaceNeeded && spaceBelow >= minSpaceNeeded) {
+                        setTooltipPosition('bottom');
+                        return;
+                    }
+                    
+                    // Default to top position
+                    setTooltipPosition('top');
                 };
                 
                 updatePosition();
@@ -1335,11 +1351,11 @@ const WebsiteStats = ({ data }) => {
                     <div className={`absolute w-full h-full ${tooltipPosition === 'top' ? 'top-[-20px]' : 'bottom-[-20px]'}`} />
                     {content}
                     <div className={`
-                        absolute left-0 w-[400px] bg-gray-800 text-white text-sm rounded-lg shadow-lg 
+                        absolute left-1/2 -translate-x-1/2 w-[400px] bg-gray-800 text-white text-sm rounded-lg shadow-lg 
                         opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50 pointer-events-none
                         ${tooltipPosition === 'top' 
-                            ? 'bottom-full mb-2' 
-                            : 'top-full mt-2'
+                            ? 'bottom-full mb-4' 
+                            : 'top-full mt-4'
                         }
                     `}>
                         {/* Tooltip Header */}
