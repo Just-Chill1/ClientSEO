@@ -864,6 +864,10 @@ const Backlinks = () => {
                 backlinksTable: data.backlinksTable
             };
             
+            console.log('Backlinks data received:', data);
+            console.log('Backlinks summary:', backlinks.backlinksSummary);
+            console.log('Backlinks table:', backlinks.backlinksTable);
+            
             if (backlinks.backlinksSummary && backlinks.backlinksTable) {
                 sessionStorage.setItem(cacheKey, JSON.stringify(backlinks));
                 setActiveTableTab(Object.keys(backlinks.backlinksTable)[0] || '');
@@ -886,8 +890,8 @@ const Backlinks = () => {
     const { backlinksSummary, backlinksTable } = backlinksData;
     const competitors = Object.keys(backlinksTable);
     const followData = [
-        { name: 'Dofollow', value: backlinksSummary.totalDofollow, color: '#3b82f6' },
-        { name: 'Nofollow', value: backlinksSummary.totalNofollow, color: '#9ca3af' },
+        { name: 'Dofollow', value: Number(backlinksSummary.totalDofollow) || 0, color: '#3b82f6' },
+        { name: 'Nofollow', value: Number(backlinksSummary.totalNofollow) || 0, color: '#9ca3af' },
     ];
     const filteredBacklinks = (backlinksTable[activeTableTab] || []).filter(row =>
         row.backlinkUrl.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -907,29 +911,29 @@ const Backlinks = () => {
                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                     <div className="p-4 bg-slate-50 rounded-lg">
                         <p className="text-sm text-gray-500">Total Backlinks</p>
-                        <p className="text-4xl font-bold text-gray-800">{backlinksSummary.totalBacklinks.toLocaleString()}</p>
+                        <p className="text-4xl font-bold text-gray-800">{(backlinksSummary.totalBacklinks || 0).toLocaleString()}</p>
                         <p className="text-sm text-gray-500 mt-1">
-                            <span className={backlinksSummary.backlinksChange >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                {backlinksSummary.backlinksChange >= 0 ? '+' : ''}{backlinksSummary.backlinksChange}
+                            <span className={(Number(backlinksSummary.backlinksChange) || 0) >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                {(Number(backlinksSummary.backlinksChange) || 0) >= 0 ? '+' : ''}{Number(backlinksSummary.backlinksChange) || 0}
                             </span> last month
                         </p>
                     </div>
                      <div className="p-4 bg-slate-50 rounded-lg">
                         <p className="text-sm text-gray-500">Referring Domains</p>
-                        <p className="text-4xl font-bold text-gray-800">{backlinksSummary.topReferringDomains}</p>
+                        <p className="text-4xl font-bold text-gray-800">{backlinksSummary.topReferringDomains || 0}</p>
                     </div>
                      <div className="p-4 bg-slate-50 rounded-lg">
                         <p className="text-sm text-gray-500">Avg. Spam Score</p>
-                        <p className="text-4xl font-bold text-gray-800">{backlinksSummary.avgSpamScore}%</p>
+                        <p className="text-4xl font-bold text-gray-800">{backlinksSummary.avgSpamScore || 0}%</p>
                           <p className="text-sm text-gray-500 mt-1">
-                            <span className={backlinksSummary.spamScoreChange > 0 ? 'text-red-600' : 'text-green-600'}>
-                                {backlinksSummary.spamScoreChange > 0 ? '+' : ''}{backlinksSummary.spamScoreChange.toFixed(1)}%
+                            <span className={(Number(backlinksSummary.spamScoreChange) || 0) > 0 ? 'text-red-600' : 'text-green-600'}>
+                                {(Number(backlinksSummary.spamScoreChange) || 0) > 0 ? '+' : ''}{(Number(backlinksSummary.spamScoreChange) || 0).toFixed(1)}%
                             </span> last month
                         </p>
                     </div>
                     <div className="p-4 bg-slate-50 rounded-lg">
                         <p className="text-sm text-gray-500">Avg. Reffer Rank</p>
-                        <p className="text-4xl font-bold text-gray-800">{backlinksSummary.avgRefferRank}</p>
+                        <p className="text-4xl font-bold text-gray-800">{backlinksSummary.avgRefferRank || 0}</p>
                      </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
@@ -937,7 +941,7 @@ const Backlinks = () => {
                         <PlusCircle className="w-8 h-8 text-green-500 flex-shrink-0" />
                         <div>
                             <p className="text-sm text-gray-500">New Links</p>
-                            <p className="text-2xl font-bold text-green-600">{backlinksSummary.newLinks}</p>
+                            <p className="text-2xl font-bold text-green-600">{backlinksSummary.newLinks || 0}</p>
                             <p className="text-xs text-gray-500">This Run</p>
                         </div>
                      </div>
@@ -945,7 +949,7 @@ const Backlinks = () => {
                         <MinusCircle className="w-8 h-8 text-red-500 flex-shrink-0" />
                         <div>
                             <p className="text-sm text-gray-500">Lost Links</p>
-                            <p className="text-2xl font-bold text-red-600">{backlinksSummary.lostLinks}</p>
+                            <p className="text-2xl font-bold text-red-600">{backlinksSummary.lostLinks || 0}</p>
                              <p className="text-xs text-gray-500">This Run</p>
                         </div>
                      </div>
