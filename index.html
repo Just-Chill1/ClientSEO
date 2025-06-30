@@ -1282,6 +1282,26 @@ const GeogridMaps = () => {
             return;
         }
 
+        // Use a different cache key for the full geogrid data
+        const cacheKey = `full_geogrid_${workbookId}`;
+        
+        // Try to get data from cache first
+        const cachedData = sessionStorage.getItem(cacheKey);
+        if (cachedData) {
+            try {
+                const parsed = JSON.parse(cachedData);
+                setGeogridData(parsed);
+                setLoading(false);
+                return;
+            } catch (e) {
+                console.error('Cache parsing error:', e);
+                // Clear invalid cache
+                sessionStorage.removeItem(cacheKey);
+            }
+        }
+
+        // If no cache or invalid cache, fetch fresh data
+        setLoading(true);
         const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
         
         fetchWithCorsWorkaround(scriptUrl, (err, data) => {
@@ -1303,6 +1323,10 @@ const GeogridMaps = () => {
                 Object.entries(rawData).forEach(([key, value]) => {
                     normalizedData[key.toLowerCase().trim()] = value;
                 });
+
+                // Cache the normalized data
+                sessionStorage.setItem(cacheKey, JSON.stringify(normalizedData));
+                
                 setGeogridData(normalizedData);
                 setLoading(false);
             } catch (e) {
@@ -1314,13 +1338,29 @@ const GeogridMaps = () => {
     }, []);
 
     if (loading) {
-        return <PageContent><div className="p-8 text-center text-gray-500">Loading Geogrid data...</div></PageContent>;
-    }
-    if (error) {
-        return <PageContent><div className="p-8 text-center text-red-500">Geogrid Error: {error}</div></PageContent>;
-    }
-    if (!geogridData || Object.keys(geogridData).length === 0) {
-        return <PageContent><div className="p-8 text-center text-gray-500">No Geogrid data available.</div></PageContent>;
+        return (
+            <PageContent>
+                <div className="flex justify-between items-center mb-6">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-800">Geogrid Search Results</h1>
+                        <p className="text-gray-500 mt-1">Track your local search rankings across different keywords</p>
+                    </div>
+                    <button
+                        disabled
+                        className="bg-slate-100 text-slate-400 font-bold py-1 px-3 rounded-lg text-xs cursor-not-allowed"
+                    >
+                        Refresh
+                    </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {targetKeywords.map(keyword => (
+                        <Card key={keyword} className="animate-pulse">
+                            <div className="h-[500px] bg-gray-100 rounded-lg"></div>
+                        </Card>
+                    ))}
+                </div>
+            </PageContent>
+        );
     }
 
     const GeogridMapCard = ({ keyword, monthlyData }) => {
