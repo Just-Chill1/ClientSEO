@@ -570,26 +570,31 @@ const Dashboard = ({ setActiveTab }) => {
 
             const scriptUrl = `https://script.google.com/macros/s/AKfycbys_HQL8HQdyL_-DoS0Aakvj-IzDWWW5HtNJDiFhbUwgCuKEYJ7N6iZGC-F62I7uZlV/exec?location=${selectedLocation}`;
             setLoading(true);
+            setError(null);
             
-            fetchWithCorsWorkaround(scriptUrl, (err, data) => {
-                if (err) {
+            fetch(scriptUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    const services = dataSet === 'topServices' ? data.topServices : data.newServices;
+                    if (services) {
+                        sessionStorage.setItem(cacheKey, JSON.stringify(services));
+                    }
+                    setServiceData(services);
+                    setLoading(false);
+                })
+                .catch(err => {
+                    console.error("ServiceList Fetch Error:", err);
                     setError(err.message);
                     setLoading(false);
-                    return;
-                }
-                if (data.error) {
-                    setError(data.error);
-                    setLoading(false);
-                    return;
-                }
-                
-                const services = dataSet === 'topServices' ? data.topServices : data.newServices;
-                if (services) {
-                    sessionStorage.setItem(cacheKey, JSON.stringify(services));
-                }
-                setServiceData(services);
-                setLoading(false);
-            });
+                });
         }, [selectedLocation, dataSet]);
 
         if (loading) return <Card className="col-span-12 md:col-span-6 flex items-center justify-center"><p className="text-gray-500">Loading Service Data...</p></Card>;
@@ -811,6 +816,13 @@ const Backlinks = () => {
       <>
         <circle cx="11" cy="11" r="8" />
         <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </>
+    );
+    const ExternalLink = createIcon(
+      <>
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+        <polyline points="15 3 21 3 21 9" />
+        <line x1="10" y1="14" x2="21" y2="3" />
       </>
     );
 
