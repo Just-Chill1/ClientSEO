@@ -1296,6 +1296,29 @@ const WebsiteStats = ({ data }) => {
 
     /* ---------- helpers ---------- */
     const StatCard = ({ label, value, icon, tooltip }) => {
+        const [tooltipPosition, setTooltipPosition] = React.useState('top');
+        const cardRef = React.useRef(null);
+
+        React.useEffect(() => {
+            if (cardRef.current && tooltip) {
+                const updatePosition = () => {
+                    const rect = cardRef.current.getBoundingClientRect();
+                    const spaceAbove = rect.top;
+                    const spaceBelow = window.innerHeight - rect.bottom;
+                    setTooltipPosition(spaceAbove > 300 ? 'top' : 'bottom');
+                };
+                
+                updatePosition();
+                window.addEventListener('scroll', updatePosition);
+                window.addEventListener('resize', updatePosition);
+                
+                return () => {
+                    window.removeEventListener('scroll', updatePosition);
+                    window.removeEventListener('resize', updatePosition);
+                };
+            }
+        }, [tooltip]);
+
         const content = (
             <div className="flex items-center space-x-3">
                 <div className="p-2 bg-blue-100 rounded-full">{icon}</div>
@@ -1305,12 +1328,27 @@ const WebsiteStats = ({ data }) => {
                 </div>
             </div>
         );
+
         if (tooltip) {
             return (
-                <div className="relative group cursor-help">
+                <div ref={cardRef} className="relative group cursor-help">
                     {content}
-                    <div className="absolute left-0 bottom-full mb-2 w-[500px] p-4 bg-gray-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50 pointer-events-none">
-                       {tooltip}
+                    <div className={`
+                        absolute left-0 w-[500px] p-4 bg-gray-800 text-white text-sm rounded-lg shadow-lg 
+                        opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50 pointer-events-none
+                        ${tooltipPosition === 'top' 
+                            ? 'bottom-full mb-2' 
+                            : 'top-full mt-2'
+                        }
+                    `}>
+                        {tooltip}
+                        <div className={`
+                            absolute left-4 w-3 h-3 bg-gray-800 transform rotate-45
+                            ${tooltipPosition === 'top'
+                                ? 'bottom-[-6px]'
+                                : 'top-[-6px]'
+                            }
+                        `}></div>
                     </div>
                 </div>
             )
