@@ -134,8 +134,280 @@ const PageContent = ({children}) => (
 /* ------------------------------------------------------------------ */
 /* PLACEHOLDER PAGES – replace each later with real JSX               */
 /* ------------------------------------------------------------------ */
-const Dashboard     = () => <PageContent><h2 className="text-center text-gray-500">Dashboard – TODO</h2></PageContent>;
+const Dashboard = ({ data, setActiveTab }) => {
+    // Destructure chart components here, as they are only used in this component.
+    const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, PieChart, Pie, Legend } = window.Recharts;
+    
+    // --- Additional Icon Components for this page ---
+    const ExternalLink = createIcon(
+      <>
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+        <polyline points="15 3 21 3 21 9" />
+        <line x1="10" y1="14" x2="21" y2="3" />
+      </>
+    );
+    const ChevronDown = createIcon(<polyline points="6 9 12 15 18 9" />);
+    const ChevronUp = createIcon(<polyline points="18 15 12 9 6 15" />);
+
+    // --- Reusable Components for this page ---
+    const InfoTooltip = ({ text }) => (
+        <div className="relative flex items-center group">
+            <Info className="w-4 h-4 text-gray-400" />
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none">
+                {text}
+                <svg className="absolute text-gray-800 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255"><polygon className="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
+            </div>
+        </div>
+    );
+     const AdIndicator = ({ hasAd, link }) => {
+        if (hasAd) {
+            return (
+                <a href={link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full hover:bg-green-200 transition-colors">
+                    Active <ExternalLink className="w-3 h-3 ml-1.5" />
+                </a>
+            );
+        }
+        return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">None</span>;
+    };
+
+
+    // --- Sub-components for Dashboard ---
+    const GeogridSection = ({ setActiveTab }) => {
+        const geogridData = { 'June 2025': { imageUrl: 'https://placehold.co/800x400/A7D7C5/333333?text=Geogrid+Map+-+June+2025' }, 'May 2025': { imageUrl: 'https://placehold.co/800x400/C5A7D7/333333?text=Geogrid+Map+-+May+2025' }, 'April 2025': { imageUrl: 'https://placehold.co/800x400/D7C5A7/333333?text=Geogrid+Map+-+April+2025' }, };
+        const availableMonths = Object.keys(geogridData);
+        const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
+
+        const handleDateChange = (direction) => {
+            const newIndex = currentMonthIndex + direction;
+            if (newIndex >= 0 && newIndex < availableMonths.length) {
+                setCurrentMonthIndex(newIndex);
+            }
+        };
+        
+        const currentMonth = availableMonths[currentMonthIndex];
+        const data = geogridData[currentMonth];
+
+        return (
+            <Card className="col-span-12 lg:col-span-8">
+                <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center space-x-2">
+                        <h2 className="text-xl font-bold text-gray-800">Geogrid Map</h2>
+                        <InfoTooltip text="Visualizes your clinic's ranking on Google Maps for a specific search term across a geographic area. Each point on the grid represents a search from that location." />
+                        <button onClick={() => setActiveTab('Geogrid Maps')} className="text-xs font-normal text-blue-600 hover:text-blue-800">(See More)</button>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                        <button onClick={() => handleDateChange(1)} disabled={currentMonthIndex >= availableMonths.length - 1} className="p-1 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">&lt;</button>
+                        <span className="font-semibold text-gray-700">{currentMonth}</span>
+                        <button onClick={() => handleDateChange(-1)} disabled={currentMonthIndex <= 0} className="p-1 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed">&gt;</button>
+                    </div>
+                </div>
+                <img src={data.imageUrl} alt="Geogrid Map" className="w-full rounded-lg mb-4 border border-gray-200" />
+            </Card>
+        );
+    };
+
+    const CensusInfo = () => {
+        const censusData = { 'Location': 'Polk County, Florida', 'Population': '736,229', 'MedSpas (10 Miles)': '~30', 'Median Income': '$60,901', 'Gender': [ { label: 'Male', value: '49.3%' }, { label: 'Female', value: '50.7%' } ], 'Age Ranges': [ { label: '0-17', value: '18%' }, { label: '18-34', value: '19.4%' }, { label: '35-54', value: '24.2%' }, { label: '55-74', value: '23.2%' }, { label: '75+', value: '8.8%' } ], 'Ethnicity': [ { label: 'White', value: '54.4%' }, { label: 'Black', value: '14.4%' }, { label: 'Hispanic', value: '26.2%' }, { label: 'Asian', value: '1.7%' } ], 'Languages': [ { label: 'English Only', value: '74.9%' }, { label: 'Spanish', value: '20.8%' } ], };
+        return (
+            <Card className="col-span-12 lg:col-span-4 h-full">
+                 <div className="flex items-center space-x-2 mb-4">
+                    <h2 className="text-xl font-bold text-gray-800">Census Data</h2>
+                    <InfoTooltip text="Provides demographic and economic information for your target service area." />
+                 </div>
+                <div>
+                    {Object.entries(censusData).map(([key, value]) => {
+                        if (Array.isArray(value)) {
+                            return (
+                                <div key={key} className="flex justify-between items-start text-sm py-3 border-t border-gray-100 first:border-t-0 first:pt-0">
+                                    <span className="font-medium text-gray-600 pt-0.5">{key}</span>
+                                    <div className="text-right">
+                                        {value.map(item => (
+                                            <div key={item.label}>
+                                                <span className="text-gray-600">{item.label}: </span>
+                                                <span className="font-semibold text-gray-800">{item.value}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            );
+                        }
+                        return (
+                            <div key={key} className="flex justify-between items-center text-sm py-3 border-t border-gray-100 first:border-t-0 first:pt-0">
+                                <span className="font-medium text-gray-600">{key}</span>
+                                <span className="font-semibold text-gray-800 text-right">{value}</span>
+                            </div>
+                        );
+                    })}
+                </div>
+            </Card>
+        );
+    };
+
+    const OverviewTable = () => {
+        const overviewData = [ { id: 0, name: 'Clique Medspa', score: 5.0, reviews: 139, speed: '1.2s', hours: 'Mon-Fri 9am-6pm, Sat 10am-4pm, Sun Closed', kwPos1: 15, backlinks: 155, gAds: true, gAdLink: '#', fbAds: false, fbAdLink: null, isClient: true }, { id: 1, name: 'Aesthetic Solutions', score: 4.8, reviews: 450, speed: '1.5s', hours: 'Mon-Fri 10am-7pm, Sat 10am-2pm, Sun Closed', kwPos1: 22, backlinks: 120, gAds: true, gAdLink: '#', fbAds: true, fbAdLink: '#', isClient: false }, { id: 2, name: 'Radiant You', score: 4.7, reviews: 250, speed: '2.1s', hours: 'Mon-Thu 9am-5pm, Fri-Sun Closed', kwPos1: 8, backlinks: 85, gAds: false, gAdLink: null, fbAds: true, fbAdLink: '#', isClient: false }, { id: 3, name: 'The Glow Up Clinic', score: 4.9, reviews: 510, speed: '0.9s', hours: 'Mon-Sat 9am-8pm, Sun 11am-5pm', kwPos1: 5, backlinks: 168, gAds: true, gAdLink: '#', fbAds: false, fbAdLink: null, isClient: false }, { id: 4, name: 'Timeless Beauty', score: 4.6, reviews: 180, speed: '1.8s', hours: 'Mon-Fri 10am-8pm, Sat 10am-6pm, Sun Closed', kwPos1: 2, backlinks: 45, gAds: false, gAdLink: null, fbAds: false, fbAdLink: null, isClient: false }, ];
+
+        return (
+            <Card className="col-span-12 overflow-x-auto">
+                <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center space-x-2">
+                        <h2 className="text-xl font-bold text-gray-800">Overview</h2>
+                         <InfoTooltip text="A high-level comparison of your clinic against key competitors on important metrics like online reviews, site performance, and advertising." />
+                    </div>
+                    <button onClick={() => alert('Webhook for Overview refresh triggered!')} className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-1 px-3 rounded-lg text-xs transition-colors duration-300">Refresh</button>
+                </div>
+                <table className="w-full text-left text-sm whitespace-nowrap">
+                    <thead>
+                        <tr className="border-b-2 border-gray-200">
+                            <th className="py-2 px-3">Clinic</th>
+                            <th className="py-2 px-3 text-center">Site Speed</th>
+                            <th className="py-2 px-3 text-center">Keywords #1</th>
+                            <th className="py-2 px-3 text-center">Backlinks</th>
+                            <th className="py-2 px-3">Opening Hours</th>
+                            <th className="py-2 px-3 text-center">Google Ads</th>
+                            <th className="py-2 px-3 text-center">Facebook Ads</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {overviewData.map(c => (
+                            <tr key={c.id} className={`border-b border-gray-100 ${c.isClient ? 'bg-blue-50' : ''}`}>
+                                <td className="py-3 px-3">
+                                    <div className="font-semibold text-gray-800">{c.name}</div>
+                                    <div className="text-xs text-gray-600">{c.score.toFixed(1)} ⭐ ({c.reviews} reviews)</div>
+                                </td>
+                                <td className="py-3 px-3 text-center font-medium">{c.speed}</td>
+                                <td className="py-3 px-3 text-center font-medium">{c.kwPos1}</td>
+                                <td className="py-3 px-3 text-center font-medium">{c.backlinks.toLocaleString()}</td>
+                                <td className="py-3 px-3 text-gray-600">{c.hours}</td>
+                                <td className="py-3 px-3 text-center"><AdIndicator hasAd={c.gAds} link={c.gAdLink} /></td>
+                                <td className="py-3 px-3 text-center"><AdIndicator hasAd={c.fbAds} link={c.fbAdLink} /></td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </Card>
+        );
+    };
+
+    return (
+        <PageContent>
+            <div className="grid grid-cols-12 gap-6">
+                <GeogridSection setActiveTab={setActiveTab} />
+                <CensusInfo />
+                <OverviewTable />
+            </div>
+        </PageContent>
+    );
+};
+
 /* ------------------------------------------------------------------ */
+/* KEYWORDS PAGE – full live version                                  */
+/* ------------------------------------------------------------------ */
+const Keywords = ({ summary, table }) => {
+  /* ----- competitor selector state ----- */
+  const siteNames   = Object.keys(table);
+  const clientName  = siteNames.find(n=>n.toLowerCase().includes('client') || n.toLowerCase().includes('look')) || siteNames[0];
+  const [active, setActive] = useState(clientName);
+
+  /* ----- rows for the selected site ----- */
+  const rows   = table[active] || [];
+  const ROWCAP = 200;       // show up to 200 keywords
+
+  /* ----- summary cards ----- */
+  const bucket = [
+    {label:'Total', value:summary.totalKeywords},
+    {label:'Pos 1', value:summary.pos1},
+    {label:'Pos 2-3', value:summary.pos2_3},
+    {label:'Pos 4-10', value:summary.pos4_10},
+    {label:'Pos 11-20', value:summary.pos11_20},
+    {label:'New',  value:summary.isNew,  color:summary.isNew  ?'text-blue-600':''},
+    {label:'Up',   value:summary.isUp,   color:summary.isUp   ?'text-green-600':''},
+    {label:'Down', value:summary.isDown, color:summary.isDown ?'text-red-600':''},
+    {label:'Lost', value:summary.isLost, color:summary.isLost ?'text-red-600':''},
+    {label:'ETV',  value:summary.etv.toFixed(2)},
+    {label:'Est. Cost', value:'$'+summary.estPaidCost.toFixed(2)}
+  ];
+
+  return (
+    <PageContent>
+      {/* overview cards */}
+      <Card className="mb-8">
+        <h2 className="text-xl font-bold mb-4">Keyword Overview</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
+          {bucket.map(c=>(
+            <div key={c.label} className="text-center">
+              <p className={`text-xl font-bold ${c.color||'text-gray-800'}`}>{c.value}</p>
+              <p className="text-xs text-gray-500">{c.label}</p>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* competitor pills */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {siteNames.map(n=>(
+          <button key={n}
+                  onClick={()=>setActive(n)}
+                  className={`px-3 py-1 rounded-full text-sm border
+                    ${active===n
+                      ?'bg-blue-600 text-white border-blue-600'
+                      :'bg-white text-gray-600 hover:bg-gray-100'}`}>
+            {n}
+          </button>
+        ))}
+      </div>
+
+      {/* keyword table */}
+      <Card className="overflow-x-auto">
+        <table className="min-w-[880px] text-sm">
+          <thead className="text-left border-b">
+            <tr>
+              <th className="py-2 pr-4">Keyword</th>
+              <th className="py-2 pr-2">Rank</th>
+              <th className="py-2 pr-2">Prev</th>
+              <th className="py-2 pr-2">Δ</th>
+              <th className="py-2 pr-2">Vol</th>
+              <th className="py-2 pr-2">CPC</th>
+              <th className="py-2 pr-2">Intent</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.slice(0,ROWCAP).map((r,i)=>{
+              const delta = r.rank_prev==='' ? null : r.rank_prev - r.rank_now;
+              return (
+                <tr key={i} className="border-b last:border-0">
+                  <td className="py-1 pr-4 whitespace-nowrap">{r.keyword}</td>
+                  <td className="py-1 pr-2">{r.rank_now}</td>
+                  <td className="py-1 pr-2">{r.rank_prev || '–'}</td>
+                  <td className="py-1 pr-2">
+                    {r.is_new  && <Star          className="w-4 h-4 text-blue-500 inline"/>}
+                    {r.is_lost && <AlertTriangle className="w-4 h-4 text-red-500  inline"/>}
+                    {delta>0   && <ArrowUp       className="w-4 h-4 text-green-500 inline"/>}
+                    {delta<0   && <ArrowDown     className="w-4 h-4 text-red-500   inline"/>}
+                  </td>
+                  <td className="py-1 pr-2">{r.search_vol}</td>
+                  <td className="py-1 pr-2">${Number(r.cpc_usd).toFixed(2)}</td>
+                  <td className="py-1 pr-2">{r.intent}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        {rows.length>ROWCAP &&
+          <p className="text-xs text-gray-400 mt-2">
+            Showing first {ROWCAP} of {rows.length} rows.
+          </p>}
+      </Card>
+    </PageContent>
+  );
+};
+
+const Backlinks     = () => <PageContent><h2 className="text-center text-gray-500">Backlinks – TODO</h2></PageContent>;
+const ToolsPage     = () => <PageContent><h2 className="text-center text-gray-500">Tools – coming soon</h2></PageContent>;
+const GeogridMaps = ({data}) =>
+  <PageContent>
+    <h2 className="text-center text-gray-500">Geogrid Maps – TODO</h2>
+  </PageContent>;
+
 /* ------------------------------------------------------------------ */
 /* WEBSITE STATS – polished gauge, colour rules, horizontal bars      */
 /* ------------------------------------------------------------------ */
@@ -375,114 +647,6 @@ const WebsiteStats = ({ data }) => {
 };
 
 /* ------------------------------------------------------------------ */
-/* KEYWORDS PAGE – full live version                                  */
-/* ------------------------------------------------------------------ */
-const Keywords = ({ summary, table }) => {
-  /* ----- competitor selector state ----- */
-  const siteNames   = Object.keys(table);
-  const clientName  = siteNames.find(n=>n.toLowerCase().includes('client') || n.toLowerCase().includes('look')) || siteNames[0];
-  const [active, setActive] = useState(clientName);
-
-  /* ----- rows for the selected site ----- */
-  const rows   = table[active] || [];
-  const ROWCAP = 200;       // show up to 200 keywords
-
-  /* ----- summary cards ----- */
-  const bucket = [
-    {label:'Total', value:summary.totalKeywords},
-    {label:'Pos 1', value:summary.pos1},
-    {label:'Pos 2-3', value:summary.pos2_3},
-    {label:'Pos 4-10', value:summary.pos4_10},
-    {label:'Pos 11-20', value:summary.pos11_20},
-    {label:'New',  value:summary.isNew,  color:summary.isNew  ?'text-blue-600':''},
-    {label:'Up',   value:summary.isUp,   color:summary.isUp   ?'text-green-600':''},
-    {label:'Down', value:summary.isDown, color:summary.isDown ?'text-red-600':''},
-    {label:'Lost', value:summary.isLost, color:summary.isLost ?'text-red-600':''},
-    {label:'ETV',  value:summary.etv.toFixed(2)},
-    {label:'Est. Cost', value:'$'+summary.estPaidCost.toFixed(2)}
-  ];
-
-  return (
-    <PageContent>
-      {/* overview cards */}
-      <Card className="mb-8">
-        <h2 className="text-xl font-bold mb-4">Keyword Overview</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
-          {bucket.map(c=>(
-            <div key={c.label} className="text-center">
-              <p className={`text-xl font-bold ${c.color||'text-gray-800'}`}>{c.value}</p>
-              <p className="text-xs text-gray-500">{c.label}</p>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* competitor pills */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {siteNames.map(n=>(
-          <button key={n}
-                  onClick={()=>setActive(n)}
-                  className={`px-3 py-1 rounded-full text-sm border
-                    ${active===n
-                      ?'bg-blue-600 text-white border-blue-600'
-                      :'bg-white text-gray-600 hover:bg-gray-100'}`}>
-            {n}
-          </button>
-        ))}
-      </div>
-
-      {/* keyword table */}
-      <Card className="overflow-x-auto">
-        <table className="min-w-[880px] text-sm">
-          <thead className="text-left border-b">
-            <tr>
-              <th className="py-2 pr-4">Keyword</th>
-              <th className="py-2 pr-2">Rank</th>
-              <th className="py-2 pr-2">Prev</th>
-              <th className="py-2 pr-2">Δ</th>
-              <th className="py-2 pr-2">Vol</th>
-              <th className="py-2 pr-2">CPC</th>
-              <th className="py-2 pr-2">Intent</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.slice(0,ROWCAP).map((r,i)=>{
-              const delta = r.rank_prev==='' ? null : r.rank_prev - r.rank_now;
-              return (
-                <tr key={i} className="border-b last:border-0">
-                  <td className="py-1 pr-4 whitespace-nowrap">{r.keyword}</td>
-                  <td className="py-1 pr-2">{r.rank_now}</td>
-                  <td className="py-1 pr-2">{r.rank_prev || '–'}</td>
-                  <td className="py-1 pr-2">
-                    {r.is_new  && <Star          className="w-4 h-4 text-blue-500 inline"/>}
-                    {r.is_lost && <AlertTriangle className="w-4 h-4 text-red-500  inline"/>}
-                    {delta>0   && <ArrowUp       className="w-4 h-4 text-green-500 inline"/>}
-                    {delta<0   && <ArrowDown     className="w-4 h-4 text-red-500   inline"/>}
-                  </td>
-                  <td className="py-1 pr-2">{r.search_vol}</td>
-                  <td className="py-1 pr-2">${Number(r.cpc_usd).toFixed(2)}</td>
-                  <td className="py-1 pr-2">{r.intent}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        {rows.length>ROWCAP &&
-          <p className="text-xs text-gray-400 mt-2">
-            Showing first {ROWCAP} of {rows.length} rows.
-          </p>}
-      </Card>
-    </PageContent>
-  );
-};
-
-const Backlinks     = () => <PageContent><h2 className="text-center text-gray-500">Backlinks – TODO</h2></PageContent>;
-const ToolsPage     = () => <PageContent><h2 className="text-center text-gray-500">Tools – coming soon</h2></PageContent>;
-const GeogridMaps = ({data}) =>
-  <PageContent>
-    <h2 className="text-center text-gray-500">Geogrid Maps – TODO</h2>
-  </PageContent>;
-/* ------------------------------------------------------------------ */
 /* HEADER                                                             */
 /* ------------------------------------------------------------------ */
 const Header = ({active,setActive}) => {
@@ -559,7 +723,7 @@ const App = () => {
   } else {
     switch (tab) {
       case 'Dashboard':
-        body = <Dashboard data={data.dashboard} />;
+        body = <Dashboard data={data.dashboard} setActiveTab={setTab} />;
         break;
       case 'Website Stats':
         body = <WebsiteStats data={data.websiteStats} />;
