@@ -1102,10 +1102,49 @@ const WebsiteStats = ({ data }) => {
 
     /* fallback if no data yet */
     if (!data) {
+        console.log('WebsiteStats: No data provided');
         return <PageContent><div className="p-8 text-center text-gray-500">No Website Stats data available.</div></PageContent>;
     }
 
-    const { healthData, competitorPerfData, technicalSeoData } = data;
+    // Debug logging
+    console.log('WebsiteStats raw data:', data);
+    console.log('healthData:', data.healthData);
+    console.log('competitorPerfData:', data.competitorPerfData);
+    console.log('technicalSeoData:', data.technicalSeoData);
+
+    // Ensure we have all required data objects with defaults
+    const healthData = {
+        pageScore: data?.healthData?.pageScore || 0,
+        siteSpeed: data?.healthData?.siteSpeed || '0s',
+        brokenLinks: data?.healthData?.brokenLinks || 0,
+        ssl: data?.healthData?.ssl || false,
+        checks: {
+            checksPassed: data?.healthData?.checks?.checksPassed || 0,
+            totalChecks: data?.healthData?.checks?.totalChecks || 1,
+            passedList: data?.healthData?.checks?.passedList || [],
+            failedList: data?.healthData?.checks?.failedList || []
+        },
+        errors: data?.healthData?.errors || [],
+        warnings: data?.healthData?.warnings || []
+    };
+
+    const competitorPerfData = (data?.competitorPerfData || []).map(comp => ({
+        name: comp.name || 'Unknown',
+        isClient: comp.isClient || false,
+        'Site Speed (s)': parseFloat(String(comp['Site Speed (s)']).replace(/[^\d.]/g, '')) || 0,
+        'Est. Monthly Traffic': parseInt(comp['Est. Monthly Traffic'], 10) || 0,
+        'Referring Domains': parseInt(comp['Referring Domains'], 10) || 0,
+        'Total Backlinks': parseInt(comp['Total Backlinks'], 10) || 0
+    }));
+
+    const technicalSeoData = (data?.technicalSeoData || []).map(site => ({
+        name: site.name || 'Unknown',
+        hasSSL: Boolean(site.hasSSL),
+        hasSchema: Boolean(site.hasSchema),
+        h1: site.h1 || '',
+        title: site.title || '',
+        description: site.description || ''
+    }));
 
     /* ---------- colour helpers ---------- */
     const gaugeColour =
