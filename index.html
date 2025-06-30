@@ -865,102 +865,191 @@ const Dashboard = ({ setActiveTab }) => {
 /* KEYWORDS PAGE – full live version                                  */
 /* ------------------------------------------------------------------ */
 const Keywords = ({ summary, table }) => {
-  /* ----- competitor selector state ----- */
-  const siteNames   = Object.keys(table);
-  const clientName  = siteNames.find(n=>n.toLowerCase().includes('client') || n.toLowerCase().includes('look')) || siteNames[0];
-  const [active, setActive] = useState(clientName);
+    const [active, setActive] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
+    const siteNames = Object.keys(table);
+    const clientName = siteNames.find(n => n.toLowerCase().includes('client') || n.toLowerCase().includes('look')) || siteNames[0];
 
-  /* ----- rows for the selected site ----- */
-  const rows   = table[active] || [];
-  const ROWCAP = 200;       // show up to 200 keywords
+    // Set initial active site
+    useEffect(() => {
+        if (!active && siteNames.length > 0) {
+            setActive(clientName);
+        }
+    }, [siteNames, clientName]);
 
-  /* ----- summary cards ----- */
-  const bucket = [
-    {label:'Total', value:summary.totalKeywords},
-    {label:'Pos 1', value:summary.pos1},
-    {label:'Pos 2-3', value:summary.pos2_3},
-    {label:'Pos 4-10', value:summary.pos4_10},
-    {label:'Pos 11-20', value:summary.pos11_20},
-    {label:'New',  value:summary.isNew,  color:summary.isNew  ?'text-blue-600':''},
-    {label:'Up',   value:summary.isUp,   color:summary.isUp   ?'text-green-600':''},
-    {label:'Down', value:summary.isDown, color:summary.isDown ?'text-red-600':''},
-    {label:'Lost', value:summary.isLost, color:summary.isLost ?'text-red-600':''},
-    {label:'ETV',  value:summary.etv.toFixed(2)},
-    {label:'Est. Cost', value:'$'+summary.estPaidCost.toFixed(2)}
-  ];
+    // Icons
+    const Search = createIcon(
+        <>
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </>
+    );
+    const ExternalLink = createIcon(
+        <>
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            <polyline points="15 3 21 3 21 9" />
+            <line x1="10" y1="14" x2="21" y2="3" />
+        </>
+    );
 
-  return (
-    <PageContent>
-      {/* overview cards */}
-      <Card className="mb-8">
-        <h2 className="text-xl font-bold mb-4">Keyword Overview</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
-          {bucket.map(c=>(
-            <div key={c.label} className="text-center">
-              <p className={`text-xl font-bold ${c.color||'text-gray-800'}`}>{c.value}</p>
-              <p className="text-xs text-gray-500">{c.label}</p>
-            </div>
-          ))}
-        </div>
-      </Card>
+    // Summary cards data
+    const summaryCards = [
+        { label: 'Total Keywords', value: summary.totalKeywords, color: 'text-gray-800' },
+        { label: 'Position 1', value: summary.pos1, color: 'text-emerald-600' },
+        { label: 'Positions 2-3', value: summary.pos2_3, color: 'text-emerald-500' },
+        { label: 'Positions 4-10', value: summary.pos4_10, color: 'text-blue-500' },
+        { label: 'Positions 11-20', value: summary.pos11_20, color: 'text-yellow-500' },
+        { label: 'New Keywords', value: summary.isNew, color: 'text-blue-600', badge: 'bg-blue-100 text-blue-800' },
+        { label: 'Improved', value: summary.isUp, color: 'text-green-600', badge: 'bg-green-100 text-green-800' },
+        { label: 'Declined', value: summary.isDown, color: 'text-red-600', badge: 'bg-red-100 text-red-800' },
+        { label: 'Lost', value: summary.isLost, color: 'text-red-600', badge: 'bg-red-100 text-red-800' },
+        { label: 'Est. Traffic Value', value: `$${summary.etv.toFixed(2)}`, color: 'text-gray-800' },
+        { label: 'Est. Paid Cost', value: `$${summary.estPaidCost.toFixed(2)}`, color: 'text-gray-800' }
+    ];
 
-      {/* competitor pills */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {siteNames.map(n=>(
-          <button key={n}
-                  onClick={()=>setActive(n)}
-                  className={`px-3 py-1 rounded-full text-sm border
-                    ${active===n
-                      ?'bg-blue-600 text-white border-blue-600'
-                      :'bg-white text-gray-600 hover:bg-gray-100'}`}>
-            {n}
-          </button>
-        ))}
-      </div>
+    // Filter keywords based on search term
+    const filteredKeywords = table[active] ? table[active].filter(row =>
+        row.keyword.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        row.url.toLowerCase().includes(searchTerm.toLowerCase())
+    ) : [];
 
-      {/* keyword table */}
-      <Card className="overflow-x-auto">
-        <table className="min-w-[880px] text-sm">
-          <thead className="text-left border-b">
-            <tr>
-              <th className="py-2 pr-4">Keyword</th>
-              <th className="py-2 pr-2">Rank</th>
-              <th className="py-2 pr-2">Prev</th>
-              <th className="py-2 pr-2">Δ</th>
-              <th className="py-2 pr-2">Vol</th>
-              <th className="py-2 pr-2">CPC</th>
-              <th className="py-2 pr-2">Intent</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.slice(0,ROWCAP).map((r,i)=>{
-              const delta = r.rank_prev==='' ? null : r.rank_prev - r.rank_now;
-              return (
-                <tr key={i} className="border-b last:border-0">
-                  <td className="py-1 pr-4 whitespace-nowrap">{r.keyword}</td>
-                  <td className="py-1 pr-2">{r.rank_now}</td>
-                  <td className="py-1 pr-2">{r.rank_prev || '–'}</td>
-                  <td className="py-1 pr-2">
-                    {r.is_new  && <Star          className="w-4 h-4 text-blue-500 inline"/>}
-                    {r.is_lost && <AlertTriangle className="w-4 h-4 text-red-500  inline"/>}
-                    {delta>0   && <ArrowUp       className="w-4 h-4 text-green-500 inline"/>}
-                    {delta<0   && <ArrowDown     className="w-4 h-4 text-red-500   inline"/>}
-                  </td>
-                  <td className="py-1 pr-2">{r.search_vol}</td>
-                  <td className="py-1 pr-2">${Number(r.cpc_usd).toFixed(2)}</td>
-                  <td className="py-1 pr-2">{r.intent}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        {rows.length>ROWCAP &&
-          <p className="text-xs text-gray-400 mt-2">
-            Showing first {ROWCAP} of {rows.length} rows.
-          </p>}
-      </Card>
-    </PageContent>
-  );
+    return (
+        <PageContent>
+            <h1 className="text-3xl font-bold text-gray-800 mb-6">Keyword Analysis</h1>
+
+            <Card className="mb-6">
+                <div className="flex items-center space-x-2 mb-4">
+                    <h2 className="text-xl font-bold text-gray-800">Keywords Summary</h2>
+                    <InfoTooltip text="Overview of your keyword rankings, showing positions, changes, and estimated values." />
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                    {summaryCards.map(card => (
+                        <div key={card.label} className="p-4 bg-slate-50 rounded-lg">
+                            <p className="text-sm text-gray-500">{card.label}</p>
+                            <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
+                        </div>
+                    ))}
+                </div>
+            </Card>
+
+            <Card>
+                <div className="flex justify-between items-center mb-4">
+                    <div className="flex items-center space-x-2">
+                        <h2 className="text-xl font-bold text-gray-800">Keywords</h2>
+                        <InfoTooltip text="Analyze keyword rankings for your site and competitors. Use the tabs to switch between different sites." />
+                    </div>
+                    <button
+                        onClick={() => alert('Webhook for Keywords refresh triggered!')}
+                        className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-1 px-3 rounded-lg text-xs transition-colors duration-300"
+                    >
+                        Refresh
+                    </button>
+                </div>
+
+                <div className="flex flex-wrap gap-2 mb-4">
+                    {siteNames.map(site => (
+                        <button
+                            key={site}
+                            onClick={() => setActive(site)}
+                            className={`px-3 py-1 rounded-full text-sm border transition-colors
+                                ${active === site
+                                    ? 'bg-blue-600 text-white border-blue-600'
+                                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100'
+                                }`}
+                        >
+                            {site}
+                        </button>
+                    ))}
+                </div>
+
+                <div className="mb-4">
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Search by keyword or URL..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        />
+                    </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm whitespace-nowrap">
+                        <thead>
+                            <tr className="border-b-2 border-gray-200 bg-gray-50">
+                                <th className="py-2 px-3">Keyword</th>
+                                <th className="py-2 px-3 text-center">Position</th>
+                                <th className="py-2 px-3 text-center">Change</th>
+                                <th className="py-2 px-3 text-center">Status</th>
+                                <th className="py-2 px-3 text-center">Volume</th>
+                                <th className="py-2 px-3 text-center">CPC</th>
+                                <th className="py-2 px-3">URL</th>
+                                <th className="py-2 px-3 text-center">Link</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredKeywords.map((row, index) => (
+                                <tr key={index} className="border-b border-gray-100 hover:bg-slate-50">
+                                    <td className="py-3 px-3 font-medium">{row.keyword}</td>
+                                    <td className="py-3 px-3 text-center font-medium">
+                                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold
+                                            ${row.position <= 1 ? 'bg-emerald-100 text-emerald-800' :
+                                            row.position <= 3 ? 'bg-emerald-50 text-emerald-700' :
+                                            row.position <= 10 ? 'bg-blue-50 text-blue-700' :
+                                            'bg-yellow-50 text-yellow-700'}`}>
+                                            {row.position}
+                                        </span>
+                                    </td>
+                                    <td className="py-3 px-3 text-center">
+                                        <span className={
+                                            row.change > 0 ? 'text-green-600' :
+                                            row.change < 0 ? 'text-red-600' :
+                                            'text-gray-400'
+                                        }>
+                                            {row.change > 0 ? '+' : ''}{row.change || '-'}
+                                        </span>
+                                    </td>
+                                    <td className="py-3 px-3 text-center">
+                                        {row.isNew ? (
+                                            <span className="text-xs font-semibold px-2 py-1 bg-blue-100 text-blue-800 rounded-full">New</span>
+                                        ) : row.isLost ? (
+                                            <span className="text-xs font-semibold px-2 py-1 bg-red-100 text-red-800 rounded-full">Lost</span>
+                                        ) : row.isUp ? (
+                                            <span className="text-xs font-semibold px-2 py-1 bg-green-100 text-green-800 rounded-full">Up</span>
+                                        ) : row.isDown ? (
+                                            <span className="text-xs font-semibold px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full">Down</span>
+                                        ) : (
+                                            <span className="text-gray-400">-</span>
+                                        )}
+                                    </td>
+                                    <td className="py-3 px-3 text-center">{row.volume.toLocaleString()}</td>
+                                    <td className="py-3 px-3 text-center">${row.cpc.toFixed(2)}</td>
+                                    <td className="py-3 px-3 text-blue-600 hover:underline">
+                                        <a href={row.url} target="_blank" rel="noopener noreferrer">
+                                            {row.url.replace(/^https?:\/\//i, '')}
+                                        </a>
+                                    </td>
+                                    <td className="py-3 px-3 text-center">
+                                        <a href={row.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 inline-block">
+                                            <ExternalLink className="w-4 h-4" />
+                                        </a>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                    {filteredKeywords.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                            No matching keywords found for "{searchTerm}"
+                        </div>
+                    )}
+                </div>
+            </Card>
+        </PageContent>
+    );
 };
 
 const Backlinks = () => {
