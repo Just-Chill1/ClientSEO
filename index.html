@@ -223,11 +223,14 @@ const Dashboard = ({ setActiveTab }) => {
             if (cachedData) {
                 try {
                     const parsed = JSON.parse(cachedData);
-                    setGeogridData(parsed);
+                    const medspaNearMe = parsed['medspa near me'] || [];
+                    const latestData = medspaNearMe.length > 0 ? medspaNearMe[0] : null;
+                    setGeogridData(latestData);
                     setLoading(false);
                     return;
                 } catch (e) {
                     // Invalid cache, continue with fresh fetch
+                    console.error('Cache parsing error:', e);
                 }
             }
 
@@ -245,12 +248,23 @@ const Dashboard = ({ setActiveTab }) => {
                     return;
                 }
                 
-                const geogrid = data.dashboard?.geogridForDashboard;
-                if (geogrid) {
-                    sessionStorage.setItem(cacheKey, JSON.stringify(geogrid));
+                try {
+                    // Get the latest geogrid data for 'medspa near me'
+                    const allGeogridData = data.geogridData || {};
+                    const medspaNearMe = allGeogridData['medspa near me'] || [];
+                    const latestData = medspaNearMe.length > 0 ? medspaNearMe[0] : null;
+                    
+                    // Store the full geogrid data in cache
+                    sessionStorage.setItem(cacheKey, JSON.stringify(allGeogridData));
+                    
+                    // Set only the latest data for dashboard display
+                    setGeogridData(latestData);
+                    setLoading(false);
+                } catch (e) {
+                    console.error('Data processing error:', e);
+                    setError('Failed to process geogrid data');
+                    setLoading(false);
                 }
-                setGeogridData(geogrid);
-                setLoading(false);
             });
         }, []);
 
@@ -263,7 +277,7 @@ const Dashboard = ({ setActiveTab }) => {
         if (!geogridData) {
             return <Card className="col-span-12 lg:col-span-8 flex items-center justify-center"><p className="text-gray-500">No Geogrid data to display for 'medspa near me'.</p></Card>;
         }
-        
+
         return (
             <Card className="col-span-12 lg:col-span-8">
                 <div className="flex justify-between items-center mb-4">
@@ -272,55 +286,70 @@ const Dashboard = ({ setActiveTab }) => {
                         <InfoTooltip text="A snapshot of your latest Geogrid map for the keyword 'medspa near me'." />
                         <button onClick={() => setActiveTab('Geogrid Maps')} className="text-xs font-normal text-blue-600 hover:text-blue-800">(See More)</button>
                     </div>
-                     <span className="font-semibold text-gray-700">{geogridData.date}</span>
+                    <span className="font-semibold text-gray-700">{geogridData.date}</span>
                 </div>
-                                    <div className="space-y-6">
-                        <div className="relative w-[80%] mx-auto h-[600px] overflow-hidden">
-                            <iframe 
-                                src={geogridData.mapLink}
-                                className="w-full h-full rounded-lg border border-gray-200"
-                                style={{ background: '#f9fafb' }}
-                                loading="lazy"
-                                allowFullScreen
-                                scrolling="no"
-                            />
-                            <a 
-                                href={geogridData.mapLink} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="absolute bottom-2 right-2 bg-white/90 hover:bg-white text-gray-700 px-2 py-1 rounded text-xs flex items-center gap-1 shadow-sm transition-colors"
-                            >
-                                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
-                                    <polyline points="15 3 21 3 21 9" />
-                                    <line x1="10" y1="14" x2="21" y2="3" />
-                                </svg>
-                                Open in new tab
-                            </a>
+
+                {geogridData.mapLink ? (
+                    <div className="relative w-full h-[450px] overflow-hidden">
+                        <iframe 
+                            src={geogridData.mapLink}
+                            className="w-full h-full rounded-lg border border-gray-200"
+                            style={{ background: '#f9fafb' }}
+                            loading="lazy"
+                            allowFullScreen
+                            scrolling="no"
+                        />
+                        <a 
+                            href={geogridData.mapLink} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="absolute bottom-2 right-2 bg-white/90 hover:bg-white text-gray-700 px-2 py-1 rounded text-xs flex items-center gap-1 shadow-sm transition-colors"
+                        >
+                            <ExternalLink className="w-3 h-3 mr-1" />
+                            Open in new tab
+                        </a>
+                    </div>
+                ) : (
+                    <div className="w-full h-[450px] flex flex-col items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+                        <div className="bg-gray-100 p-4 rounded-full mb-4">
+                            <svg className="w-12 h-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                            </svg>
                         </div>
-                        
-                        {/* Competitor Rankings */}
-                        <div className="w-[80%] mx-auto">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-4">Competitor Rankings</h3>
-                            <div className="grid grid-cols-2 gap-4">
-                                {geogridData.competitors.map((comp, index) => (
-                                    <div key={index} className="flex items-center space-x-3">
-                                        <div className={`
-                                            w-10 h-10 rounded-full flex items-center justify-center text-black font-semibold
-                                            ${comp.rank <= 1 ? 'bg-emerald-500' : 
-                                              comp.rank <= 2 ? 'bg-emerald-400' :
-                                              comp.rank <= 4 ? 'bg-emerald-300' :
-                                              comp.rank <= 6 ? 'bg-emerald-200' :
-                                              'bg-yellow-200'}
-                                        `} style={{ textShadow: '0 0 3px rgba(255,255,255,0.5)' }}>
-                                            {comp.rank.toFixed(1)}
-                                        </div>
-                                        <span className="text-gray-700">{comp.name}</span>
+                        <p className="text-lg font-semibold text-gray-600 mb-2">Map Not Available Yet</p>
+                        <p className="text-sm text-gray-500 text-center max-w-md">
+                            The Geogrid map for "medspa near me" is pending setup. Once available, it will show local search rankings across your service area.
+                        </p>
+                    </div>
+                )}
+
+                {geogridData.competitors && geogridData.competitors.length > 0 && (
+                    <div className="mt-6 px-4">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-4">Competitor Rankings</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            {geogridData.competitors.map((comp, index) => (
+                                <div key={index} className="flex items-center space-x-3">
+                                    <div className={`
+                                        w-10 h-10 rounded-full flex items-center justify-center text-black font-semibold
+                                        ${comp.rank <= 1 ? 'bg-emerald-500' : 
+                                          comp.rank <= 2 ? 'bg-emerald-400' :
+                                          comp.rank <= 4 ? 'bg-emerald-300' :
+                                          comp.rank <= 6 ? 'bg-emerald-200' :
+                                          'bg-yellow-200'}
+                                    `} style={{ textShadow: '0 0 3px rgba(255,255,255,0.5)' }}>
+                                        {typeof comp.rank === 'number' ? comp.rank.toFixed(1) : '-'}
                                     </div>
-                                ))}
-                            </div>
+                                    <div>
+                                        <span className="text-gray-700">{comp.name || 'Unknown'}</span>
+                                        {comp.domain && (
+                                            <span className="block text-xs text-gray-500">{comp.domain}</span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
+                )}
             </Card>
         );
     };
@@ -1253,20 +1282,6 @@ const GeogridMaps = () => {
             return;
         }
 
-        // Check cache first
-        const cacheKey = `geogrid_${workbookId}`;
-        const cachedData = sessionStorage.getItem(cacheKey);
-        if (cachedData) {
-            try {
-                const parsed = JSON.parse(cachedData);
-                setGeogridData(parsed);
-                setLoading(false);
-                return;
-            } catch (e) {
-                // Invalid cache, continue with fresh fetch
-            }
-        }
-
         const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
         
         fetchWithCorsWorkaround(scriptUrl, (err, data) => {
@@ -1281,18 +1296,20 @@ const GeogridMaps = () => {
                 return;
             }
             
-            // Get geogrid data from the correct path
-            const geogrid = data.geogridData;
-            if (geogrid) {
-                // Convert all keywords to lowercase for consistent matching
+            try {
+                // Get geogrid data and normalize keywords
+                const rawData = data.geogridData || {};
                 const normalizedData = {};
-                Object.entries(geogrid).forEach(([key, value]) => {
+                Object.entries(rawData).forEach(([key, value]) => {
                     normalizedData[key.toLowerCase().trim()] = value;
                 });
-                sessionStorage.setItem(cacheKey, JSON.stringify(normalizedData));
                 setGeogridData(normalizedData);
+                setLoading(false);
+            } catch (e) {
+                console.error('Data processing error:', e);
+                setError('Failed to process geogrid data');
+                setLoading(false);
             }
-            setLoading(false);
         });
     }, []);
 
