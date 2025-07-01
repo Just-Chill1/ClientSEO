@@ -113,37 +113,39 @@ function getWebsiteStats(spreadsheet) {
 // --- Helper Functions ---
 
 function getDashboardOverview(spreadsheet) {
+    const clientInfoSheet = spreadsheet.getSheetByName('Client & Competitor Info');
     const onPageSheet = spreadsheet.getSheetByName('On-Page Insights');
-    const gbpSheet = spreadsheet.getSheetByName('GBP Insights');
     const linksSheet = spreadsheet.getSheetByName('Links');
     
-    if (!onPageSheet || !gbpSheet || !linksSheet) return [];
+    if (!clientInfoSheet || !onPageSheet || !linksSheet) return [];
 
+    const clientInfoValues = clientInfoSheet.getRange('A2:Q' + clientInfoSheet.getLastRow()).getValues();
     const onPageValues = onPageSheet.getRange('A2:U' + onPageSheet.getLastRow()).getValues();
-    const gbpValues = gbpSheet.getRange('A2:T' + gbpSheet.getLastRow()).getValues();
     const linksValues = linksSheet.getRange('A2:S' + linksSheet.getLastRow()).getValues();
 
-    return onPageValues.map((onPageRow, index) => {
-        const name = onPageRow[1];
+    return clientInfoValues.map((clientRow, index) => {
+        const name = clientRow[1];  // Column B - Clinic Name
         if (!name) return null;
 
-        const gbpRow = gbpValues[index] || []; 
+        const onPageRow = onPageValues[index] || [];
         const linksRow = linksValues[index] || [];
         
-        // Add type checking for numeric values
-        const speed = onPageRow[10];
-        const speedFormatted = (typeof speed === 'number') ? speed.toFixed(4) + ' sec.' : 'N/A';
+        // Get site speed from On-Page Insights
+        const speed = onPageRow[10];  // Keeping the original site speed column
+        const speedFormatted = (typeof speed === 'number' && !isNaN(speed)) ? speed.toFixed(2) + ' sec.' : 'N/A';
         
-        // Get GBP data (review score, review count, address)
-        const reviewScore = parseFloat(gbpRow[1]) || 0;
-        const reviewCount = parseInt(gbpRow[2]) || 0;
-        const address = gbpRow[3] || '';
-        const borough = gbpRow[4] || '';
-        const city = gbpRow[5] || '';
+        // Get data from Client & Competitor Info sheet
+        const reviewScore = parseFloat(clientRow[14]) || 0;  // Column O - Review Score
+        const reviewCount = parseInt(clientRow[15]) || 0;    // Column P - Review Count
+        const address = clientRow[2] || '';     // Column C - Address
+        const borough = clientRow[3] || '';     // Column D - Borough
+        const city = clientRow[4] || '';        // Column E - City
+        const website = clientRow[8] || '';     // Column I - Website
+        const hours = clientRow[13] || 'N/A';   // Column N - Opening Hours
         
-        const kwPos1 = parseInt(onPageRow[19]) || 0;
-        const backlinks = parseInt(onPageRow[16]) || 0;
-        const website = onPageRow[8] || '';
+        // Get keywords data from On-Page Insights
+        const kwPos1 = parseInt(onPageRow[19]) || 0;  // Keeping the original keywords column
+        const backlinks = parseInt(onPageRow[16]) || 0;  // Keeping the original backlinks column
 
         return {
             id: index,
@@ -157,10 +159,10 @@ function getDashboardOverview(spreadsheet) {
             speed: speedFormatted,
             kwPos1: kwPos1,
             backlinks: backlinks,
-            hours: gbpRow[19] || 'N/A',
+            hours: hours,
             gAds: linksRow[18] === true,
             fbAds: linksRow[17] === true,
-            isClient: onPageRow[0] === 'Client'
+            isClient: clientRow[0] === 'Client'
         };
     }).filter(row => row);
 }
