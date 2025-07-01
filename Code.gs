@@ -123,15 +123,29 @@ function getDashboardOverview(spreadsheet) {
     const onPageValues = onPageSheet.getRange('A2:U' + onPageSheet.getLastRow()).getValues();
     const linksValues = linksSheet.getRange('A2:S' + linksSheet.getLastRow()).getValues();
 
+    // Create a map of website to onPage data for easier lookup
+    const onPageMap = new Map();
+    onPageValues.forEach(row => {
+        const website = row[8]; // Column I - Website
+        if (website) {
+            onPageMap.set(website, {
+                speed: row[10],      // Site Speed
+                kwPos1: row[19],     // Keywords Position 1
+                backlinks: row[16]   // Backlinks
+            });
+        }
+    });
+
     return clientInfoValues.map((clientRow, index) => {
         const name = clientRow[1];  // Column B - Clinic Name
         if (!name) return null;
 
-        const onPageRow = onPageValues[index] || [];
+        const website = clientRow[8];     // Column I - Website
+        const onPageData = onPageMap.get(website) || {};
         const linksRow = linksValues[index] || [];
         
-        // Get site speed from On-Page Insights
-        const speed = onPageRow[10];  // Keeping the original site speed column
+        // Get site speed from On-Page Insights with proper formatting
+        const speed = onPageData.speed;
         const speedFormatted = (typeof speed === 'number' && !isNaN(speed)) ? speed.toFixed(2) + ' sec.' : 'N/A';
         
         // Get data from Client & Competitor Info sheet
@@ -140,12 +154,11 @@ function getDashboardOverview(spreadsheet) {
         const address = clientRow[2] || '';     // Column C - Address
         const borough = clientRow[3] || '';     // Column D - Borough
         const city = clientRow[4] || '';        // Column E - City
-        const website = clientRow[8] || '';     // Column I - Website
         const hours = clientRow[13] || 'N/A';   // Column N - Opening Hours
         
-        // Get keywords data from On-Page Insights
-        const kwPos1 = parseInt(onPageRow[19]) || 0;  // Keeping the original keywords column
-        const backlinks = parseInt(onPageRow[16]) || 0;  // Keeping the original backlinks column
+        // Get keywords and backlinks data from On-Page Insights
+        const kwPos1 = parseInt(onPageData.kwPos1) || 0;
+        const backlinks = parseInt(onPageData.backlinks) || 0;
 
         return {
             id: index,
