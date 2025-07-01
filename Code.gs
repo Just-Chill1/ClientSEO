@@ -134,16 +134,26 @@ function getDashboardOverview(spreadsheet) {
         const speed = onPageRow[10];
         const speedFormatted = (typeof speed === 'number') ? speed.toFixed(4) + ' sec.' : 'N/A';
         
-        const score = parseFloat(gbpRow[1]) || 0;
-        const reviews = parseInt(gbpRow[2]) || 0;
+        // Get GBP data (review score, review count, address)
+        const reviewScore = parseFloat(gbpRow[1]) || 0;
+        const reviewCount = parseInt(gbpRow[2]) || 0;
+        const address = gbpRow[3] || '';
+        const borough = gbpRow[4] || '';
+        const city = gbpRow[5] || '';
+        
         const kwPos1 = parseInt(onPageRow[19]) || 0;
         const backlinks = parseInt(onPageRow[16]) || 0;
+        const website = onPageRow[8] || '';
 
         return {
             id: index,
-            name: name,
-            score: score,
-            reviews: reviews,
+            clinicName: name,
+            reviewScore: reviewScore.toFixed(1),
+            reviewCount: reviewCount,
+            address: address,
+            borough: borough,
+            city: city,
+            website: website,
             speed: speedFormatted,
             kwPos1: kwPos1,
             backlinks: backlinks,
