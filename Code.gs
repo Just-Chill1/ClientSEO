@@ -359,7 +359,11 @@ function getBacklinksTables(spreadsheet) {
     const sheet = spreadsheet.getSheetByName(mapping.sheetName);
     if (sheet) {
       const website = getWebsiteFromSheet(sheet);
+      // Add debug logging
+      Logger.log('Sheet: ' + mapping.sheetName);
+      Logger.log('Raw website: ' + website);
       const displayName = formatWebsiteToDisplayName(website);
+      Logger.log('Display name: ' + displayName);
       if (displayName) {
         allTables[displayName] = getBacklinkTableData(sheet);
       }
