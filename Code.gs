@@ -375,60 +375,84 @@ function getGeogridData(spreadsheet) {
     if (!sheet || sheet.getLastRow() < 2) return {};
 
     const values = sheet.getDataRange().getValues();
-    const headers = values[0];
-    const rows = values.slice(1);
+    const rows = values.slice(1);  // Skip header row
+    
+    // Log the first row to see the structure
+    Logger.log('First row data: ' + JSON.stringify(rows[0]));
     
     const groupedByKeyword = {};
     
-    rows.forEach(row => {
-        const keyword = row[7];
-        if (!keyword) return;
+    rows.forEach((row, index) => {
+        // Get keyword from column H (index 7)
+        const keyword = String(row[7] || '').trim().toLowerCase();
+        if (!keyword) {
+            Logger.log('Skipping row ' + (index + 2) + ' - no keyword found');
+            return;
+        }
         
         if (!groupedByKeyword[keyword]) {
             groupedByKeyword[keyword] = [];
         }
         
         // Format the date
-        const runDate = new Date(row[0]);
-        const formattedDate = runDate.toLocaleString('default', { 
-            month: 'long', 
-            year: 'numeric', 
-            timeZone: 'UTC' 
-        });
+        let formattedDate;
+        try {
+            const runDate = new Date(row[0]);
+            formattedDate = runDate.toLocaleString('default', { 
+                month: 'long', 
+                year: 'numeric', 
+                timeZone: 'UTC' 
+            });
+        } catch (e) {
+            Logger.log('Date parsing error for row ' + (index + 2) + ': ' + e);
+            formattedDate = String(row[0]);
+        }
         
         // Process competitors data
         const competitors = [];
-        for (let i = 1; i <= 5; i++) {
-            const nameIndex = 9 + (i-1)*3 + 1;  // Calculate correct indices for competitor name
-            const rankIndex = 9 + (i-1)*3 + 2;  // Calculate correct indices for rank
+        // Map showing the column indices for competitor data
+        const competitorColumns = [
+            { name: 10, rank: 11 },  // First competitor
+            { name: 13, rank: 14 },  // Second competitor
+            { name: 16, rank: 17 },  // Third competitor
+            { name: 19, rank: 20 },  // Fourth competitor
+            { name: 22, rank: 23 }   // Fifth competitor
+        ];
+        
+        competitorColumns.forEach((cols, i) => {
+            const name = row[cols.name];
+            const rank = row[cols.rank];
             
-            const name = row[nameIndex];
-            const rank = row[rankIndex];
-            
-            if (name && rank !== undefined && rank !== null) {
+            if (name && rank !== undefined) {
                 competitors.push({
                     name: String(name),
                     rank: parseFloat(rank) || 0
                 });
             }
-        }
-        
-        // Add the entry to the keyword group
-        groupedByKeyword[keyword].push({
-            date: formattedDate,
-            mapLink: row[9] || '',
-            competitors: competitors
         });
+        
+        // Log competitors found
+        Logger.log('Competitors found for keyword ' + keyword + ': ' + competitors.length);
+        
+        // Create the entry
+        const entry = {
+            date: formattedDate,
+            mapLink: String(row[8] || ''),  // Map link is in column I (index 8)
+            competitors: competitors
+        };
+        
+        groupedByKeyword[keyword].push(entry);
     });
     
     // Sort entries within each keyword group by date (newest first)
-    for (const keyword in groupedByKeyword) {
+    Object.keys(groupedByKeyword).forEach(keyword => {
         groupedByKeyword[keyword].sort((a, b) => {
-            const dateA = new Date(a.date);
-            const dateB = new Date(b.date);
-            return dateB - dateA;
+            return new Date(b.date) - new Date(a.date);
         });
-    }
+    });
+    
+    // Log final structure
+    Logger.log('Final keywords found: ' + Object.keys(groupedByKeyword).join(', '));
     
     return groupedByKeyword;
 }
