@@ -370,90 +370,46 @@ function getBacklinkTableData(sheet) {
 }
 
 function getGeogridData(spreadsheet) {
-    const sheetName = 'GeoGrid Maps';
+    const sheetName = 'Geogrid Maps';
     const sheet = spreadsheet.getSheetByName(sheetName);
-    if (!sheet || sheet.getLastRow() < 2) return {};
+    if (!sheet || sheet.getLastRow() < 2) {
+        return {};
+    }
 
-    const values = sheet.getDataRange().getValues();
-    const rows = values.slice(1);  // Skip header row
-    
-    // Log the first row to see the structure
-    Logger.log('First row data: ' + JSON.stringify(rows[0]));
-    
+    const values = sheet.getDataRange().getValues().slice(1);
     const groupedByKeyword = {};
-    
-    rows.forEach((row, index) => {
-        // Get keyword from column H (index 7)
-        const keyword = String(row[7] || '').trim().toLowerCase();
-        if (!keyword) {
-            Logger.log('Skipping row ' + (index + 2) + ' - no keyword found');
-            return;
-        }
-        
+
+    values.forEach(row => {
+        const keyword = row[7];
+        if (!keyword) return;
+
         if (!groupedByKeyword[keyword]) {
             groupedByKeyword[keyword] = [];
         }
         
-        // Format the date
-        let formattedDate;
-        try {
-            const runDate = new Date(row[0]);
-            formattedDate = runDate.toLocaleString('default', { 
-                month: 'long', 
-                year: 'numeric', 
-                timeZone: 'UTC' 
-            });
-        } catch (e) {
-            Logger.log('Date parsing error for row ' + (index + 2) + ': ' + e);
-            formattedDate = String(row[0]);
-        }
-        
-        // Process competitors data
+        const runDate = new Date(row[0]);
+        const formattedDate = runDate.toLocaleString('default', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+
         const competitors = [];
-        // Map showing the column indices for competitor data
-        const competitorColumns = [
-            { name: 10, rank: 11 },  // First competitor
-            { name: 13, rank: 14 },  // Second competitor
-            { name: 16, rank: 17 },  // Third competitor
-            { name: 19, rank: 20 },  // Fourth competitor
-            { name: 22, rank: 23 }   // Fifth competitor
-        ];
-        
-        competitorColumns.forEach((cols, i) => {
-            const name = row[cols.name];
-            const rank = row[cols.rank];
-            
-            if (name && rank !== undefined) {
-                competitors.push({
-                    name: String(name),
-                    rank: parseFloat(rank) || 0
-                });
+        for (let i = 1; i <= 5; i++) {
+            const name = row[9 + (i-1)*3 + 1];
+            const rank = row[9 + (i-1)*3 + 3];
+            if (name && rank) {
+                competitors.push({ name: name, rank: parseFloat(rank) });
             }
-        });
-        
-        // Log competitors found
-        Logger.log('Competitors found for keyword ' + keyword + ': ' + competitors.length);
-        
-        // Create the entry
-        const entry = {
+        }
+
+        groupedByKeyword[keyword].push({
             date: formattedDate,
-            mapLink: String(row[8] || ''),  // Map link is in column I (index 8)
-            competitors: competitors
-        };
-        
-        groupedByKeyword[keyword].push(entry);
-    });
-    
-    // Sort entries within each keyword group by date (newest first)
-    Object.keys(groupedByKeyword).forEach(keyword => {
-        groupedByKeyword[keyword].sort((a, b) => {
-            return new Date(b.date) - new Date(a.date);
+            mapLink: row[9],
+            competitors: competitors,
         });
     });
-    
-    // Log final structure
-    Logger.log('Final keywords found: ' + Object.keys(groupedByKeyword).join(', '));
-    
+
+    for (const keyword in groupedByKeyword) {
+        groupedByKeyword[keyword].sort((a, b) => new Date(b.date) - new Date(a.date));
+    }
+
     return groupedByKeyword;
 }
 
