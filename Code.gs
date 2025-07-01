@@ -282,17 +282,54 @@ function getBacklinksSummary(spreadsheet) {
     };
 }
 
+// Helper function to format website URL into a display name
+function formatWebsiteToDisplayName(website) {
+  if (!website) return '';
+  
+  // Remove protocol and www
+  let displayName = website.replace(/^https?:\/\//i, '').replace(/^www\./i, '');
+  
+  // Remove trailing slash
+  displayName = displayName.replace(/\/$/, '');
+  
+  // Remove everything after the first slash if it exists
+  displayName = displayName.split('/')[0];
+  
+  return displayName;
+}
+
+// Helper function to get website from sheet
+function getWebsiteFromSheet(sheet) {
+  if (!sheet || sheet.getLastRow() < 2) return '';
+  
+  // Assuming website is in column C (index 2)
+  const websiteCol = 2;
+  const website = sheet.getRange(2, websiteCol + 1).getValue();
+  return website;
+}
+
 function getKeywordsTables(spreadsheet) {
-  const competitorMapping = [
-    { friendlyName: "Clique Medspa", sheetName: "Client_kw" }, { friendlyName: "TrueMedSpa", sheetName: "Competitor 1_kw" },
-    { friendlyName: "Viva Vitality MedSpa", sheetName: "Competitor 2_kw" }, { friendlyName: "Ageless Venetian", sheetName: "Competitor 3_kw" },
-    { friendlyName: "Aesthetic Surgery", sheetName: "Competitor 4_kw" },
+  const sheetMapping = [
+    { sheetName: 'Client_kw' },
+    { sheetName: 'Competitor 1_kw' },
+    { sheetName: 'Competitor 2_kw' },
+    { sheetName: 'Competitor 3_kw' },
+    { sheetName: 'Competitor 4_kw' }
   ];
+  
   const allTables = {};
-  competitorMapping.forEach(c => {
-    const sheet = spreadsheet.getSheetByName(c.sheetName);
-    allTables[c.friendlyName] = sheet ? getKeywordTableData(sheet) : [];
+  
+  sheetMapping.forEach(mapping => {
+    const sheet = spreadsheet.getSheetByName(mapping.sheetName);
+    if (sheet) {
+      const website = getWebsiteFromSheet(sheet);
+      const displayName = formatWebsiteToDisplayName(website);
+      if (displayName) {
+        allTables[displayName] = getKeywordTableData(sheet);
+      }
+    }
   });
+  
   return allTables;
 }
 
@@ -308,16 +345,27 @@ function getKeywordTableData(sheet) {
 }
 
 function getBacklinksTables(spreadsheet) {
-  const competitorMapping = [
-    { friendlyName: "Clique Medspa", sheetName: "Client_bl" }, { friendlyName: "TrueMedSpa", sheetName: "Competitor 1_bl" },
-    { friendlyName: "Viva Vitality MedSpa", sheetName: "Competitor 2_bl" }, { friendlyName: "Ageless Venetian", sheetName: "Competitor 3_bl" },
-    { friendlyName: "Aesthetic Surgery", sheetName: "Competitor 4_bl" },
+  const sheetMapping = [
+    { sheetName: 'Client_bl' },
+    { sheetName: 'Competitor 1_bl' },
+    { sheetName: 'Competitor 2_bl' },
+    { sheetName: 'Competitor 3_bl' },
+    { sheetName: 'Competitor 4_bl' }
   ];
+  
   const allTables = {};
-  competitorMapping.forEach(c => {
-    const sheet = spreadsheet.getSheetByName(c.sheetName);
-    allTables[c.friendlyName] = sheet ? getBacklinkTableData(sheet) : [];
+  
+  sheetMapping.forEach(mapping => {
+    const sheet = spreadsheet.getSheetByName(mapping.sheetName);
+    if (sheet) {
+      const website = getWebsiteFromSheet(sheet);
+      const displayName = formatWebsiteToDisplayName(website);
+      if (displayName) {
+        allTables[displayName] = getBacklinkTableData(sheet);
+      }
+    }
   });
+  
   return allTables;
 }
 
@@ -337,57 +385,8 @@ function getGeogridData(spreadsheet) {
     const data = geogridSheet.getDataRange().getValues();
     const headers = data[0];
     const rows = data.slice(1);
-
-    // Get column indices
-    const dateIndex = headers.indexOf('Run Date');
-    const keywordIndex = headers.indexOf('Keyword');
-    const mapLinkIndex = headers.indexOf('Map Link');
-    const mapTypeIndex = headers.indexOf('Map Type');
-
-    // Get position column indices
-    const positionIndices = [];
-    for (let i = 1; i <= 5; i++) {
-        positionIndices.push({
-            name: headers.indexOf(`Position ${i} Name`),
-            domain: headers.indexOf(`Position ${i} Domain`),
-            rank: headers.indexOf(`Position ${i} Average Rank`)
-        });
-    }
-
-    // Group data by keyword
-    const keywordGroups = {};
-    rows.forEach(row => {
-        if (!row[keywordIndex]) return; // Skip if no keyword
-
-        const keyword = String(row[keywordIndex]).toLowerCase().trim();
-        if (!keywordGroups[keyword]) {
-            keywordGroups[keyword] = [];
-        }
-
-        // Format competitors data
-        const competitors = positionIndices.map(pos => ({
-            name: row[pos.name] || '',
-            domain: row[pos.domain] || '',
-            rank: parseFloat(row[pos.rank]) || 0
-        })).filter(comp => comp.name || comp.domain); // Only include competitors with data
-
-        // Only include rows that have either a map link or competitor data
-        if (row[mapLinkIndex] || competitors.length > 0) {
-            keywordGroups[keyword].push({
-                date: formatDate(row[dateIndex]),
-                mapLink: row[mapLinkIndex] || '',
-                mapType: row[mapTypeIndex] || '',
-                competitors: competitors
-            });
-        }
-    });
-
-    // Sort each keyword's data by date
-    Object.keys(keywordGroups).forEach(keyword => {
-        keywordGroups[keyword].sort((a, b) => new Date(b.date) - new Date(a.date));
-    });
-
-    return keywordGroups;
+    
+    return rows;
 }
 
 function formatDate(date) {

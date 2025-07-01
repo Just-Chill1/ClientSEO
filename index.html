@@ -868,14 +868,13 @@ const Keywords = ({ summary, table }) => {
     const [active, setActive] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const siteNames = Object.keys(table);
-    const clientName = siteNames.find(n => n.toLowerCase().includes('client') || n.toLowerCase().includes('look')) || siteNames[0];
-
-    // Set initial active site
+    
+    // Set initial active site to the first one
     useEffect(() => {
         if (!active && siteNames.length > 0) {
-            setActive(clientName);
+            setActive(siteNames[0]);
         }
-    }, [siteNames, clientName]);
+    }, [siteNames]);
 
     // Icons
     const Search = createIcon(
