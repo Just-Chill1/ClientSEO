@@ -54,8 +54,13 @@ function getDashboardData(spreadsheet) {
     const aiReport = getAiReport(spreadsheet);
     
     const allGeogridData = getGeogridData(spreadsheet);
+    console.log('All geogrid keywords:', Object.keys(allGeogridData));
+    
     const medspaNearMeData = allGeogridData['medspa near me'] || [];
+    console.log('Medspa near me data length:', medspaNearMeData.length);
+    
     const latestGeogrid = medspaNearMeData.length > 0 ? medspaNearMeData[0] : null;
+    console.log('Latest geogrid data:', latestGeogrid);
 
     return {
         overviewData,
@@ -370,18 +375,23 @@ function getBacklinkTableData(sheet) {
 }
 
 function getGeogridData(spreadsheet) {
-    const sheetName = 'GeoGrid Maps';  // Note: exact case matching
+    const sheetName = 'GeoGrid Maps';  // Case sensitive sheet name
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet || sheet.getLastRow() < 2) {
+        console.log('No GeoGrid Maps sheet found or no data');
         return {};
     }
 
     const values = sheet.getDataRange().getValues().slice(1);
+    console.log('Total rows in GeoGrid Maps:', values.length);
     const groupedByKeyword = {};
 
-    values.forEach(row => {
-        const keyword = row[7];
-        if (!keyword) return;
+    values.forEach((row, index) => {
+        const keyword = row[7];  // Column H
+        if (!keyword) {
+            console.log(`Row ${index + 2}: No keyword found`);
+            return;
+        }
 
         if (!groupedByKeyword[keyword]) {
             groupedByKeyword[keyword] = [];
@@ -389,22 +399,38 @@ function getGeogridData(spreadsheet) {
         
         const runDate = new Date(row[0]);
         const formattedDate = runDate.toLocaleString('default', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-
+        
         const competitors = [];
-        for (let i = 1; i <= 5; i++) {
-            const name = row[9 + (i-1)*3 + 1];
-            const rank = row[9 + (i-1)*3 + 3];
+        // Starting from column K (index 10), each competitor takes 3 columns
+        for (let i = 0; i < 5; i++) {
+            const nameIndex = 10 + (i * 3);     // Competitor name columns: K, N, Q, T, W
+            const rankIndex = nameIndex + 2;     // Rank columns: M, P, S, V, Y
+            const name = row[nameIndex];
+            const rank = row[rankIndex];
+            
             if (name && rank) {
                 competitors.push({ name: name, rank: parseFloat(rank) });
+            } else {
+                console.log(`Row ${index + 2}: Missing competitor data for position ${i+1}. Name: ${name}, Rank: ${rank}`);
             }
+        }
+
+        if (competitors.length === 0) {
+            console.log(`Row ${index + 2}: No competitor data found for keyword: ${keyword}`);
         }
 
         groupedByKeyword[keyword].push({
             date: formattedDate,
-            mapLink: row[9],
+            mapLink: row[9],  // Column J
             competitors: competitors,
         });
     });
+
+    // Log the final structure
+    console.log('Keywords found:', Object.keys(groupedByKeyword));
+    for (const keyword in groupedByKeyword) {
+        console.log(`${keyword}: ${groupedByKeyword[keyword].length} entries`);
+    }
 
     for (const keyword in groupedByKeyword) {
         groupedByKeyword[keyword].sort((a, b) => new Date(b.date) - new Date(a.date));
