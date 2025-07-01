@@ -108,82 +108,46 @@ function getWebsiteStats(spreadsheet) {
 // --- Helper Functions ---
 
 function getDashboardOverview(spreadsheet) {
-    const clientInfoSheet = spreadsheet.getSheetByName('Client & Competitor Info');
-    const linksSheet = spreadsheet.getSheetByName('Links');
     const onPageSheet = spreadsheet.getSheetByName('On-Page Insights');
+    const gbpSheet = spreadsheet.getSheetByName('GBP Insights');
+    const linksSheet = spreadsheet.getSheetByName('Links');
     
-    if (!clientInfoSheet || !linksSheet) return [];
+    if (!onPageSheet || !gbpSheet || !linksSheet) return [];
 
-    const clientInfoValues = clientInfoSheet.getRange('A2:P' + clientInfoSheet.getLastRow()).getValues();
+    const onPageValues = onPageSheet.getRange('A2:U' + onPageSheet.getLastRow()).getValues();
+    const gbpValues = gbpSheet.getRange('A2:T' + gbpSheet.getLastRow()).getValues();
     const linksValues = linksSheet.getRange('A2:S' + linksSheet.getLastRow()).getValues();
-    
-    // Get On-Page Insights data
-    let onPageData = {};
-    if (onPageSheet && onPageSheet.getLastRow() > 1) {
-        const onPageValues = onPageSheet.getRange('A2:CP' + onPageSheet.getLastRow()).getValues();
-        onPageData = onPageValues.reduce((acc, row) => {
-            const name = String(row[1] || '').trim();
-            if (name) {
-                acc[name] = {
-                    speed: row[10] ? row[10].toFixed(4) + ' sec.' : 'N/A',
-                    kwPos1: row[19] || 0,
-                    backlinks: row[16] || 0
-                };
-            }
-            return acc;
-        }, {});
-    }
 
-    return clientInfoValues.map((clientRow, index) => {
+    return onPageValues.map((onPageRow, index) => {
+        const name = onPageRow[1];
+        if (!name) return null;
+
+        const gbpRow = gbpValues[index] || []; 
         const linksRow = linksValues[index] || [];
-        const accountType = clientRow[0];
-        if (!accountType) return null;
+        
+        // Add type checking for numeric values
+        const speed = onPageRow[10];
+        const speedFormatted = (typeof speed === 'number') ? speed.toFixed(4) + ' sec.' : 'N/A';
+        
+        const score = parseFloat(gbpRow[1]) || 0;
+        const reviews = parseInt(gbpRow[2]) || 0;
+        const kwPos1 = parseInt(onPageRow[19]) || 0;
+        const backlinks = parseInt(onPageRow[16]) || 0;
 
-        // Get all the basic info and ensure it's properly formatted
-        const clinicName = String(clientRow[1] || '').trim();
-        const address = String(clientRow[2] || '').trim();
-        const borough = String(clientRow[3] || '').trim();
-        const city = String(clientRow[4] || '').trim();
-        const website = String(clientRow[8] || '').trim();
-        const hours = String(clientRow[13] || '').trim();
-        const reviewScore = parseFloat(clientRow[14]) || 0;
-        const reviewCount = parseInt(clientRow[15]) || 0;
-
-        // Only return if we have a clinic name
-        if (!clinicName) return null;
-
-        // Get matching on-page data
-        const onPageMetrics = onPageData[clinicName] || {
-            speed: 'N/A',
-            kwPos1: 0,
-            backlinks: 0
-        };
-
-        // Handle Google Ads and Facebook Ads status
-        const gAdsStatus = linksRow[17] ? (String(linksRow[17]).toLowerCase() === 'yes' ? 'Multiple Ads Found' : 'No Ads Found') : 'Unknown';
-        const fbAdsStatus = linksRow[16] ? (String(linksRow[16]).toLowerCase() === 'yes' ? 'Multiple Ads Found' : 'No Ads Found') : 'Unknown';
-
-        // Create the final object with all data properly formatted
         return {
             id: index,
-            clinicName: clinicName,
-            address: address,
-            borough: borough,
-            city: city,
-            website: website,
-            reviewScore: reviewScore.toFixed(1),
-            reviewCount: reviewCount,
-            hours: hours || 'N/A',
-            gAds: gAdsStatus,
-            fbAds: fbAdsStatus,
-            gAdsLink: String(linksRow[17]).toLowerCase() === 'yes' ? 'https://ads.google.com' : null,
-            fbAdsLink: String(linksRow[16]).toLowerCase() === 'yes' ? 'https://facebook.com/ads' : null,
-            isClient: accountType.toLowerCase() === 'client',
-            speed: onPageMetrics.speed,
-            kwPos1: onPageMetrics.kwPos1,
-            backlinks: onPageMetrics.backlinks
+            name: name,
+            score: score,
+            reviews: reviews,
+            speed: speedFormatted,
+            kwPos1: kwPos1,
+            backlinks: backlinks,
+            hours: gbpRow[19] || 'N/A',
+            gAds: linksRow[18] === true,
+            fbAds: linksRow[17] === true,
+            isClient: onPageRow[0] === 'Client'
         };
-    }).filter(row => row && row.clinicName); // Only return rows that have a clinic name
+    }).filter(row => row);
 }
 
 function getCensusData(spreadsheet) {
@@ -286,46 +250,61 @@ function getBacklinksSummary(spreadsheet) {
 function formatWebsiteToDisplayName(website) {
   if (!website) return '';
   
-  // Remove protocol and www
-  let displayName = website.replace(/^https?:\/\//i, '').replace(/^www\./i, '');
-  
-  // Remove trailing slash
-  displayName = displayName.replace(/\/$/, '');
-  
-  // Remove everything after the first slash if it exists
-  displayName = displayName.split('/')[0];
-  
-  return displayName;
+  try {
+    // Remove protocol and www
+    let displayName = website.replace(/^https?:\/\//i, '').replace(/^www\./i, '');
+    
+    // Remove trailing slash
+    displayName = displayName.replace(/\/$/, '');
+    
+    // Remove everything after the first slash if it exists
+    displayName = displayName.split('/')[0];
+    
+    return displayName;
+  } catch (e) {
+    console.error('Error formatting website:', e);
+    return website; // Return original if formatting fails
+  }
 }
 
 // Helper function to get website from sheet
 function getWebsiteFromSheet(sheet) {
   if (!sheet || sheet.getLastRow() < 2) return '';
   
-  // Assuming website is in column C (index 2)
-  const websiteCol = 2;
-  const website = sheet.getRange(2, websiteCol + 1).getValue();
-  return website;
+  // Get all values from the first data row
+  const firstDataRow = sheet.getRange(2, 1, 1, sheet.getLastColumn()).getValues()[0];
+  
+  // Find the column with header 'website' or containing website URL
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const websiteColumnIndex = headers.findIndex(header => 
+    String(header).toLowerCase() === 'website' || 
+    String(header).toLowerCase() === 'website url' ||
+    String(header).toLowerCase() === 'url'
+  );
+  
+  // If we found the website column, return its value, otherwise return empty string
+  return websiteColumnIndex !== -1 ? firstDataRow[websiteColumnIndex] : '';
 }
 
 function getKeywordsTables(spreadsheet) {
   const sheetMapping = [
-    { sheetName: 'Client_kw' },
-    { sheetName: 'Competitor 1_kw' },
-    { sheetName: 'Competitor 2_kw' },
-    { sheetName: 'Competitor 3_kw' },
-    { sheetName: 'Competitor 4_kw' }
+    { sheetName: "Client_kw" }, { sheetName: "Competitor 1_kw" },
+    { sheetName: "Competitor 2_kw" }, { sheetName: "Competitor 3_kw" },
+    { sheetName: "Competitor 4_kw" },
   ];
-  
   const allTables = {};
   
   sheetMapping.forEach(mapping => {
     const sheet = spreadsheet.getSheetByName(mapping.sheetName);
-    if (sheet) {
-      const website = getWebsiteFromSheet(sheet);
-      const displayName = formatWebsiteToDisplayName(website);
-      if (displayName) {
-        allTables[displayName] = getKeywordTableData(sheet);
+    if (sheet && sheet.getLastRow() >= 2) {
+      // Get the website from the first data row, column C (index 2)
+      const website = sheet.getRange('C2').getValue();
+      if (website) {
+        // Format the website URL to be used as the key
+        const displayName = formatWebsiteToDisplayName(website);
+        if (displayName) {
+          allTables[displayName] = getKeywordTableData(sheet);
+        }
       }
     }
   });
@@ -346,22 +325,23 @@ function getKeywordTableData(sheet) {
 
 function getBacklinksTables(spreadsheet) {
   const sheetMapping = [
-    { sheetName: 'Client_bl' },
-    { sheetName: 'Competitor 1_bl' },
-    { sheetName: 'Competitor 2_bl' },
-    { sheetName: 'Competitor 3_bl' },
-    { sheetName: 'Competitor 4_bl' }
+    { sheetName: "Client_bl" }, { sheetName: "Competitor 1_bl" },
+    { sheetName: "Competitor 2_bl" }, { sheetName: "Competitor 3_bl" },
+    { sheetName: "Competitor 4_bl" },
   ];
-  
   const allTables = {};
   
   sheetMapping.forEach(mapping => {
     const sheet = spreadsheet.getSheetByName(mapping.sheetName);
-    if (sheet) {
-      const website = getWebsiteFromSheet(sheet);
-      const displayName = formatWebsiteToDisplayName(website);
-      if (displayName) {
-        allTables[displayName] = getBacklinkTableData(sheet);
+    if (sheet && sheet.getLastRow() >= 2) {
+      // Get the website from the first data row, column C (index 2)
+      const website = sheet.getRange('C2').getValue();
+      if (website) {
+        // Format the website URL to be used as the key
+        const displayName = formatWebsiteToDisplayName(website);
+        if (displayName) {
+          allTables[displayName] = getBacklinkTableData(sheet);
+        }
       }
     }
   });
@@ -371,22 +351,86 @@ function getBacklinksTables(spreadsheet) {
 
 function getBacklinkTableData(sheet) {
   if (sheet.getLastRow() < 2) return [];
+  
+  // Get all data rows
   const values = sheet.getDataRange().getValues().slice(1);
+  
+  // Map and filter the data
   return values.map(row => ({
-    backlinkUrl: row[3], linkUrl: row[4], isNew: row[5], isLost: row[6],
-    spamScore: row[7], rank: row[8], following: row[9], title: row[10]
-  })).filter(row => row.backlinkUrl);
+    website: row[2] || '',      // Add website column
+    backlinkUrl: row[3] || '',  // Add fallback empty string
+    linkUrl: row[4] || '',      // Add fallback empty string
+    isNew: row[5] === true,     // Ensure boolean
+    isLost: row[6] === true,    // Ensure boolean
+    spamScore: parseFloat(row[7]) || 0,  // Ensure number
+    rank: parseFloat(row[8]) || 0,       // Ensure number
+    following: row[9] === true,          // Ensure boolean
+    title: row[10] || ''       // Add fallback empty string
+  })).filter(row => row.backlinkUrl);  // Only include rows with backlink URLs
 }
 
 function getGeogridData(spreadsheet) {
-    const geogridSheet = spreadsheet.getSheetByName('GeoGrid Maps');
-    if (!geogridSheet) return {};
+    const sheetName = 'GeoGrid Maps';
+    const sheet = spreadsheet.getSheetByName(sheetName);
+    if (!sheet || sheet.getLastRow() < 2) return {};
 
-    const data = geogridSheet.getDataRange().getValues();
-    const headers = data[0];
-    const rows = data.slice(1);
+    const values = sheet.getDataRange().getValues();
+    const headers = values[0];
+    const rows = values.slice(1);
     
-    return rows;
+    const groupedByKeyword = {};
+    
+    rows.forEach(row => {
+        const keyword = row[7];
+        if (!keyword) return;
+        
+        if (!groupedByKeyword[keyword]) {
+            groupedByKeyword[keyword] = [];
+        }
+        
+        // Format the date
+        const runDate = new Date(row[0]);
+        const formattedDate = runDate.toLocaleString('default', { 
+            month: 'long', 
+            year: 'numeric', 
+            timeZone: 'UTC' 
+        });
+        
+        // Process competitors data
+        const competitors = [];
+        for (let i = 1; i <= 5; i++) {
+            const nameIndex = 9 + (i-1)*3 + 1;  // Calculate correct indices for competitor name
+            const rankIndex = 9 + (i-1)*3 + 2;  // Calculate correct indices for rank
+            
+            const name = row[nameIndex];
+            const rank = row[rankIndex];
+            
+            if (name && rank !== undefined && rank !== null) {
+                competitors.push({
+                    name: String(name),
+                    rank: parseFloat(rank) || 0
+                });
+            }
+        }
+        
+        // Add the entry to the keyword group
+        groupedByKeyword[keyword].push({
+            date: formattedDate,
+            mapLink: row[9] || '',
+            competitors: competitors
+        });
+    });
+    
+    // Sort entries within each keyword group by date (newest first)
+    for (const keyword in groupedByKeyword) {
+        groupedByKeyword[keyword].sort((a, b) => {
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            return dateB - dateA;
+        });
+    }
+    
+    return groupedByKeyword;
 }
 
 function formatDate(date) {
