@@ -370,7 +370,7 @@ function getBacklinkTableData(sheet) {
 }
 
 function getGeogridData(spreadsheet) {
-    const sheetName = 'Geogrid Maps';
+    const sheetName = 'GeoGrid Maps';  // Note: exact case matching
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet || sheet.getLastRow() < 2) {
         return {};
