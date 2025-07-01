@@ -891,7 +891,6 @@ const Keywords = ({ summary, table }) => {
             <line x1="10" y1="14" x2="21" y2="3" />
         </>
     );
-    const TrendingUp = createIcon(<polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />);
 
     // Summary cards data
     const summaryCards = [
@@ -925,16 +924,6 @@ const Keywords = ({ summary, table }) => {
     const formatCurrency = (num) => {
         if (num === undefined || num === null) return '-';
         return typeof num === 'number' ? `$${num.toFixed(2)}` : num;
-    };
-
-    // Format date
-    const formatDate = (dateStr) => {
-        if (!dateStr) return '-';
-        try {
-            return new Date(dateStr).toLocaleDateString();
-        } catch (e) {
-            return dateStr;
-        }
     };
 
     return (
@@ -971,22 +960,6 @@ const Keywords = ({ summary, table }) => {
                     </button>
                 </div>
 
-                <div className="flex flex-wrap gap-2 mb-4">
-                    {siteNames.map(site => (
-                        <button
-                            key={site}
-                            onClick={() => setActive(site)}
-                            className={`px-3 py-1 rounded-full text-sm border transition-colors
-                                ${active === site
-                                    ? 'bg-blue-600 text-white border-blue-600'
-                                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-100'
-                                }`}
-                        >
-                            {site}
-                        </button>
-                    ))}
-                </div>
-
                 <div className="mb-4">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -1000,7 +973,28 @@ const Keywords = ({ summary, table }) => {
                     </div>
                 </div>
 
-                <div className="overflow-x-auto">
+                <div className="border-b border-gray-200">
+                    <nav className="-mb-px flex space-x-6 overflow-x-auto">
+                        {siteNames.map(name => (
+                            <button
+                                key={name}
+                                onClick={() => {
+                                    setActive(name);
+                                    setSearchTerm('');
+                                }}
+                                className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm ${
+                                    active === name
+                                    ? 'border-blue-500 text-blue-600'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                }`}
+                            >
+                                {name}
+                            </button>
+                        ))}
+                    </nav>
+                </div>
+
+                <div className="mt-4 overflow-x-auto">
                     <table className="w-full text-left text-sm whitespace-nowrap">
                         <thead>
                             <tr className="border-b-2 border-gray-200 bg-gray-50">
@@ -1014,9 +1008,8 @@ const Keywords = ({ summary, table }) => {
                                 <th className="py-2 px-3 text-center">Difficulty</th>
                                 <th className="py-2 px-3 text-center">Intent</th>
                                 <th className="py-2 px-3 text-center">Competition</th>
-                                <th className="py-2 px-3">Ranking URL</th>
                                 <th className="py-2 px-3">Title</th>
-                                <th className="py-2 px-3 text-center">Link</th>
+                                <th className="py-2 px-3 text-center">Check</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1085,17 +1078,12 @@ const Keywords = ({ summary, table }) => {
                                             {row.competition_lvl || '-'}
                                         </span>
                                     </td>
-                                    <td className="py-3 px-3 text-blue-600 hover:underline max-w-xs truncate">
-                                        <a href={row.ranking_url} target="_blank" rel="noopener noreferrer" title={row.ranking_url}>
-                                            {row.ranking_url?.replace(/^https?:\/\//i, '') || '-'}
-                                        </a>
-                                    </td>
                                     <td className="py-3 px-3 text-gray-600 max-w-xs truncate" title={row.ranking_title}>
                                         {row.ranking_title || '-'}
                                     </td>
                                     <td className="py-3 px-3 text-center">
-                                        {row.ranking_url && (
-                                            <a href={row.ranking_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 inline-block">
+                                        {row.check_url && (
+                                            <a href={row.check_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 inline-block">
                                                 <ExternalLink className="w-4 h-4" />
                                             </a>
                                         )}
