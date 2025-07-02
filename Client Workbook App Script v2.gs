@@ -157,14 +157,16 @@ function getDashboardOverview(spreadsheet) {
         
         // Properly handle the speed value from the corresponding onPageRow
         let speedValue = 'N/A';
-        // Site Speed is in column K of On-Page Insights, which is index 10
-        const rawSpeed = onPageRow[10]; 
-        if (typeof rawSpeed === 'number' && !isNaN(rawSpeed)) {
-            speedValue = rawSpeed.toFixed(2) + 's';
-        } else if (typeof rawSpeed === 'string' && rawSpeed.trim() !== '') {
-            const parsedSpeed = parseFloat(rawSpeed);
-            if (!isNaN(parsedSpeed)) {
-                speedValue = parsedSpeed.toFixed(2) + 's';
+        const rawSpeed = onPageRow[10]; // Site Speed is in column K (index 10)
+
+        if (rawSpeed !== null && rawSpeed !== undefined && String(rawSpeed).trim() !== '') {
+            // Convert to string, remove non-numeric characters (except period), then parse.
+            const numericString = String(rawSpeed).replace(/[^\d.]/g, '');
+            if (numericString) { // Check if there's anything left to parse
+                const parsedSpeed = parseFloat(numericString);
+                if (!isNaN(parsedSpeed)) {
+                    speedValue = parsedSpeed.toFixed(2) + 's';
+                }
             }
         }
         
