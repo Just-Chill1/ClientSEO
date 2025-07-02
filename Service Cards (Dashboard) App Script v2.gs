@@ -86,6 +86,25 @@ function doGet(e) {
   }
 }
 
+// Custom parser to handle "Month YYYY" format
+function parseDateHeader(header) {
+    if (!header || typeof header !== 'string') return null;
+    const months = {
+        'january': 0, 'february': 1, 'march': 2, 'april': 3, 'may': 4, 'june': 5,
+        'july': 6, 'august': 7, 'september': 8, 'october': 9, 'november': 10, 'december': 11
+    };
+    const parts = header.trim().split(/\s+/);
+    if (parts.length !== 2) return null;
+    
+    const month = months[parts[0].toLowerCase()];
+    const year = parseInt(parts[1], 10);
+
+    if (month !== undefined && !isNaN(year)) {
+        return new Date(year, month, 1);
+    }
+    return null;
+}
+
 function processSheetData(sheet, locationColumnIndex, locationFilterValue) {
     const header = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     const data = sheet.getDataRange().getValues();
@@ -93,9 +112,18 @@ function processSheetData(sheet, locationColumnIndex, locationFilterValue) {
     // --- ROBUST DATE COLUMN FINDER ---
     const dateColumns = [];
     header.forEach((cell, index) => {
-        // Check if the cell value is a valid Date object or a string that can be parsed into a date
-        const date = new Date(cell);
-        if (cell && !isNaN(date.getTime())) {
+        // Try our custom parser first for "Month YYYY"
+        let date = parseDateHeader(cell);
+        
+        // Fallback for standard date formats if the custom parser fails
+        if (!date && cell) {
+            let parsed = new Date(cell);
+            if (!isNaN(parsed.getTime())) {
+                date = parsed;
+            }
+        }
+        
+        if (date) {
             dateColumns.push({ index: index, date: date });
         }
     });

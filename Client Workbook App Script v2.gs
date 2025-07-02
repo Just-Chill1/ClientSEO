@@ -147,37 +147,33 @@ function getDashboardOverview(spreadsheet) {
     const onPageValues = onPageSheet.getRange('A2:U' + onPageSheet.getLastRow()).getValues();
     const linksValues = linksSheet.getRange('A2:S' + linksSheet.getLastRow()).getValues();
 
-    // Create a map of clinic names to onPage data for easier lookup
-    const onPageData = {};
-    onPageValues.forEach(row => {
-        const accountType = String(row[0] || '').trim();  // Column A - Account Type
-        if (accountType) {
-            // Properly handle the speed value
-            let speedValue = 'N/A';
-            if (typeof row[10] === 'number' && !isNaN(row[10])) {
-                speedValue = row[10].toFixed(2) + 's';
-            }
-            
-            onPageData[accountType] = {
-                speed: speedValue,
-                kwPos1: parseInt(row[19]) || 0,     // Keywords Position 1
-                backlinks: parseInt(row[16]) || 0    // Backlinks
-            };
-        }
-    });
-
     return clientInfoValues.map((clientRow, index) => {
-        const accountType = String(clientRow[0] || '').trim();
         const name = clientRow[1];  // Column B - Clinic Name
         if (!name) return null;
 
+        // Use index-based matching since rows are parallel across sheets.
+        const onPageRow = onPageValues[index] || [];
         const linksRow = linksValues[index] || [];
         
-        // Get site speed and other metrics from On-Page Insights using clinic name
-        const metrics = onPageData[accountType] || {
-            speed: 'N/A',
-            kwPos1: 0,
-            backlinks: 0
+        // Properly handle the speed value from the corresponding onPageRow
+        let speedValue = 'N/A';
+        // Site Speed is in column K of On-Page Insights, which is index 10
+        const rawSpeed = onPageRow[10]; 
+        if (typeof rawSpeed === 'number' && !isNaN(rawSpeed)) {
+            speedValue = rawSpeed.toFixed(2) + 's';
+        } else if (typeof rawSpeed === 'string' && rawSpeed.trim() !== '') {
+            const parsedSpeed = parseFloat(rawSpeed);
+            if (!isNaN(parsedSpeed)) {
+                speedValue = parsedSpeed.toFixed(2) + 's';
+            }
+        }
+        
+        // Keywords #1 is in column T of On-Page Insights (index 19)
+        // Backlinks is in column Q of On-Page Insights (index 16)
+        const metrics = {
+            speed: speedValue,
+            kwPos1: parseInt(onPageRow[19]) || 0,
+            backlinks: parseInt(onPageRow[16]) || 0
         };
         
         // Get data from Client & Competitor Info sheet
@@ -203,8 +199,8 @@ function getDashboardOverview(spreadsheet) {
             kwPos1: metrics.kwPos1,
             backlinks: metrics.backlinks,
             hours: hours,
-            gAds: linksRow[18] === true,
-            fbAds: linksRow[17] === true,
+            gAds: linksRow[18] === true, // gAds is column S in Links sheet
+            fbAds: linksRow[17] === true, // fbAds is column R in Links sheet
             isClient: clientRow[0] === 'Client'
         };
     }).filter(row => row);
