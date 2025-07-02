@@ -123,16 +123,16 @@ function getDashboardOverview(spreadsheet) {
     const onPageValues = onPageSheet.getRange('A2:U' + onPageSheet.getLastRow()).getValues();
     const linksValues = linksSheet.getRange('A2:S' + linksSheet.getLastRow()).getValues();
 
-    // Create a map of website to onPage data for easier lookup
-    const onPageMap = new Map();
+    // Create a map of clinic names to onPage data for easier lookup
+    const onPageData = {};
     onPageValues.forEach(row => {
-        const website = row[8]; // Column I - Website
-        if (website) {
-            onPageMap.set(website, {
-                speed: row[10],      // Site Speed
-                kwPos1: row[19],     // Keywords Position 1
-                backlinks: row[16]   // Backlinks
-            });
+        const name = String(row[1] || '').trim();  // Column B - Name
+        if (name) {
+            onPageData[name] = {
+                speed: row[10] ? row[10].toFixed(4) + ' sec.' : 'N/A',  // Site Speed
+                kwPos1: row[19] || 0,     // Keywords Position 1
+                backlinks: row[16] || 0    // Backlinks
+            };
         }
     });
 
@@ -140,13 +140,14 @@ function getDashboardOverview(spreadsheet) {
         const name = clientRow[1];  // Column B - Clinic Name
         if (!name) return null;
 
-        const website = clientRow[8];     // Column I - Website
-        const onPageData = onPageMap.get(website) || {};
         const linksRow = linksValues[index] || [];
         
-        // Get site speed from On-Page Insights with proper formatting
-        const speed = onPageData.speed;
-        const speedFormatted = (typeof speed === 'number' && !isNaN(speed)) ? speed.toFixed(2) + ' sec.' : 'N/A';
+        // Get site speed and other metrics from On-Page Insights using clinic name
+        const metrics = onPageData[name] || {
+            speed: 'N/A',
+            kwPos1: 0,
+            backlinks: 0
+        };
         
         // Get data from Client & Competitor Info sheet
         const reviewScore = parseFloat(clientRow[14]) || 0;  // Column O - Review Score
@@ -154,11 +155,8 @@ function getDashboardOverview(spreadsheet) {
         const address = clientRow[2] || '';     // Column C - Address
         const borough = clientRow[3] || '';     // Column D - Borough
         const city = clientRow[4] || '';        // Column E - City
+        const website = clientRow[8] || '';     // Column I - Website
         const hours = clientRow[13] || 'N/A';   // Column N - Opening Hours
-        
-        // Get keywords and backlinks data from On-Page Insights
-        const kwPos1 = parseInt(onPageData.kwPos1) || 0;
-        const backlinks = parseInt(onPageData.backlinks) || 0;
 
         return {
             id: index,
@@ -169,9 +167,9 @@ function getDashboardOverview(spreadsheet) {
             borough: borough,
             city: city,
             website: website,
-            speed: speedFormatted,
-            kwPos1: kwPos1,
-            backlinks: backlinks,
+            speed: metrics.speed,
+            kwPos1: metrics.kwPos1,
+            backlinks: metrics.backlinks,
             hours: hours,
             gAds: linksRow[18] === true,
             fbAds: linksRow[17] === true,
