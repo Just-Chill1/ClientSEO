@@ -728,122 +728,152 @@ const Dashboard = ({ setActiveTab }) => {
         const [showAll, setShowAll] = useState(false);
 
         useEffect(() => {
-            const fetchData = async () => {
+            const cacheKey = `services_${selectedLocation}_${dataSet}`;
+            const cachedData = sessionStorage.getItem(cacheKey);
+            
+            if (cachedData) {
                 try {
-                    const response = await google.script.run
-                        .withSuccessHandler(result => {
-                            setServiceData(dataSet === 'normal' ? result.normalServices : result.newServices);
-                            setLoading(false);
-                        })
-                        .withFailureHandler(error => {
-                            setError(error.message);
-                            setLoading(false);
-                        })
-                        .doGet({ parameter: { location: selectedLocation } });
-                } catch (error) {
-                    setError(error.message);
+                    const parsed = JSON.parse(cachedData);
+                    setServiceData(parsed);
                     setLoading(false);
+                    setError(null);
+                    return;
+                } catch (e) {
+                    // Invalid cache, continue with fresh fetch
                 }
-            };
-            fetchData();
+            }
+
+            const scriptUrl = `https://script.google.com/macros/s/AKfycbys_HQL8HQdyL_-DoS0Aakvj-IzDWWW5HtNJDiFhbUwgCuKEYJ7N6iZGC-F62I7uZlV/exec?location=${selectedLocation}`;
+            setLoading(true);
+            setError(null);
+            
+            fetch(scriptUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    const services = dataSet === 'topServices' ? data.topServices : data.newServices;
+                    if (services) {
+                        // Calculate total volume for percentage
+                        const totalVolume = services.reduce((sum, service) => sum + service.totalVolume, 0);
+                        const servicesWithPercentage = services.map(service => ({
+                            ...service,
+                            volumePercentage: ((service.totalVolume / totalVolume) * 100).toFixed(1)
+                        }));
+                        sessionStorage.setItem(cacheKey, JSON.stringify(servicesWithPercentage));
+                        setServiceData(servicesWithPercentage);
+                    }
+                    setLoading(false);
+                })
+                .catch(err => {
+                    console.error("ServiceList Fetch Error:", err);
+                    setError(err.message);
+                    setLoading(false);
+                });
         }, [selectedLocation, dataSet]);
 
-        if (loading) return <div>Loading...</div>;
-        if (error) return <div>Error: {error}</div>;
-        if (!serviceData) return <div>No data available</div>;
-
+        if (loading) return <Card className="col-span-12 md:col-span-6 flex items-center justify-center"><p className="text-gray-500">Loading Service Data...</p></Card>;
+        if (error) return <Card className="col-span-12 md:col-span-6 flex items-center justify-center"><p className="text-red-500">Service Error: {error}</p></Card>;
+        if (!serviceData || serviceData.length === 0) return <Card className="col-span-12 md:col-span-6 flex items-center justify-center"><p className="text-gray-500">No service data found for {selectedLocation}.</p></Card>;
+        
+        // Get displayed services based on showAll toggle
         const displayedServices = showAll ? serviceData : serviceData.slice(0, 5);
-
-        const getTrendIcon = (trend) => {
-            if (!trend || trend === '-') return '➡️';
-            if (trend.toLowerCase().includes('up')) return '⬆️';
-            if (trend.toLowerCase().includes('down')) return '⬇️';
-            return '➡️';
-        };
-
-        const getTrendTooltip = (trend) => {
-            if (!trend || trend === '-') return 'No change in trend';
-            if (trend.toLowerCase().includes('up')) return 'Trending up';
-            if (trend.toLowerCase().includes('down')) return 'Trending down';
-            return 'No change in trend';
-        };
-
+        
         return (
-            <div className="card">
-                <div className="card-header">
-                    <h5 className="card-title">
-                        {title}
+            <Card className="col-span-12 md:col-span-6">
+                <div className="flex justify-between items-start mb-4">
+                    <div className="flex items-center space-x-2">
+                        <h2 className="text-xl font-bold text-gray-800">{title}</h2>
                         <InfoTooltip text={tooltipText} />
-                    </h5>
+                    </div>
+                    <select 
+                        value={selectedLocation} 
+                        onChange={(e) => setSelectedLocation(e.target.value)}
+                        className="text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                    >
+                         <option value="USA">United States</option>
+                         <option value="Canada">Canada</option>
+                         <option value="Florida">Florida</option>
+                         <option value="Lakeland, FL">Lakeland, FL</option>
+                    </select>
                 </div>
-                <div className="card-body">
-                    <table className="table">
-                        <thead>
-                            <tr>
-                                <th>Service</th>
-                                <th>% of Volume</th>
-                                <th>Avg. Comp.</th>
-                                <th>Avg. CPC</th>
-                                <th>Trend</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {displayedServices.map((service, index) => (
-                                <React.Fragment key={index}>
-                                    <tr onClick={() => setExpandedService(expandedService === service.service ? null : service.service)} 
-                                        style={{ cursor: 'pointer' }}>
-                                        <td>{service.service}</td>
-                                        <td>{service.volumePercentage}%</td>
-                                        <td>{service.avgComp}</td>
-                                        <td>${service.avgCpc}</td>
-                                        <td>
-                                            <span title={getTrendTooltip(service.trend)}>
-                                                {getTrendIcon(service.trend)}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    {expandedService === service.service && (
-                                        <tr>
-                                            <td colSpan="5">
-                                                <table className="table table-sm">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Keyword</th>
-                                                            <th>Volume</th>
-                                                            <th>Trend</th>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm whitespace-nowrap">
+                       <thead>
+                          <tr className="border-b-2 border-gray-200">
+                             <th className="py-2 px-3">Service</th>
+                             <th className="py-2 px-3 text-center">% of Volume</th>
+                             <th className="py-2 px-3 text-center">Avg. Comp.</th>
+                             <th className="py-2 px-3 text-center">Avg. CPC</th>
+                             <th className="py-2 px-3 text-center">Trend</th>
+                          </tr>
+                       </thead>
+                       <tbody>
+                          {displayedServices.map(service => (
+                            <React.Fragment key={service.name}>
+                                <tr className="border-b border-gray-100 hover:bg-slate-50 cursor-pointer" onClick={() => setExpandedService(expandedService === service.name ? null : service.name)}>
+                                   <td className="py-3 px-3 font-medium text-gray-800">{service.name}</td>
+                                   <td className="py-3 px-3 text-center">{service.volumePercentage}%</td>
+                                   <td className="py-3 px-3 text-center">{service.avgCompetition}</td>
+                                   <td className="py-3 px-3 text-center">${service.avgCpc}</td>
+                                   <td className="py-3 px-3 text-center">
+                                      {service.trend === 1 && <ArrowUp className="w-4 h-4 text-green-500 mx-auto" title="Increasing" />}
+                                      {service.trend === -1 && <ArrowDown className="w-4 h-4 text-red-500 mx-auto" title="Decreasing" />}
+                                      {service.trend === 0 && <span className="text-gray-400" title="No Change">-</span>}
+                                   </td>
+                                </tr>
+                                {expandedService === service.name && (
+                                    <tr>
+                                        <td colSpan="5" className="p-0">
+                                            <div className="bg-slate-50 p-3">
+                                                <h4 className="font-bold text-xs mb-2">Top Keywords for {service.name}</h4>
+                                                 <table className="w-full text-left text-xs">
+                                                     <thead>
+                                                        <tr className="border-b border-gray-300">
+                                                            <th className="py-1 px-2">Keyword</th>
+                                                            <th className="py-1 px-2 text-center">Volume</th>
+                                                            <th className="py-1 px-2 text-center">Trend</th>
                                                         </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {service.keywords.map((keyword, kidx) => (
-                                                            <tr key={kidx}>
-                                                                <td>{keyword.keyword}</td>
-                                                                <td>{keyword.volume}</td>
-                                                                <td>
-                                                                    <span title={getTrendTooltip(keyword.trend)}>
-                                                                        {getTrendIcon(keyword.trend)}
-                                                                    </span>
+                                                     </thead>
+                                                     <tbody>
+                                                        {service.keywords.map(kw => (
+                                                            <tr key={kw.name} className="border-b border-gray-200">
+                                                                <td className="py-1 px-2">{kw.name}</td>
+                                                                <td className="py-1 px-2 text-center">{kw.volume.toLocaleString()}</td>
+                                                                <td className="py-1 px-2 text-center">
+                                                                    {kw.trend === 1 && <ArrowUp className="w-3 h-3 text-green-500 mx-auto" title="Increasing" />}
+                                                                    {kw.trend === -1 && <ArrowDown className="w-3 h-3 text-red-500 mx-auto" title="Decreasing" />}
+                                                                    {kw.trend === 0 && <span className="text-gray-400" title="No Change">-</span>}
                                                                 </td>
                                                             </tr>
                                                         ))}
-                                                    </tbody>
-                                                </table>
-                                            </td>
-                                        </tr>
-                                    )}
-                                </React.Fragment>
-                            ))}
-                        </tbody>
+                                                     </tbody>
+                                                 </table>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                )}
+                            </React.Fragment>
+                          ))}
+                       </tbody>
                     </table>
                     {serviceData.length > 5 && (
                         <button 
-                            className="btn btn-link" 
                             onClick={() => setShowAll(!showAll)}
+                            className="mt-4 text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center"
                         >
                             {showAll ? 'Show Less' : `Show ${serviceData.length - 5} More`}
+                            {showAll ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
                         </button>
                     )}
                 </div>
-            </div>
+            </Card>
         );
     };
     
