@@ -128,10 +128,16 @@ function getDashboardOverview(spreadsheet) {
     onPageValues.forEach(row => {
         const name = String(row[1] || '').trim();  // Column B - Name
         if (name) {
+            // Properly handle the speed value
+            let speedValue = 'N/A';
+            if (typeof row[10] === 'number' && !isNaN(row[10])) {
+                speedValue = row[10].toFixed(4) + ' sec.';
+            }
+            
             onPageData[name] = {
-                speed: row[10] ? row[10].toFixed(4) + ' sec.' : 'N/A',  // Site Speed
-                kwPos1: row[19] || 0,     // Keywords Position 1
-                backlinks: row[16] || 0    // Backlinks
+                speed: speedValue,
+                kwPos1: parseInt(row[19]) || 0,     // Keywords Position 1
+                backlinks: parseInt(row[16]) || 0    // Backlinks
             };
         }
     });
