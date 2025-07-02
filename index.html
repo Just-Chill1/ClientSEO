@@ -1,4 +1,28 @@
 <!DOCTYPE html>
+<!--
+  MedSpa SEO Dashboard - Application Overview
+
+  This file, `index.html`, serves as the front-end for the MedSpa SEO tracking dashboard.
+  It is built using vanilla HTML, Tailwind CSS for styling, and React (via CDN) for dynamic components.
+
+  Application Architecture:
+
+  The dashboard's data is sourced from a two-workbook system hosted on Google Sheets, each managed by its own Google App Script. This architecture separates client-specific data from general service data.
+
+  1. Client Workbook:
+     - A new, unique Google Sheet (workbook) is created for each individual client.
+     - This workbook contains all client-specific data, such as website stats, GBP info, keyword rankings, backlink profiles, geogrid maps, and competitor data.
+     - It is managed by the `Client Workbook App Script v2.gs`.
+     - The dashboard identifies and fetches data from the correct client workbook by reading the `workbookId` from the URL query parameter (e.g., ?workbookId=YOUR_ID).
+
+  2. Services Workbook:
+     - A single, shared Google Sheet that contains trend data for MedSpa services (e.g., search volume, competition).
+     - This data populates the "Services by Search Volume" and "New Services by Search Volume" cards on the dashboard.
+     - It is managed by the `Service Cards (Dashboard) App Script v2.gs`.
+     - The script for this workbook is called with a geographic location parameter to fetch relevant data.
+
+  This setup ensures that each client's sensitive data is isolated in its own workbook, while still allowing the dashboard to display general industry trends from a centralized source.
+-->
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>

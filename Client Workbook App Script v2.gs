@@ -445,11 +445,11 @@ function getBacklinkTableData(sheet) {
     website: row[2] || '',      // Add website column
     backlinkUrl: row[3] || '',  // Add fallback empty string
     linkUrl: row[4] || '',      // Add fallback empty string
-    isNew: row[5] === true,     // Ensure boolean
-    isLost: row[6] === true,    // Ensure boolean
+    isNew: String(row[5]).toLowerCase() === 'true',     // Handle string "TRUE"
+    isLost: String(row[6]).toLowerCase() === 'true',    // Handle string "TRUE"
     spamScore: parseFloat(row[7]) || 0,  // Ensure number
     rank: parseFloat(row[8]) || 0,       // Ensure number
-    following: row[9] === true,          // Ensure boolean
+    following: String(row[9]).toLowerCase() === 'true', // Handle string "TRUE"
     title: row[10] || ''       // Add fallback empty string
   })).filter(row => row.backlinkUrl);  // Only include rows with backlink URLs
 }
