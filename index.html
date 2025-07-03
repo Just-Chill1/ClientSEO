@@ -1482,6 +1482,15 @@ const GeogridMaps = () => {
         'aesthetics spa',
         'best med spa near me'
     ];
+    
+    const getRankColor = (rank) => {
+        if (rank === null || rank === undefined) return 'bg-gray-400';
+        if (rank <= 3) return 'bg-green-500';
+        if (rank <= 5) return 'bg-sky-500';
+        if (rank <= 10) return 'bg-yellow-500';
+        if (rank <= 20) return 'bg-orange-500';
+        return 'bg-red-500';
+    };
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -1608,15 +1617,6 @@ const GeogridMaps = () => {
             }
         };
 
-        const getRankColorClasses = (rank) => {
-            if (!rank && rank !== 0) return 'bg-gray-200';
-            if (rank <= 1) return 'bg-emerald-500';
-            if (rank <= 2) return 'bg-emerald-400';
-            if (rank <= 4) return 'bg-emerald-300';
-            if (rank <= 6) return 'bg-emerald-200';
-            return 'bg-yellow-200';
-        };
-
         // Ensure competitors array exists and has valid data
         const competitors = Array.isArray(currentData.competitors) ? currentData.competitors : [];
 
@@ -1663,7 +1663,7 @@ const GeogridMaps = () => {
                             className="absolute bottom-2 right-2 bg-white/90 hover:bg-white text-gray-700 px-2 py-1 rounded text-xs flex items-center gap-1 shadow-sm transition-colors"
                         >
                             <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6" />
                                 <polyline points="15 3 21 3 21 9" />
                                 <line x1="10" y1="14" x2="21" y2="3" />
                             </svg>
@@ -1685,66 +1685,49 @@ const GeogridMaps = () => {
                 )}
 
                 {competitors.length > 0 && (
-                    <div className="mt-2">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-4 px-8">Ranking Distribution</h3>
-                        <ResponsiveContainer width="100%" height={180}>
-                            <BarChart 
-                                data={competitors} 
-                                margin={{ top: 5, right: 30, left: 30, bottom: 40 }}
-                            >
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis 
-                                    dataKey="name" 
-                                    type="category" 
-                                    tick={{ 
-                                        fontSize: 12,
-                                        fontWeight: 500,
-                                        fill: '#374151',
-                                        textAnchor: 'end'
-                                    }} 
-                                    interval={0} 
-                                    angle={-45} 
-                                    textAnchor="end"
-                                    height={60}
-                                />
-                                <YAxis 
-                                    type="number" 
-                                    domain={[0, dataMax => Math.round((dataMax || 10) * 1.1)]}
-                                    tick={{ fontSize: 12 }}
-                                    label={{ 
-                                        value: 'Rank', 
-                                        angle: -90, 
-                                        position: 'insideLeft',
-                                        style: { textAnchor: 'middle', fill: '#6B7280', fontSize: 12 }
-                                    }}
-                                />
-                                <Tooltip 
-                                    cursor={{fill: 'rgba(241, 245, 249, 0.7)'}} 
-                                    contentStyle={{ 
-                                        backgroundColor: 'rgba(31, 41, 55, 0.9)', 
-                                        borderColor: 'rgba(255,255,255,0.2)', 
-                                        borderRadius: '0.5rem',
-                                        padding: '8px 12px'
-                                    }} 
-                                    itemStyle={{ color: '#fff', fontSize: '12px' }} 
-                                    labelStyle={{ color: '#fff', fontWeight: 'bold', marginBottom: '4px' }}
-                                    formatter={(value) => [`Rank: ${value}`, '']}
-                                />
-                                <Bar 
-                                    dataKey="rank" 
-                                    barSize={40}
-                                    radius={[4, 4, 0, 0]}
-                                >
-                                    {competitors.map((entry, index) => (
-                                        <Cell 
-                                            key={`cell-${entry.name}`} 
-                                            fill={CHART_COLORS[index % CHART_COLORS.length]}
-                                            style={{ filter: 'brightness(1.1)' }}
-                                        />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
+                    <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* Left column: Avg Score List */}
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-3">Avg Score</h3>
+                            <div className="space-y-2">
+                                {competitors.map((comp, index) => (
+                                    <div key={index} className="flex items-center space-x-3 p-2 rounded-lg bg-slate-50 border border-slate-200">
+                                        <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white text-base ${getRankColor(comp.rank)}`}>
+                                            {typeof comp.rank === 'number' ? comp.rank.toFixed(1) : '-'}
+                                        </div>
+                                        <div>
+                                            <p className="font-medium text-sm text-gray-800 leading-tight">{comp.name || 'Unknown'}</p>
+                                            {comp.domain && (
+                                                <p className="text-xs text-gray-500">{comp.domain}</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                        
+                        {/* Right column: Top 5 Hits Bar Chart */}
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-3">Rankings in Top 5</h3>
+                            <ResponsiveContainer width="100%" height={250}>
+                                <BarChart data={competitors} margin={{ top: 5, right: 20, left: 0, bottom: 60 }}>
+                                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                     <XAxis dataKey="name" type="category" tick={{ fontSize: 10 }} interval={0} angle={-45} textAnchor="end" height={70}/>
+                                     <YAxis type="number" allowDecimals={false} domain={[0, dataMax => Math.round((dataMax || 5) * 1.2)]} />
+                                     <Tooltip 
+                                        cursor={{fill: 'rgba(241, 245, 249, 0.7)'}} 
+                                        contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.9)', borderColor: 'rgba(255,255,255,0.2)', borderRadius: '0.5rem' }} 
+                                        itemStyle={{ color: '#fff' }} 
+                                        labelStyle={{ color: '#fff', fontWeight: 'bold' }}
+                                        formatter={(value) => [`${value} rankings`, '']}
+                                        labelFormatter={(label) => `Top 5 for ${label}`}
+                                     />
+                                     <Bar dataKey='top5Total' name="Top 5 Rankings" barSize={35}>
+                                         {competitors.map((entry, index) => <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} /> )}
+                                     </Bar>
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
                 )}
             </Card>

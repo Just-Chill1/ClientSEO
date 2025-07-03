@@ -477,17 +477,24 @@ function getGeogridData(spreadsheet) {
         const formattedDate = runDate.toLocaleString('default', { month: 'long', year: 'numeric', timeZone: 'UTC' });
         
         const competitors = [];
-        // Starting from column K (index 10), each competitor takes 3 columns
+        // Starting from column K (index 10), each competitor now takes 5 columns
         for (let i = 0; i < 5; i++) {
-            const nameIndex = 10 + (i * 3);     // Competitor name columns: K, N, Q, T, W
-            const rankIndex = nameIndex + 2;     // Rank columns: M, P, S, V, Y
-            const name = row[nameIndex];
-            const rank = row[rankIndex];
+            const baseIndex = 10 + (i * 5);     // K, P, U, Z, AE
+            const name = row[baseIndex];
+            const domain = row[baseIndex + 1];
+            const rank = row[baseIndex + 2];
+            const top5 = row[baseIndex + 3];
+            const top10 = row[baseIndex + 4];
             
-            if (name && rank) {
-                competitors.push({ name: name, rank: parseFloat(rank) });
-            } else {
-                console.log(`Row ${index + 2}: Missing competitor data for position ${i+1}. Name: ${name}, Rank: ${rank}`);
+            // Ensure a competitor has a name and a valid rank to be included
+            if (name && (rank !== undefined && rank !== null && rank !== '')) {
+                competitors.push({ 
+                    name: name,
+                    domain: domain,
+                    rank: parseFloat(rank),
+                    top5Total: parseInt(top5) || 0,
+                    top10Total: parseInt(top10) || 0,
+                 });
             }
         }
 
