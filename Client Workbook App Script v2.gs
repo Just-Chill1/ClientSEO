@@ -155,13 +155,15 @@ function getDashboardOverview(spreadsheet) {
         const onPageRow = onPageValues[index] || [];
         const linksRow = linksValues[index] || [];
         
-        // --- Robust Site Speed Parsing ---
+        // --- More Robust Site Speed Parsing ---
         let speedValue = 'N/A';
         const rawSpeed = onPageRow[10]; // Site Speed is in column K (index 10)
-        if (rawSpeed !== null && rawSpeed !== undefined && String(rawSpeed).trim() !== '') {
-            const numericString = String(rawSpeed).replace(/[^\d.]/g, '');
-            if (numericString) {
-                const parsedSpeed = parseFloat(numericString);
+        if (rawSpeed) {
+            const speedStr = String(rawSpeed);
+            // Find the first sequence of digits and dots
+            const matches = speedStr.match(/[\d.]+/); 
+            if (matches && matches[0]) {
+                const parsedSpeed = parseFloat(matches[0]);
                 if (!isNaN(parsedSpeed)) {
                     speedValue = parsedSpeed.toFixed(2) + 's';
                 }
@@ -196,10 +198,10 @@ function getDashboardOverview(spreadsheet) {
             kwPos1: metrics.kwPos1,
             backlinks: metrics.backlinks,
             hours: hours,
-            gAds: linksRow[18] || 'Unknown',      // Google Ads status is col S (18)
-            gAdsLink: linksRow[20] || '',     // Google Ads Link is col U (20)
-            fbAds: linksRow[17] || 'Unknown',     // Facebook Ads status is col R (17)
-            fbAdsLink: linksRow[19] || '',    // Facebook Ads Link is col T (19)
+            gAds: (linksRow[18] || 'Unknown').trim(),      // Google Ads status (col S)
+            gAdsLink: (linksRow[20] || '').trim(),     // Google Ads Link (col U)
+            fbAds: (linksRow[17] || 'Unknown').trim(),     // Facebook Ads status (col R)
+            fbAdsLink: (linksRow[19] || '').trim(),    // Facebook Ads Link (col T)
             isClient: clientRow[0] === 'Client'
         };
     }).filter(row => row);

@@ -603,7 +603,6 @@ const Dashboard = ({ setActiveTab }) => {
                                         const daysOrder = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
                                         const hoursMap = {};
                                         
-                                        // Handle various separators like ", " or just ","
                                         c.hours.split(/, ?/).forEach(part => {
                                             const bits = part.split(/:\s?/);
                                             if (bits.length < 2) return;
@@ -616,18 +615,17 @@ const Dashboard = ({ setActiveTab }) => {
                                             }
                                         });
 
-                                        const grouped = [];
-                                        const closedDays = [];
-
                                         if (Object.keys(hoursMap).length === 0) return c.hours;
                                         
+                                        const grouped = [];
+                                        const closedDays = [];
                                         let currentGroup = null;
                                         
                                         daysOrder.forEach(day => {
                                             const time = hoursMap[day];
                                             if (time === undefined) return;
 
-                                            if (time === 'Closed') {
+                                            if (time.toLowerCase() === 'closed') {
                                                 closedDays.push(day);
                                                 return;
                                             }
