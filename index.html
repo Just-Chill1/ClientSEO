@@ -603,7 +603,8 @@ const Dashboard = ({ setActiveTab }) => {
                                         const daysOrder = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
                                         const hoursMap = {};
                                         
-                                        c.hours.split(/, ?/).forEach(part => {
+                                        // Handle both comma and semicolon separators for robust parsing
+                                        c.hours.split(/, ?|; ?/).forEach(part => {
                                             const bits = part.split(/:\s?/);
                                             if (bits.length < 2) return;
                                             
@@ -632,12 +633,9 @@ const Dashboard = ({ setActiveTab }) => {
                                         return (
                                             <div className="text-xs space-y-1">
                                                 {openDays.map(item => (
-                                                    <div key={item.day}>
-                                                        <span className="font-medium">{item.day}:</span>
-                                                        {' '}
-                                                        <span>{item.time}</span>
-                                                        {' '}
-                                                        <span className="text-blue-600 font-medium">Open</span>
+                                                    <div key={item.day} className="font-semibold">
+                                                        <span>{item.day}: {item.time}</span>
+                                                        <span className="text-blue-600 ml-1">Open</span>
                                                     </div>
                                                 ))}
                                                 {closedDays.length > 0 && (
