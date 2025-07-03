@@ -1685,8 +1685,8 @@ const GeogridMaps = () => {
                 )}
 
                 {competitors.length > 0 && (
-                    <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* Left column: Avg Score List */}
+                    <div className="mt-8 space-y-8">
+                        {/* Section for Avg Score */}
                         <div>
                             <h3 className="text-lg font-semibold text-gray-800 mb-3">Avg Score</h3>
                             <div className="space-y-2">
@@ -1695,10 +1695,10 @@ const GeogridMaps = () => {
                                         <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white text-base ${getRankColor(comp.rank)}`}>
                                             {typeof comp.rank === 'number' ? comp.rank.toFixed(1) : '-'}
                                         </div>
-                                        <div>
-                                            <p className="font-medium text-sm text-gray-800 leading-tight">{comp.name || 'Unknown'}</p>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-sm text-gray-800 leading-tight truncate" title={comp.name || 'Unknown'}>{comp.name || 'Unknown'}</p>
                                             {comp.domain && (
-                                                <p className="text-xs text-gray-500">{comp.domain}</p>
+                                                <p className="text-xs text-gray-500 truncate" title={comp.domain}>{comp.domain}</p>
                                             )}
                                         </div>
                                     </div>
@@ -1706,7 +1706,7 @@ const GeogridMaps = () => {
                             </div>
                         </div>
                         
-                        {/* Right column: Top 5 Hits Bar Chart */}
+                        {/* Section for Top 5 Hits Bar Chart */}
                         <div>
                             <h3 className="text-lg font-semibold text-gray-800 mb-3">Rankings in Top 5</h3>
                             <ResponsiveContainer width="100%" height={250}>
