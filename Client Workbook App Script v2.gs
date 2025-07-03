@@ -145,7 +145,11 @@ function getDashboardOverview(spreadsheet) {
 
     const clientInfoValues = clientInfoSheet.getRange('A2:Q' + clientInfoSheet.getLastRow()).getValues();
     const onPageValues = onPageSheet.getRange('A2:U' + onPageSheet.getLastRow()).getValues();
-    const linksValues = linksSheet.getRange('A2:U' + linksSheet.getLastRow()).getValues(); // Extend to column U for ad links
+    
+    // Fetch both display values and rich text values to capture hyperlinks
+    const linksRange = linksSheet.getRange('A2:U' + linksSheet.getLastRow());
+    const linksValues = linksRange.getDisplayValues(); // Use getDisplayValues for consistency
+    const linksRichTextValues = linksRange.getRichTextValues();
 
     return clientInfoValues.map((clientRow, index) => {
         const name = clientRow[1];  // Column B - Clinic Name
@@ -154,6 +158,7 @@ function getDashboardOverview(spreadsheet) {
         // Use index-based matching since rows are parallel across sheets.
         const onPageRow = onPageValues[index] || [];
         const linksRow = linksValues[index] || [];
+        const richTextLinksRow = linksRichTextValues[index] || [];
         
         // --- More Robust Site Speed Parsing ---
         let speedValue = 'N/A';
@@ -185,6 +190,14 @@ function getDashboardOverview(spreadsheet) {
         const hoursRaw = clientRow[13] || 'N/A';
         const hours = formatOpeningHours(hoursRaw);
 
+        // --- Ads Data Extraction with Hyperlinks ---
+        const gAdsStatus = (linksRow[18] || 'Unknown').trim();      // Google Ads status (col S)
+        const fbAdsStatus = (linksRow[17] || 'Unknown').trim();     // Facebook Ads status (col R)
+
+        // Get link from the hyperlink formula in status cell (R/S), with a fallback to dedicated link columns (T/U)
+        const gAdsLink = (richTextLinksRow[18] ? richTextLinksRow[18].getLinkUrl() : null) || (linksRow[20] || '').trim();
+        const fbAdsLink = (richTextLinksRow[17] ? richTextLinksRow[17].getLinkUrl() : null) || (linksRow[19] || '').trim();
+
         return {
             id: index,
             clinicName: name,
@@ -198,10 +211,10 @@ function getDashboardOverview(spreadsheet) {
             kwPos1: metrics.kwPos1,
             backlinks: metrics.backlinks,
             hours: hours,
-            gAds: (linksRow[18] || 'Unknown').trim(),      // Google Ads status (col S)
-            gAdsLink: (linksRow[20] || '').trim(),     // Google Ads Link (col U)
-            fbAds: (linksRow[17] || 'Unknown').trim(),     // Facebook Ads status (col R)
-            fbAdsLink: (linksRow[19] || '').trim(),    // Facebook Ads Link (col T)
+            gAds: gAdsStatus,
+            gAdsLink: gAdsLink,
+            fbAds: fbAdsStatus,
+            fbAdsLink: fbAdsLink,
             isClient: clientRow[0] === 'Client'
         };
     }).filter(row => row);
