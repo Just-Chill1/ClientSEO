@@ -617,45 +617,32 @@ const Dashboard = ({ setActiveTab }) => {
 
                                         if (Object.keys(hoursMap).length === 0) return c.hours;
                                         
-                                        const grouped = [];
+                                        const openDays = [];
                                         const closedDays = [];
-                                        let currentGroup = null;
                                         
                                         daysOrder.forEach(day => {
                                             const time = hoursMap[day];
-                                            if (time === undefined) return;
-
-                                            if (time.toLowerCase() === 'closed') {
-                                                closedDays.push(day);
-                                                return;
-                                            }
-
-                                            if (currentGroup && currentGroup.time === time) {
-                                                currentGroup.days.push(day);
+                                            if (time && time.toLowerCase() !== 'closed') {
+                                                openDays.push({ day, time });
                                             } else {
-                                                if (currentGroup) grouped.push(currentGroup);
-                                                currentGroup = { days: [day], time: time };
+                                                closedDays.push(day);
                                             }
                                         });
-                                        if (currentGroup) grouped.push(currentGroup);
 
                                         return (
                                             <div className="text-xs space-y-1">
-                                                {grouped.map((group, idx) => (
-                                                    <div key={idx}>
-                                                        <span className="font-medium">
-                                                            {group.days.length > 1
-                                                                ? `${group.days[0]}-${group.days[group.days.length - 1]}`
-                                                                : group.days[0]
-                                                            }:
-                                                        </span>
+                                                {openDays.map(item => (
+                                                    <div key={item.day}>
+                                                        <span className="font-medium">{item.day}:</span>
                                                         {' '}
-                                                        <span>{group.time}</span>
+                                                        <span>{item.time}</span>
+                                                        {' '}
+                                                        <span className="text-blue-600 font-medium">Open</span>
                                                     </div>
                                                 ))}
                                                 {closedDays.length > 0 && (
-                                                    <div className="text-red-500">
-                                                        Closed: {closedDays.join(', ')}
+                                                    <div className="text-red-500 font-semibold">
+                                                        {closedDays.join(', ')} Closed
                                                     </div>
                                                 )}
                                             </div>
