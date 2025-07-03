@@ -598,56 +598,61 @@ const Dashboard = ({ setActiveTab }) => {
                                 <td className="py-3 px-3 text-center font-medium">{c.backlinks.toLocaleString()}</td>
                                 <td className="py-3 px-3 text-gray-600">
                                     {(() => {
-                                        const days = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
-                                        const hoursMap = {};
-                                        const closedDays = [];
+                                        if (!c.hours || c.hours === 'N/A') return 'N/A';
                                         
-                                        // Parse the hours string
-                                        c.hours.split(', ').forEach(dayHours => {
-                                            const [day, hours] = dayHours.split(': ');
-                                            if (hours === 'Closed') {
-                                                closedDays.push(day.substring(0, 3));
-                                            } else {
-                                                hoursMap[day.substring(0, 3)] = hours;
+                                        const daysOrder = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+                                        const hoursMap = {};
+                                        
+                                        // Handle various separators like ", " or just ","
+                                        c.hours.split(/, ?/).forEach(part => {
+                                            const bits = part.split(/:\s?/);
+                                            if (bits.length < 2) return;
+                                            
+                                            const day = bits[0].trim().substring(0, 3).toUpperCase();
+                                            const time = bits.slice(1).join(':').trim();
+                                            
+                                            if (daysOrder.includes(day)) {
+                                                hoursMap[day] = time;
                                             }
                                         });
+
+                                        const grouped = [];
+                                        const closedDays = [];
+
+                                        if (Object.keys(hoursMap).length === 0) return c.hours;
                                         
-                                        // Group consecutive days with same hours
-                                        const groupedHours = [];
-                                        let currentGroup = { days: [], hours: '' };
+                                        let currentGroup = null;
                                         
-                                        days.forEach(day => {
-                                            if (closedDays.includes(day)) return;
-                                            
-                                            const hours = hoursMap[day];
-                                            if (!hours) return;
-                                            
-                                            if (currentGroup.hours === hours) {
+                                        daysOrder.forEach(day => {
+                                            const time = hoursMap[day];
+                                            if (time === undefined) return;
+
+                                            if (time === 'Closed') {
+                                                closedDays.push(day);
+                                                return;
+                                            }
+
+                                            if (currentGroup && currentGroup.time === time) {
                                                 currentGroup.days.push(day);
                                             } else {
-                                                if (currentGroup.days.length > 0) {
-                                                    groupedHours.push({ ...currentGroup });
-                                                }
-                                                currentGroup = { days: [day], hours };
+                                                if (currentGroup) grouped.push(currentGroup);
+                                                currentGroup = { days: [day], time: time };
                                             }
                                         });
-                                        
-                                        if (currentGroup.days.length > 0) {
-                                            groupedHours.push(currentGroup);
-                                        }
-                                        
+                                        if (currentGroup) grouped.push(currentGroup);
+
                                         return (
                                             <div className="text-xs space-y-1">
-                                                {groupedHours.map((group, idx) => (
+                                                {grouped.map((group, idx) => (
                                                     <div key={idx}>
                                                         <span className="font-medium">
-                                                            {group.days.length === 1 
-                                                                ? group.days[0] 
-                                                                : `${group.days[0]}-${group.days[group.days.length-1]}`
+                                                            {group.days.length > 1
+                                                                ? `${group.days[0]}-${group.days[group.days.length - 1]}`
+                                                                : group.days[0]
                                                             }:
                                                         </span>
                                                         {' '}
-                                                        <span>{group.hours}</span>
+                                                        <span>{group.time}</span>
                                                     </div>
                                                 ))}
                                                 {closedDays.length > 0 && (

@@ -206,32 +206,10 @@ function getDashboardOverview(spreadsheet) {
 }
 
 function formatOpeningHours(hoursString) {
-  if (!hoursString || hoursString === 'N/A') return 'N/A';
-
-  const dayMap = { MON: 'Monday', TUE: 'Tuesday', WED: 'Wednesday', THU: 'Thursday', FRI: 'Friday', SAT: 'Saturday', SUN: 'Sunday' };
-  const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  const finalHours = {};
-
-  hoursString.split(',').forEach(part => {
-    const [days, time] = part.trim().split(/:\s+/);
-    if (!time) {
-      finalHours[dayMap[days]] = 'Closed';
-      return;
-    }
-
-    if (days.includes('-')) {
-      const [startDay, endDay] = days.split('-');
-      const startIndex = dayOrder.indexOf(dayMap[startDay]);
-      const endIndex = dayOrder.indexOf(dayMap[endDay]);
-      for (let i = startIndex; i <= endIndex; i++) {
-        finalHours[dayOrder[i]] = time;
-      }
-    } else {
-      finalHours[dayMap[days]] = time;
-    }
-  });
-
-  return dayOrder.map(day => `${day}: ${finalHours[day] || 'Closed'}`).join(', ');
+  // The frontend now handles the complex parsing and grouping.
+  // This function just ensures a clean string is passed.
+  if (!hoursString || typeof hoursString !== 'string') return 'N/A';
+  return hoursString.trim();
 }
 
 function getCensusData(spreadsheet) {
