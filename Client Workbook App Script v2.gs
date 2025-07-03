@@ -145,7 +145,7 @@ function getDashboardOverview(spreadsheet) {
 
     const clientInfoValues = clientInfoSheet.getRange('A2:Q' + clientInfoSheet.getLastRow()).getValues();
     const onPageValues = onPageSheet.getRange('A2:U' + onPageSheet.getLastRow()).getValues();
-    const linksValues = linksSheet.getRange('A2:S' + linksSheet.getLastRow()).getValues();
+    const linksValues = linksSheet.getRange('A2:U' + linksSheet.getLastRow()).getValues(); // Extend to column U for ad links
 
     return clientInfoValues.map((clientRow, index) => {
         const name = clientRow[1];  // Column B - Clinic Name
@@ -155,14 +155,12 @@ function getDashboardOverview(spreadsheet) {
         const onPageRow = onPageValues[index] || [];
         const linksRow = linksValues[index] || [];
         
-        // Properly handle the speed value from the corresponding onPageRow
+        // --- Robust Site Speed Parsing ---
         let speedValue = 'N/A';
         const rawSpeed = onPageRow[10]; // Site Speed is in column K (index 10)
-
         if (rawSpeed !== null && rawSpeed !== undefined && String(rawSpeed).trim() !== '') {
-            // Convert to string, remove non-numeric characters (except period), then parse.
             const numericString = String(rawSpeed).replace(/[^\d.]/g, '');
-            if (numericString) { // Check if there's anything left to parse
+            if (numericString) {
                 const parsedSpeed = parseFloat(numericString);
                 if (!isNaN(parsedSpeed)) {
                     speedValue = parsedSpeed.toFixed(2) + 's';
@@ -170,22 +168,19 @@ function getDashboardOverview(spreadsheet) {
             }
         }
         
-        // Keywords #1 is in column T of On-Page Insights (index 19)
-        // Backlinks is in column Q of On-Page Insights (index 16)
         const metrics = {
             speed: speedValue,
-            kwPos1: parseInt(onPageRow[19]) || 0,
-            backlinks: parseInt(onPageRow[16]) || 0
+            kwPos1: parseInt(onPageRow[19]) || 0, // Keywords #1 is col T (19)
+            backlinks: parseInt(onPageRow[16]) || 0, // Backlinks is col Q (16)
         };
         
-        // Get data from Client & Competitor Info sheet
-        const reviewScore = parseFloat(clientRow[14]) || 0;  // Column O - Review Score
-        const reviewCount = parseInt(clientRow[15]) || 0;    // Column P - Review Count
-        const address = clientRow[2] || '';     // Column C - Address
-        const borough = clientRow[3] || '';     // Column D - Borough
-        const city = clientRow[4] || '';        // Column E - City
-        const website = clientRow[8] || '';     // Column I - Website
-        const hoursRaw = clientRow[13] || 'N/A';   // Column N - Opening Hours
+        const reviewScore = parseFloat(clientRow[14]) || 0;
+        const reviewCount = parseInt(clientRow[15]) || 0;
+        const address = clientRow[2] || '';
+        const borough = clientRow[3] || '';
+        const city = clientRow[4] || '';
+        const website = clientRow[8] || '';
+        const hoursRaw = clientRow[13] || 'N/A';
         const hours = formatOpeningHours(hoursRaw);
 
         return {
@@ -201,8 +196,10 @@ function getDashboardOverview(spreadsheet) {
             kwPos1: metrics.kwPos1,
             backlinks: metrics.backlinks,
             hours: hours,
-            gAds: linksRow[18] === true, // gAds is column S in Links sheet
-            fbAds: linksRow[17] === true, // fbAds is column R in Links sheet
+            gAds: linksRow[18] || 'Unknown',      // Google Ads status is col S (18)
+            gAdsLink: linksRow[20] || '',     // Google Ads Link is col U (20)
+            fbAds: linksRow[17] || 'Unknown',     // Facebook Ads status is col R (17)
+            fbAdsLink: linksRow[19] || '',    // Facebook Ads Link is col T (19)
             isClient: clientRow[0] === 'Client'
         };
     }).filter(row => row);
@@ -403,10 +400,14 @@ function getKeywordTableData(sheet) {
   if (sheet.getLastRow() < 2) return [];
   const values = sheet.getDataRange().getValues().slice(1);
   return values.map(row => ({
-    keyword: row[3], rank_now: row[4], rank_prev: row[5], is_new: row[6], is_up: row[7],
-    is_down: row[8], competition_lvl: row[9], cpc_usd: row[10], search_vol: row[11],
+    keyword: row[3], rank_now: row[4], rank_prev: row[5], 
+    is_new: String(row[6]).toLowerCase() === 'true', 
+    is_up: String(row[7]).toLowerCase() === 'true',
+    is_down: String(row[8]).toLowerCase() === 'true', 
+    is_lost: String(row[18]).toLowerCase() === 'true',
+    competition_lvl: row[9], cpc_usd: row[10], search_vol: row[11],
     etv: row[12], est_paid_cost: row[13], intent: row[14], keyword_difficulty: row[15],
-    ranking_title: row[17], is_lost: row[18], check_url: row[19],
+    ranking_title: row[17], check_url: row[19],
   })).filter(row => row.keyword);
 }
 
