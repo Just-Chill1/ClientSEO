@@ -843,27 +843,18 @@ const Keywords = ({ summary, table }) => {
         </>
     );
 
-    // Summary cards data
-    const summaryCards = [
-        { label: 'Total Keywords', value: summary.totalKeywords, color: 'text-gray-800' },
-        { label: 'Position 1', value: summary.pos1, color: 'text-emerald-600' },
-        { label: 'Positions 2-3', value: summary.pos2_3, color: 'text-emerald-500' },
-        { label: 'Positions 4-10', value: summary.pos4_10, color: 'text-blue-500' },
-        { label: 'Positions 11-20', value: summary.pos11_20, color: 'text-yellow-500' },
-        { label: 'New Keywords', value: summary.isNew, color: 'text-blue-600', badge: 'bg-blue-100 text-blue-800' },
-        { label: 'Improved', value: summary.isUp, color: 'text-green-600', badge: 'bg-green-100 text-green-800' },
-        { label: 'Declined', value: summary.isDown, color: 'text-red-600', badge: 'bg-red-100 text-red-800' },
-        { label: 'Lost', value: summary.isLost, color: 'text-red-600', badge: 'bg-red-100 text-red-800' },
-        { label: 'Est. Traffic Value', value: `$${summary.etv.toFixed(2)}`, color: 'text-gray-800' },
-        { label: 'Est. Paid Cost', value: `$${summary.estPaidCost.toFixed(2)}`, color: 'text-gray-800' }
-    ];
-
-    // Filter keywords based on search term
-    const filteredKeywords = table[active] ? table[active].filter(row =>
-        row.keyword?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        row.ranking_url?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        row.ranking_title?.toLowerCase().includes(searchTerm.toLowerCase())
-    ) : [];
+    // Reusable component for each stat in the summary
+    const SummaryStat = ({ label, value, color, icon, valuePrefix = '' }) => (
+        <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg transition-all hover:shadow-md hover:bg-white">
+            <div className="flex items-center">
+                {icon && <div className="mr-3 text-gray-400">{icon}</div>}
+                <span className="text-sm text-gray-600 font-medium">{label}</span>
+            </div>
+            <span className={`text-lg font-bold ${color}`}>
+                {value > 0 ? valuePrefix : ''}{value}
+            </span>
+        </div>
+    );
 
     // Format number with fallback
     const formatNumber = (num) => {
@@ -887,13 +878,65 @@ const Keywords = ({ summary, table }) => {
                     <InfoTooltip text="Overview of your keyword rankings, showing positions, changes, and estimated values." />
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-                    {summaryCards.map(card => (
-                        <div key={card.label} className="p-4 bg-slate-50 rounded-lg">
-                            <p className="text-sm text-gray-500">{card.label}</p>
-                            <p className={`text-2xl font-bold ${card.color}`}>{card.value}</p>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Column 1: Core & Financial Metrics */}
+                    <div className="space-y-6 flex flex-col">
+                        <div className="p-6 bg-slate-100 rounded-xl text-center flex-grow flex flex-col justify-center">
+                            <p className="text-base text-gray-500">Total Keywords Tracked</p>
+                            <p className="text-5xl font-bold text-blue-600">{summary.totalKeywords.toLocaleString()}</p>
                         </div>
-                    ))}
+                        <div className="space-y-3">
+                            <SummaryStat
+                                label="Est. Traffic Value"
+                                value={`$${summary.etv.toFixed(2)}`}
+                                color="text-gray-800"
+                            />
+                            <SummaryStat
+                                label="Est. Paid Cost"
+                                value={`$${summary.estPaidCost.toFixed(2)}`}
+                                color="text-gray-800"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Column 2: Ranking Distribution */}
+                    <div className="space-y-3">
+                        <h3 className="text-lg font-semibold text-gray-700 px-2 mb-2">Ranking Distribution</h3>
+                        <SummaryStat label="Position 1" value={summary.pos1} color={summary.pos1 > 0 ? 'text-emerald-600' : 'text-gray-500'} />
+                        <SummaryStat label="Positions 2-3" value={summary.pos2_3} color={summary.pos2_3 > 0 ? 'text-emerald-500' : 'text-gray-500'} />
+                        <SummaryStat label="Positions 4-10" value={summary.pos4_10} color={summary.pos4_10 > 0 ? 'text-blue-500' : 'text-gray-500'} />
+                        <SummaryStat label="Positions 11-20" value={summary.pos11_20} color={summary.pos11_20 > 0 ? 'text-yellow-500' : 'text-gray-500'} />
+                    </div>
+
+                    {/* Column 3: Keyword Dynamics */}
+                    <div className="space-y-3">
+                        <h3 className="text-lg font-semibold text-gray-700 px-2 mb-2">Keyword Dynamics</h3>
+                        <SummaryStat
+                            label="Improved"
+                            value={summary.isUp}
+                            color={summary.isUp > 0 ? 'text-green-600' : 'text-gray-500'}
+                            icon={<ArrowUp className="w-5 h-5" />}
+                            valuePrefix="+"
+                        />
+                        <SummaryStat
+                            label="New"
+                            value={summary.isNew}
+                            color={summary.isNew > 0 ? 'text-blue-600' : 'text-gray-500'}
+                            icon={<Star className="w-5 h-5 text-blue-500" fill="currentColor"/>}
+                        />
+                        <SummaryStat
+                            label="Declined"
+                            value={summary.isDown}
+                            color={summary.isDown > 0 ? 'text-red-600' : 'text-gray-500'}
+                            icon={<ArrowDown className="w-5 h-5" />}
+                        />
+                        <SummaryStat
+                            label="Lost"
+                            value={summary.isLost}
+                            color={summary.isLost > 0 ? 'text-red-600' : 'text-gray-500'}
+                            icon={<XCircle className="w-5 h-5" />}
+                        />
+                    </div>
                 </div>
             </Card>
 
@@ -964,7 +1007,11 @@ const Keywords = ({ summary, table }) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredKeywords.map((row, index) => (
+                            {table[active]?.filter(row =>
+                                row.keyword?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                row.ranking_url?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                row.ranking_title?.toLowerCase().includes(searchTerm.toLowerCase())
+                            )?.map((row, index) => (
                                 <tr key={index} className="border-b border-gray-100 hover:bg-slate-50">
                                     <td className="py-3 px-3 font-medium">{row.keyword}</td>
                                     <td className="py-3 px-3 text-center font-medium">
@@ -1043,7 +1090,11 @@ const Keywords = ({ summary, table }) => {
                             ))}
                         </tbody>
                     </table>
-                    {filteredKeywords.length === 0 && (
+                    {table[active]?.filter(row =>
+                        row.keyword?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        row.ranking_url?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        row.ranking_title?.toLowerCase().includes(searchTerm.toLowerCase())
+                    )?.length === 0 && (
                         <div className="text-center py-8 text-gray-500">
                             No matching keywords found for "{searchTerm}"
                         </div>
