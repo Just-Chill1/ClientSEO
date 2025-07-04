@@ -1673,6 +1673,128 @@ const GeogridMaps = () => {
 };
 
 /* ------------------------------------------------------------------ */
+/* WEBSITE STATS - HELPER COMPONENTS & DATA                           */
+/* ------------------------------------------------------------------ */
+const StatCard = ({ label, value, icon, tooltip }) => {
+    const cardRef = useRef(null);
+    const [tooltipPosition, setTooltipPosition] = useState('top');
+    const [tooltipWidthClass, setTooltipWidthClass] = useState('w-64');
+
+    useEffect(() => {
+        if (tooltip && tooltip.width === 'large') {
+            setTooltipWidthClass('w-[600px]');
+        } else {
+            setTooltipWidthClass('w-64');
+        }
+    }, [tooltip]);
+
+    const content = (
+        <div className="flex items-center space-x-3">
+            <div className="p-2 bg-blue-100 rounded-full">{icon}</div>
+            <div>
+                <p className="text-sm text-gray-500">{label}</p>
+                <p className={`font-bold text-lg ${value.color || 'text-gray-800'}`}>{value.text}</p>
+            </div>
+        </div>
+    );
+
+    if (tooltip && tooltip.content) {
+        return (
+            <div ref={cardRef} className="relative group cursor-help">
+                {content}
+                <div className={`absolute left-1/2 -translate-x-1/2 ${tooltipWidthClass} bg-gray-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50 pointer-events-none ${tooltipPosition === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'}`}>
+                    {tooltip.header && (
+                         <div className="px-3 py-1.5 bg-gray-700 rounded-t-lg font-semibold border-b border-gray-600">
+                            {tooltip.header}
+                        </div>
+                    )}
+                    <div className="p-3">{tooltip.content}</div>
+                    <div className={`absolute left-1/2 -translate-x-[6px] w-3 h-3 bg-gray-800 transform rotate-45 ${tooltipPosition === 'top' ? 'bottom-[-6px]' : 'top-[-6px]'}`}></div>
+                </div>
+            </div>
+        );
+    }
+    return content;
+};
+
+const HealthCheckItem = ({ icon, color, title, items }) => (
+    <div className="relative group flex items-center space-x-2">
+        {icon}
+        <div>
+            <p className={`font-bold text-lg ${color}`}>{items.length}</p>
+            <p className="text-xs text-gray-500">{title}</p>
+        </div>
+        <div className="absolute left-0 bottom-full mb-2 w-72 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
+            <h4 className="font-bold mb-2 border-b border-gray-600 pb-1">{title} Found</h4>
+            <ul className="space-y-1">
+                {items.map((item, index) => <li key={index}>- {item.description}</li>)}
+            </ul>
+            {items.length === 0 && <p className="text-gray-400">No issues found.</p>}
+        </div>
+    </div>
+);
+
+const BooleanCheck = ({ value, tooltipContent }) => {
+    const check = value ? <CheckCircle className="w-5 h-5 text-green-500 mx-auto" /> : <XCircle className="w-5 h-5 text-red-500 mx-auto" />;
+    const ContentTooltip = ({ content, children }) => (
+         <div className="relative group flex justify-center">
+            {children}
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-80 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
+                {content ? content : <span className="text-gray-400">Not Found</span>}
+            </div>
+        </div>
+    );
+    if (tooltipContent) {
+        return <ContentTooltip content={tooltipContent}>{check}</ContentTooltip>
+    }
+    return check;
+};
+
+const formatDate = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return dateString; // Return original if invalid
+    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
+const CalendarIcon = createIcon(
+  <>
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+    <line x1="16" y1="2" x2="16" y2="6"></line>
+    <line x1="8" y1="2" x2="8" y2="6"></line>
+    <line x1="3" y1="10" x2="21" y2="10"></line>
+  </>
+);
+
+const checkCategories = {
+    performance: {
+        title: "Performance",
+        icon: "⚡",
+        checks: { high_loading_time: "Page loads quickly", high_waiting_time: "Server responds quickly", has_render_blocking_resources: "No render-blocking resources", size_greater_than_3mb: "Page size is optimized", small_page_size: "Page is lightweight", large_page_size: "Page size is reasonable" }
+    },
+    security: {
+        title: "Security & Technical",
+        icon: "🔒",
+        checks: { is_https: "Uses secure HTTPS connection", is_http: "HTTP connection available", is_www: "WWW configuration correct", has_html_doctype: "Proper HTML structure", no_doctype: "DOCTYPE declaration present", canonical: "Canonical URL defined", flash: "No Flash content (deprecated)", frame: "No frame usage (outdated)", has_favicon: "Favicon present" }
+    },
+    content: {
+        title: "Content Quality",
+        icon: "📝",
+        checks: { low_content_rate: "Sufficient content density", high_content_rate: "Content not overly dense", low_character_count: "Adequate content length", high_character_count: "Content length appropriate", low_readability_rate: "Content is readable", lorem_ipsum: "No placeholder content" }
+    },
+    seo: {
+        title: "SEO Optimization",
+        icon: "🎯",
+        checks: { has_meta_title: "Meta title present", title_too_long: "Title length optimal", title_too_short: "Title length sufficient", no_title: "Title tag implemented", has_micromarkup: "Rich snippets implemented", has_micromarkup_errors: "Rich snippets valid", irrelevant_title: "Title is relevant", irrelevant_description: "Description is relevant", irrelevant_meta_keywords: "Keywords are relevant", no_description: "Meta description present", duplicate_meta_tag: "No duplicate meta tags", duplicate_title_tag: "No duplicate titles", seo_friendly_url: "URLs are SEO-friendly", seo_friendly_url_characters_check: "URL characters valid", seo_friendly_url_dynamic_check: "URLs not dynamic", seo_friendly_url_keywords_check: "URLs contain keywords", seo_friendly_url_relative_length_check: "URL length appropriate" }
+    },
+    accessibility: {
+        title: "Accessibility",
+        icon: "♿",
+        checks: { no_image_alt: "Images have alt text", no_image_title: "Images have titles", deprecated_html_tags: "Modern HTML used", no_h1_tag: "Main heading present" }
+    }
+};
+
+/* ------------------------------------------------------------------ */
 /* WEBSITE STATS – polished gauge, colour rules, horizontal bars      */
 /* ------------------------------------------------------------------ */
 const WebsiteStats = ({ data }) => {
@@ -1697,35 +1819,6 @@ const WebsiteStats = ({ data }) => {
         'Total Backlinks': parseInt(String(comp['Total Backlinks'] || '0').replace(/,/g, ''), 10) || 0
     }));
 
-    /* ---------- check descriptions and categories ---------- */
-    const checkCategories = {
-        performance: {
-            title: "Performance",
-            icon: "⚡",
-            checks: { high_loading_time: "Page loads quickly", high_waiting_time: "Server responds quickly", has_render_blocking_resources: "No render-blocking resources", size_greater_than_3mb: "Page size is optimized", small_page_size: "Page is lightweight", large_page_size: "Page size is reasonable" }
-        },
-        security: {
-            title: "Security & Technical",
-            icon: "🔒",
-            checks: { is_https: "Uses secure HTTPS connection", is_http: "HTTP connection available", is_www: "WWW configuration correct", has_html_doctype: "Proper HTML structure", no_doctype: "DOCTYPE declaration present", canonical: "Canonical URL defined", flash: "No Flash content (deprecated)", frame: "No frame usage (outdated)", has_favicon: "Favicon present" }
-        },
-        content: {
-            title: "Content Quality",
-            icon: "📝",
-            checks: { low_content_rate: "Sufficient content density", high_content_rate: "Content not overly dense", low_character_count: "Adequate content length", high_character_count: "Content length appropriate", low_readability_rate: "Content is readable", lorem_ipsum: "No placeholder content" }
-        },
-        seo: {
-            title: "SEO Optimization",
-            icon: "🎯",
-            checks: { has_meta_title: "Meta title present", title_too_long: "Title length optimal", title_too_short: "Title length sufficient", no_title: "Title tag implemented", has_micromarkup: "Rich snippets implemented", has_micromarkup_errors: "Rich snippets valid", irrelevant_title: "Title is relevant", irrelevant_description: "Description is relevant", irrelevant_meta_keywords: "Keywords are relevant", no_description: "Meta description present", duplicate_meta_tag: "No duplicate meta tags", duplicate_title_tag: "No duplicate titles", seo_friendly_url: "URLs are SEO-friendly", seo_friendly_url_characters_check: "URL characters valid", seo_friendly_url_dynamic_check: "URLs not dynamic", seo_friendly_url_keywords_check: "URLs contain keywords", seo_friendly_url_relative_length_check: "URL length appropriate" }
-        },
-        accessibility: {
-            title: "Accessibility",
-            icon: "♿",
-            checks: { no_image_alt: "Images have alt text", no_image_title: "Images have titles", deprecated_html_tags: "Modern HTML used", no_h1_tag: "Main heading present" }
-        }
-    };
-
     /* ---------- colour helpers ---------- */
     const gaugeColour = healthData.pageScore >= 90 ? '#16a34a' : healthData.pageScore >= 70 ? '#eab308' : '#dc2626';
     const speedSec = parseFloat(String(healthData.siteSpeed).replace(/[^\d.]/g, '')) || 0;
@@ -1735,82 +1828,6 @@ const WebsiteStats = ({ data }) => {
     const passPct  = healthData.checks.totalChecks > 0 ? (healthData.checks.passed / healthData.checks.totalChecks * 100) : 0;
     const passCol  = passPct >= 88 ? 'text-green-600' : passPct >= 69 ? 'text-yellow-600' : 'text-red-600';
     const CHART_COLORS = ['#3b82f6', '#16a34a', '#eab308', '#a855f7', '#ec4899', '#0ea5e9'];
-
-    /* ---------- Reusable Components ---------- */
-    const StatCard = ({ label, value, icon, tooltip }) => {
-        const cardRef = useRef(null);
-        const [tooltipPosition, setTooltipPosition] = useState('top');
-        const [tooltipWidthClass, setTooltipWidthClass] = useState('w-64');
-
-        useEffect(() => {
-            if (tooltip && tooltip.width === 'large') {
-                setTooltipWidthClass('w-[600px]');
-            } else {
-                setTooltipWidthClass('w-64');
-            }
-        }, [tooltip]);
-
-        const content = (
-            <div className="flex items-center space-x-3">
-                <div className="p-2 bg-blue-100 rounded-full">{icon}</div>
-                <div>
-                    <p className="text-sm text-gray-500">{label}</p>
-                    <p className={`font-bold text-lg ${value.color || 'text-gray-800'}`}>{value.text}</p>
-                </div>
-            </div>
-        );
-
-        if (tooltip && tooltip.content) {
-            return (
-                <div ref={cardRef} className="relative group cursor-help">
-                    {content}
-                    <div className={`absolute left-1/2 -translate-x-1/2 ${tooltipWidthClass} bg-gray-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50 pointer-events-none ${tooltipPosition === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'}`}>
-                        {tooltip.header && (
-                             <div className="px-3 py-1.5 bg-gray-700 rounded-t-lg font-semibold border-b border-gray-600">
-                                {tooltip.header}
-                            </div>
-                        )}
-                        <div className="p-3">{tooltip.content}</div>
-                        <div className={`absolute left-1/2 -translate-x-[6px] w-3 h-3 bg-gray-800 transform rotate-45 ${tooltipPosition === 'top' ? 'bottom-[-6px]' : 'top-[-6px]'}`}></div>
-                    </div>
-                </div>
-            );
-        }
-        return content;
-    };
-
-    const HealthCheckItem = ({ icon, color, title, items }) => (
-        <div className="relative group flex items-center space-x-2">
-            {icon}
-            <div>
-                <p className={`font-bold text-lg ${color}`}>{items.length}</p>
-                <p className="text-xs text-gray-500">{title}</p>
-            </div>
-            <div className="absolute left-0 bottom-full mb-2 w-72 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
-                <h4 className="font-bold mb-2 border-b border-gray-600 pb-1">{title} Found</h4>
-                <ul className="space-y-1">
-                    {items.map((item, index) => <li key={index}>- {item.description}</li>)}
-                </ul>
-                {items.length === 0 && <p className="text-gray-400">No issues found.</p>}
-            </div>
-        </div>
-    );
-
-    const BooleanCheck = ({ value, tooltipContent }) => {
-        const check = value ? <CheckCircle className="w-5 h-5 text-green-500 mx-auto" /> : <XCircle className="w-5 h-5 text-red-500 mx-auto" />;
-        const ContentTooltip = ({ content, children }) => (
-             <div className="relative group flex justify-center">
-                {children}
-                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-80 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
-                    {content ? content : <span className="text-gray-400">Not Found</span>}
-                </div>
-            </div>
-        );
-        if (tooltipContent) {
-            return <ContentTooltip content={tooltipContent}>{check}</ContentTooltip>
-        }
-        return check;
-    };
 
     /* ---------- stat-cards data with new tooltips ---------- */
     const cards = [
@@ -1879,23 +1896,6 @@ const WebsiteStats = ({ data }) => {
             icon: <CalendarIcon className="w-5 h-5 text-blue-600" />
         }
     ];
-
-    /* Helper to format dates */
-    const formatDate = (dateString) => {
-        if (!dateString) return null;
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return dateString; // Return original if invalid
-        return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    };
-
-    const CalendarIcon = createIcon(
-      <>
-        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-        <line x1="16" y1="2" x2="16" y2="6"></line>
-        <line x1="8" y1="2" x2="8" y2="6"></line>
-        <line x1="3" y1="10" x2="21" y2="10"></line>
-      </>
-    );
 
     return (
         <PageContent>
@@ -1998,10 +1998,10 @@ const WebsiteStats = ({ data }) => {
                 </div>
             </Card>
             
-            <AIReportSection reportText={aiReport} title="SWOT Analysis" />
+            <AIReportSection reportText={aiReport} title="On-Page AI Notes" />
 
             <Card className="mt-8">
-                <h2 className="text-lg font-bold mb-4">Technical SEO Checklist</h2>
+                <h2 className="text-lg font-semibold mb-4">Technical SEO Checklist</h2>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                         <thead className="text-left bg-slate-50">
