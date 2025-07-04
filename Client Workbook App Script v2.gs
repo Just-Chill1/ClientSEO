@@ -484,17 +484,21 @@ function getGeogridData(spreadsheet) {
             const name = row[baseIndex];
             const domain = row[baseIndex + 1];
             const rank = row[baseIndex + 2];
-            const top5 = row[baseIndex + 3];
-            const top10 = row[baseIndex + 4];
+            const top5Raw = row[baseIndex + 3];
+            const top10Raw = row[baseIndex + 4];
             
             // Ensure a competitor has a name and a valid rank to be included
             if (name && (rank !== undefined && rank !== null && rank !== '')) {
+                // More robust parsing for top 5/10 totals
+                const top5 = (typeof top5Raw === 'number') ? top5Raw : parseInt(top5Raw, 10);
+                const top10 = (typeof top10Raw === 'number') ? top10Raw : parseInt(top10Raw, 10);
+
                 competitors.push({ 
                     name: name,
                     domain: domain,
                     rank: parseFloat(rank),
-                    top5Total: parseInt(top5) || 0,
-                    top10Total: parseInt(top10) || 0,
+                    top5Total: !isNaN(top5) ? top5 : 0,
+                    top10Total: !isNaN(top10) ? top10 : 0,
                  });
             }
         }

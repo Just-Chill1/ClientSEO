@@ -1646,7 +1646,7 @@ const GeogridMaps = () => {
                     </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     {/* Left Column: Avg Score */}
                     <div className="md:col-span-1">
                         {competitors.length > 0 && (
@@ -1672,7 +1672,7 @@ const GeogridMaps = () => {
                     </div>
 
                     {/* Right Column: Map */}
-                    <div className="md:col-span-2">
+                    <div className="md:col-span-3">
                         {currentData.mapLink ? (
                             <div className="relative w-full h-[550px] overflow-hidden">
                                 <iframe 
@@ -1756,7 +1756,7 @@ const GeogridMaps = () => {
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {targetKeywords.map(keyword => (
                     <GeogridMapCard 
                         key={keyword} 
