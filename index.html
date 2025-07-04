@@ -1784,13 +1784,12 @@ const StatCard = ({ label, value, icon, tooltip }) => {
 
         const handleMouseEnter = () => {
             const cardRect = cardElement.getBoundingClientRect();
+            // A more robust heuristic for tooltip positioning
             const spaceAbove = cardRect.top;
-            
-            // A simple heuristic to decide tooltip position
-            // Estimate tooltip height. large is w-[600px] so it can be tall.
+            const spaceBelow = window.innerHeight - cardRect.bottom;
             const estimatedHeight = tooltip.width === 'large' ? 350 : 150;
 
-            if (spaceAbove < estimatedHeight && (window.innerHeight - cardRect.bottom) > spaceAbove) {
+            if (spaceAbove < estimatedHeight && spaceBelow > spaceAbove) {
                 setTooltipPosition('bottom');
             } else {
                 setTooltipPosition('top');
