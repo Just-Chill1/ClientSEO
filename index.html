@@ -766,35 +766,33 @@ const Dashboard = ({ setActiveTab }) => {
             setLoading(true);
             setError(null);
             
-            fetch(scriptUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.error) {
-                        throw new Error(data.error);
-                    }
-                    const services = dataSet === 'topServices' ? data.topServices : data.newServices;
-                    if (services) {
-                        // Calculate total volume for percentage
-                        const totalVolume = services.reduce((sum, service) => sum + service.totalVolume, 0);
-                        const servicesWithPercentage = services.map(service => ({
-                            ...service,
-                            volumePercentage: ((service.totalVolume / totalVolume) * 100).toFixed(1)
-                        }));
-                        sessionStorage.setItem(cacheKey, JSON.stringify(servicesWithPercentage));
-                        setServiceData(servicesWithPercentage);
-                    }
-                    setLoading(false);
-                })
-                .catch(err => {
+            fetchWithCorsWorkaround(scriptUrl, (err, data) => {
+                if (err) {
                     console.error("ServiceList Fetch Error:", err);
                     setError(err.message);
                     setLoading(false);
-                });
+                    return;
+                }
+
+                if (data.error) {
+                    setError(data.error);
+                    setLoading(false);
+                    return;
+                }
+
+                const services = dataSet === 'topServices' ? data.topServices : data.newServices;
+                if (services) {
+                    // Calculate total volume for percentage
+                    const totalVolume = services.reduce((sum, service) => sum + service.totalVolume, 0);
+                    const servicesWithPercentage = services.map(service => ({
+                        ...service,
+                        volumePercentage: totalVolume > 0 ? ((service.totalVolume / totalVolume) * 100).toFixed(1) : 0
+                    }));
+                    sessionStorage.setItem(cacheKey, JSON.stringify(servicesWithPercentage));
+                    setServiceData(servicesWithPercentage);
+                }
+                setLoading(false);
+            });
         }, [selectedLocation, dataSet]);
 
         if (loading) return <Card className="col-span-12 md:col-span-6 flex items-center justify-center"><p className="text-gray-500">Loading Service Data...</p></Card>;
