@@ -463,11 +463,12 @@ function getGeogridData(spreadsheet) {
     const groupedByKeyword = {};
 
     values.forEach((row, index) => {
-        const keyword = row[7];  // Column H
-        if (!keyword) {
-            console.log(`Row ${index + 2}: No keyword found`);
+        const rawKeyword = row[7];  // Column H
+        if (!rawKeyword || typeof rawKeyword !== 'string') {
+            console.log(`Row ${index + 2}: No keyword found or invalid type`);
             return;
         }
+        const keyword = rawKeyword.toLowerCase().trim();
 
         if (!groupedByKeyword[keyword]) {
             groupedByKeyword[keyword] = [];
