@@ -1781,7 +1781,17 @@ const WebsiteStats = ({ data }) => {
         return <PageContent><div className="p-8 text-center text-gray-500">No Website Stats data available.</div></PageContent>;
     }
     
-    const { healthData, competitorPerfData, technicalSeoData, aiReport } = data;
+    const { healthData, competitorPerfData: rawCompetitorPerfData, technicalSeoData, aiReport } = data;
+
+    // Clean and parse competitor data for charting to prevent NaN errors
+    const competitorPerfData = (rawCompetitorPerfData || []).map(comp => ({
+        name: comp.name || 'Unknown',
+        isClient: comp.isClient || false,
+        'Site Speed (s)': parseFloat(String(comp['Site Speed (s)'] || '0').replace(/[^\d.]/g, '')) || 0,
+        'Est. Monthly Traffic': parseInt(String(comp['Est. Monthly Traffic'] || '0').replace(/,/g, ''), 10) || 0,
+        'Referring Domains': parseInt(String(comp['Referring Domains'] || '0').replace(/,/g, ''), 10) || 0,
+        'Total Backlinks': parseInt(String(comp['Total Backlinks'] || '0').replace(/,/g, ''), 10) || 0
+    }));
 
     /* ---------- check descriptions and categories ---------- */
     const checkCategories = {
