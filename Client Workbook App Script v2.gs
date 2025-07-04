@@ -103,12 +103,29 @@ function getWebsiteStats(spreadsheet) {
 
     const healthData = {
         pageScore: clientData ? clientData.pageScore : 0,
-        siteSpeed: clientData ? clientData.siteSpeed : 0,
+        siteSpeed: clientData ? clientData.siteSpeed : '0s',
         brokenLinks: clientData ? clientData.brokenLinks : 0,
         ssl: clientData ? clientData.ssl : false,
         errors: websiteErrors.errors,
         warnings: websiteErrors.warnings,
-        checks: checksData 
+        checks: checksData,
+        lastUpdated: [
+            clientData?.lastModifiedHeader,
+            clientData?.lastModifiedSitemap,
+            clientData?.lastModifiedMeta
+        ].filter(Boolean), // Filter out any null/empty dates
+        speedDetails: {
+            'Time to Interactive': clientData?.time_to_interactive,
+            'DOM Complete': clientData?.dom_complete,
+            'Largest Contentful Paint': clientData?.largest_contentful_paint,
+            'First Input Delay': clientData?.first_input_delay,
+            'Connection Time': clientData?.connection_time,
+            'Time to Secure Connection': clientData?.time_to_secure_connection,
+            'Request Sent Time': clientData?.request_sent_time,
+            'Waiting Time (TTFB)': clientData?.waiting_time,
+            'Download Time': clientData?.download_time,
+            'Full Page Load': clientData?.duration_time,
+        }
     };
 
     return {
@@ -126,10 +143,9 @@ function getWebsiteStats(spreadsheet) {
             url: site.website,
             hasSchema: site.hasMicromarkup,
             h1: site.h1,
-            hasTitle: !!site.title,
-            hasDescription: !!site.meta,
-            hasSSL: site.ssl,
-            lastModified: site.lastModified
+            title: site.title,
+            description: site.meta,
+            hasSSL: site.ssl
         }))
     };
 }
@@ -249,13 +265,41 @@ function getOnPageInsights(spreadsheet) {
     const sheetName = 'On-Page Insights';
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet || sheet.getLastRow() < 2) return [];
-    const values = sheet.getRange('A2:CP' + sheet.getLastRow()).getValues(); 
+    // Extend range to cover all new columns up to CZ
+    const values = sheet.getRange('A2:CZ' + sheet.getLastRow()).getValues(); 
     return values.map(row => ({
-        name: row[1], website: row[8], siteSpeed: row[10], title: row[11],
-        meta: row[12], h1: row[13], ssl: row[14] === true, referringDomains: row[15],
-        totalBacklinks: row[16], estMonthlyTraffic: row[17], kwPos1: row[19], pageScore: row[22], 
-        brokenLinks: row[24], lastModified: row[27], isClient: row[0] === 'Client',
+        name: row[1], 
+        website: row[8], 
+        siteSpeed: row[10], 
+        title: row[11],
+        meta: row[12], 
+        h1: row[13], 
+        ssl: row[14] === true, 
+        referringDomains: row[15],
+        totalBacklinks: row[16], 
+        estMonthlyTraffic: row[17], 
+        kwPos1: row[19], 
+        pageScore: row[22], 
+        brokenLinks: row[24], 
+        isClient: row[0] === 'Client',
         hasMicromarkup: row[42] === true,
+        // Last Modified Dates
+        lastModifiedHeader: row[29], // Column AD
+        lastModifiedSitemap: row[30], // Column AE
+        lastModifiedMeta: row[31],    // Column AF
+        // New Speed Metrics
+        time_to_interactive: row[94], // Column CQ
+        dom_complete: row[95],
+        largest_contentful_paint: row[96],
+        first_input_delay: row[97],
+        connection_time: row[98],
+        time_to_secure_connection: row[99],
+        request_sent_time: row[100],
+        waiting_time: row[101],
+        download_time: row[102],
+        duration_time: row[103],
+        fetch_start: row[104],
+        fetch_end: row[105]
     })).filter(row => row.name);
 }
 

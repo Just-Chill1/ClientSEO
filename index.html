@@ -1775,52 +1775,15 @@ const GeogridMaps = () => {
 const WebsiteStats = ({ data }) => {
     /* pull Recharts only in this page */
     const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } = window.Recharts;
+    const {useState} = React;
 
     /* fallback if no data yet */
     if (!data) {
         console.log('WebsiteStats: No data provided');
         return <PageContent><div className="p-8 text-center text-gray-500">No Website Stats data available.</div></PageContent>;
     }
-
-    // Debug logging
-    console.log('WebsiteStats raw data:', data);
-    console.log('healthData:', data.healthData);
-    console.log('competitorPerfData:', data.competitorPerfData);
-    console.log('technicalSeoData:', data.technicalSeoData);
-
-    // Ensure we have all required data objects with defaults
-    const healthData = {
-        pageScore: data?.healthData?.pageScore || 0,
-        siteSpeed: data?.healthData?.siteSpeed || '0s',
-        brokenLinks: data?.healthData?.brokenLinks || 0,
-        ssl: data?.healthData?.ssl || false,
-        checks: {
-            checksPassed: data?.healthData?.checks?.checksPassed || 0,
-            totalChecks: data?.healthData?.checks?.totalChecks || 1,
-            passedList: data?.healthData?.checks?.passedList || [],
-            failedList: data?.healthData?.checks?.failedList || []
-        },
-        errors: data?.healthData?.errors || [],
-        warnings: data?.healthData?.warnings || []
-    };
-
-    const competitorPerfData = (data?.competitorPerfData || []).map(comp => ({
-        name: comp.name || 'Unknown',
-        isClient: comp.isClient || false,
-        'Site Speed (s)': parseFloat(String(comp['Site Speed (s)']).replace(/[^\d.]/g, '')) || 0,
-        'Est. Monthly Traffic': parseInt(comp['Est. Monthly Traffic'], 10) || 0,
-        'Referring Domains': parseInt(comp['Referring Domains'], 10) || 0,
-        'Total Backlinks': parseInt(comp['Total Backlinks'], 10) || 0
-    }));
-
-    const technicalSeoData = (data?.technicalSeoData || []).map(site => ({
-        name: site.name || 'Unknown',
-        hasSSL: Boolean(site.hasSSL),
-        hasSchema: Boolean(site.hasSchema),
-        h1: site.h1 || '',
-        title: site.title || '',
-        description: site.description || ''
-    }));
+    
+    const { healthData, competitorPerfData, technicalSeoData, aiReport } = data;
 
     /* ---------- check descriptions and categories ---------- */
     const checkCategories = {
@@ -1919,58 +1882,43 @@ const WebsiteStats = ({ data }) => {
         }
     };
 
-    // Function to determine if a check result is positive or negative
-    const isPositiveCheck = (checkName, value) => {
-        // Checks where true means good
-        const positiveTrueChecks = [
-            'is_https', 'has_html_doctype', 'canonical', 'has_favicon',
-            'has_meta_title', 'has_micromarkup'
-        ];
-        
-        // Checks where false means good
-        const negativeFalseChecks = [
-            'high_loading_time', 'is_redirect', 'is_4xx_code', 'is_5xx_code',
-            'is_broken', 'no_doctype', 'no_encoding_meta_tag', 'no_h1_tag',
-            'https_to_http_links', 'size_greater_than_3mb', 'has_meta_refresh_redirect',
-            'has_render_blocking_resources', 'low_content_rate', 'high_content_rate',
-            'low_character_count', 'high_character_count', 'low_readability_rate',
-            'irrelevant_description', 'irrelevant_title', 'irrelevant_meta_keywords',
-            'title_too_long', 'title_too_short', 'deprecated_html_tags',
-            'duplicate_meta_tag', 'duplicate_title_tag', 'no_image_alt',
-            'no_image_title', 'no_description', 'no_title', 'flash', 'frame',
-            'lorem_ipsum'
-        ];
-
-        if (positiveTrueChecks.includes(checkName)) return value === true;
-        if (negativeFalseChecks.includes(checkName)) return value === false;
-        return value === true; // Default case
-    };
-
     /* ---------- colour helpers ---------- */
-    const gaugeColour =
-        healthData.pageScore >= 90 ? '#16a34a'
-        : healthData.pageScore >= 70 ? '#eab308'
-        : '#dc2626';
-
+    const gaugeColour = healthData.pageScore >= 90 ? '#16a34a' : healthData.pageScore >= 70 ? '#eab308' : '#dc2626';
     const speedSec = parseFloat(String(healthData.siteSpeed).replace(/[^\d.]/g, '')) || 0;
-    const speedCol = speedSec < 1.5 ? 'text-green-600'
-                    : speedSec < 3   ? 'text-yellow-600'
-                    :                  'text-red-600';
-
-    const linkCol  = healthData.brokenLinks === 0 ? 'text-green-600'
-                    : healthData.brokenLinks === 1 ? 'text-yellow-600'
-                    :                              'text-red-600';
-
+    const speedCol = speedSec < 1.5 ? 'text-green-600' : speedSec < 3 ? 'text-yellow-600' : 'text-red-600';
+    const linkCol  = healthData.brokenLinks === 0 ? 'text-green-600' : healthData.brokenLinks === 1 ? 'text-yellow-600' : 'text-red-600';
     const sslCol   = healthData.ssl ? 'text-green-600' : 'text-red-600';
-
-    const passPct  = healthData.checks.checksPassed / healthData.checks.totalChecks * 100;
-    const passCol  = passPct >= 88 ? 'text-green-600'
-                    : passPct >= 69  ? 'text-yellow-600'
-                    :                  'text-red-600';
-    
+    const passPct  = healthData.checks.totalChecks > 0 ? (healthData.checks.checksPassed / healthData.checks.totalChecks * 100) : 0;
+    const passCol  = passPct >= 88 ? 'text-green-600' : passPct >= 69 ? 'text-yellow-600' : 'text-red-600';
     const CHART_COLORS = ['#3b82f6', '#16a34a', '#eab308', '#a855f7', '#ec4899', '#0ea5e9'];
 
-    /* ---------- helpers ---------- */
+    /* ---------- Reusable Components ---------- */
+     const AIReportSection = () => {
+        const [isExpanded, setIsExpanded] = useState(false);
+        if (!aiReport) return null;
+
+        const ChevronDown = createIcon(<polyline points="6 9 12 15 18 9" />);
+        const ChevronUp = createIcon(<polyline points="18 15 12 9 6 15" />);
+
+        return (
+            <Card className="col-span-12 relative">
+                 <div className="flex items-center space-x-2 mb-1">
+                     <h2 className="text-xl font-bold text-gray-800">AI Report</h2>
+                     <InfoTooltip text="An automated SWOT (Strengths, Weaknesses, Opportunities, Threats) analysis based on the collected data, providing strategic insights and recommendations." />
+                 </div>
+                 <h3 className="text-md font-semibold text-gray-600 mb-3">SWOT Analysis</h3>
+                 <div className={`prose prose-sm max-w-none text-gray-600 overflow-hidden relative transition-all duration-300 ${isExpanded ? 'max-h-full' : 'max-h-24'}`}>
+                    <div dangerouslySetInnerHTML={{ __html: aiReport.replace(/\n/g, '<br />') }} />
+                     {!isExpanded && <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent"></div>}
+                 </div>
+                 <button onClick={() => setIsExpanded(!isExpanded)} className="mt-2 text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center">
+                     {isExpanded ? 'Show Less' : 'Show More'}
+                     {isExpanded ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+                 </button>
+            </Card>
+        );
+    }
+    
     const StatCard = ({ label, value, icon, tooltip }) => {
         const [tooltipPosition, setTooltipPosition] = React.useState('top');
         const cardRef = React.useRef(null);
@@ -2125,17 +2073,25 @@ const WebsiteStats = ({ data }) => {
         return check;
     };
 
-    /* ---------- stat-cards data ---------- */
+    /* ---------- stat-cards data with new tooltips ---------- */
     const cards = [
         { 
             label: 'Site Speed', 
             value: { text: healthData.siteSpeed, color: speedCol }, 
-            icon: <TrendingUp className="w-5 h-5 text-blue-600" /> 
+            icon: <TrendingUp className="w-5 h-5 text-blue-600" />,
+            tooltip: (
+                <div className="space-y-2 text-xs">
+                    <h4 className="font-bold text-sm mb-2 border-b border-gray-600 pb-1">Detailed Speed Metrics</h4>
+                    {Object.entries(healthData.speedDetails).map(([key, val]) => (
+                        val ? <div key={key} className="flex justify-between"><span>{key}:</span><span className="font-semibold">{val}</span></div> : null
+                    ))}
+                </div>
+            )
         },
         { 
             label: 'Broken Links', 
             value: { text: healthData.brokenLinks ?? '0', color: linkCol }, 
-            icon: <Link2 className="w-5 h-5 text-blue-600" /> 
+            icon: <Link2 className="w-5 h-5 text-blue-600" />
         },
         { 
             label: 'SSL', 
@@ -2186,10 +2142,25 @@ const WebsiteStats = ({ data }) => {
         },
     ];
 
+    /* Helper to format dates */
+    const formatDate = (dateString) => {
+        if (!dateString) return null;
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return dateString; // Return original if invalid
+        return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    };
+
     return (
         <PageContent>
             <Card className="mb-8">
-                <h2 className="text-xl font-bold mb-4">Website Health</h2>
+                <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold">Website Health</h2>
+                    {healthData.lastUpdated.length > 0 && (
+                        <div className="text-xs text-gray-500">
+                            Last Updated: {formatDate(healthData.lastUpdated[0])}
+                        </div>
+                    )}
+                </div>
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     <div className="flex flex-col items-center">
                         <div className="relative">
@@ -2285,29 +2256,31 @@ const WebsiteStats = ({ data }) => {
                 </div>
             </Card>
             
-            <Card>
-                <h2 className="text-lg font-semibold mb-4">Technical SEO Checklist</h2>
+            <AIReportSection />
+
+            <Card className="mt-8">
+                <h2 className="text-lg font-bold mb-4">Technical SEO Checklist</h2>
                 <div className="overflow-x-auto">
-                    <table className="min-w-[640px] text-sm">
-                        <thead className="text-left border-b">
+                    <table className="w-full text-sm">
+                        <thead className="text-left bg-slate-50">
                             <tr>
-                                <th className="py-2 pr-4">Website</th>
-                                <th className="py-2 text-center">SSL</th>
-                                <th className="py-2 text-center">Schema</th>
-                                <th className="py-2">H1</th>
-                                <th className="py-2">Title</th>
-                                <th className="py-2">Description</th>
+                                <th className="p-3 font-semibold text-slate-700">Website</th>
+                                <th className="p-3 text-center font-semibold text-slate-700">SSL</th>
+                                <th className="p-3 text-center font-semibold text-slate-700">Schema</th>
+                                <th className="p-3 font-semibold text-slate-700">H1 Tag</th>
+                                <th className="p-3 font-semibold text-slate-700">Title Tag</th>
+                                <th className="p-3 font-semibold text-slate-700">Meta Description</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {technicalSeoData.map(site => (
-                                <tr key={site.name} className="border-b last:border-0">
-                                    <td className="py-2 pr-4 font-semibold">{site.name}</td>
-                                    <td className="py-2 text-center"><BooleanCheck value={site.hasSSL} /></td>
-                                    <td className="py-2 text-center"><BooleanCheck value={site.hasSchema} /></td>
-                                    <td className="py-2"><BooleanCheck value={site.h1} tooltipContent={site.h1} /></td>
-                                    <td className="py-2"><BooleanCheck value={site.title} tooltipContent={site.title} /></td>
-                                    <td className="py-2"><BooleanCheck value={site.description} tooltipContent={site.description} /></td>
+                            {technicalSeoData.map((site, index) => (
+                                <tr key={site.name} className={`border-b border-slate-100 ${index % 2 !== 0 ? 'bg-slate-50/50' : 'bg-white'}`}>
+                                    <td className="p-3 pr-4 font-semibold text-slate-800">{site.name}</td>
+                                    <td className="p-3 text-center"><BooleanCheck value={site.hasSSL} /></td>
+                                    <td className="p-3 text-center"><BooleanCheck value={site.hasSchema} /></td>
+                                    <td className="p-3"><BooleanCheck value={site.h1} tooltipContent={site.h1} /></td>
+                                    <td className="p-3"><BooleanCheck value={site.title} tooltipContent={site.title} /></td>
+                                    <td className="p-3"><BooleanCheck value={site.description} tooltipContent={site.description} /></td>
                                 </tr>
                             ))}
                         </tbody>
@@ -2398,7 +2371,7 @@ const App = () => {
         body = <Dashboard setActiveTab={setTab} />;
         break;
       case 'Website Stats':
-        body = <WebsiteStats data={data.websiteStats} />;
+        body = <WebsiteStats data={{...data.websiteStats, aiReport: data.dashboard?.aiReport}} />;
         break;
       case 'Geogrid Maps':
         body = <GeogridMaps data={data.geogridData} />;
