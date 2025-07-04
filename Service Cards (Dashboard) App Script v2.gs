@@ -60,21 +60,14 @@ function doGet(e) {
       throw new Error(`Sheet "${sheetName}" not found.`);
     }
 
-    const data = processSheetData(sheet, locationColumnIndex, locationFilterValue);
+    const data = aggregateServiceData(sheet, locationColumnIndex, locationFilterValue);
 
-    const response = {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    };
-    
     // Support for JSONP
     if (e.parameter.callback) {
       return ContentService.createTextOutput(e.parameter.callback + '(' + JSON.stringify(data) + ')').setMimeType(ContentService.MimeType.JAVASCRIPT);
     } else {
       return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
     }
-
 
   } catch (error) {
     const errorResponse = { error: error.message, stack: error.stack };
@@ -105,6 +98,125 @@ function parseDateHeader(header) {
     return null;
 }
 
+function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue) {
+  if (!sheet) return { topServices: [], newServices: [] };
+  const data = sheet.getDataRange().getValues();
+  const headers = data.shift(); // Get and remove header row
+
+  // Find the indices of all month columns using the robust date parser
+  const monthColumns = headers.reduce((acc, header, index) => {
+    const date = parseDateHeader(header);
+    if (date) {
+      acc.push({ header, index, date });
+    }
+    return acc;
+  }, []);
+
+  // Sort by date to find the latest two months
+  monthColumns.sort((a, b) => b.date - a.date);
+  const currentMonth = monthColumns.length > 0 ? monthColumns[0] : null;
+  const previousMonth = monthColumns.length > 1 ? monthColumns[1] : null;
+
+  // Get indices of other required columns
+  const serviceCol = headers.indexOf('Service');
+  const keywordCol = headers.indexOf('Keyword');
+  const compCol = headers.indexOf('Competition Index');
+  const cpcCol = headers.indexOf('CPC');
+  const locationCol = locationColumnIndex;
+
+  // Exit if essential columns are not found
+  if (serviceCol === -1 || keywordCol === -1 || !currentMonth) {
+    console.error('Essential columns (Service, Keyword) or current month data not found.');
+    return { topServices: [], newServices: [] };
+  }
+
+  const aggregatedData = {};
+
+  data.forEach(row => {
+    const rowLocation = row[locationCol];
+    if (!rowLocation || rowLocation.toString().trim().toLowerCase() !== locationFilterValue.trim().toLowerCase()){
+        return; // Skip row if location doesn't match
+    }
+
+    const serviceName = row[serviceCol];
+    const keyword = row[keywordCol];
+    if (!serviceName || !keyword) return; // Skip empty rows
+
+    if (!aggregatedData[serviceName]) {
+      aggregatedData[serviceName] = {
+        name: serviceName,
+        totalCompetition: 0,
+        totalCpc: 0,
+        totalCurrentVolume: 0,
+        totalPreviousVolume: 0,
+        keywords: [],
+        keywordCount: 0
+      };
+    }
+
+    const service = aggregatedData[serviceName];
+    
+    const currentVol = parseInt(row[currentMonth.index], 10) || 0;
+    const prevVol = previousMonth ? (parseInt(row[previousMonth.index], 10) || 0) : 0;
+    
+    let keywordTrend = 0;
+    if (currentVol > prevVol) keywordTrend = 1;
+    else if (currentVol < prevVol) keywordTrend = -1;
+
+    // Add keyword-level data
+    service.keywords.push({
+      name: keyword,
+      volume: currentVol,
+      trend: keywordTrend
+    });
+    
+    // Update service-level aggregates
+    const competition = parseFloat(row[compCol] || 0);
+    const cpc = parseFloat(row[cpcCol] || 0);
+    if(!isNaN(competition)) service.totalCompetition += competition;
+    if(!isNaN(cpc)) service.totalCpc += cpc;
+    service.totalCurrentVolume += currentVol;
+    service.totalPreviousVolume += prevVol;
+    service.keywordCount++;
+  });
+
+  const allServices = Object.values(aggregatedData);
+  const allServicesTotalVolume = allServices.reduce((sum, s) => sum + s.totalCurrentVolume, 0);
+
+  // Convert the aggregated object into the final array format
+  const formattedServices = allServices.map(service => {
+    const numKeywords = service.keywordCount;
+    if (numKeywords === 0) return null;
+
+    let serviceTrend = 0;
+    if (service.totalCurrentVolume > service.totalPreviousVolume) serviceTrend = 1;
+    else if (service.totalCurrentVolume < service.totalPreviousVolume) serviceTrend = -1;
+
+    return {
+      name: service.name,
+      totalVolume: service.totalCurrentVolume,
+      volumePercentage: allServicesTotalVolume > 0 ? ((service.totalCurrentVolume / allServicesTotalVolume) * 100).toFixed(1) : '0.0',
+      avgCompetition: (service.totalCompetition / numKeywords).toFixed(2),
+      avgCpc: (service.totalCpc / numKeywords).toFixed(2),
+      trend: serviceTrend,
+      keywords: service.keywords.sort((a, b) => b.volume - a.volume) // Sort keywords by volume
+    };
+  }).filter(s => s !== null && s.totalVolume > 0); // Filter out services with no volume
+
+  const topServices = formattedServices
+      .filter(s => NORMAL_SERVICES.includes(s.name))
+      .sort((a, b) => b.totalVolume - a.totalVolume);
+
+  const newServices = formattedServices
+      .filter(s => NEW_SERVICES.includes(s.name))
+      .sort((a, b) => b.totalVolume - a.totalVolume);
+      
+  return { topServices, newServices };
+}
+
+// --- DEPRECATED ---
+// The function below is the old implementation and is no longer used.
+// It is kept for reference but will be removed in a future version.
 function processSheetData(sheet, locationColumnIndex, locationFilterValue) {
     const header = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     const data = sheet.getDataRange().getValues();
@@ -211,96 +323,4 @@ function processSheetData(sheet, locationColumnIndex, locationFilterValue) {
         .sort((a, b) => b.totalVolume - a.totalVolume);
         
     return { topServices, newServices };
-}
-
-function aggregateServiceData(sheet) {
-  if (!sheet) return [];
-  const data = sheet.getDataRange().getValues();
-  const headers = data.shift(); // Get and remove header row
-
-  // Find the indices of all month columns using the robust date parser
-  const monthColumns = headers.reduce((acc, header, index) => {
-    const date = parseDateHeader(header);
-    if (date) {
-      acc.push({ header, index, date });
-    }
-    return acc;
-  }, []);
-
-  // Sort by date to find the latest two months
-  monthColumns.sort((a, b) => b.date - a.date);
-  const currentMonth = monthColumns.length > 0 ? monthColumns[0] : null;
-  const previousMonth = monthColumns.length > 1 ? monthColumns[1] : null;
-
-  // Get indices of other required columns
-  const serviceCol = headers.indexOf('Service');
-  const keywordCol = headers.indexOf('Keyword');
-  const compCol = headers.indexOf('Competition Index');
-  const cpcCol = headers.indexOf('CPC');
-
-  // Exit if essential columns are not found
-  if (serviceCol === -1 || keywordCol === -1 || !currentMonth) {
-    console.error('Essential columns (Service, Keyword) or current month data not found.');
-    return [];
-  }
-
-  const aggregatedData = {};
-
-  data.forEach(row => {
-    const serviceName = row[serviceCol];
-    const keyword = row[keywordCol];
-    if (!serviceName || !keyword) return; // Skip empty rows
-
-    if (!aggregatedData[serviceName]) {
-      aggregatedData[serviceName] = {
-        name: serviceName,
-        totalCompetition: 0,
-        totalCpc: 0,
-        totalCurrentVolume: 0,
-        totalPreviousVolume: 0,
-        keywords: [],
-      };
-    }
-
-    const service = aggregatedData[serviceName];
-    
-    const currentVol = parseFloat(row[currentMonth.index] || 0);
-    const prevVol = previousMonth ? (parseFloat(row[previousMonth.index] || 0)) : 0;
-    
-    let keywordTrend = 0;
-    if (currentVol > prevVol) keywordTrend = 1;
-    else if (currentVol < prevVol) keywordTrend = -1;
-
-    // Add keyword-level data
-    service.keywords.push({
-      name: keyword,
-      volume: currentVol,
-      trend: keywordTrend
-    });
-    
-    // Update service-level aggregates
-    service.totalCompetition += parseFloat(row[compCol] || 0);
-    service.totalCpc += parseFloat(row[cpcCol] || 0);
-    service.totalCurrentVolume += currentVol;
-    service.totalPreviousVolume += prevVol;
-  });
-
-  // Convert the aggregated object into the final array format
-  return Object.values(aggregatedData).map(service => {
-    const numKeywords = service.keywords.length;
-    if (numKeywords === 0) return null;
-
-    let serviceTrend = 0;
-    if (service.totalCurrentVolume > service.totalPreviousVolume) serviceTrend = 1;
-    else if (service.totalCurrentVolume < service.totalPreviousVolume) serviceTrend = -1;
-
-    return {
-      name: service.name,
-      totalVolume: service.totalCurrentVolume, // Used by frontend for % calculation
-      avgCompetition: (service.totalCompetition / numKeywords).toFixed(2),
-      avgCpc: (service.totalCpc / numKeywords).toFixed(2),
-      trend: serviceTrend,
-      keywords: service.keywords.sort((a, b) => b.volume - a.volume) // Sort keywords by volume
-    };
-  }).filter(s => s !== null && s.totalVolume > 0); // Filter out services with no volume
 } 
