@@ -796,7 +796,7 @@ const Dashboard = ({ setActiveTab }) => {
     return (
         <PageContent>
             <div className="grid grid-cols-12 gap-6">
-                <GeogridSection setActiveTab={setTab} />
+                <GeogridSection setActiveTab={setActiveTab} />
                 <CensusInfo censusData={dashboardData?.censusData} loading={loading} error={error} />
                 <OverviewTable overviewData={dashboardData?.overviewData} loading={loading} error={error}/>
                 
