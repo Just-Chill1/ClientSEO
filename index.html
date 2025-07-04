@@ -1371,7 +1371,7 @@ const Backlinks = () => {
 
 const ToolsPage     = () => <PageContent><h2 className="text-center text-gray-500">Tools – coming soon</h2></PageContent>;
 const GeogridMaps = () => {
-    const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } = window.Recharts;
+    const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, LabelList } = window.Recharts;
     const [geogridData, setGeogridData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -1523,6 +1523,30 @@ const GeogridMaps = () => {
         // Ensure competitors array exists and has valid data
         const competitors = Array.isArray(currentData.competitors) ? currentData.competitors : [];
 
+        const CustomXAxisTick = ({ x, y, payload }) => {
+            const name = payload.value || '';
+            // A simple heuristic to split long names
+            if (name.length > 15) { 
+                const breakPoint = name.lastIndexOf(' ', 15);
+                const line1 = breakPoint > 0 ? name.substring(0, breakPoint) : name.substring(0, 15);
+                const line2 = breakPoint > 0 ? name.substring(breakPoint + 1) : name.substring(15);
+                return (
+                    <g transform={`translate(${x},${y})`}>
+                        <text x={0} y={0} dy={5} textAnchor="end" fill="#6B7280" fontSize={12} transform="rotate(-40)">
+                            <tspan x="0" dy="1em">{line1}</tspan>
+                            {line2 && <tspan x="0" dy="1.2em">{line2}</tspan>}
+                        </text>
+                    </g>
+                );
+            }
+
+            return (
+                <g transform={`translate(${x},${y})`}>
+                    <text x={0} y={0} dy={16} textAnchor="end" fill="#6B7280" fontSize={12} transform="rotate(-40)">{name}</text>
+                </g>
+            );
+        };
+
         return (
             <Card>
                 <div className="flex justify-between items-start mb-4">
@@ -1620,21 +1644,38 @@ const GeogridMaps = () => {
                 {competitors.length > 0 && (
                     <div className="mt-8">
                         <h3 className="text-lg font-semibold text-gray-800 mb-3">Rankings in Top 5</h3>
-                        <ResponsiveContainer width="100%" height={250}>
-                            <BarChart data={competitors} margin={{ top: 5, right: 20, left: 0, bottom: 60 }}>
+                        <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={competitors} margin={{ top: 20, right: 30, left: 0, bottom: 80 }}>
                                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                 <XAxis dataKey="name" type="category" tick={{ fontSize: 10 }} interval={0} angle={-45} textAnchor="end" height={70}/>
-                                 <YAxis type="number" allowDecimals={false} domain={[0, dataMax => Math.round((dataMax || 5) * 1.2)]} />
-                                 <Tooltip 
-                                    cursor={{fill: 'rgba(241, 245, 249, 0.7)'}} 
-                                    contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.9)', borderColor: 'rgba(255,255,255,0.2)', borderRadius: '0.5rem' }} 
-                                    itemStyle={{ color: '#fff' }} 
-                                    labelStyle={{ color: '#fff', fontWeight: 'bold' }}
-                                    formatter={(value) => [`${value} rankings`, '']}
-                                    labelFormatter={(label) => `Top 5 for ${label}`}
+                                 <XAxis 
+                                     dataKey="name" 
+                                     type="category" 
+                                     interval={0} 
+                                     tick={<CustomXAxisTick />} 
+                                     height={90}
                                  />
-                                 <Bar dataKey='top5Total' name="Top 5 Rankings" barSize={35}>
+                                 <YAxis 
+                                     type="number" 
+                                     allowDecimals={false} 
+                                     domain={[0, dataMax => (Math.ceil((dataMax || 5) * 1.1 / 5) * 5)]} 
+                                     tick={{ fontSize: 12, fill: '#6B7280' }}
+                                 />
+                                 <Tooltip
+                                     cursor={{ fill: 'rgba(241, 245, 249, 0.7)' }}
+                                     contentStyle={{
+                                         backgroundColor: 'rgba(31, 41, 55, 0.9)',
+                                         borderColor: 'rgba(255,255,255,0.2)',
+                                         borderRadius: '0.5rem',
+                                         boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                     }}
+                                     itemStyle={{ color: '#fff' }}
+                                     labelStyle={{ color: '#fff', fontWeight: 'bold' }}
+                                     formatter={(value, name, props) => [`${value}`, 'Top 5 Count']}
+                                     labelFormatter={(label) => `${label}`}
+                                 />
+                                 <Bar dataKey='top5Total' name="Top 5 Rankings" radius={[4, 4, 0, 0]}>
                                      {competitors.map((entry, index) => <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} /> )}
+                                     <LabelList dataKey="top5Total" position="top" style={{ fill: '#4B5563', fontSize: 12, fontWeight: 'bold' }} />
                                  </Bar>
                             </BarChart>
                         </ResponsiveContainer>
