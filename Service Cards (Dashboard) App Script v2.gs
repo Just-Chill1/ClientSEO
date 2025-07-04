@@ -100,8 +100,8 @@ function parseDateHeader(header) {
 
 function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue) {
   if (!sheet) return { topServices: [], newServices: [] };
-  const data = sheet.getDataRange().getValues();
-  const headers = data.shift(); // Get and remove header row
+  const allData = sheet.getDataRange().getValues();
+  const headers = allData.shift(); // Get and remove header row
 
   // Find the indices of all month columns using the robust date parser
   const monthColumns = headers.reduce((acc, header, index) => {
@@ -114,30 +114,50 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue) {
 
   // Sort by date to find the latest two months
   monthColumns.sort((a, b) => b.date - a.date);
-  const currentMonth = monthColumns.length > 0 ? monthColumns[0] : null;
-  const previousMonth = monthColumns.length > 1 ? monthColumns[1] : null;
+
+  // Filter rows for the selected location
+  const data = allData.filter(row => {
+      const rowLocation = row[locationColumnIndex];
+      return rowLocation && rowLocation.toString().trim().toLowerCase() === locationFilterValue.trim().toLowerCase();
+  });
+
+  if (data.length === 0) return { topServices: [], newServices: [] };
+
+  // Find the last two months that actually contain volume data
+  let currentMonth = null;
+  let previousMonth = null;
+  for (const monthCol of monthColumns) {
+      const hasVolume = data.some(row => {
+          const vol = row[monthCol.index];
+          // Check for non-empty, non-dash, and numeric values
+          return vol !== '' && vol !== '-' && !isNaN(parseInt(vol, 10));
+      });
+
+      if (hasVolume) {
+          if (!currentMonth) {
+              currentMonth = monthCol;
+          } else {
+              previousMonth = monthCol;
+              break; // We have the two most recent months with data
+          }
+      }
+  }
 
   // Get indices of other required columns
   const serviceCol = headers.indexOf('Service');
   const keywordCol = headers.indexOf('Keyword');
   const compCol = headers.indexOf('Competition Index');
   const cpcCol = headers.indexOf('CPC');
-  const locationCol = locationColumnIndex;
 
   // Exit if essential columns are not found
   if (serviceCol === -1 || keywordCol === -1 || !currentMonth) {
-    console.error('Essential columns (Service, Keyword) or current month data not found.');
+    console.error('Essential columns (Service, Keyword) or current month data not found for location: ' + locationFilterValue);
     return { topServices: [], newServices: [] };
   }
 
   const aggregatedData = {};
 
   data.forEach(row => {
-    const rowLocation = row[locationCol];
-    if (!rowLocation || rowLocation.toString().trim().toLowerCase() !== locationFilterValue.trim().toLowerCase()){
-        return; // Skip row if location doesn't match
-    }
-
     const serviceName = row[serviceCol];
     const keyword = row[keywordCol];
     if (!serviceName || !keyword) return; // Skip empty rows
