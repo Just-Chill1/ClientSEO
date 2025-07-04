@@ -196,6 +196,37 @@ const InfoTooltip = ({ text }) => (
 /* ------------------------------------------------------------------ */
 /* PLACEHOLDER PAGES – replace each later with real JSX               */
 /* ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------ */
+/* AI Report Section (used on multiple pages)                         */
+/* ------------------------------------------------------------------ */
+const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
+    const { useState } = React;
+    const [isExpanded, setIsExpanded] = useState(false);
+    if (!reportText) return null;
+
+    const ChevronDown = createIcon(<polyline points="6 9 12 15 18 9" />);
+    const ChevronUp = createIcon(<polyline points="18 15 12 9 6 15" />);
+
+    return (
+        <Card className="mt-8">
+             <div className="flex items-center space-x-2 mb-1">
+                 <h2 className="text-xl font-bold text-gray-800">AI Report</h2>
+                 <InfoTooltip text="An automated SWOT (Strengths, Weaknesses, Opportunities, Threats) analysis based on the collected data, providing strategic insights and recommendations." />
+             </div>
+             <h3 className="text-md font-semibold text-gray-600 mb-3">{title}</h3>
+             <div className={`prose prose-sm max-w-none text-gray-600 overflow-hidden relative transition-all duration-300 ${isExpanded ? 'max-h-full' : 'max-h-24'}`}>
+                <div dangerouslySetInnerHTML={{ __html: reportText.replace(/\n/g, '<br />') }} />
+                 {!isExpanded && <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent"></div>}
+             </div>
+             <button onClick={() => setIsExpanded(!isExpanded)} className="mt-2 text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center">
+                 {isExpanded ? 'Show Less' : 'Show More'}
+                 {isExpanded ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+             </button>
+        </Card>
+    );
+};
+
 const Dashboard = ({ setActiveTab }) => {
     const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, PieChart, Pie, Legend } = window.Recharts;
     
@@ -657,87 +688,6 @@ const Dashboard = ({ setActiveTab }) => {
         );
     };
     
-    const AIReport = () => {
-        const [reportText, setReportText] = useState(null);
-        const [loading, setLoading] = useState(true);
-        const [error, setError] = useState(null);
-        const [isExpanded, setIsExpanded] = useState(false);
-
-        useEffect(() => {
-            const params = new URLSearchParams(window.location.search);
-            const workbookId = params.get('workbookId');
-            if (!workbookId) {
-                setError("No workbook ID provided");
-                setLoading(false);
-                return;
-            }
-
-            // Check cache first
-            const cacheKey = `aiReport_${workbookId}`;
-            const cachedData = sessionStorage.getItem(cacheKey);
-            if (cachedData) {
-                try {
-                    const parsed = JSON.parse(cachedData);
-                    setReportText(parsed);
-                    setLoading(false);
-                    return;
-                } catch (e) {
-                    // Invalid cache, continue with fresh fetch
-                }
-            }
-
-            const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
-            
-            fetchWithCorsWorkaround(scriptUrl, (err, data) => {
-                if (err) {
-                    setError(err.message);
-                    setLoading(false);
-                    return;
-                }
-                if (data.error) {
-                    setError(`Script error: ${data.error}`);
-                    setLoading(false);
-                    return;
-                }
-                
-                const report = data.dashboard?.aiReport;
-                if (report) {
-                    sessionStorage.setItem(cacheKey, JSON.stringify(report));
-                }
-                setReportText(report);
-                setLoading(false);
-            });
-        }, []);
-
-        if (loading) {
-            return <Card className="col-span-12 relative flex items-center justify-center"><p className="text-gray-500">Loading AI Report...</p></Card>;
-        }
-        if (error) {
-            return <Card className="col-span-12 relative flex items-center justify-center"><p className="text-red-500">AI Report Error: {error}</p></Card>;
-        }
-        if (!reportText) {
-            return <Card className="col-span-12 relative flex items-center justify-center"><p className="text-gray-500">No AI report available.</p></Card>;
-        }
-
-        return (
-            <Card className="col-span-12 relative">
-                 <div className="flex items-center space-x-2 mb-1">
-                     <h2 className="text-xl font-bold text-gray-800">AI Report</h2>
-                     <InfoTooltip text="An automated SWOT (Strengths, Weaknesses, Opportunities, Threats) analysis based on the collected data, providing strategic insights and recommendations." />
-                 </div>
-                 <h3 className="text-md font-semibold text-gray-600 mb-3">SWOT Analysis</h3>
-                 <div className={`prose prose-sm max-w-none text-gray-600 overflow-hidden relative transition-all duration-300 ${isExpanded ? 'max-h-96' : 'max-h-24'}`}>
-                    <div dangerouslySetInnerHTML={{ __html: reportText?.replace(/\n/g, '<br />') }} />
-                     {!isExpanded && <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent"></div>}
-                 </div>
-                 <button onClick={() => setIsExpanded(!isExpanded)} className="mt-2 text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center">
-                     {isExpanded ? 'Show Less' : 'Show More'}
-                     {isExpanded ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
-                 </button>
-            </Card>
-        );
-    }
-
     const ServiceList = ({ title, dataSet, tooltipText }) => {
         const [serviceData, setServiceData] = useState(null);
         const [loading, setLoading] = useState(true);
@@ -900,7 +850,7 @@ const Dashboard = ({ setActiveTab }) => {
                 <GeogridSection setActiveTab={setActiveTab} />
                 <CensusInfo />
                 <OverviewTable />
-                <AIReport />
+                <AIReportSection reportText={overviewData?.aiReport} title="SWOT Analysis" />
                 <ServiceList title="Services by Search Volume" dataSet="topServices" tooltipText="Lists the most popular, established MedSpa services based on monthly search volume in the selected geographic area." />
                 <ServiceList title="New Services by Search Volume" dataSet="newServices" tooltipText="Highlights emerging or newer services with growing search interest, indicating potential new market opportunities." />
             </div>
@@ -1780,7 +1730,8 @@ const WebsiteStats = ({ data }) => {
         return <PageContent><div className="p-8 text-center text-gray-500">No Website Stats data available.</div></PageContent>;
     }
     
-    const { healthData, competitorPerfData: rawCompetitorPerfData, technicalSeoData, aiReport } = data;
+    const { healthData, competitorPerfData: rawCompetitorPerfData, technicalSeoData } = data;
+    const aiReport = healthData?.aiNotes;
 
     // Clean and parse competitor data for charting to prevent NaN errors
     const competitorPerfData = (rawCompetitorPerfData || []).map(comp => ({
@@ -1832,32 +1783,6 @@ const WebsiteStats = ({ data }) => {
     const CHART_COLORS = ['#3b82f6', '#16a34a', '#eab308', '#a855f7', '#ec4899', '#0ea5e9'];
 
     /* ---------- Reusable Components ---------- */
-    const AIReportSection = () => {
-        const [isExpanded, setIsExpanded] = useState(false);
-        if (!aiReport) return null;
-
-        const ChevronDown = createIcon(<polyline points="6 9 12 15 18 9" />);
-        const ChevronUp = createIcon(<polyline points="18 15 12 9 6 15" />);
-
-        return (
-            <Card className="col-span-12 relative">
-                 <div className="flex items-center space-x-2 mb-1">
-                     <h2 className="text-xl font-bold text-gray-800">AI Report</h2>
-                     <InfoTooltip text="An automated SWOT (Strengths, Weaknesses, Opportunities, Threats) analysis based on the collected data, providing strategic insights and recommendations." />
-                 </div>
-                 <h3 className="text-md font-semibold text-gray-600 mb-3">SWOT Analysis</h3>
-                 <div className={`prose prose-sm max-w-none text-gray-600 overflow-hidden relative transition-all duration-300 ${isExpanded ? 'max-h-full' : 'max-h-24'}`}>
-                    <div dangerouslySetInnerHTML={{ __html: aiReport.replace(/\n/g, '<br />') }} />
-                     {!isExpanded && <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent"></div>}
-                 </div>
-                 <button onClick={() => setIsExpanded(!isExpanded)} className="mt-2 text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center">
-                     {isExpanded ? 'Show Less' : 'Show More'}
-                     {isExpanded ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
-                 </button>
-            </Card>
-        );
-    }
-    
     const StatCard = ({ label, value, icon, tooltip }) => {
         const cardRef = useRef(null);
         const [tooltipPosition, setTooltipPosition] = useState('top');
@@ -2119,7 +2044,7 @@ const WebsiteStats = ({ data }) => {
                 </div>
             </Card>
             
-            <AIReportSection />
+            <AIReportSection reportText={aiReport} title="SWOT Analysis" />
 
             <Card className="mt-8">
                 <h2 className="text-lg font-bold mb-4">Technical SEO Checklist</h2>
@@ -2234,7 +2159,7 @@ const App = () => {
         body = <Dashboard setActiveTab={setTab} />;
         break;
       case 'Website Stats':
-        body = <WebsiteStats data={{...data.websiteStats, aiReport: data.dashboard?.aiReport}} />;
+        body = <WebsiteStats data={data.websiteStats} />;
         break;
       case 'Geogrid Maps':
         body = <GeogridMaps data={data.geogridData} />;

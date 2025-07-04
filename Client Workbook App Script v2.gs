@@ -98,7 +98,6 @@ function getWebsiteStats(spreadsheet) {
     const onPageInsights = getOnPageInsights(spreadsheet);
     const websiteErrors = getWebsiteErrors(spreadsheet);
     const checksData = getChecksData(spreadsheet);
-
     const clientData = onPageInsights.find(site => site.isClient);
 
     const healthData = {
@@ -109,6 +108,7 @@ function getWebsiteStats(spreadsheet) {
         errors: websiteErrors.errors,
         warnings: websiteErrors.warnings,
         checks: checksData,
+        aiNotes: clientData ? clientData.aiNotes : null,
         lastUpdated: [
             clientData?.lastModifiedHeader,
             clientData?.lastModifiedSitemap,
@@ -265,8 +265,8 @@ function getOnPageInsights(spreadsheet) {
     const sheetName = 'On-Page Insights';
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet || sheet.getLastRow() < 2) return [];
-    // Extend range to cover all new columns up to CZ
-    const values = sheet.getRange('A2:CZ' + sheet.getLastRow()).getValues(); 
+    // Extend range to cover all new columns up to DB
+    const values = sheet.getRange('A2:DB' + sheet.getLastRow()).getValues(); 
     return values.map(row => ({
         name: row[1], 
         website: row[8], 
@@ -287,19 +287,21 @@ function getOnPageInsights(spreadsheet) {
         lastModifiedHeader: row[29], // Column AD
         lastModifiedSitemap: row[30], // Column AE
         lastModifiedMeta: row[31],    // Column AF
+        // AI Notes
+        aiNotes: row[67], // Column CP
         // New Speed Metrics
-        time_to_interactive: row[94], // Column CQ
-        dom_complete: row[95],
-        largest_contentful_paint: row[96],
-        first_input_delay: row[97],
-        connection_time: row[98],
-        time_to_secure_connection: row[99],
-        request_sent_time: row[100],
-        waiting_time: row[101],
-        download_time: row[102],
-        duration_time: row[103],
-        fetch_start: row[104],
-        fetch_end: row[105]
+        time_to_interactive: row[68], // Column CQ
+        dom_complete: row[69], // CR
+        largest_contentful_paint: row[70], // CS
+        first_input_delay: row[71], // CT
+        connection_time: row[72], // CU
+        time_to_secure_connection: row[73], // CV
+        request_sent_time: row[74], // CW
+        waiting_time: row[75], // CX
+        download_time: row[76], // CY
+        duration_time: row[77], // CZ
+        fetch_start: row[78], // DA
+        fetch_end: row[79] // DB
     })).filter(row => row.name);
 }
 
