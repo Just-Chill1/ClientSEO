@@ -416,57 +416,7 @@ const Dashboard = ({ setActiveTab }) => {
         );
     };
 
-    const CensusInfo = () => {
-        const [censusData, setCensusData] = useState(null);
-        const [loading, setLoading] = useState(true);
-        const [error, setError] = useState(null);
-
-        useEffect(() => {
-            const params = new URLSearchParams(window.location.search);
-            const workbookId = params.get('workbookId');
-            if (!workbookId) {
-                setError("No workbook ID provided");
-                setLoading(false);
-                return;
-            }
-
-            // Check cache first
-            const cacheKey = `census_${workbookId}`;
-            const cachedData = sessionStorage.getItem(cacheKey);
-            if (cachedData) {
-                try {
-                    const parsed = JSON.parse(cachedData);
-                    setCensusData(parsed);
-                    setLoading(false);
-                    return;
-                } catch (e) {
-                    // Invalid cache, continue with fresh fetch
-                }
-            }
-
-            const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
-            
-            fetchWithCorsWorkaround(scriptUrl, (err, data) => {
-                if (err) {
-                    setError(err.message);
-                    setLoading(false);
-                    return;
-                }
-                if (data.error) {
-                    setError(`Script error: ${data.error}`);
-                    setLoading(false);
-                    return;
-                }
-                
-                const census = data.dashboard?.censusData;
-                if (census) {
-                    sessionStorage.setItem(cacheKey, JSON.stringify(census));
-                }
-                setCensusData(census);
-                setLoading(false);
-            });
-        }, []);
-
+    const CensusInfo = ({ censusData, loading, error }) => {
         if (loading) {
             return <Card className="col-span-12 lg:col-span-4 h-full flex items-center justify-center"><p className="text-gray-500">Loading Census data...</p></Card>;
         }
@@ -520,57 +470,7 @@ const Dashboard = ({ setActiveTab }) => {
         );
     };
 
-    const OverviewTable = () => {
-        const [overviewData, setOverviewData] = useState(null);
-        const [loading, setLoading] = useState(true);
-        const [error, setError] = useState(null);
-
-        useEffect(() => {
-            const params = new URLSearchParams(window.location.search);
-            const workbookId = params.get('workbookId');
-            if (!workbookId) {
-                setError("No workbook ID provided");
-                setLoading(false);
-                return;
-            }
-
-            // Check cache first
-            const cacheKey = `overview_${workbookId}`;
-            const cachedData = sessionStorage.getItem(cacheKey);
-            if (cachedData) {
-                try {
-                    const parsed = JSON.parse(cachedData);
-                    setOverviewData(parsed);
-                    setLoading(false);
-                    return;
-                } catch (e) {
-                    // Invalid cache, continue with fresh fetch
-                }
-            }
-
-            const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
-            
-            fetchWithCorsWorkaround(scriptUrl, (err, data) => {
-                if (err) {
-                    setError(err.message);
-                    setLoading(false);
-                    return;
-                }
-                if (data.error) {
-                    setError(`Script error: ${data.error}`);
-                    setLoading(false);
-                    return;
-                }
-                
-                const overview = data.dashboard?.overviewData;
-                if (overview) {
-                    sessionStorage.setItem(cacheKey, JSON.stringify(overview));
-                }
-                setOverviewData(overview);
-                setLoading(false);
-            });
-        }, []);
-
+    const OverviewTable = ({ overviewData, loading, error }) => {
         if (loading) {
             return <Card className="col-span-12 overflow-x-auto flex items-center justify-center"><p className="text-gray-500">Loading Overview data...</p></Card>;
         }
@@ -844,13 +744,69 @@ const Dashboard = ({ setActiveTab }) => {
         );
     };
     
+    const [dashboardData, setDashboardData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const workbookId = params.get('workbookId');
+        if (!workbookId) {
+            setError("No workbook ID provided");
+            setLoading(false);
+            return;
+        }
+
+        // Use a single cache key for all dashboard data
+        const cacheKey = `dashboard_data_${workbookId}`;
+        const cachedData = sessionStorage.getItem(cacheKey);
+        if (cachedData) {
+            try {
+                const parsed = JSON.parse(cachedData);
+                setDashboardData(parsed);
+                setLoading(false);
+                return;
+            } catch (e) {
+                // Invalid cache, continue with fresh fetch
+            }
+        }
+
+        const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
+        
+        fetchWithCorsWorkaround(scriptUrl, (err, data) => {
+            if (err) {
+                setError(err.message);
+                setLoading(false);
+                return;
+            }
+            if (data.error) {
+                setError(`Script error: ${data.error}`);
+                setLoading(false);
+                return;
+            }
+            
+            const dashboard = data.dashboard;
+            if (dashboard) {
+                sessionStorage.setItem(cacheKey, JSON.stringify(dashboard));
+            }
+            setDashboardData(dashboard);
+            setLoading(false);
+        });
+    }, []);
+
     return (
         <PageContent>
             <div className="grid grid-cols-12 gap-6">
                 <GeogridSection setActiveTab={setActiveTab} />
-                <CensusInfo />
-                <OverviewTable />
-                <AIReportSection reportText={overviewData?.aiReport} title="SWOT Analysis" />
+                <CensusInfo censusData={dashboardData?.censusData} loading={loading} error={error} />
+                <OverviewTable overviewData={dashboardData?.overviewData} loading={loading} error={error}/>
+                
+                {!loading && !error && dashboardData?.aiReport && (
+                    <div className="col-span-12">
+                       <AIReportSection reportText={dashboardData.aiReport} title="SWOT Analysis" />
+                    </div>
+                )}
+
                 <ServiceList title="Services by Search Volume" dataSet="topServices" tooltipText="Lists the most popular, established MedSpa services based on monthly search volume in the selected geographic area." />
                 <ServiceList title="New Services by Search Volume" dataSet="newServices" tooltipText="Highlights emerging or newer services with growing search interest, indicating potential new market opportunities." />
             </div>
