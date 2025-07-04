@@ -1942,9 +1942,10 @@ const WebsiteStats = ({ data }) => {
     const speedSec = parseFloat(String(healthData.siteSpeed).replace(/[^\d.]/g, '')) || 0;
     const speedCol = speedSec < 1.5 ? 'text-green-600' : speedSec < 3 ? 'text-yellow-600' : 'text-red-600';
     
-    // Fix for broken links count display
-    const brokenLinksValue = (healthData.brokenLinks === '' || healthData.brokenLinks == null) ? 0 : parseInt(healthData.brokenLinks, 10);
-    const linkCol = brokenLinksValue === 0 ? 'text-green-600' : brokenLinksValue === 1 ? 'text-yellow-600' : 'text-red-600';
+    // Fix for broken links NaN display by treating it as a boolean
+    const hasBrokenLinks = healthData.brokenLinks === true || String(healthData.brokenLinks).toLowerCase() === 'true';
+    const brokenLinksText = hasBrokenLinks ? 'Found' : '0';
+    const linkCol = hasBrokenLinks ? 'text-red-600' : 'text-green-600';
 
     const sslCol   = healthData.ssl ? 'text-green-600' : 'text-red-600';
 
@@ -1965,7 +1966,10 @@ const WebsiteStats = ({ data }) => {
                 content: (
                     <div className="space-y-1.5 text-xs">
                         {healthData.speedDetails && Object.entries(healthData.speedDetails).map(([key, val]) => (
-                            (val != null && val !== '') ? <div key={key} className="flex justify-between items-center"><span>{key}:</span><span className="font-semibold">{val}</span></div> : null
+                            <div key={key} className="flex justify-between items-center">
+                                <span>{key}:</span>
+                                <span className="font-semibold">{val != null && val !== '' ? val : 'N/A'}</span>
+                            </div>
                         ))}
                     </div>
                 ),
@@ -1974,7 +1978,7 @@ const WebsiteStats = ({ data }) => {
         },
         { 
             label: 'Broken Links', 
-            value: { text: brokenLinksValue, color: linkCol }, 
+            value: { text: brokenLinksText, color: linkCol }, 
             icon: <Link2 className="w-5 h-5 text-blue-600" />
         },
         {
