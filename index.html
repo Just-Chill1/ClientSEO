@@ -62,7 +62,7 @@
 /* ------------------------------------------------------------------ */
 /* shared helpers / icons / generic components                        */
 /* ------------------------------------------------------------------ */
-const {useState,useEffect, useRef} = React;
+const {useState, useEffect, useRef} = React;
 
 // --- Helper function to fetch data with CORS workaround ---
 const fetchWithCorsWorkaround = (url, callback) => {
@@ -201,7 +201,6 @@ const InfoTooltip = ({ text }) => (
 /* AI Report Section (used on multiple pages)                         */
 /* ------------------------------------------------------------------ */
 const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
-    const { useState } = React;
     const [isExpanded, setIsExpanded] = useState(false);
     if (!reportText) return null;
 
@@ -1679,7 +1678,6 @@ const GeogridMaps = () => {
 const WebsiteStats = ({ data }) => {
     /* pull Recharts only in this page */
     const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } = window.Recharts;
-    const {useState, useEffect, useRef} = React;
 
     /* fallback if no data yet */
     if (!data) {
