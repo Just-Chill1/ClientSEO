@@ -1921,12 +1921,16 @@ const WebsiteStats = ({ data }) => {
 
     /* fallback if no data yet */
     if (!data) {
+        console.log('No data received in WebsiteStats');
         return <PageContent><div className="p-8 text-center text-gray-500">No Website Stats data available.</div></PageContent>;
     }
 
+    console.log('WebsiteStats received data:', data);
     const { healthData, competitorPerfData: rawCompetitorPerfData, technicalSeoData } = data;
+    console.log('healthData:', healthData);
     // Fix: Get aiNotes directly from healthData
     const aiReport = healthData?.aiNotes || null;
+    console.log('aiReport:', aiReport);
 
     // Clean and parse competitor data for charting to prevent NaN errors
     const competitorPerfData = (rawCompetitorPerfData || []).map(comp => ({
@@ -2129,6 +2133,7 @@ const WebsiteStats = ({ data }) => {
             </Card>
 
             {/* Only render AIReportSection if aiReport exists */}
+            {console.log('About to render AIReportSection with:', aiReport)}
             {aiReport && <AIReportSection reportText={aiReport} title="On-Page AI Notes" />}
 
             <Card className="mt-8">
