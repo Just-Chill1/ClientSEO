@@ -271,7 +271,12 @@ function getOnPageInsights(spreadsheet) {
     
     // Add debug logs - now looking at the first data row (row 2 in the sheet)
     console.log('First data row of On-Page Insights:', values[0]);
-    console.log('AI Notes column (CP) value:', values[0][91]); // Adjusting index to 91 for column CP
+    
+    // Get the AI Notes value and ensure it's a string
+    const aiNotesValue = values[0][91]; // Column CP
+    console.log('Raw AI Notes value:', aiNotesValue);
+    const aiNotesString = aiNotesValue ? String(aiNotesValue).trim() : '';
+    console.log('Processed AI Notes string:', aiNotesString);
     
     return values.map(row => ({
         name: row[1], 
@@ -293,8 +298,8 @@ function getOnPageInsights(spreadsheet) {
         lastModifiedHeader: row[29], // Column AD
         lastModifiedSitemap: row[30], // Column AE
         lastModifiedMeta: row[31],    // Column AF
-        // AI Notes - Fixing the column index to 91 for column CP
-        aiNotes: row[91], // Column CP
+        // AI Notes - Ensure it's a string
+        aiNotes: row[91] ? String(row[91]).trim() : '', // Column CP
         // New Speed Metrics
         time_to_interactive: row[68], // Column CQ
         dom_complete: row[69], // CR

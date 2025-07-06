@@ -212,9 +212,29 @@ const InfoTooltip = ({ text }) => (
 const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     
-    // Handle null, undefined, or non-string values
-    const formattedText = typeof reportText === 'string' ? reportText : '';
-    if (!formattedText) return null;
+    console.log('AIReportSection received reportText:', reportText);
+    console.log('Type of reportText:', typeof reportText);
+    
+    // More robust type checking and conversion
+    let formattedText = '';
+    try {
+        if (reportText === null || reportText === undefined) {
+            console.log('reportText is null or undefined');
+            return null;
+        }
+        
+        // Convert to string if it's not already a string
+        formattedText = String(reportText);
+        console.log('Converted formattedText:', formattedText);
+        
+        if (!formattedText.trim()) {
+            console.log('formattedText is empty after trimming');
+            return null;
+        }
+    } catch (error) {
+        console.error('Error processing reportText:', error);
+        return null;
+    }
 
     const ChevronDown = createIcon(<polyline points="6 9 12 15 18 9" />);
     const ChevronUp = createIcon(<polyline points="18 15 12 9 6 15" />);
@@ -1978,9 +1998,20 @@ const WebsiteStats = ({ data }) => {
     console.log('WebsiteStats received data:', data);
     const { healthData, competitorPerfData: rawCompetitorPerfData, technicalSeoData } = data;
     console.log('healthData:', healthData);
-    // Fix: Get aiNotes directly from healthData
-    const aiReport = healthData?.aiNotes || null;
-    console.log('aiReport:', aiReport);
+    
+    // More robust handling of AI Notes
+    let aiReport = null;
+    try {
+        // Ensure we have a string value for aiNotes
+        if (healthData?.aiNotes) {
+            aiReport = String(healthData.aiNotes).trim();
+            if (!aiReport) aiReport = null;
+        }
+    } catch (error) {
+        console.error('Error processing AI Notes:', error);
+        aiReport = null;
+    }
+    console.log('Processed aiReport:', aiReport);
 
     // Clean and parse competitor data for charting to prevent NaN errors
     const competitorPerfData = (rawCompetitorPerfData || []).map(comp => ({
@@ -2182,8 +2213,7 @@ const WebsiteStats = ({ data }) => {
                 </div>
             </Card>
 
-            {/* Only render AIReportSection if aiReport exists */}
-            {console.log('About to render AIReportSection with:', aiReport)}
+            {/* Only render AIReportSection if aiReport is a non-empty string */}
             {aiReport && <AIReportSection reportText={aiReport} title="On-Page AI Notes" />}
 
             <Card className="mt-8">
