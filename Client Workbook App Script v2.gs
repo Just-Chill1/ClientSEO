@@ -265,8 +265,14 @@ function getOnPageInsights(spreadsheet) {
     const sheetName = 'On-Page Insights';
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet || sheet.getLastRow() < 2) return [];
-    // Extend range to cover all new columns up to DB
+    
+    // Get values starting from row 2 (where the actual data begins)
     const values = sheet.getRange('A2:DB' + sheet.getLastRow()).getValues(); 
+    
+    // Add debug logs - now looking at the first data row (row 2 in the sheet)
+    console.log('First data row of On-Page Insights:', values[0]);
+    console.log('AI Notes column (CP) value:', values[0][91]); // Adjusting index to 91 for column CP
+    
     return values.map(row => ({
         name: row[1], 
         website: row[8], 
@@ -287,8 +293,8 @@ function getOnPageInsights(spreadsheet) {
         lastModifiedHeader: row[29], // Column AD
         lastModifiedSitemap: row[30], // Column AE
         lastModifiedMeta: row[31],    // Column AF
-        // AI Notes
-        aiNotes: row[67], // Column CP
+        // AI Notes - Fixing the column index to 91 for column CP
+        aiNotes: row[91], // Column CP
         // New Speed Metrics
         time_to_interactive: row[68], // Column CQ
         dom_complete: row[69], // CR
