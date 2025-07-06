@@ -211,7 +211,10 @@ const InfoTooltip = ({ text }) => (
 /* ------------------------------------------------------------------ */
 const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
     const [isExpanded, setIsExpanded] = useState(false);
-    if (!reportText) return null;
+    
+    // Handle null, undefined, or non-string values
+    const formattedText = typeof reportText === 'string' ? reportText : '';
+    if (!formattedText) return null;
 
     const ChevronDown = createIcon(<polyline points="6 9 12 15 18 9" />);
     const ChevronUp = createIcon(<polyline points="18 15 12 9 6 15" />);
@@ -224,7 +227,7 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
              </div>
              <h3 className="text-md font-semibold text-gray-600 mb-3">{title}</h3>
              <div className={`prose prose-sm max-w-none text-gray-600 overflow-hidden relative transition-all duration-300 ${isExpanded ? 'max-h-full' : 'max-h-24'}`}>
-                <div dangerouslySetInnerHTML={{ __html: reportText.replace(/\n/g, '<br />') }} />
+                <div dangerouslySetInnerHTML={{ __html: formattedText.replace(/\n/g, '<br />') }} />
                  {!isExpanded && <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent"></div>}
              </div>
              <button onClick={() => setIsExpanded(!isExpanded)} className="mt-2 text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center">
