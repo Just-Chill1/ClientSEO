@@ -1784,12 +1784,13 @@ const StatCard = ({ label, value, icon, tooltip }) => {
 
         const handleMouseEnter = () => {
             const cardRect = cardElement.getBoundingClientRect();
-            // A more robust heuristic for tooltip positioning
             const spaceAbove = cardRect.top;
-            const spaceBelow = window.innerHeight - cardRect.bottom;
+            
+            // A simple heuristic to decide tooltip position
+            // Estimate tooltip height. large is w-[600px] so it can be tall.
             const estimatedHeight = tooltip.width === 'large' ? 350 : 150;
 
-            if (spaceAbove < estimatedHeight && spaceBelow > spaceAbove) {
+            if (spaceAbove < estimatedHeight && (window.innerHeight - cardRect.bottom) > spaceAbove) {
                 setTooltipPosition('bottom');
             } else {
                 setTooltipPosition('top');
@@ -1915,238 +1916,251 @@ const checkCategories = {
 /* WEBSITE STATS – polished gauge, colour rules, horizontal bars      */
 /* ------------------------------------------------------------------ */
 const WebsiteStats = ({ data }) => {
-    const { healthData, competitorPerfData, technicalSeoData } = data;
-    const { Card, TooltipWrapper } = window['@tremor/react'];
-    const { ShieldCheck, Star, Gauge, Link2, Server, AlertTriangle, XCircle, CheckCircle2, Zap } = lucide;
+    /* pull Recharts only in this page */
+    const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } = window.Recharts;
 
-    if (!healthData) return <div className="text-center text-gray-500">Loading website stats...</div>;
-
-    const StatCard = ({ label, value, icon, tooltip }) => {
-        const cardElement = React.useRef(null);
-        const [tooltipPosition, calculatePosition] = useTooltipPosition(cardElement);
-
-        const content = (
-            <div ref={cardElement} onMouseEnter={calculatePosition} className="relative bg-slate-50 p-4 rounded-lg transition-all hover:bg-white hover:shadow-md h-full flex flex-col justify-between">
-                <div>
-                    <div className="flex items-center text-gray-600">
-                        {icon}
-                        <span className="ml-2 text-sm font-medium">{label}</span>
-                    </div>
-                    <p className={`text-2xl font-bold mt-2 ${value.color}`}>{value.text}</p>
-                </div>
-            </div>
-        );
-
-        if (tooltip) {
-            return (
-                <TooltipWrapper 
-                    content={tooltip.content}
-                    title={tooltip.title}
-                    position={tooltipPosition}
-                    width="large"
-                    className="cursor-help"
-                >
-                    {content}
-                </TooltipWrapper>
-            );
-        }
-        return content;
+    /* fallback if no data yet */
+    if (!data) {
+        return <PageContent><div className="p-8 text-center text-gray-500">No Website Stats data available.</div></PageContent>;
     }
     
-    const HealthCheckItem = ({ title, status, details, tooltip }) => {
-        const statusConfig = {
-            'passing': { icon: <CheckCircle2 className="text-green-500" />, text: 'text-gray-800', bg: 'bg-green-50' },
-            'failing': { icon: <XCircle className="text-red-500" />, text: 'text-gray-800', bg: 'bg-red-50' },
-            'warning': { icon: <AlertTriangle className="text-yellow-500" />, text: 'text-gray-800', bg: 'bg-yellow-50' }
-        };
-        const config = statusConfig[status];
+    const { healthData, competitorPerfData: rawCompetitorPerfData, technicalSeoData } = data;
+    const aiReport = healthData?.aiNotes;
 
-        return (
-            <div 
-                className="has-tooltip relative flex items-center justify-between p-3 rounded-md"
-            >
-                <div className="flex items-center">
-                    <div className="mr-3">{config.icon}</div>
-                    <span className={`${config.text} text-sm`}>{title}</span>
-                </div>
-                <span className="text-sm text-gray-500">{details}</span>
-                {tooltip && <div className="tooltip absolute z-10 p-2 bg-gray-700 text-white text-xs rounded-md shadow-lg">{tooltip}</div>}
-            </div>
-        );
-    }
+    // Clean and parse competitor data for charting to prevent NaN errors
+    const competitorPerfData = (rawCompetitorPerfData || []).map(comp => ({
+        name: comp.name || 'Unknown',
+        isClient: comp.isClient || false,
+        'Site Speed (s)': parseFloat(String(comp['Site Speed (s)'] || '0').replace(/[^\d.]/g, '')) || 0,
+        'Est. Monthly Traffic': parseInt(String(comp['Est. Monthly Traffic'] || '0').replace(/,/g, ''), 10) || 0,
+        'Referring Domains': parseInt(String(comp['Referring Domains'] || '0').replace(/,/g, ''), 10) || 0,
+        'Total Backlinks': parseInt(String(comp['Total Backlinks'] || '0').replace(/,/g, ''), 10) || 0
+    }));
 
-    const scoreCol = healthData.pageScore > 89 ? 'text-green-600' : healthData.pageScore > 49 ? 'text-yellow-600' : 'text-red-600';
-    const speedSec = parseFloat(healthData.siteSpeed);
+    /* ---------- colour helpers ---------- */
+    const gaugeColour = healthData.pageScore >= 90 ? '#16a34a' : healthData.pageScore >= 70 ? '#eab308' : '#dc2626';
+    const speedSec = parseFloat(String(healthData.siteSpeed).replace(/[^\d.]/g, '')) || 0;
     const speedCol = speedSec < 1.5 ? 'text-green-600' : speedSec < 3 ? 'text-yellow-600' : 'text-red-600';
     
+    // Fix for broken links NaN display by treating it as a boolean
     const hasBrokenLinks = healthData.brokenLinks === true || String(healthData.brokenLinks).toLowerCase() === 'true';
     const brokenLinksText = hasBrokenLinks ? 'Found' : '0';
     const linkCol = hasBrokenLinks ? 'text-red-600' : 'text-green-600';
 
     const sslCol   = healthData.ssl ? 'text-green-600' : 'text-red-600';
-    const errorCol = healthData.errors?.length > 0 ? 'text-red-600' : 'text-green-600';
-    const warnCol  = healthData.warnings?.length > 0 ? 'text-yellow-600' : 'text-green-600';
- 
-    // Filter and format speed details for the tooltip
-    const formattedSpeedDetails = healthData.speedDetails 
-        ? Object.entries(healthData.speedDetails)
-            .filter(([key, val]) => val !== null && val !== '' && val !== undefined)
-            .map(([key, val]) => {
-                // Append 's' to time-based metrics
-                const isTime = key.toLowerCase().includes('time') || key.toLowerCase().includes('paint') || key.toLowerCase().includes('delay') || key.toLowerCase().includes('duration') || key.toLowerCase().includes('complete');
-                const formattedVal = (typeof val === 'number' && isTime) ? `${val.toFixed(2)}s` : val;
-                return [key, formattedVal];
-            })
-        : [];
- 
-    const speedDetailsContent = (
-        <div className="text-white">
-            <p className="mb-3 text-gray-300">Detailed performance metrics based on the latest site crawl.</p>
-            {formattedSpeedDetails.length > 0 ? (
-                <div className="space-y-1.5 text-xs">
-                    {formattedSpeedDetails.map(([key, val]) => (
-                        <div key={key} className="flex justify-between items-center">
-                            <span>{key}:</span>
-                            <span className="font-semibold">{val}</span>
-                        </div>
-                    ))}
-                </div>
-            ) : (
-                <div className="text-center py-4 text-gray-400">
-                    No detailed speed metrics available.
-                </div>
-            )}
-        </div>
-    );
 
     // Restore color logic for Checks Passed based on absolute numbers
     const checksPassed = healthData.checks.checksPassed;
     const passCol = checksPassed >= 46 ? 'text-green-600' : checksPassed >= 36 ? 'text-yellow-600' : 'text-red-600';
 
-    const coreStats = [
-        { 
-            label: 'Page Score', 
-            value: { text: healthData.pageScore, color: scoreCol }, 
-            icon: <Star className="w-5 h-5 text-blue-600" />
-        },
+    const CHART_COLORS = ['#3b82f6', '#16a34a', '#eab308', '#a855f7', '#ec4899', '#0ea5e9'];
+
+    /* ---------- stat-cards data with new tooltips ---------- */
+    const cards = [
         { 
             label: 'Site Speed', 
-            value: { text: healthData.siteSpeed, color: speedCol },
-            icon: <Gauge className="w-5 h-5 text-blue-600" />,
-            tooltip: { title: 'Site Speed Details', content: speedDetailsContent }
+            value: { text: healthData.siteSpeed, color: speedCol }, 
+            icon: <TrendingUp className="w-5 h-5 text-blue-600" />,
+            tooltip: {
+                header: 'Detailed Speed Metrics',
+                content: (
+                    <div className="space-y-1.5 text-xs">
+                        {healthData.speedDetails && Object.entries(healthData.speedDetails).map(([key, val]) => (
+                            <div key={key} className="flex justify-between items-center">
+                                <span>{key}:</span>
+                                <span className="font-semibold">{val != null && val !== '' ? val : 'N/A'}</span>
+                            </div>
+                        ))}
+                    </div>
+                ),
+                width: 'small'
+            }
         },
         { 
             label: 'Broken Links', 
             value: { text: brokenLinksText, color: linkCol }, 
             icon: <Link2 className="w-5 h-5 text-blue-600" />
         },
-        { 
-            label: 'SSL Enabled', 
-            value: { text: healthData.ssl ? 'Yes' : 'No', color: sslCol }, 
-            icon: <ShieldCheck className="w-5 h-5 text-blue-600" />
+        {
+            label: 'Last Updated',
+            value: { text: (healthData.lastUpdated && healthData.lastUpdated.length > 0 ? formatDate(healthData.lastUpdated[0]) : 'N/A'), color: 'text-gray-800'},
+            icon: <CalendarIcon className="w-5 h-5 text-blue-600" />
         },
         { 
-            label: 'Checks Passed', 
-            value: { text: `${healthData.checks.checksPassed} / ${healthData.checks.totalChecks}`, color: passCol }, 
-            icon: <CheckCircle2 className="w-5 h-5 text-blue-600" />
+            label: 'SSL', 
+            value: { text: healthData.ssl ? 'Active' : 'Inactive', color: sslCol }, 
+            icon: <ShieldCheck className="w-5 h-5 text-blue-600" /> 
+        },
+        {
+            label: 'Checks Passed',
+            value: { text: `${healthData.checks.checksPassed}/${healthData.checks.totalChecks}`, color: passCol },
+            icon: <CheckCircle className="w-5 h-5 text-blue-600" />,
+            tooltip: {
+                header: 'Health Check Results',
+                width: 'large',
+                content: (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {Object.entries(checkCategories).map(([category, categoryData]) => {
+                            const categoryChecks = Object.entries(categoryData.checks).filter(([checkName]) => healthData.checks.passedList.includes(checkName) || healthData.checks.failedList.includes(checkName));
+                            if (categoryChecks.length === 0) return null;
+                            return (
+                                <div key={category} className="space-y-1.5">
+                                    <h4 className="font-semibold flex items-center text-gray-300 text-xs"><span className="mr-1.5">{categoryData.icon}</span>{categoryData.title}</h4>
+                                    <ul className="space-y-1">
+                                        {categoryChecks.map(([checkName, description]) => {
+                                            const isPassed = healthData.checks.passedList.includes(checkName);
+                                            return (
+                                                <li key={checkName} className="flex items-start text-xs leading-tight">
+                                                    <span className="mr-1.5 flex-shrink-0 text-[11px]">{isPassed ? '✅' : '❌'}</span>
+                                                    <span className={isPassed ? 'text-green-300' : 'text-red-300'}>{description}</span>
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )
+            },
         }
     ];
 
-    const lastUpdatedDate = healthData.lastUpdated && healthData.lastUpdated.length > 0
-        ? new Date(Math.max.apply(null, healthData.lastUpdated.map(d => new Date(d))))
-        : null;
-
-    const formattedDate = lastUpdatedDate 
-        ? `${lastUpdatedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
-        :'Not available';
-
-    // Tooltip positioning logic
-    const useTooltipPosition = (cardElement) => {
-        const [tooltipPosition, setTooltipPosition] = useState('top');
-        
-        const calculatePosition = () => {
-            if (!cardElement.current) return;
-            const cardRect = cardElement.current.getBoundingClientRect();
-            const spaceAbove = cardRect.top;
-            const spaceBelow = window.innerHeight - cardRect.bottom;
-            const estimatedHeight = 350; // A generous estimate for tooltip height
-            
-            if (spaceAbove < estimatedHeight && spaceBelow > spaceAbove) {
-                setTooltipPosition('bottom');
-            } else {
-                setTooltipPosition('top');
-            }
-        };
-        
-        return [tooltipPosition, calculatePosition];
-    };
-
-
     return (
-        <div className="space-y-6">
-            <Card>
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold text-gray-800">Website Health & Stats</h2>
-                    <span className="text-sm text-gray-500">Last updated: {formattedDate}</span>
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    {coreStats.map(stat => <StatCard key={stat.label} {...stat} />)}
-                </div>
-
-                {/* AI Notes Section */}
-                {healthData.aiNotes && (
-                    <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-5">
-                        <div className="flex items-center mb-2">
-                            <Zap className="w-6 h-6 text-blue-500 mr-3" />
-                            <h3 className="text-lg font-semibold text-gray-800">AI-Generated Insights</h3>
+        <PageContent>
+            <Card className="mb-8">
+                <h2 className="text-xl font-bold mb-6">Website Health</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                    {/* Left side: Gauge */}
+                    <div className="flex flex-col items-center justify-center">
+                        <div className="relative">
+                            <svg className="w-32 h-32">
+                                <circle r="54" cx="64" cy="64" fill="transparent" stroke="currentColor" strokeWidth="8" className="text-gray-200" />
+                                <circle r="54" cx="64" cy="64" fill="transparent" stroke={gaugeColour} strokeWidth="8" strokeDasharray={2 * Math.PI * 54} strokeDashoffset={healthData.pageScore >= 99.9 ? 0 : 2 * Math.PI * 54 * (1 - healthData.pageScore / 100)} strokeLinecap="round" style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }} />
+                            </svg>
+                            <span className="absolute inset-0 flex items-center justify-center text-3xl font-bold text-black">{healthData.pageScore.toFixed(1)}</span>
                         </div>
-                        <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{healthData.aiNotes}</p>
+                        <p className="text-gray-600 mt-2 font-semibold">Page Score</p>
+                        <div className="flex space-x-6 mt-4">
+                            <HealthCheckItem icon={<AlertTriangle className="w-5 h-5 text-yellow-500" />} color="text-yellow-500" title="Warnings" items={healthData.warnings || []}/>
+                            <HealthCheckItem icon={<XCircle className="w-5 h-5 text-red-500" />} color="text-red-500" title="Errors" items={healthData.errors || []}/>
+                        </div>
                     </div>
-                )}
+                    {/* Right side: Stat Cards */}
+                    <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-8 gap-x-6 content-center">
+                        {cards.map((c) => (
+                            <StatCard 
+                                key={c.label} 
+                                label={c.label}
+                                value={c.value}
+                                icon={c.icon}
+                                tooltip={c.tooltip}
+                            />
+                        ))}
+                    </div>
+                </div>
             </Card>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-                <Card>
-                    <h3 className="font-bold text-gray-800 mb-4">Technical SEO Health</h3>
-                    <div className="space-y-2">
-                        <HealthCheckItem title="Content & Structure" status="passing" details={`${healthData.checks.passedList.filter(c => c.includes('title') || c.includes('description')).length} / 5 passed`} />
-                        <HealthCheckItem title="Indexing & Crawlability" status="warning" details="3 / 5 passed" />
-                        <HealthCheckItem title="Security" status="passing" details="2 / 2 passed" />
-                        <HealthCheckItem title="Performance" status="failing" details="1 / 4 passed" />
+            <Card className="mb-8">
+                <h2 className="text-lg font-semibold mb-4">Performance vs. Competitors</h2>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-12">
+                    <div>
+                        <h3 className="text-lg font-semibold text-center text-gray-700 mb-2">Site Speed (s)</h3>
+                        <p className="text-xs text-gray-500 text-center mb-2">(Lower is better)</p>
+                        <ResponsiveContainer width="100%" height={260}>
+                            <BarChart data={competitorPerfData} layout="vertical" margin={{ left: 80, right: 20, top: 5, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                <XAxis type="number" tick={{ fontSize: 12 }} domain={[0, (dataMax) => Math.round(dataMax * 1.2)]} />
+                                <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 12 }} />
+                                <Tooltip />
+                                <Bar dataKey="Site Speed (s)" barSize={18}>
+                                    {competitorPerfData.map((entry, idx) => <Cell key={idx} fill={entry.isClient ? '#0ea5e9' : CHART_COLORS[idx % CHART_COLORS.length]} />)}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
                     </div>
-                </Card>
-                
-                <Card>
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="font-bold text-gray-800">Errors & Warnings</h3>
-                        <div className="flex space-x-4">
-                            <span className={`flex items-center text-sm font-medium ${errorCol}`}>
-                                <XCircle className="w-4 h-4 mr-1.5" /> {healthData.errors?.length || 0} Errors
-                            </span>
-                            <span className={`flex items-center text-sm font-medium ${warnCol}`}>
-                                <AlertTriangle className="w-4 h-4 mr-1.5" /> {healthData.warnings?.length || 0} Warnings
-                            </span>
-                        </div>
+                    <div>
+                        <h3 className="text-lg font-semibold text-center text-gray-700 mb-2">Est. Monthly Traffic</h3>
+                        <p className="text-xs text-gray-500 text-center mb-2">(Higher is better)</p>
+                        <ResponsiveContainer width="100%" height={260}>
+                             <BarChart data={competitorPerfData} margin={{ top: 5, right: 20, left: 0, bottom: 50 }}>
+                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                 <XAxis dataKey="name" type="category" tick={{ fontSize: 10 }} interval={0} angle={-45} textAnchor="end"/>
+                                 <YAxis type="number" domain={[0, dataMax => Math.round(dataMax * 1.1)]} />
+                                 <Tooltip cursor={{fill: 'rgba(241, 245, 249, 0.7)'}} contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.9)', borderColor: 'rgba(255,255,255,0.2)', borderRadius: '0.5rem' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff', fontWeight: 'bold' }} />
+                                 <Bar dataKey='Est. Monthly Traffic' barSize={35}>
+                                     {competitorPerfData.map((entry, index) => <Cell key={`cell-${entry.name}`} fill={entry.isClient ? '#0ea5e9' : CHART_COLORS[index % CHART_COLORS.length]} /> )}
+                                 </Bar>
+                             </BarChart>
+                        </ResponsiveContainer>
                     </div>
-                    <div className="h-40 overflow-y-auto pr-2 space-y-2">
-                        {healthData.errors?.map(e => <div key={e.id} className="text-xs p-2 rounded bg-red-50 text-red-700">{e.description}</div>)}
-                        {healthData.warnings?.map(w => <div key={w.id} className="text-xs p-2 rounded bg-yellow-50 text-yellow-700">{w.description}</div>)}
-                        {healthData.errors?.length === 0 && healthData.warnings?.length === 0 &&
-                            <div className="flex flex-col items-center justify-center h-full text-gray-400">
-                                <CheckCircle2 className="w-10 h-10 text-green-500 mb-2" />
-                                <span className="font-medium">No issues found</span>
-                            </div>
-                        }
-                    </div>
-                </Card>
-            </div>
+                    <div>
+                         <h3 className="text-lg font-semibold text-center text-gray-700 mb-2">Referring Domains</h3>
+                         <p className="text-xs text-gray-500 text-center mb-2">(Higher is better)</p>
+                         <ResponsiveContainer width="100%" height={260}>
+                             <BarChart data={competitorPerfData} margin={{ top: 5, right: 20, left: 0, bottom: 50 }}>
+                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                 <XAxis dataKey="name" type="category" tick={{ fontSize: 10 }} interval={0} angle={-45} textAnchor="end"/>
+                                 <YAxis type="number" domain={[0, dataMax => Math.round(dataMax * 1.1)]} />
+                                 <Tooltip cursor={{fill: 'rgba(241, 245, 249, 0.7)'}} contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.9)', borderColor: 'rgba(255,255,255,0.2)', borderRadius: '0.5rem' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff', fontWeight: 'bold' }} />
+                                 <Bar dataKey='Referring Domains' barSize={35}>
+                                     {competitorPerfData.map((entry, index) => <Cell key={`cell-${entry.name}`} fill={entry.isClient ? '#0ea5e9' : CHART_COLORS[index % CHART_COLORS.length]} /> )}
+                                 </Bar>
+                             </BarChart>
+                         </ResponsiveContainer>
+                     </div>
+                      <div>
+                         <h3 className="text-lg font-semibold text-center text-gray-700 mb-2">Total Backlinks</h3>
+                         <p className="text-xs text-gray-500 text-center mb-2">(Higher is better)</p>
+                         <ResponsiveContainer width="100%" height={260}>
+                            <BarChart data={competitorPerfData} margin={{ top: 5, right: 20, left: 0, bottom: 50 }}>
+                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                 <XAxis dataKey="name" type="category" tick={{ fontSize: 10 }} interval={0} angle={-45} textAnchor="end"/>
+                                 <YAxis type="number" domain={[0, dataMax => Math.round(dataMax * 1.1)]} />
+                                 <Tooltip cursor={{fill: 'rgba(241, 245, 249, 0.7)'}} contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.9)', borderColor: 'rgba(255,255,255,0.2)', borderRadius: '0.5rem' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff', fontWeight: 'bold' }} />
+                                 <Bar dataKey='Total Backlinks' barSize={35}>
+                                     {competitorPerfData.map((entry, index) => <Cell key={`cell-${entry.name}`} fill={entry.isClient ? '#0ea5e9' : CHART_COLORS[index % CHART_COLORS.length]} /> )}
+                                 </Bar>
+                             </BarChart>
+                         </ResponsiveContainer>
+                     </div>
+                </div>
+            </Card>
+            
+            <AIReportSection reportText={aiReport} title="On-Page AI Notes" />
 
-            {/* Competitor Performance Table */}
-            {/* ... table jsx ... */}
-        </div>
+            <Card className="mt-8">
+                <h2 className="text-lg font-semibold mb-4">Technical SEO Checklist</h2>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                        <thead className="text-left bg-slate-50">
+                            <tr>
+                                <th className="p-3 font-semibold text-slate-700">Website</th>
+                                <th className="p-3 text-center font-semibold text-slate-700">SSL</th>
+                                <th className="p-3 text-center font-semibold text-slate-700">Schema</th>
+                                <th className="p-3 font-semibold text-slate-700">H1 Tag</th>
+                                <th className="p-3 font-semibold text-slate-700">Title Tag</th>
+                                <th className="p-3 font-semibold text-slate-700">Meta Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {technicalSeoData.map((site, index) => (
+                                <tr key={site.name} className={`border-b border-slate-100 ${index % 2 !== 0 ? 'bg-slate-50/50' : 'bg-white'}`}>
+                                    <td className="p-3 pr-4 font-semibold text-slate-800">{site.name}</td>
+                                    <td className="p-3 text-center"><BooleanCheck value={site.hasSSL} /></td>
+                                    <td className="p-3 text-center"><BooleanCheck value={site.hasSchema} /></td>
+                                    <td className="p-3"><BooleanCheck value={site.h1} tooltipContent={site.h1} /></td>
+                                    <td className="p-3"><BooleanCheck value={site.title} tooltipContent={site.title} /></td>
+                                    <td className="p-3"><BooleanCheck value={site.description} tooltipContent={site.description} /></td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </Card>
+        </PageContent>
     );
-}
+};
 
 /* ------------------------------------------------------------------ */
 /* HEADER                                                             */
