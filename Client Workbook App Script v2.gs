@@ -278,42 +278,47 @@ function getOnPageInsights(spreadsheet) {
     const aiNotesString = aiNotesValue ? String(aiNotesValue).trim() : '';
     console.log('Processed AI Notes string:', aiNotesString);
     
-    return values.map(row => ({
-        name: row[1], 
-        website: row[8], 
-        siteSpeed: row[10], 
-        title: row[11],
-        meta: row[12], 
-        h1: row[13], 
-        ssl: row[14] === true, 
-        referringDomains: row[15],
-        totalBacklinks: row[16], 
-        estMonthlyTraffic: row[17], 
-        kwPos1: row[19], 
-        pageScore: row[22], 
-        brokenLinks: row[24], 
-        isClient: row[0] === 'Client',
-        hasMicromarkup: row[42] === true,
-        // Last Modified Dates
-        lastModifiedHeader: row[29], // Column AD
-        lastModifiedSitemap: row[30], // Column AE
-        lastModifiedMeta: row[31],    // Column AF
-        // AI Notes - Ensure it's a string
-        aiNotes: row[91] ? String(row[91]).trim() : '', // Column CP
-        // New Speed Metrics
-        time_to_interactive: row[68], // Column CQ
-        dom_complete: row[69], // CR
-        largest_contentful_paint: row[70], // CS
-        first_input_delay: row[71], // CT
-        connection_time: row[72], // CU
-        time_to_secure_connection: row[73], // CV
-        request_sent_time: row[74], // CW
-        waiting_time: row[75], // CX
-        download_time: row[76], // CY
-        duration_time: row[77], // CZ
-        fetch_start: row[78], // DA
-        fetch_end: row[79] // DB
-    })).filter(row => row.name);
+    return values.map(row => {
+        const isClient = row[0] === 'Client';
+        const aiNotes = row[91] ? String(row[91]).trim() : '';
+        
+        return {
+            name: row[1], 
+            website: row[8], 
+            siteSpeed: row[10], 
+            title: row[11],
+            meta: row[12], 
+            h1: row[13], 
+            ssl: row[14] === true, 
+            referringDomains: row[15],
+            totalBacklinks: row[16], 
+            estMonthlyTraffic: row[17], 
+            kwPos1: row[19], 
+            pageScore: row[22], 
+            brokenLinks: row[24], 
+            isClient: isClient,
+            hasMicromarkup: row[42] === true,
+            // Last Modified Dates
+            lastModifiedHeader: row[29], // Column AD
+            lastModifiedSitemap: row[30], // Column AE
+            lastModifiedMeta: row[31],    // Column AF
+            // AI Notes - Only include if this is the client row
+            aiNotes: isClient ? aiNotes : '',
+            // New Speed Metrics
+            time_to_interactive: row[68], // Column CQ
+            dom_complete: row[69], // CR
+            largest_contentful_paint: row[70], // CS
+            first_input_delay: row[71], // CT
+            connection_time: row[72], // CU
+            time_to_secure_connection: row[73], // CV
+            request_sent_time: row[74], // CW
+            waiting_time: row[75], // CX
+            download_time: row[76], // CY
+            duration_time: row[77], // CZ
+            fetch_start: row[78], // DA
+            fetch_end: row[79] // DB
+        };
+    }).filter(row => row.name);
 }
 
 function getWebsiteErrors(spreadsheet) {

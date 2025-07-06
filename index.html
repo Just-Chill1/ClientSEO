@@ -2002,10 +2002,12 @@ const WebsiteStats = ({ data }) => {
     // More robust handling of AI Notes
     let aiReport = null;
     try {
-        // Ensure we have a string value for aiNotes
-        if (healthData?.aiNotes) {
-            aiReport = String(healthData.aiNotes).trim();
-            if (!aiReport) aiReport = null;
+        // Get aiNotes from healthData and ensure it's a string
+        const aiNotes = healthData?.aiNotes;
+        console.log('Raw aiNotes:', aiNotes);
+        
+        if (typeof aiNotes === 'string' && aiNotes.trim()) {
+            aiReport = aiNotes.trim();
         }
     } catch (error) {
         console.error('Error processing AI Notes:', error);
@@ -2214,7 +2216,11 @@ const WebsiteStats = ({ data }) => {
             </Card>
 
             {/* Only render AIReportSection if aiReport is a non-empty string */}
-            {aiReport && <AIReportSection reportText={aiReport} title="On-Page AI Notes" />}
+            {aiReport && (
+                <div className="col-span-12">
+                    <AIReportSection reportText={aiReport} title="On-Page AI Notes" />
+                </div>
+            )}
 
             <Card className="mt-8">
                 <h2 className="text-lg font-semibold mb-4">Technical SEO Checklist</h2>
