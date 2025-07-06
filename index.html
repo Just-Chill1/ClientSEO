@@ -1925,7 +1925,8 @@ const WebsiteStats = ({ data }) => {
     }
 
     const { healthData, competitorPerfData: rawCompetitorPerfData, technicalSeoData } = data;
-    const aiReport = healthData?.aiNotes;
+    // Fix: Get aiNotes directly from healthData
+    const aiReport = healthData?.aiNotes || null;
 
     // Clean and parse competitor data for charting to prevent NaN errors
     const competitorPerfData = (rawCompetitorPerfData || []).map(comp => ({
@@ -2127,7 +2128,8 @@ const WebsiteStats = ({ data }) => {
                 </div>
             </Card>
 
-            <AIReportSection reportText={aiReport} title="On-Page AI Notes" />
+            {/* Only render AIReportSection if aiReport exists */}
+            {aiReport && <AIReportSection reportText={aiReport} title="On-Page AI Notes" />}
 
             <Card className="mt-8">
                 <h2 className="text-lg font-semibold mb-4">Technical SEO Checklist</h2>
