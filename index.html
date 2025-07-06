@@ -176,6 +176,15 @@ const ShieldCheck = createIcon(
   </>
 );
 
+const CalendarIcon = createIcon(
+    <React.Fragment>
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+    </React.Fragment>
+);
+
 /* --- generic wrappers --- */
 const Card        = ({children,className=''}) => (
   <div className={`bg-white rounded-xl shadow-md p-6 ${className}`}>{children}</div>);
@@ -884,12 +893,12 @@ const Keywords = ({ summary, table }) => {
                         <div className="p-6 bg-slate-100 rounded-xl text-center flex-grow flex flex-col justify-center">
                             <p className="text-base text-gray-500">Total Keywords Tracked</p>
                             <p className="text-5xl font-bold text-blue-600">{summary.totalKeywords.toLocaleString()}</p>
-                        </div>
+                            </div>
                         <div className="space-y-3">
                             <SummaryStat
                                 label="Est. Traffic Value"
                                 value={`$${summary.etv.toFixed(2)}`}
-                                color="text-gray-800"
+                            color="text-gray-800"
                             />
                             <SummaryStat
                                 label="Est. Paid Cost"
@@ -945,14 +954,14 @@ const Keywords = ({ summary, table }) => {
                     <div className="flex items-center space-x-2">
                         <h2 className="text-xl font-bold text-gray-800">Keywords</h2>
                         <InfoTooltip text="Analyze keyword rankings for your site and competitors. Use the tabs to switch between different sites." />
-                    </div>
+                </div>
                     <button
                         onClick={() => alert('Webhook for Keywords refresh triggered!')}
                         className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-1 px-3 rounded-lg text-xs transition-colors duration-300"
                     >
                         Refresh
                     </button>
-                </div>
+                            </div>
 
                 <div className="mb-4">
                     <div className="relative">
@@ -964,7 +973,7 @@ const Keywords = ({ summary, table }) => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                         />
-                    </div>
+                </div>
                 </div>
 
                 <div className="border-b border-gray-200">
@@ -1841,16 +1850,16 @@ const HealthCheckItem = ({ icon, color, title, items }) => (
         <div>
             <p className={`font-bold text-lg ${color}`}>{items.length}</p>
             <p className="text-xs text-gray-500">{title}</p>
-        </div>
+             </div>
         <div className="absolute left-0 bottom-full mb-2 w-72 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-none">
             <h4 className="font-bold mb-2 border-b border-gray-600 pb-1">{title} Found</h4>
             <ul className="space-y-1">
                 {items.map((item, index) => <li key={index}>- {item.description}</li>)}
             </ul>
             {items.length === 0 && <p className="text-gray-400">No issues found.</p>}
-        </div>
-    </div>
-);
+                </div>
+            </div>
+        );
 
 const BooleanCheck = ({ value, tooltipContent }) => {
     const check = value ? <CheckCircle className="w-5 h-5 text-green-500 mx-auto" /> : <XCircle className="w-5 h-5 text-red-500 mx-auto" />;
@@ -1870,19 +1879,10 @@ const BooleanCheck = ({ value, tooltipContent }) => {
 
 const formatDate = (dateString) => {
     if (!dateString) return null;
-    const date = new Date(dateString);
+        const date = new Date(dateString);
     if (isNaN(date.getTime())) return dateString; // Return original if invalid
     return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 };
-
-const CalendarIcon = createIcon(
-  <>
-    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-    <line x1="16" y1="2" x2="16" y2="6"></line>
-    <line x1="8" y1="2" x2="8" y2="6"></line>
-    <line x1="3" y1="10" x2="21" y2="10"></line>
-  </>
-);
 
 const checkCategories = {
     performance: {
@@ -1923,7 +1923,7 @@ const WebsiteStats = ({ data }) => {
     if (!data) {
         return <PageContent><div className="p-8 text-center text-gray-500">No Website Stats data available.</div></PageContent>;
     }
-    
+
     const { healthData, competitorPerfData: rawCompetitorPerfData, technicalSeoData } = data;
     const aiReport = healthData?.aiNotes;
 
@@ -1941,7 +1941,7 @@ const WebsiteStats = ({ data }) => {
     const gaugeColour = healthData.pageScore >= 90 ? '#16a34a' : healthData.pageScore >= 70 ? '#eab308' : '#dc2626';
     const speedSec = parseFloat(String(healthData.siteSpeed).replace(/[^\d.]/g, '')) || 0;
     const speedCol = speedSec < 1.5 ? 'text-green-600' : speedSec < 3 ? 'text-yellow-600' : 'text-red-600';
-    
+
     // Fix for broken links NaN display by treating it as a boolean
     const hasBrokenLinks = healthData.brokenLinks === true || String(healthData.brokenLinks).toLowerCase() === 'true';
     const brokenLinksText = hasBrokenLinks ? 'Found' : '0';
@@ -2033,13 +2033,13 @@ const WebsiteStats = ({ data }) => {
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
                     {/* Left side: Gauge */}
                     <div className="flex flex-col items-center justify-center">
-                        <div className="relative">
-                            <svg className="w-32 h-32">
+                             <div className="relative">
+                                 <svg className="w-32 h-32">
                                 <circle r="54" cx="64" cy="64" fill="transparent" stroke="currentColor" strokeWidth="8" className="text-gray-200" />
                                 <circle r="54" cx="64" cy="64" fill="transparent" stroke={gaugeColour} strokeWidth="8" strokeDasharray={2 * Math.PI * 54} strokeDashoffset={healthData.pageScore >= 99.9 ? 0 : 2 * Math.PI * 54 * (1 - healthData.pageScore / 100)} strokeLinecap="round" style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }} />
-                            </svg>
-                            <span className="absolute inset-0 flex items-center justify-center text-3xl font-bold text-black">{healthData.pageScore.toFixed(1)}</span>
-                        </div>
+                                 </svg>
+                                 <span className="absolute inset-0 flex items-center justify-center text-3xl font-bold text-black">{healthData.pageScore.toFixed(1)}</span>
+                             </div>
                         <p className="text-gray-600 mt-2 font-semibold">Page Score</p>
                         <div className="flex space-x-6 mt-4">
                             <HealthCheckItem icon={<AlertTriangle className="w-5 h-5 text-yellow-500" />} color="text-yellow-500" title="Warnings" items={healthData.warnings || []}/>
@@ -2058,9 +2058,9 @@ const WebsiteStats = ({ data }) => {
                             />
                         ))}
                     </div>
-                </div>
+                 </div>
             </Card>
-
+  
             <Card className="mb-8">
                 <h2 className="text-lg font-semibold mb-4">Performance vs. Competitors</h2>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-12">
@@ -2078,7 +2078,7 @@ const WebsiteStats = ({ data }) => {
                                 </Bar>
                             </BarChart>
                         </ResponsiveContainer>
-                    </div>
+                </div>
                     <div>
                         <h3 className="text-lg font-semibold text-center text-gray-700 mb-2">Est. Monthly Traffic</h3>
                         <p className="text-xs text-gray-500 text-center mb-2">(Higher is better)</p>
@@ -2093,7 +2093,7 @@ const WebsiteStats = ({ data }) => {
                                  </Bar>
                              </BarChart>
                         </ResponsiveContainer>
-                    </div>
+                            </div>
                     <div>
                          <h3 className="text-lg font-semibold text-center text-gray-700 mb-2">Referring Domains</h3>
                          <p className="text-xs text-gray-500 text-center mb-2">(Higher is better)</p>
@@ -2108,7 +2108,7 @@ const WebsiteStats = ({ data }) => {
                                  </Bar>
                              </BarChart>
                          </ResponsiveContainer>
-                     </div>
+                    </div>
                       <div>
                          <h3 className="text-lg font-semibold text-center text-gray-700 mb-2">Total Backlinks</h3>
                          <p className="text-xs text-gray-500 text-center mb-2">(Higher is better)</p>
@@ -2121,12 +2121,12 @@ const WebsiteStats = ({ data }) => {
                                  <Bar dataKey='Total Backlinks' barSize={35}>
                                      {competitorPerfData.map((entry, index) => <Cell key={`cell-${entry.name}`} fill={entry.isClient ? '#0ea5e9' : CHART_COLORS[index % CHART_COLORS.length]} /> )}
                                  </Bar>
-                             </BarChart>
-                         </ResponsiveContainer>
+                        </BarChart>
+                    </ResponsiveContainer>
                      </div>
                 </div>
             </Card>
-            
+
             <AIReportSection reportText={aiReport} title="On-Page AI Notes" />
 
             <Card className="mt-8">
@@ -2141,9 +2141,9 @@ const WebsiteStats = ({ data }) => {
                                 <th className="p-3 font-semibold text-slate-700">H1 Tag</th>
                                 <th className="p-3 font-semibold text-slate-700">Title Tag</th>
                                 <th className="p-3 font-semibold text-slate-700">Meta Description</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                             </tr>
+                         </thead>
+                         <tbody>
                             {technicalSeoData.map((site, index) => (
                                 <tr key={site.name} className={`border-b border-slate-100 ${index % 2 !== 0 ? 'bg-slate-50/50' : 'bg-white'}`}>
                                     <td className="p-3 pr-4 font-semibold text-slate-800">{site.name}</td>
@@ -2152,11 +2152,11 @@ const WebsiteStats = ({ data }) => {
                                     <td className="p-3"><BooleanCheck value={site.h1} tooltipContent={site.h1} /></td>
                                     <td className="p-3"><BooleanCheck value={site.title} tooltipContent={site.title} /></td>
                                     <td className="p-3"><BooleanCheck value={site.description} tooltipContent={site.description} /></td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                                 </tr>
+                             ))}
+                         </tbody>
+                     </table>
+                 </div>
             </Card>
         </PageContent>
     );
@@ -2264,7 +2264,7 @@ const App = () => {
   }
 
   /* ----- render ----- */
-  return (
+            return (
     <div className="min-h-screen bg-gray-50 font-sans">
       <Header active={tab} setActive={setTab} />
       {body}
