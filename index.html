@@ -860,10 +860,18 @@ const Dashboard = ({ setActiveTab }) => {
 /* ------------------------------------------------------------------ */
 /* KEYWORDS PAGE – full live version                                  */
 /* ------------------------------------------------------------------ */
-const Keywords = ({ summary, table }) => {
+const Keywords = ({ summary, table, webhooks, setData }) => {
     const [active, setActive] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const siteNames = Object.keys(table);
+    
+    // Refresh state management
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [refreshProgress, setRefreshProgress] = useState(0);
+    const [refreshMessage, setRefreshMessage] = useState('');
+    const [lastRefresh, setLastRefresh] = useState(null);
+    const pollIntervalRef = useRef(null);
+    const refreshStartTimeRef = useRef(null);
     
     // Set initial active site to the first one
     useEffect(() => {
@@ -871,6 +879,195 @@ const Keywords = ({ summary, table }) => {
             setActive(siteNames[0]);
         }
     }, [siteNames]);
+
+    // Cleanup polling on unmount
+    useEffect(() => {
+        return () => {
+            if (pollIntervalRef.current) {
+                clearInterval(pollIntervalRef.current);
+            }
+        };
+    }, []);
+
+    // Refresh functionality
+    const triggerRefresh = async () => {
+        console.log('Keywords refresh - Webhooks data:', webhooks);
+        
+        if (!webhooks || !webhooks['Keywords']) {
+            alert('Keywords refresh webhook not configured for this workbook');
+            console.log('Keywords webhook check failed. Webhooks:', webhooks);
+            return;
+        }
+
+        setIsRefreshing(true);
+        setRefreshProgress(5);
+        setRefreshMessage('Triggering keywords automation...');
+        refreshStartTimeRef.current = Date.now();
+
+        try {
+            // Get the workbook ID from URL parameters
+            const params = new URLSearchParams(window.location.search);
+            const workbookId = params.get('workbookId');
+            
+            if (!workbookId) {
+                throw new Error('No workbook ID found in URL');
+            }
+
+            // Construct the webhook URL with required parameters
+            const baseWebhookUrl = webhooks['Keywords'];
+            const webhookUrl = `${baseWebhookUrl}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('Keywords Archive')}`;
+            
+            console.log('Triggering keywords webhook:', webhookUrl);
+            
+            const response = await fetch(webhookUrl, {
+                method: 'GET',
+                mode: 'no-cors' // Many webhooks don't support CORS
+            });
+            
+            // Show success message
+            console.log('Keywords webhook triggered successfully!');
+            
+            setRefreshProgress(15);
+            setRefreshMessage('Keywords automation started! Fetching fresh data...');
+            
+            // Start polling for data changes
+            startPolling();
+            
+        } catch (error) {
+            console.error('Error triggering keywords refresh:', error);
+            setIsRefreshing(false);
+            setRefreshProgress(0);
+            setRefreshMessage('');
+            alert(`Failed to trigger keywords refresh: ${error.message}`);
+        }
+    };
+
+    const startPolling = () => {
+        let attempts = 0;
+        const maxAttempts = 12; // Poll for ~6 minutes (30s intervals)
+        
+        const poll = async () => {
+            attempts++;
+            const elapsed = (Date.now() - refreshStartTimeRef.current) / 1000;
+            const progress = Math.min(15 + (attempts * 7), 95);
+            
+            setRefreshProgress(progress);
+            
+            // More informative messages based on elapsed time
+            let message;
+            if (elapsed < 60) {
+                message = `Keywords automation running... (${Math.floor(elapsed)}s / ~60s expected)`;
+            } else if (elapsed < 120) {
+                message = `Processing keyword data... (${Math.floor(elapsed / 60)}:${String(Math.floor(elapsed % 60)).padStart(2, '0')})`;
+            } else {
+                message = `Finalizing keyword updates... (${Math.floor(elapsed / 60)}:${String(Math.floor(elapsed % 60)).padStart(2, '0')})`;
+            }
+            setRefreshMessage(message);
+            
+            try {
+                // Check if data has been updated by fetching fresh data
+                const params = new URLSearchParams(window.location.search);
+                const workbookId = params.get('workbookId');
+                
+                if (workbookId) {
+                    const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
+                    
+                    const response = await fetch(scriptUrl);
+                    const newData = await response.json();
+                    
+                    // Check for changes in keywords data
+                    if (newData.keywordsSummary && newData.keywordsTable && hasKeywordsDataChanged(summary, table, newData.keywordsSummary, newData.keywordsTable)) {
+                        // Data has changed! Stop polling and update in-place
+                        clearInterval(pollIntervalRef.current);
+                        setRefreshProgress(100);
+                        setRefreshMessage('Keywords update complete! Loading fresh data...');
+                        
+                        // Update the data in-place
+                        setData(newData);
+                        setLastRefresh(new Date());
+                        
+                        // Clear refresh state after a brief success message
+                        setTimeout(() => {
+                            setIsRefreshing(false);
+                            setRefreshProgress(0);
+                            setRefreshMessage('');
+                        }, 2000);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error('Error polling for keywords updates:', error);
+            }
+            
+            // Stop polling after max attempts
+            if (attempts >= maxAttempts) {
+                clearInterval(pollIntervalRef.current);
+                setIsRefreshing(false);
+                setRefreshProgress(0);
+                setRefreshMessage('');
+                
+                // Try one final check for updates
+                try {
+                    const params = new URLSearchParams(window.location.search);
+                    const workbookId = params.get('workbookId');
+                    
+                    if (workbookId) {
+                        const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
+                        
+                        fetch(scriptUrl)
+                            .then(response => response.json())
+                            .then(finalData => {
+                                if (finalData.keywordsSummary && finalData.keywordsTable) {
+                                    setData(finalData);
+                                    setLastRefresh(new Date());
+                                    console.log('Final keywords data update applied');
+                                }
+                            })
+                            .catch(e => console.log('Final keywords check failed:', e));
+                    }
+                } catch (error) {
+                    console.error('Error in final keywords update check:', error);
+                }
+            }
+        };
+        
+        // Start with immediate poll, then continue with 30-second intervals
+        pollIntervalRef.current = setInterval(poll, 30000);
+        
+        // Poll immediately to start
+        poll();
+    };
+
+    const hasKeywordsDataChanged = (oldSummary, oldTable, newSummary, newTable) => {
+        // Check if keywords data has changed
+        const hasChanges = (
+            // Check summary changes
+            oldSummary?.totalKeywords !== newSummary?.totalKeywords ||
+            oldSummary?.pos1 !== newSummary?.pos1 ||
+            oldSummary?.etv !== newSummary?.etv ||
+            oldSummary?.isNew !== newSummary?.isNew ||
+            oldSummary?.isUp !== newSummary?.isUp ||
+            oldSummary?.isDown !== newSummary?.isDown ||
+            oldSummary?.isLost !== newSummary?.isLost ||
+            // Check table changes by comparing table sizes
+            JSON.stringify(Object.keys(oldTable || {})) !== JSON.stringify(Object.keys(newTable || {})) ||
+            Object.keys(oldTable || {}).some(siteName => 
+                (oldTable[siteName] || []).length !== (newTable[siteName] || []).length
+            )
+        );
+        
+        console.log('Keywords data change detected:', hasChanges);
+        return hasChanges;
+    };
+
+    const cancelRefresh = () => {
+        if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current);
+        }
+        setIsRefreshing(false);
+        setRefreshProgress(0);
+        setRefreshMessage('');
+    };
 
     // Icons
     const Search = createIcon(
@@ -914,7 +1111,61 @@ const Keywords = ({ summary, table }) => {
 
     return (
         <PageContent>
-            <h1 className="text-3xl font-bold text-gray-800 mb-6">Keyword Analysis</h1>
+            {/* Header Section */}
+            <div className="mb-6">
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-800">Keyword Analysis</h1>
+                        <p className="text-gray-600 mt-1">Track your keyword rankings and performance metrics</p>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                        {lastRefresh && (
+                            <span className="text-sm text-gray-500">
+                                Last updated: {lastRefresh.toLocaleTimeString()}
+                            </span>
+                        )}
+                        <button 
+                            onClick={isRefreshing ? cancelRefresh : triggerRefresh}
+                            disabled={!webhooks}
+                            className={`px-6 py-2 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl ${
+                                isRefreshing 
+                                    ? 'bg-red-500 hover:bg-red-600 text-white' 
+                                    : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
+                            } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                            {isRefreshing ? 'Cancel Refresh' : 'Refresh Data'}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Refresh Progress Bar */}
+            {isRefreshing && (
+                <div className="mb-6 bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-semibold text-gray-900">Refreshing Keywords Data</h3>
+                        <span className="text-sm font-medium text-blue-600">{refreshProgress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
+                        <div 
+                            className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
+                            style={{ width: `${refreshProgress}%` }}
+                        ></div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <p className="text-sm text-gray-600">{refreshMessage}</p>
+                        <button 
+                            onClick={cancelRefresh}
+                            className="text-sm text-red-600 hover:text-red-800 font-medium"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                        💡 Keywords automation typically takes 2-3 minutes to complete. We'll automatically refresh when new data is available.
+                    </p>
+                </div>
+            )}
 
             <Card className="mb-6">
                 <div className="flex items-center space-x-2 mb-4">
@@ -985,18 +1236,10 @@ const Keywords = ({ summary, table }) => {
             </Card>
 
             <Card>
-                <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center space-x-2">
-                        <h2 className="text-xl font-bold text-gray-800">Keywords</h2>
-                        <InfoTooltip text="Analyze keyword rankings for your site and competitors. Use the tabs to switch between different sites." />
+                                <div className="flex items-center space-x-2 mb-4">
+                    <h2 className="text-xl font-bold text-gray-800">Keywords</h2>
+                    <InfoTooltip text="Analyze keyword rankings for your site and competitors. Use the tabs to switch between different sites." />
                 </div>
-                    <button
-                        onClick={() => console.log('Keywords refresh requested')}
-                        className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-1 px-3 rounded-lg text-xs transition-colors duration-300"
-                    >
-                        Refresh
-                    </button>
-                            </div>
 
                 <div className="mb-4">
                     <div className="relative">
@@ -3020,7 +3263,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
 /* HEADER                                                             */
 /* ------------------------------------------------------------------ */
 const Header = ({active,setActive}) => {
-  const tabs=['Dashboard','Website Stats','Geogrid Maps','Keywords','Backlinks','Tools'];
+  const tabs=['Dashboard','Website Stats','Keywords','Backlinks','Geogrid Maps','Tools'];
   return (
     <header className="bg-white shadow-sm sticky top-0 z-20">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -3132,6 +3375,8 @@ const App = () => {
           <Keywords
             summary={data.keywordsSummary}
             table={data.keywordsTable}
+            webhooks={data.webhooks}
+            setData={setData}
           />
         );
         break;
