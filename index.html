@@ -2158,7 +2158,8 @@ const WebsiteStats = ({ data }) => {
         return (
             <div ref={cardRef} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200 group relative">
                 <div className="flex items-start justify-between mb-4">
-                    <div className={`p-3 rounded-xl ${status === 'good' ? 'bg-green-100 text-green-600' : 
+                    <div className={`p-3 rounded-xl ${status === 'excellent' ? 'bg-green-100 text-green-600' : 
+                        status === 'good' ? 'bg-green-100 text-green-600' : 
                         status === 'warning' ? 'bg-yellow-100 text-yellow-600' : 
                         status === 'error' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
                         {icon}
@@ -2296,8 +2297,8 @@ const WebsiteStats = ({ data }) => {
         const circumference = 2 * Math.PI * 85;
         const strokeDasharray = circumference;
         
-        // Cap visual progress to ensure there's always a small gap (max 94% visual)
-        const visualScore = Math.min(score, 94);
+        // Cap visual progress to ensure there's always a small gap (max 96.5% visual)
+        const visualScore = Math.min(score, 96.5);
         const targetOffset = circumference - (visualScore / 100) * circumference;
         
         // Animation state - start empty, animate to target
@@ -2365,7 +2366,7 @@ const WebsiteStats = ({ data }) => {
                             strokeWidth="12"
                             strokeDasharray={strokeDasharray}
                             strokeDashoffset={currentOffset}
-                            strokeLinecap="round"
+                            strokeLinecap="butt"
                             className={isDisableTransition ? '' : 'transition-all duration-1000 ease-out'}
                             style={{ 
                                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
@@ -2384,7 +2385,6 @@ const WebsiteStats = ({ data }) => {
                     <p className={`text-sm font-medium ${score >= 90 ? 'text-green-600' : score >= 70 ? 'text-yellow-600' : 'text-red-600'}`}>
                         {score >= 90 ? 'Excellent' : score >= 70 ? 'Good' : 'Needs Improvement'}
                     </p>
-                    <p className="text-xs text-gray-400 mt-1">Hover to replay animation</p>
                 </div>
             </div>
         );
@@ -2504,16 +2504,21 @@ const WebsiteStats = ({ data }) => {
                          value={healthData.siteSpeed}
                          subtitle={`${speedStatus === 'excellent' ? 'Excellent' : speedStatus === 'good' ? 'Good' : 'Needs Improvement'}`}
                          icon={<TrendingUp className="w-6 h-6" />}
-                         status={speedStatus === 'excellent' ? 'good' : speedStatus === 'good' ? 'warning' : 'error'}
+                         status={speedStatus === 'excellent' ? 'excellent' : speedStatus === 'good' ? 'good' : 'error'}
                          alwaysShowDetails={true}
                          details={healthData.speedDetails}
                      />
-                     <ModernMetricCard
+                                          <ModernMetricCard
                          title="Technical Checks"
                          value={`${checksPassed}/${healthData.checks.totalChecks}`}
-                         subtitle={`${checksPercentage.toFixed(1)}% passed`}
+                         subtitle={<span className={`${checksPercentage >= 90 ? 'text-green-600' : 
+                             checksPercentage >= 80 ? 'text-green-500' : 
+                             checksPercentage >= 70 ? 'text-yellow-500' : 
+                             checksPercentage >= 60 ? 'text-orange-500' : 'text-red-500'}`}>
+                             {checksPercentage.toFixed(1)}% passed
+                         </span>}
                          icon={<CheckCircle className="w-6 h-6" />}
-                         status={checksPercentage >= 80 ? 'good' : checksPercentage >= 60 ? 'warning' : 'error'}
+                         status={checksPercentage >= 90 ? 'excellent' : checksPercentage >= 80 ? 'good' : checksPercentage >= 60 ? 'warning' : 'error'}
                          categoryBreakdown={Object.entries(checkCategories).map(([category, categoryData]) => {
                              const categoryChecks = Object.entries(categoryData.checks).filter(([checkName]) => 
                                  healthData.checks.passedList.includes(checkName) || healthData.checks.failedList.includes(checkName)
@@ -2529,38 +2534,38 @@ const WebsiteStats = ({ data }) => {
                          }).filter(cat => cat.total > 0)}
                          tooltip={{
                              header: 'Technical SEO Health Check Results',
-                             width: 'large',
-                             content: (
+                width: 'large',
+                content: (
                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                     {Object.entries(checkCategories).map(([category, categoryData]) => {
+                        {Object.entries(checkCategories).map(([category, categoryData]) => {
                                          const categoryChecks = Object.entries(categoryData.checks).filter(([checkName]) => 
                                              healthData.checks.passedList.includes(checkName) || healthData.checks.failedList.includes(checkName)
                                          );
-                                         if (categoryChecks.length === 0) return null;
-                                         return (
+                            if (categoryChecks.length === 0) return null;
+                            return (
                                              <div key={category} className="space-y-2">
                                                  <h4 className="font-semibold flex items-center text-gray-300 text-sm">
                                                      <span className="mr-2">{categoryData.icon}</span>
                                                      {categoryData.title}
                                                  </h4>
                                                  <ul className="space-y-1.5">
-                                                     {categoryChecks.map(([checkName, description]) => {
-                                                         const isPassed = healthData.checks.passedList.includes(checkName);
-                                                         return (
+                                        {categoryChecks.map(([checkName, description]) => {
+                                            const isPassed = healthData.checks.passedList.includes(checkName);
+                                            return (
                                                              <li key={checkName} className="flex items-start text-xs leading-relaxed">
                                                                  <span className="mr-2 flex-shrink-0 text-sm">{isPassed ? '✅' : '❌'}</span>
                                                                  <span className={isPassed ? 'text-green-300' : 'text-red-300'}>
                                                                      {description}
                                                                  </span>
-                                                             </li>
-                                                         );
-                                                     })}
-                                                 </ul>
-                                             </div>
-                                         );
-                                     })}
-                                 </div>
-                             )
+                                                </li>
+                                            );
+                                        })}
+                                    </ul>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )
                          }}
                      />
                      <ModernMetricCard
@@ -2568,14 +2573,14 @@ const WebsiteStats = ({ data }) => {
                          value={hasBrokenLinks ? 'Issues Found' : 'All Good'}
                          subtitle={hasBrokenLinks ? 'Fix required' : 'No broken links'}
                          icon={<Link2 className="w-6 h-6" />}
-                         status={hasBrokenLinks ? 'error' : 'good'}
+                         status={hasBrokenLinks ? 'error' : 'excellent'}
                      />
                      <ModernMetricCard
                          title="SSL Certificate"
                          value={healthData.ssl ? 'Secure' : 'Not Secure'}
                          subtitle={healthData.ssl ? 'HTTPS enabled' : 'HTTPS required'}
                          icon={<ShieldCheck className="w-6 h-6" />}
-                         status={healthData.ssl ? 'good' : 'error'}
+                         status={healthData.ssl ? 'excellent' : 'error'}
                      />
                  </div>
             </div>
@@ -2624,35 +2629,45 @@ const WebsiteStats = ({ data }) => {
                 />
             </div>
 
-            {/* Modern Technical SEO Table */}
+                        {/* Modern Technical SEO Table */}
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
-                    <h2 className="text-xl font-semibold text-gray-900">Technical SEO Checklist</h2>
-                    <p className="text-sm text-gray-600 mt-1">Essential technical elements across all websites</p>
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-6 border-b border-gray-200">
+                    <h2 className="text-2xl font-bold text-gray-900">Technical SEO Checklist</h2>
+                    <p className="text-gray-600 mt-1">Essential technical elements across all websites</p>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-gray-50">
+                        <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                             <tr>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Website</th>
-                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">SSL</th>
-                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Schema</th>
-                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">H1 Tag</th>
-                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Title Tag</th>
-                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Meta Description</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
+                                <th className="px-8 py-5 text-left text-sm font-bold text-gray-900 uppercase tracking-wider">Clinic Name</th>
+                                <th className="px-6 py-5 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">SSL</th>
+                                <th className="px-6 py-5 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">Schema</th>
+                                <th className="px-6 py-5 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">H1 Tag</th>
+                                <th className="px-6 py-5 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">Title Tag</th>
+                                <th className="px-6 py-5 text-center text-sm font-bold text-gray-900 uppercase tracking-wider">Meta Description</th>
+                             </tr>
+                         </thead>
+                        <tbody className="divide-y divide-gray-100 bg-white">
                             {technicalSeoData.map((site, index) => (
-                                <tr key={site.name} className={`hover:bg-gray-50 transition-colors ${site.name.toLowerCase().includes('client') ? 'bg-blue-50' : ''}`}>
-                                    <td className="px-6 py-4">
+                                <tr key={site.name} className={`hover:bg-gray-50 transition-all duration-200 ${site.name.toLowerCase().includes('client') ? 'bg-blue-50 hover:bg-blue-100' : ''}`}>
+                                    <td className="px-8 py-6">
                                         <div className="flex items-center">
-                                            <div className={`w-3 h-3 rounded-full mr-3 ${site.name.toLowerCase().includes('client') ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
-                                            <span className="font-medium text-gray-900">{site.name}</span>
+                                            <div className={`w-3 h-3 rounded-full mr-4 ${site.name.toLowerCase().includes('client') ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+                                            <div>
+                                                <div className="font-semibold text-gray-900 text-base">{site.clinicName || site.name}</div>
+                                                {site.website && (
+                                                    <div className="text-sm text-gray-500 mt-1">
+                                                        <a href={site.website} target="_blank" rel="noopener noreferrer" 
+                                                           className="text-blue-600 hover:text-blue-800 hover:underline">
+                                                            {site.website.replace(/^https?:\/\//i, '')}
+                                                        </a>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-center">
-                                        <div className="inline-flex items-center">
+                                    <td className="px-6 py-6 text-center">
+                                        <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-50">
                                             {site.hasSSL ? (
                                                 <CheckCircle className="w-5 h-5 text-green-500" />
                                             ) : (
@@ -2660,8 +2675,8 @@ const WebsiteStats = ({ data }) => {
                                             )}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-center">
-                                        <div className="inline-flex items-center">
+                                    <td className="px-6 py-6 text-center">
+                                        <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-50">
                                             {site.hasSchema ? (
                                                 <CheckCircle className="w-5 h-5 text-green-500" />
                                             ) : (
@@ -2669,20 +2684,26 @@ const WebsiteStats = ({ data }) => {
                                             )}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 text-center">
-                                        <BooleanCheck value={site.h1} tooltipContent={site.h1} />
+                                    <td className="px-6 py-6 text-center">
+                                        <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-50">
+                                            <BooleanCheck value={site.h1} tooltipContent={site.h1} />
+                                        </div>
                                     </td>
-                                    <td className="px-6 py-4 text-center">
-                                        <BooleanCheck value={site.title} tooltipContent={site.title} />
+                                    <td className="px-6 py-6 text-center">
+                                        <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-50">
+                                            <BooleanCheck value={site.title} tooltipContent={site.title} />
+                                        </div>
                                     </td>
-                                    <td className="px-6 py-4 text-center">
-                                        <BooleanCheck value={site.description} tooltipContent={site.description} />
+                                    <td className="px-6 py-6 text-center">
+                                        <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-50">
+                                            <BooleanCheck value={site.description} tooltipContent={site.description} />
+                                        </div>
                                     </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                                 </tr>
+                             ))}
+                         </tbody>
+                     </table>
+                 </div>
             </div>
         </PageContent>
     );
