@@ -2076,15 +2076,25 @@ const WebsiteStats = ({ data, webhooks }) => {
 
     const startPolling = () => {
         let attempts = 0;
-        const maxAttempts = 8; // Poll for ~4 minutes (30s intervals)
+        const maxAttempts = 12; // Poll for ~6 minutes (30s intervals) to account for 1min automation + buffer
         
         const poll = async () => {
             attempts++;
             const elapsed = (Date.now() - refreshStartTimeRef.current) / 1000;
-            const progress = Math.min(15 + (attempts * 10), 95);
+            const progress = Math.min(15 + (attempts * 7), 95); // Slower progress increment for longer polling
             
             setRefreshProgress(progress);
-            setRefreshMessage(`Checking for updates... (${Math.floor(elapsed / 60)}:${String(Math.floor(elapsed % 60)).padStart(2, '0')})`);
+            
+            // More informative messages based on elapsed time
+            let message;
+            if (elapsed < 60) {
+                message = `Automation running... (${Math.floor(elapsed)}s / ~60s expected)`;
+            } else if (elapsed < 120) {
+                message = `Checking for AI Report updates... (${Math.floor(elapsed / 60)}:${String(Math.floor(elapsed % 60)).padStart(2, '0')})`;
+            } else {
+                message = `Finalizing updates... (${Math.floor(elapsed / 60)}:${String(Math.floor(elapsed % 60)).padStart(2, '0')})`;
+            }
+            setRefreshMessage(message);
             
             try {
                 // Check if data has been updated by fetching fresh data
@@ -2097,7 +2107,7 @@ const WebsiteStats = ({ data, webhooks }) => {
                     const response = await fetch(scriptUrl);
                     const newData = await response.json();
                     
-                    // Compare with current data to see if it's been updated
+                    // Check specifically for AI Report and other key changes
                     if (newData.websiteStats && hasDataChanged(data, newData.websiteStats)) {
                         // Data has changed! Stop polling and refresh
                         clearInterval(pollIntervalRef.current);
@@ -2124,27 +2134,46 @@ const WebsiteStats = ({ data, webhooks }) => {
                 setRefreshMessage('');
                 
                 // Show manual refresh option
-                if (confirm('Automation may still be running. Would you like to manually refresh the page to check for updates?')) {
+                if (confirm('Automation completed but some data may still be processing. Would you like to manually refresh the page to see the latest updates?')) {
                     window.location.reload();
                 }
             }
         };
         
-        // Poll every 30 seconds
+        // Start with immediate poll, then continue with 30-second intervals
         pollIntervalRef.current = setInterval(poll, 30000);
         
-        // Also poll immediately
+        // Poll immediately to start
         poll();
     };
 
     const hasDataChanged = (oldData, newData) => {
-        // Simple comparison - check if AI notes or key metrics have changed
-        return (
+        // Check if any key data has changed, with special focus on AI Report
+        const oldAiNotes = oldData.healthData?.aiNotes;
+        const newAiNotes = newData.healthData?.aiNotes;
+        
+        // Log AI Notes comparison for debugging
+        console.log('AI Notes comparison:', {
+            old: oldAiNotes,
+            new: newAiNotes,
+            changed: oldAiNotes !== newAiNotes
+        });
+        
+        // Check for changes in multiple key areas
+        const hasChanges = (
+            // AI Report is the main indicator that automation is complete
+            oldAiNotes !== newAiNotes ||
+            // Also check other key metrics
             oldData.healthData?.pageScore !== newData.healthData?.pageScore ||
-            oldData.healthData?.aiNotes !== newData.healthData?.aiNotes ||
             oldData.healthData?.siteSpeed !== newData.healthData?.siteSpeed ||
-            JSON.stringify(oldData.healthData?.speedDetails) !== JSON.stringify(newData.healthData?.speedDetails)
+            JSON.stringify(oldData.healthData?.speedDetails) !== JSON.stringify(newData.healthData?.speedDetails) ||
+            // Check if schema data has changed
+            oldData.healthData?.hasSchema !== newData.healthData?.hasSchema ||
+            oldData.healthData?.hasSchemaErrors !== newData.healthData?.hasSchemaErrors
         );
+        
+        console.log('Data change detected:', hasChanges);
+        return hasChanges;
     };
 
     const cancelRefresh = () => {
@@ -2700,31 +2729,32 @@ const WebsiteStats = ({ data, webhooks }) => {
             )}
 
             {/* Main Health Dashboard */}
-            <div className="mb-8">
-                {/* Health Score Gauge */}
-                <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 mb-8">
-                    <div className="xl:col-span-4">
-                        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 h-full flex flex-col justify-center">
-                            <ModernGauge score={healthData.pageScore} />
-                            <div className="flex justify-center space-x-8 mt-6">
-                                <ModernIssueCounter
-                                    icon={<AlertTriangle className="w-5 h-5 text-yellow-500" />}
-                                    title="Warnings"
-                                    items={healthData.warnings || []}
-                                    textColor="text-yellow-600"
-                                />
-                                <ModernIssueCounter
-                                    icon={<XCircle className="w-5 h-5 text-red-500" />}
-                                    title="Errors"
-                                    items={healthData.errors || []}
-                                    textColor="text-red-600"
-                                />
-                            </div>
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-8">
+                {/* Health Score Gauge - Left Column */}
+                <div className="xl:col-span-4">
+                    <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 h-full flex flex-col justify-center">
+                        <ModernGauge score={healthData.pageScore} />
+                        <div className="flex justify-center space-x-8 mt-6">
+                            <ModernIssueCounter
+                                icon={<AlertTriangle className="w-5 h-5 text-yellow-500" />}
+                                title="Warnings"
+                                items={healthData.warnings || []}
+                                textColor="text-yellow-600"
+                            />
+                            <ModernIssueCounter
+                                icon={<XCircle className="w-5 h-5 text-red-500" />}
+                                title="Errors"
+                                items={healthData.errors || []}
+                                textColor="text-red-600"
+                            />
                         </div>
                     </div>
+                </div>
 
-                    {/* Main Performance Cards - 2 Large Cards */}
-                    <div className="xl:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Right Column - 2x2 + 3 Layout */}
+                <div className="xl:col-span-8 space-y-4">
+                    {/* Top Row - 2 Large Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <ModernMetricCard
                             title="Page Load Speed"
                             value={healthData.siteSpeed}
@@ -2795,43 +2825,53 @@ const WebsiteStats = ({ data, webhooks }) => {
                             }}
                         />
                     </div>
-                </div>
 
-                {/* Secondary Metrics - 3 Smaller Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <ModernMetricCard
-                        title="Broken Links"
-                        value={hasBrokenLinks ? 'Issues Found' : 'All Good'}
-                        subtitle={hasBrokenLinks ? 'Fix required' : 'No broken links'}
-                        icon={<Link2 className="w-6 h-6" />}
-                        status={hasBrokenLinks ? 'error' : 'excellent'}
-                    />
-                    <ModernMetricCard
-                        title="SSL Certificate"
-                        value={healthData.ssl ? 'Secure' : 'Not Secure'}
-                        subtitle={healthData.ssl ? 'HTTPS enabled' : 'HTTPS required'}
-                        icon={<ShieldCheck className="w-6 h-6" />}
-                        status={healthData.ssl ? 'excellent' : 'error'}
-                    />
-                    <ModernMetricCard
-                        title="Schema Markup"
-                        value={healthData.hasSchema ? 'Implemented' : 'Missing'}
-                        subtitle={
-                            healthData.hasSchema 
-                                ? (healthData.hasSchemaErrors ? 'Has errors to fix' : 'Valid and healthy')
-                                : 'Add structured data'
-                        }
-                        icon={
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                            </svg>
-                        }
-                        status={
-                            healthData.hasSchema 
-                                ? (healthData.hasSchemaErrors ? 'warning' : 'excellent')
-                                : 'error'
-                        }
-                    />
+                    {/* Bottom Row - 3 Compact Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200">
+                            <div className="flex items-center justify-between">
+                                <div className={`p-2 rounded-lg ${hasBrokenLinks ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                                    <Link2 className="w-5 h-5" />
+                                </div>
+                            </div>
+                            <h3 className="text-gray-600 text-sm font-medium mt-3 mb-1">Broken Links</h3>
+                            <p className="text-lg font-bold text-gray-900">{hasBrokenLinks ? 'Issues Found' : 'All Good'}</p>
+                            <p className="text-xs text-gray-500">{hasBrokenLinks ? 'Fix required' : 'No broken links'}</p>
+                        </div>
+                        
+                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200">
+                            <div className="flex items-center justify-between">
+                                <div className={`p-2 rounded-lg ${healthData.ssl ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                                    <ShieldCheck className="w-5 h-5" />
+                                </div>
+                            </div>
+                            <h3 className="text-gray-600 text-sm font-medium mt-3 mb-1">SSL Certificate</h3>
+                            <p className="text-lg font-bold text-gray-900">{healthData.ssl ? 'Secure' : 'Not Secure'}</p>
+                            <p className="text-xs text-gray-500">{healthData.ssl ? 'HTTPS enabled' : 'HTTPS required'}</p>
+                        </div>
+                        
+                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200">
+                            <div className="flex items-center justify-between">
+                                <div className={`p-2 rounded-lg ${
+                                    healthData.hasSchema 
+                                        ? (healthData.hasSchemaErrors ? 'bg-yellow-100 text-yellow-600' : 'bg-green-100 text-green-600')
+                                        : 'bg-red-100 text-red-600'
+                                }`}>
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <h3 className="text-gray-600 text-sm font-medium mt-3 mb-1">Schema Markup</h3>
+                            <p className="text-lg font-bold text-gray-900">{healthData.hasSchema ? 'Implemented' : 'Missing'}</p>
+                            <p className="text-xs text-gray-500">
+                                {healthData.hasSchema 
+                                    ? (healthData.hasSchemaErrors ? 'Has errors to fix' : 'Valid and healthy')
+                                    : 'Add structured data'
+                                }
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
