@@ -2010,15 +2010,28 @@ const WebsiteStats = ({ data }) => {
     let aiReport = null;
     try {
         const aiNotes = healthData?.aiNotes;
+        console.log('WebsiteStats - Raw AI Notes from healthData:', aiNotes);
+        console.log('WebsiteStats - Type of AI Notes:', typeof aiNotes);
+        
         if (aiNotes !== null && aiNotes !== undefined) {
             const cleanedNotes = String(aiNotes).trim();
+            console.log('WebsiteStats - Cleaned Notes:', cleanedNotes);
+            console.log('WebsiteStats - Cleaned Notes Length:', cleanedNotes.length);
+            
             if (cleanedNotes && !['true', 'false'].includes(cleanedNotes.toLowerCase())) {
                 aiReport = cleanedNotes;
+                console.log('WebsiteStats - Final AI Report set to:', aiReport);
+            } else {
+                console.log('WebsiteStats - AI Notes failed validation (empty or boolean)');
             }
+        } else {
+            console.log('WebsiteStats - AI Notes is null or undefined');
         }
     } catch (error) {
         console.error('Error processing AI Notes:', error);
     }
+    
+    console.log('WebsiteStats - Final aiReport value passed to AIReportSection:', aiReport);
 
     // Enhanced competitor data processing
     const competitorPerfData = (rawCompetitorPerfData || []).map(comp => ({

@@ -99,6 +99,14 @@ function getWebsiteStats(spreadsheet) {
     const websiteErrors = getWebsiteErrors(spreadsheet);
     const checksData = getChecksData(spreadsheet);
     const clientData = onPageInsights.find(site => site.isClient);
+    
+    console.log('getWebsiteStats - Number of sites found:', onPageInsights.length);
+    console.log('getWebsiteStats - Client data found:', !!clientData);
+    if (clientData) {
+        console.log('getWebsiteStats - Client aiNotes:', clientData.aiNotes);
+        console.log('getWebsiteStats - Client aiNotes type:', typeof clientData.aiNotes);
+        console.log('getWebsiteStats - Client aiNotes length:', String(clientData.aiNotes).length);
+    }
 
     const healthData = {
         pageScore: clientData ? clientData.pageScore : 0,
@@ -274,19 +282,28 @@ function getOnPageInsights(spreadsheet) {
     return values.map(row => {
         const isClient = row[0] === 'Client';
         
-        // Get AI Notes from the correct column (CP - index 91)
+        // Get AI Notes from the correct column (CP - index 93)
         let aiNotes = '';
-        if (isClient && row[91]) {
-            try {
-                // Get the raw value
-                const rawNotes = row[91];
-                // Convert to string and clean up
-                aiNotes = typeof rawNotes === 'string' ? rawNotes.trim() : String(rawNotes).trim();
-                // Log for debugging
-                console.log('Raw AI Notes:', rawNotes);
-                console.log('Processed AI Notes:', aiNotes);
-            } catch (error) {
-                console.error('Error processing AI Notes:', error);
+        if (isClient) {
+            console.log('App Script - Processing client row, checking column CP (index 93)');
+            console.log('App Script - Raw value at index 93:', row[93]);
+            console.log('App Script - Type of value at index 93:', typeof row[93]);
+            
+            if (row[93]) {
+                try {
+                    // Get the raw value
+                    const rawNotes = row[93];
+                    // Convert to string and clean up
+                    aiNotes = typeof rawNotes === 'string' ? rawNotes.trim() : String(rawNotes).trim();
+                    // Log for debugging
+                    console.log('App Script - Raw AI Notes:', rawNotes);
+                    console.log('App Script - Processed AI Notes:', aiNotes);
+                    console.log('App Script - Final aiNotes length:', aiNotes.length);
+                } catch (error) {
+                    console.error('App Script - Error processing AI Notes:', error);
+                }
+            } else {
+                console.log('App Script - No value found at column CP (index 93) for client row');
             }
         }
         
