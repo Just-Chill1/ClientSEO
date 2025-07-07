@@ -2014,16 +2014,16 @@ const WebsiteStats = ({ data }) => {
     // More robust handling of AI Notes
     let aiReport = null;
     try {
-        // Get aiNotes from healthData and ensure it's a string
+        // Get aiNotes from healthData
         const aiNotes = healthData?.aiNotes;
         console.log('Raw aiNotes:', aiNotes);
         
         // Only set aiReport if aiNotes is a non-empty string
-        if (typeof aiNotes === 'string' && aiNotes.trim()) {
-            aiReport = aiNotes.trim();
-        } else if (aiNotes) {
-            // If aiNotes exists but isn't a string, convert it
-            aiReport = String(aiNotes).trim();
+        if (aiNotes && typeof aiNotes === 'string') {
+            const cleanedNotes = aiNotes.trim();
+            if (cleanedNotes && cleanedNotes !== 'true' && cleanedNotes !== 'false') {
+                aiReport = cleanedNotes;
+            }
         }
     } catch (error) {
         console.error('Error processing AI Notes:', error);

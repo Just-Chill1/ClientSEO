@@ -269,18 +269,24 @@ function getOnPageInsights(spreadsheet) {
     // Get values starting from row 2 (where the actual data begins)
     const values = sheet.getRange('A2:DB' + sheet.getLastRow()).getValues(); 
     
-    // Add debug logs - now looking at the first data row (row 2 in the sheet)
-    console.log('First data row of On-Page Insights:', values[0]);
-    
-    // Get the AI Notes value and ensure it's a string
-    const aiNotesValue = values[0][91]; // Column CP
-    console.log('Raw AI Notes value:', aiNotesValue);
-    const aiNotesString = aiNotesValue ? String(aiNotesValue).trim() : '';
-    console.log('Processed AI Notes string:', aiNotesString);
-    
     return values.map(row => {
         const isClient = row[0] === 'Client';
-        const aiNotes = row[91] ? String(row[91]).trim() : '';
+        
+        // Get AI Notes from the correct column (CP - index 91)
+        let aiNotes = '';
+        if (isClient && row[91]) {
+            try {
+                // Get the raw value
+                const rawNotes = row[91];
+                // Convert to string and clean up
+                aiNotes = typeof rawNotes === 'string' ? rawNotes.trim() : String(rawNotes).trim();
+                // Log for debugging
+                console.log('Raw AI Notes:', rawNotes);
+                console.log('Processed AI Notes:', aiNotes);
+            } catch (error) {
+                console.error('Error processing AI Notes:', error);
+            }
+        }
         
         return {
             name: row[1], 
@@ -303,7 +309,7 @@ function getOnPageInsights(spreadsheet) {
             lastModifiedSitemap: row[30], // Column AE
             lastModifiedMeta: row[31],    // Column AF
             // AI Notes - Only include if this is the client row
-            aiNotes: isClient ? aiNotes : '',
+            aiNotes: aiNotes,
             // New Speed Metrics
             time_to_interactive: row[68], // Column CQ
             dom_complete: row[69], // CR
