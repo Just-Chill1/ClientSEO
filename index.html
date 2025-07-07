@@ -928,7 +928,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
             console.log('Keywords webhook triggered successfully!');
             
             setRefreshProgress(15);
-            setRefreshMessage('Keywords automation started! Fetching fresh data...');
+            setRefreshMessage('Keywords automation started! (~10s expected)...');
             
             // Start polling for data changes
             startPolling();
@@ -944,23 +944,23 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
 
     const startPolling = () => {
         let attempts = 0;
-        const maxAttempts = 12; // Poll for ~6 minutes (30s intervals)
+        const maxAttempts = 24; // Poll for ~2 minutes (5s intervals)
         
         const poll = async () => {
             attempts++;
             const elapsed = (Date.now() - refreshStartTimeRef.current) / 1000;
-            const progress = Math.min(15 + (attempts * 7), 95);
+            const progress = Math.min(15 + (attempts * 3.5), 95);
             
             setRefreshProgress(progress);
             
             // More informative messages based on elapsed time
             let message;
-            if (elapsed < 60) {
-                message = `Keywords automation running... (${Math.floor(elapsed)}s / ~60s expected)`;
-            } else if (elapsed < 120) {
-                message = `Processing keyword data... (${Math.floor(elapsed / 60)}:${String(Math.floor(elapsed % 60)).padStart(2, '0')})`;
+            if (elapsed < 15) {
+                message = `Keywords automation running... (${Math.floor(elapsed)}s / ~10s expected)`;
+            } else if (elapsed < 30) {
+                message = `Checking for Keywords Archive updates... (${Math.floor(elapsed)}s)`;
             } else {
-                message = `Updating Keywords Summary tab... (${Math.floor(elapsed / 60)}:${String(Math.floor(elapsed % 60)).padStart(2, '0')})`;
+                message = `Still checking for data updates... (${Math.floor(elapsed)}s)`;
             }
             setRefreshMessage(message);
             
@@ -975,25 +975,25 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                     const response = await fetch(scriptUrl);
                     const newData = await response.json();
                     
-                    // Check for changes in keywords data
-                    if (newData.keywordsSummary && newData.keywordsTable && hasKeywordsDataChanged(summary, table, newData.keywordsSummary, newData.keywordsTable)) {
-                        // Data has changed! Stop polling and update in-place
-                        clearInterval(pollIntervalRef.current);
-                        setRefreshProgress(100);
-                        setRefreshMessage('Keywords update complete! Loading fresh data...');
-                        
-                        // Update the data in-place
-                        setData(newData);
-                        setLastRefresh(new Date());
-                        
-                        // Clear refresh state after a brief success message
-                        setTimeout(() => {
-                            setIsRefreshing(false);
-                            setRefreshProgress(0);
-                            setRefreshMessage('');
-                        }, 2000);
-                        return;
-                    }
+                                         // Check for changes in keywords data
+                     if (newData.keywordsSummary && newData.keywordsTable && hasKeywordsDataChanged(summary, table, newData.keywordsSummary, newData.keywordsTable)) {
+                         // Data has changed! Stop polling and update in-place
+                         clearInterval(pollIntervalRef.current);
+                         setRefreshProgress(100);
+                         setRefreshMessage('Keywords Archive updated! Loading fresh data...');
+                         
+                         // Update the data in-place
+                         setData(newData);
+                         setLastRefresh(new Date());
+                         
+                         // Clear refresh state after a brief success message
+                         setTimeout(() => {
+                             setIsRefreshing(false);
+                             setRefreshProgress(0);
+                             setRefreshMessage('');
+                         }, 2000);
+                         return;
+                     }
                 }
             } catch (error) {
                 console.error('Error polling for keywords updates:', error);
@@ -1031,34 +1031,50 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
             }
         };
         
-        // Start with immediate poll, then continue with 30-second intervals
-        pollIntervalRef.current = setInterval(poll, 30000);
+        // Start with immediate poll, then continue with 5-second intervals for faster detection
+        pollIntervalRef.current = setInterval(poll, 5000);
         
         // Poll immediately to start
         poll();
     };
 
     const hasKeywordsDataChanged = (oldSummary, oldTable, newSummary, newTable) => {
-        // Check if keywords data has changed - focus on key summary metrics
-        const hasChanges = (
-            // Check summary changes (convert to numbers for comparison)
+        // Focus on Keywords Archive table changes since that's where new entries are always added
+        const hasTableChanges = (
+            // Check if table structure changed (new sites added)
+            JSON.stringify(Object.keys(oldTable || {})) !== JSON.stringify(Object.keys(newTable || {})) ||
+            // Check if any site has different number of keywords (most reliable indicator)
+            Object.keys(oldTable || {}).some(siteName => {
+                const oldCount = (oldTable[siteName] || []).length;
+                const newCount = (newTable[siteName] || []).length;
+                const changed = oldCount !== newCount;
+                if (changed) {
+                    console.log(`Keywords Archive change detected for ${siteName}: ${oldCount} -> ${newCount} entries`);
+                }
+                return changed;
+            })
+        );
+        
+        // Also check if summary changed as a backup
+        const hasSummaryChanges = (
             parseInt(oldSummary?.totalKeywords) !== parseInt(newSummary?.totalKeywords) ||
             parseInt(oldSummary?.pos1) !== parseInt(newSummary?.pos1) ||
-            parseFloat(oldSummary?.etv) !== parseFloat(newSummary?.etv) ||
             parseInt(oldSummary?.isNew) !== parseInt(newSummary?.isNew) ||
             parseInt(oldSummary?.isUp) !== parseInt(newSummary?.isUp) ||
             parseInt(oldSummary?.isDown) !== parseInt(newSummary?.isDown) ||
-            parseInt(oldSummary?.isLost) !== parseInt(newSummary?.isLost) ||
-            // Check table changes by comparing table sizes
-            JSON.stringify(Object.keys(oldTable || {})) !== JSON.stringify(Object.keys(newTable || {})) ||
-            Object.keys(oldTable || {}).some(siteName => 
-                (oldTable[siteName] || []).length !== (newTable[siteName] || []).length
-            )
+            parseInt(oldSummary?.isLost) !== parseInt(newSummary?.isLost)
         );
         
+        const hasChanges = hasTableChanges || hasSummaryChanges;
+        
         console.log('Keywords data change detected:', hasChanges);
-        console.log('Old summary:', oldSummary);
-        console.log('New summary:', newSummary);
+        console.log('Table changes:', hasTableChanges, 'Summary changes:', hasSummaryChanges);
+        
+        // Log table sizes for debugging
+        Object.keys(oldTable || {}).forEach(siteName => {
+            console.log(`${siteName}: ${(oldTable[siteName] || []).length} -> ${(newTable[siteName] || []).length} entries`);
+        });
+        
         return hasChanges;
     };
 
@@ -1164,7 +1180,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                         </button>
                     </div>
                                          <p className="text-xs text-gray-500 mt-2">
-                         💡 Keywords automation updates 7 tabs and typically takes 2-3 minutes. We'll automatically refresh when the Keywords Summary tab is updated.
+                         💡 Keywords automation updates 7 tabs and typically completes in 8-10 seconds. We'll automatically refresh when new entries are added to Keywords Archive.
                      </p>
                 </div>
             )}
