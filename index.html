@@ -2055,51 +2055,151 @@ const WebsiteStats = ({ data }) => {
         { client: '#06b6d4', competitor: '#0891b2' }
     ];
 
-    // Enhanced metric cards with better design and tooltip support
-    const ModernMetricCard = ({ title, value, subtitle, icon, status, trend, details, tooltip }) => (
-        <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200 group relative">
-            <div className="flex items-start justify-between mb-4">
-                <div className={`p-3 rounded-xl ${status === 'good' ? 'bg-green-100 text-green-600' : 
-                    status === 'warning' ? 'bg-yellow-100 text-yellow-600' : 
-                    status === 'error' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
-                    {icon}
+    // Enhanced metric cards with smart tooltip positioning
+    const ModernMetricCard = ({ title, value, subtitle, icon, status, trend, details, tooltip }) => {
+        const cardRef = useRef(null);
+        const [tooltipPosition, setTooltipPosition] = useState('center-top');
+
+        useEffect(() => {
+            if (!tooltip || !cardRef.current) return;
+
+            const handleMouseEnter = () => {
+                const cardRect = cardRef.current.getBoundingClientRect();
+                const tooltipWidth = tooltip.width === 'large' ? 600 : 320;
+                const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
+                
+                // Calculate if tooltip would overflow horizontally
+                const tooltipLeft = cardRect.left + cardRect.width / 2 - tooltipWidth / 2;
+                const tooltipRight = tooltipLeft + tooltipWidth;
+                
+                // Calculate if tooltip would overflow vertically
+                const estimatedTooltipHeight = tooltip.width === 'large' ? 400 : 200;
+                const spaceAbove = cardRect.top;
+                const spaceBelow = viewportHeight - cardRect.bottom;
+                
+                let position = 'center-top';
+                
+                // Determine horizontal positioning
+                if (tooltipLeft < 20) {
+                    // Not enough space on left, align to left edge of card
+                    position = 'left-top';
+                } else if (tooltipRight > viewportWidth - 20) {
+                    // Not enough space on right, align to right edge of card
+                    position = 'right-top';
+                }
+                
+                // Determine vertical positioning
+                if (spaceAbove < estimatedTooltipHeight && spaceBelow > spaceAbove) {
+                    position = position.replace('-top', '-bottom');
+                }
+                
+                setTooltipPosition(position);
+            };
+
+            const cardElement = cardRef.current;
+            cardElement.addEventListener('mouseenter', handleMouseEnter);
+            
+            return () => {
+                if (cardElement) {
+                    cardElement.removeEventListener('mouseenter', handleMouseEnter);
+                }
+            };
+        }, [tooltip]);
+
+        // Generate tooltip classes based on position
+        const getTooltipClasses = () => {
+            const baseClasses = `absolute ${tooltip?.width === 'large' ? 'w-[600px]' : 'w-80'} bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 z-50 pointer-events-none`;
+            
+            switch (tooltipPosition) {
+                case 'left-top':
+                    return `${baseClasses} left-0 bottom-full mb-3`;
+                case 'right-top':
+                    return `${baseClasses} right-0 bottom-full mb-3`;
+                case 'center-bottom':
+                    return `${baseClasses} left-1/2 -translate-x-1/2 top-full mt-3`;
+                case 'left-bottom':
+                    return `${baseClasses} left-0 top-full mt-3`;
+                case 'right-bottom':
+                    return `${baseClasses} right-0 top-full mt-3`;
+                default: // center-top
+                    return `${baseClasses} left-1/2 -translate-x-1/2 bottom-full mb-3`;
+            }
+        };
+
+        // Generate arrow classes based on position
+        const getArrowClasses = () => {
+            const isBottom = tooltipPosition.includes('bottom');
+            const arrowBase = 'absolute w-0 h-0';
+            
+            if (isBottom) {
+                // Arrow pointing up (tooltip below card)
+                const arrowColor = 'border-b-[8px] border-l-[8px] border-r-[8px] border-l-transparent border-r-transparent border-b-gray-900';
+                if (tooltipPosition.includes('left')) {
+                    return `${arrowBase} ${arrowColor} left-4 bottom-full`;
+                } else if (tooltipPosition.includes('right')) {
+                    return `${arrowBase} ${arrowColor} right-4 bottom-full`;
+                } else {
+                    return `${arrowBase} ${arrowColor} left-1/2 -translate-x-1/2 bottom-full`;
+                }
+            } else {
+                // Arrow pointing down (tooltip above card)
+                const arrowColor = 'border-t-[8px] border-l-[8px] border-r-[8px] border-l-transparent border-r-transparent border-t-gray-900';
+                if (tooltipPosition.includes('left')) {
+                    return `${arrowBase} ${arrowColor} left-4 top-full`;
+                } else if (tooltipPosition.includes('right')) {
+                    return `${arrowBase} ${arrowColor} right-4 top-full`;
+                } else {
+                    return `${arrowBase} ${arrowColor} left-1/2 -translate-x-1/2 top-full`;
+                }
+            }
+        };
+
+        return (
+            <div ref={cardRef} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200 group relative">
+                <div className="flex items-start justify-between mb-4">
+                    <div className={`p-3 rounded-xl ${status === 'good' ? 'bg-green-100 text-green-600' : 
+                        status === 'warning' ? 'bg-yellow-100 text-yellow-600' : 
+                        status === 'error' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
+                        {icon}
+                    </div>
+                    {trend && (
+                        <div className={`flex items-center text-sm ${trend.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                            {trend.direction === 'up' ? <ArrowUp className="w-4 h-4 mr-1" /> : <ArrowDown className="w-4 h-4 mr-1" />}
+                            {trend.value}
+                        </div>
+                    )}
                 </div>
-                {trend && (
-                    <div className={`flex items-center text-sm ${trend.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                        {trend.direction === 'up' ? <ArrowUp className="w-4 h-4 mr-1" /> : <ArrowDown className="w-4 h-4 mr-1" />}
-                        {trend.value}
+                <h3 className="text-gray-600 text-sm font-medium mb-2">{title}</h3>
+                <p className="text-2xl font-bold text-gray-900 mb-1">{value}</p>
+                {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+                {details && (
+                    <div className="mt-4 pt-4 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                            {Object.entries(details).slice(0, 4).map(([key, val]) => (
+                                <div key={key} className="flex justify-between">
+                                    <span className="text-gray-500">{key}:</span>
+                                    <span className="font-medium">{val || 'N/A'}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+                {/* Smart Positioned Tooltip */}
+                {tooltip && (
+                    <div className={getTooltipClasses()}>
+                        {tooltip.header && (
+                            <div className="px-4 py-3 bg-gray-800 rounded-t-xl font-semibold border-b border-gray-700">
+                                {tooltip.header}
+                            </div>
+                        )}
+                        <div className="p-4 max-h-80 overflow-y-auto">{tooltip.content}</div>
+                        <div className={getArrowClasses()}></div>
                     </div>
                 )}
             </div>
-            <h3 className="text-gray-600 text-sm font-medium mb-2">{title}</h3>
-            <p className="text-2xl font-bold text-gray-900 mb-1">{value}</p>
-            {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
-            {details && (
-                <div className="mt-4 pt-4 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="grid grid-cols-2 gap-2 text-xs">
-                        {Object.entries(details).slice(0, 4).map(([key, val]) => (
-                            <div key={key} className="flex justify-between">
-                                <span className="text-gray-500">{key}:</span>
-                                <span className="font-medium">{val || 'N/A'}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-            {/* Modern Tooltip */}
-            {tooltip && (
-                <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-3 ${tooltip.width === 'large' ? 'w-[600px]' : 'w-80'} bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 z-50 pointer-events-none`}>
-                    {tooltip.header && (
-                        <div className="px-4 py-3 bg-gray-800 rounded-t-xl font-semibold border-b border-gray-700">
-                            {tooltip.header}
-                        </div>
-                    )}
-                    <div className="p-4">{tooltip.content}</div>
-                    <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[8px] border-r-[8px] border-t-[8px] border-l-transparent border-r-transparent border-t-gray-900"></div>
-                </div>
-            )}
-        </div>
-    );
+        );
+    };
 
     // Modern warnings/errors display with tooltips
     const ModernIssueCounter = ({ icon, color, title, items, textColor }) => (
