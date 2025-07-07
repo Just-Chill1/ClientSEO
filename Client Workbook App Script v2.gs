@@ -146,6 +146,7 @@ function getWebsiteStats(spreadsheet) {
             clinicName: site.name,
             website: site.website,
             hasSchema: site.hasMicromarkup,
+            hasSchemaErrors: site.hasMicromarkupErrors,
             h1: site.h1,
             title: site.title,
             description: site.meta,
@@ -329,7 +330,8 @@ function getOnPageInsights(spreadsheet) {
             pageScore: row[22], 
             brokenLinks: row[24], 
             isClient: isClient,
-            hasMicromarkup: row[42] === true,
+            hasMicromarkup: row[51] === true, // Column AZ (has_micromarkup)
+            hasMicromarkupErrors: row[52] === true, // Column BA (has_micromarkup_errors)
             // Last Modified Dates
             lastModifiedHeader: row[29], // Column AD
             lastModifiedSitemap: row[30], // Column AE
