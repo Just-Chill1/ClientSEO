@@ -57,6 +57,7 @@ function doGet(e) {
       backlinksTable: getBacklinksTables(spreadsheet),
       keywordsSummary: getKeywordsSummary(spreadsheet),
       keywordsTable: getKeywordsTables(spreadsheet),
+      webhooks: getWebhookUrls(spreadsheet)
     };
 
     return ContentService
@@ -100,13 +101,7 @@ function getWebsiteStats(spreadsheet) {
     const checksData = getChecksData(spreadsheet);
     const clientData = onPageInsights.find(site => site.isClient);
     
-    console.log('getWebsiteStats - Number of sites found:', onPageInsights.length);
-    console.log('getWebsiteStats - Client data found:', !!clientData);
-    if (clientData) {
-        console.log('getWebsiteStats - Client aiNotes:', clientData.aiNotes);
-        console.log('getWebsiteStats - Client aiNotes type:', typeof clientData.aiNotes);
-        console.log('getWebsiteStats - Client aiNotes length:', String(clientData.aiNotes).length);
-    }
+
 
     const healthData = {
         pageScore: clientData ? clientData.pageScore : 0,
@@ -271,6 +266,28 @@ function getAiReport(spreadsheet) {
     return sheet.getRange('AJ2').getValue();
 }
 
+function getWebhookUrls(spreadsheet) {
+    const sheet = spreadsheet.getSheetByName('Config');
+    if (!sheet || sheet.getLastRow() < 2) return {};
+    
+    // Get all webhook data from Config tab
+    const values = sheet.getRange('A2:C' + sheet.getLastRow()).getValues();
+    const webhooks = {};
+    
+    values.forEach(row => {
+        const action = row[0]; // Column A
+        const tabName = row[1]; // Column B  
+        const webhookUrl = row[2]; // Column C
+        
+        // Look for rows that contain refresh actions
+        if (action && action.toString().toLowerCase().includes('refresh') && tabName && webhookUrl) {
+            webhooks[tabName] = webhookUrl;
+        }
+    });
+    
+    return webhooks;
+}
+
 function getOnPageInsights(spreadsheet) {
     const sheetName = 'On-Page Insights';
     const sheet = spreadsheet.getSheetByName(sheetName);
@@ -284,26 +301,14 @@ function getOnPageInsights(spreadsheet) {
         
         // Get AI Notes from the correct column (CP - index 93)
         let aiNotes = '';
-        if (isClient) {
-            console.log('App Script - Processing client row, checking column CP (index 93)');
-            console.log('App Script - Raw value at index 93:', row[93]);
-            console.log('App Script - Type of value at index 93:', typeof row[93]);
-            
-            if (row[93]) {
-                try {
-                    // Get the raw value
-                    const rawNotes = row[93];
-                    // Convert to string and clean up
-                    aiNotes = typeof rawNotes === 'string' ? rawNotes.trim() : String(rawNotes).trim();
-                    // Log for debugging
-                    console.log('App Script - Raw AI Notes:', rawNotes);
-                    console.log('App Script - Processed AI Notes:', aiNotes);
-                    console.log('App Script - Final aiNotes length:', aiNotes.length);
-                } catch (error) {
-                    console.error('App Script - Error processing AI Notes:', error);
-                }
-            } else {
-                console.log('App Script - No value found at column CP (index 93) for client row');
+        if (isClient && row[93]) {
+            try {
+                // Get the raw value
+                const rawNotes = row[93];
+                // Convert to string and clean up
+                aiNotes = typeof rawNotes === 'string' ? rawNotes.trim() : String(rawNotes).trim();
+            } catch (error) {
+                console.error('App Script - Error processing AI Notes:', error);
             }
         }
         

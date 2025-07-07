@@ -1997,8 +1997,144 @@ const checkCategories = {
 /* ------------------------------------------------------------------ */
 /* WEBSITE STATS – Modern SEO Dashboard Design                        */
 /* ------------------------------------------------------------------ */
-const WebsiteStats = ({ data }) => {
+const WebsiteStats = ({ data, webhooks }) => {
     const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, RadialBarChart, RadialBar, Legend, PieChart, Pie, LineChart, Line, Area, AreaChart } = window.Recharts;
+    
+    // Refresh state management
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [refreshProgress, setRefreshProgress] = useState(0);
+    const [refreshMessage, setRefreshMessage] = useState('');
+    const [lastRefresh, setLastRefresh] = useState(null);
+    const pollIntervalRef = useRef(null);
+    const refreshStartTimeRef = useRef(null);
+
+    // Cleanup polling on unmount
+    useEffect(() => {
+        return () => {
+            if (pollIntervalRef.current) {
+                clearInterval(pollIntervalRef.current);
+            }
+        };
+    }, []);
+
+    // Refresh functionality
+    const triggerRefresh = async () => {
+        if (!webhooks || !webhooks['On-Page Insights']) {
+            alert('Refresh webhook not configured for this workbook');
+            return;
+        }
+
+        setIsRefreshing(true);
+        setRefreshProgress(5);
+        setRefreshMessage('Triggering automation...');
+        refreshStartTimeRef.current = Date.now();
+
+        try {
+            // Trigger the webhook
+            const webhookUrl = webhooks['On-Page Insights'];
+            console.log('Triggering webhook:', webhookUrl);
+            
+            const response = await fetch(webhookUrl, {
+                method: 'GET',
+                mode: 'no-cors' // Many webhooks don't support CORS
+            });
+            
+            setRefreshProgress(15);
+            setRefreshMessage('Automation started! Fetching fresh data...');
+            
+            // Start polling for data changes
+            startPolling();
+            
+        } catch (error) {
+            console.error('Error triggering refresh:', error);
+            setIsRefreshing(false);
+            setRefreshProgress(0);
+            setRefreshMessage('');
+            alert('Failed to trigger refresh. Please try again.');
+        }
+    };
+
+    const startPolling = () => {
+        let attempts = 0;
+        const maxAttempts = 8; // Poll for ~4 minutes (30s intervals)
+        
+        const poll = async () => {
+            attempts++;
+            const elapsed = (Date.now() - refreshStartTimeRef.current) / 1000;
+            const progress = Math.min(15 + (attempts * 10), 95);
+            
+            setRefreshProgress(progress);
+            setRefreshMessage(`Checking for updates... (${Math.floor(elapsed / 60)}:${String(Math.floor(elapsed % 60)).padStart(2, '0')})`);
+            
+            try {
+                // Check if data has been updated by fetching fresh data
+                const params = new URLSearchParams(window.location.search);
+                const workbookId = params.get('workbookId');
+                
+                if (workbookId) {
+                    const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
+                    
+                    const response = await fetch(scriptUrl);
+                    const newData = await response.json();
+                    
+                    // Compare with current data to see if it's been updated
+                    if (newData.websiteStats && hasDataChanged(data, newData.websiteStats)) {
+                        // Data has changed! Stop polling and refresh
+                        clearInterval(pollIntervalRef.current);
+                        setRefreshProgress(100);
+                        setRefreshMessage('Update complete! Refreshing page...');
+                        setLastRefresh(new Date());
+                        
+                        // Wait a moment then reload the page
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error('Error polling for updates:', error);
+            }
+            
+            // Stop polling after max attempts
+            if (attempts >= maxAttempts) {
+                clearInterval(pollIntervalRef.current);
+                setIsRefreshing(false);
+                setRefreshProgress(0);
+                setRefreshMessage('');
+                
+                // Show manual refresh option
+                if (confirm('Automation may still be running. Would you like to manually refresh the page to check for updates?')) {
+                    window.location.reload();
+                }
+            }
+        };
+        
+        // Poll every 30 seconds
+        pollIntervalRef.current = setInterval(poll, 30000);
+        
+        // Also poll immediately
+        poll();
+    };
+
+    const hasDataChanged = (oldData, newData) => {
+        // Simple comparison - check if AI notes or key metrics have changed
+        return (
+            oldData.healthData?.pageScore !== newData.healthData?.pageScore ||
+            oldData.healthData?.aiNotes !== newData.healthData?.aiNotes ||
+            oldData.healthData?.siteSpeed !== newData.healthData?.siteSpeed ||
+            JSON.stringify(oldData.healthData?.speedDetails) !== JSON.stringify(newData.healthData?.speedDetails)
+        );
+    };
+
+    const cancelRefresh = () => {
+        if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current);
+        }
+        setIsRefreshing(false);
+        setRefreshProgress(0);
+        setRefreshMessage('');
+    };
 
     if (!data) {
         return <PageContent><div className="p-8 text-center text-gray-500">No Website Stats data available.</div></PageContent>;
@@ -2010,28 +2146,15 @@ const WebsiteStats = ({ data }) => {
     let aiReport = null;
     try {
         const aiNotes = healthData?.aiNotes;
-        console.log('WebsiteStats - Raw AI Notes from healthData:', aiNotes);
-        console.log('WebsiteStats - Type of AI Notes:', typeof aiNotes);
-        
         if (aiNotes !== null && aiNotes !== undefined) {
             const cleanedNotes = String(aiNotes).trim();
-            console.log('WebsiteStats - Cleaned Notes:', cleanedNotes);
-            console.log('WebsiteStats - Cleaned Notes Length:', cleanedNotes.length);
-            
             if (cleanedNotes && !['true', 'false'].includes(cleanedNotes.toLowerCase())) {
                 aiReport = cleanedNotes;
-                console.log('WebsiteStats - Final AI Report set to:', aiReport);
-            } else {
-                console.log('WebsiteStats - AI Notes failed validation (empty or boolean)');
             }
-        } else {
-            console.log('WebsiteStats - AI Notes is null or undefined');
         }
     } catch (error) {
         console.error('Error processing AI Notes:', error);
     }
-    
-    console.log('WebsiteStats - Final aiReport value passed to AIReportSection:', aiReport);
 
     // Enhanced competitor data processing
     const competitorPerfData = (rawCompetitorPerfData || []).map(comp => ({
@@ -2507,14 +2630,54 @@ const WebsiteStats = ({ data }) => {
                         <h1 className="text-3xl font-bold text-gray-900">Website Performance</h1>
                         <p className="text-gray-600 mt-1">Comprehensive technical SEO analysis and competitor comparison</p>
                     </div>
-                    <button 
-                        onClick={() => alert('Refresh triggered!')}
-                        className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-2 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
-                    >
-                        Refresh Data
-                    </button>
+                    <div className="flex items-center space-x-4">
+                        {lastRefresh && (
+                            <span className="text-sm text-gray-500">
+                                Last updated: {lastRefresh.toLocaleTimeString()}
+                            </span>
+                        )}
+                        <button 
+                            onClick={isRefreshing ? cancelRefresh : triggerRefresh}
+                            disabled={!webhooks}
+                            className={`px-6 py-2 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl ${
+                                isRefreshing 
+                                    ? 'bg-red-500 hover:bg-red-600 text-white' 
+                                    : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
+                            } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                            {isRefreshing ? 'Cancel Refresh' : 'Refresh Data'}
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            {/* Refresh Progress Bar */}
+            {isRefreshing && (
+                <div className="mb-6 bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-lg font-semibold text-gray-900">Refreshing Website Stats</h3>
+                        <span className="text-sm font-medium text-blue-600">{refreshProgress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
+                        <div 
+                            className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
+                            style={{ width: `${refreshProgress}%` }}
+                        ></div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <p className="text-sm text-gray-600">{refreshMessage}</p>
+                        <button 
+                            onClick={cancelRefresh}
+                            className="text-sm text-red-600 hover:text-red-800 font-medium"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                        💡 The automation typically takes 2-3 minutes to complete. We'll automatically refresh when new data is available.
+                    </p>
+                </div>
+            )}
 
             {/* Main Health Dashboard */}
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 mb-8">
@@ -2831,7 +2994,7 @@ const App = () => {
         body = <Dashboard setActiveTab={setTab} />;
         break;
       case 'Website Stats':
-        body = <WebsiteStats data={data.websiteStats} />;
+        body = <WebsiteStats data={data.websiteStats} webhooks={data.webhooks} />;
         break;
       case 'Geogrid Maps':
         body = <GeogridMaps data={data.geogridData} />;
