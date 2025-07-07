@@ -310,19 +310,19 @@ function getOnPageInsights(spreadsheet) {
             lastModifiedMeta: row[31],    // Column AF
             // AI Notes - Only include if this is the client row
             aiNotes: aiNotes,
-            // New Speed Metrics
-            time_to_interactive: row[68], // Column CQ
-            dom_complete: row[69], // CR
-            largest_contentful_paint: row[70], // CS
-            first_input_delay: row[71], // CT
-            connection_time: row[72], // CU
-            time_to_secure_connection: row[73], // CV
-            request_sent_time: row[74], // CW
-            waiting_time: row[75], // CX
-            download_time: row[76], // CY
-            duration_time: row[77], // CZ
-            fetch_start: row[78], // DA
-            fetch_end: row[79] // DB
+            // New Speed Metrics - Fixed column indices
+            time_to_interactive: row[94], // Column CQ
+            dom_complete: row[95], // CR
+            largest_contentful_paint: row[96], // CS
+            first_input_delay: row[97], // CT
+            connection_time: row[98], // CU
+            time_to_secure_connection: row[99], // CV
+            request_sent_time: row[100], // CW
+            waiting_time: row[101], // CX
+            download_time: row[102], // CY
+            duration_time: row[103], // CZ
+            fetch_start: row[104], // DA
+            fetch_end: row[105] // DB
         };
     }).filter(row => row.name);
 }

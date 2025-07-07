@@ -1782,47 +1782,47 @@ const GeogridMaps = () => {
                     </div>
                 </div>
 
-                {/* Bottom Row: Bar Chart */}
-                {competitors.length > 0 && (
-                    <div className="mt-8">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-3">Rankings in Top 5</h3>
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={competitors} margin={{ top: 20, right: 30, left: 0, bottom: 80 }}>
-                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                 <XAxis 
-                                     dataKey="name" 
-                                     type="category" 
-                                     interval={0} 
-                                     tick={<CustomXAxisTick />} 
-                                     height={90}
-                                 />
-                                 <YAxis 
-                                     type="number" 
-                                     allowDecimals={false} 
-                                     domain={[0, dataMax => (Math.ceil((dataMax || 5) * 1.1 / 5) * 5)]} 
-                                     tick={{ fontSize: 12, fill: '#6B7280' }}
-                                 />
-                                 <Tooltip
-                                     cursor={{ fill: 'rgba(241, 245, 249, 0.7)' }}
-                                     contentStyle={{
-                                         backgroundColor: 'rgba(31, 41, 55, 0.9)',
-                                         borderColor: 'rgba(255,255,255,0.2)',
-                                         borderRadius: '0.5rem',
-                                         boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                                     }}
-                                     itemStyle={{ color: '#fff' }}
-                                     labelStyle={{ color: '#fff', fontWeight: 'bold' }}
-                                     formatter={(value, name, props) => [`${value}`, 'Top 5 Count']}
-                                     labelFormatter={(label) => `${label}`}
-                                 />
-                                 <Bar dataKey='top5Total' name="Top 5 Rankings" radius={[4, 4, 0, 0]}>
-                                     {competitors.map((entry, index) => <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} /> )}
-                                     <LabelList dataKey="top5Total" position="top" style={{ fill: '#4B5563', fontSize: 12, fontWeight: 'bold' }} />
-                                 </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                )}
+                                 {/* Bottom Row: Bar Chart */}
+                 {competitors.length > 0 && (
+                     <div className="mt-8">
+                         <h3 className="text-lg font-semibold text-gray-800 mb-3">Rankings in Top 5</h3>
+                         <ResponsiveContainer width="100%" height={300}>
+                             <BarChart data={competitors} margin={{ top: 30, right: 30, left: 0, bottom: 80 }}>
+                                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                                  <XAxis 
+                                      dataKey="name" 
+                                      type="category" 
+                                      interval={0} 
+                                      tick={<CustomXAxisTick />} 
+                                      height={90}
+                                  />
+                                  <YAxis 
+                                      type="number" 
+                                      allowDecimals={false} 
+                                      domain={[0, dataMax => (Math.ceil((dataMax || 5) * 1.1 / 5) * 5)]} 
+                                      tick={{ fontSize: 12, fill: '#6B7280' }}
+                                  />
+                                  <Tooltip
+                                      cursor={{ fill: 'rgba(241, 245, 249, 0.7)' }}
+                                      contentStyle={{
+                                          backgroundColor: 'rgba(31, 41, 55, 0.9)',
+                                          borderColor: 'rgba(255,255,255,0.2)',
+                                          borderRadius: '0.5rem',
+                                          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                      }}
+                                      itemStyle={{ color: '#fff' }}
+                                      labelStyle={{ color: '#fff', fontWeight: 'bold' }}
+                                      formatter={(value, name, props) => [`${value}`, 'Top 5 Count']}
+                                      labelFormatter={(label) => `${label}`}
+                                  />
+                                  <Bar dataKey='top5Total' name="Top 5 Rankings" radius={[4, 4, 0, 0]}>
+                                      {competitors.map((entry, index) => <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} /> )}
+                                      <LabelList dataKey="top5Total" position="top" style={{ fill: '#4B5563', fontSize: 12, fontWeight: 'bold' }} />
+                                  </Bar>
+                             </BarChart>
+                         </ResponsiveContainer>
+                     </div>
+                 )}
             </Card>
         );
     };
@@ -2186,47 +2186,71 @@ const WebsiteStats = ({ data }) => {
         );
     };
 
-    // Modern comparison chart
-    const ModernComparisonChart = ({ data, dataKey, title, color, isInverted = false }) => (
-        <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-            <p className="text-sm text-gray-500 mb-4">{isInverted ? 'Lower is better' : 'Higher is better'}</p>
-            <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
-                    <defs>
-                        {data.map((entry, index) => (
-                            <linearGradient key={`gradient-${index}`} id={`gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor={entry.isClient ? color.client : color.competitor} />
-                                <stop offset="100%" stopColor={entry.isClient ? `${color.client}80` : `${color.competitor}80`} />
-                            </linearGradient>
-                        ))}
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                    <XAxis 
-                        dataKey="name" 
-                        tick={{ fontSize: 12, fill: '#64748b' }}
-                        angle={-45}
-                        textAnchor="end"
-                        height={80}
-                    />
-                    <YAxis tick={{ fontSize: 12, fill: '#64748b' }} />
-                    <Tooltip 
-                        contentStyle={{ 
-                            backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-                            border: '1px solid #e2e8f0', 
-                            borderRadius: '12px',
-                            boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)'
-                        }}
-                    />
-                    <Bar dataKey={dataKey} radius={[6, 6, 0, 0]} barSize={40}>
-                        {data.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={`url(#gradient-${index})`} />
-                        ))}
-                    </Bar>
-                </BarChart>
-            </ResponsiveContainer>
-        </div>
-    );
+    // Modern comparison chart with value labels
+    const ModernComparisonChart = ({ data, dataKey, title, color, isInverted = false }) => {
+        const { LabelList } = window.Recharts;
+        
+        // Custom label formatter for different data types
+        const formatLabel = (value) => {
+            if (dataKey === 'Site Speed (s)') {
+                return `${value}s`;
+            } else if (dataKey.includes('Traffic') || dataKey.includes('Backlinks') || dataKey.includes('Domains')) {
+                return value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toString();
+            }
+            return value.toString();
+        };
+
+        return (
+            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
+                <p className="text-sm text-gray-500 mb-4">{isInverted ? 'Lower is better' : 'Higher is better'}</p>
+                <ResponsiveContainer width="100%" height={280}>
+                    <BarChart data={data} margin={{ top: 40, right: 30, left: 20, bottom: 60 }}>
+                        <defs>
+                            {data.map((entry, index) => (
+                                <linearGradient key={`gradient-${index}`} id={`gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor={entry.isClient ? color.client : color.competitor} />
+                                    <stop offset="100%" stopColor={entry.isClient ? `${color.client}80` : `${color.competitor}80`} />
+                                </linearGradient>
+                            ))}
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                        <XAxis 
+                            dataKey="name" 
+                            tick={{ fontSize: 12, fill: '#64748b' }}
+                            angle={-45}
+                            textAnchor="end"
+                            height={80}
+                        />
+                        <YAxis tick={{ fontSize: 12, fill: '#64748b' }} />
+                        <Tooltip 
+                            contentStyle={{ 
+                                backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                                border: '1px solid #e2e8f0', 
+                                borderRadius: '12px',
+                                boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)'
+                            }}
+                        />
+                        <Bar dataKey={dataKey} radius={[6, 6, 0, 0]} barSize={40}>
+                            {data.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={`url(#gradient-${index})`} />
+                            ))}
+                            <LabelList 
+                                dataKey={dataKey} 
+                                position="top" 
+                                style={{ 
+                                    fill: '#374151', 
+                                    fontSize: 12, 
+                                    fontWeight: 'bold' 
+                                }}
+                                formatter={formatLabel}
+                            />
+                        </Bar>
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+        );
+    };
 
     return (
         <PageContent>
