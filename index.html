@@ -2045,12 +2045,6 @@ const WebsiteStats = ({ data }) => {
     const checksPassed = healthData.checks.checksPassed;
     const checksPercentage = (checksPassed / healthData.checks.totalChecks) * 100;
 
-    // Debug logging
-    console.log('Health Data:', healthData);
-    console.log('Speed:', healthData.siteSpeed, 'Parsed:', speedSec, 'Status:', speedStatus);
-    console.log('SSL:', healthData.ssl);
-    console.log('Broken Links:', healthData.brokenLinks, 'Has Broken Links:', hasBrokenLinks);
-
     // Enhanced gradient colors for charts
     const GRADIENT_COLORS = [
         { client: '#3b82f6', competitor: '#1e40af' },
@@ -2162,6 +2156,9 @@ const WebsiteStats = ({ data }) => {
         };
 
 
+        
+        // Debug for ModernMetricCard
+        console.log(`ModernMetricCard "${title}" received status:`, status);
         
         return (
             <div ref={cardRef} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200 group relative">
@@ -2512,7 +2509,11 @@ const WebsiteStats = ({ data }) => {
                          value={healthData.siteSpeed}
                          subtitle={`${speedStatus === 'excellent' ? 'Excellent' : speedStatus === 'good' ? 'Good' : 'Poor Performance'}`}
                          icon={<TrendingUp className="w-6 h-6" />}
-                         status={speedStatus === 'excellent' ? 'excellent' : speedStatus === 'good' ? 'good' : 'error'}
+                         status={(() => {
+                             const finalStatus = speedStatus === 'excellent' ? 'excellent' : speedStatus === 'good' ? 'good' : 'error';
+                             console.log('Speed Card - speedSec:', speedSec, 'speedStatus:', speedStatus, 'finalStatus:', finalStatus);
+                             return finalStatus;
+                         })()}
                          alwaysShowDetails={true}
                          details={healthData.speedDetails}
                      />
@@ -2581,14 +2582,22 @@ const WebsiteStats = ({ data }) => {
                          value={hasBrokenLinks ? 'Issues Found' : 'All Good'}
                          subtitle={hasBrokenLinks ? 'Fix required' : 'No broken links'}
                          icon={<Link2 className="w-6 h-6" />}
-                         status={hasBrokenLinks ? 'error' : 'excellent'}
+                         status={(() => {
+                             const finalStatus = hasBrokenLinks ? 'error' : 'excellent';
+                             console.log('Broken Links Card - brokenLinks:', healthData.brokenLinks, 'hasBrokenLinks:', hasBrokenLinks, 'finalStatus:', finalStatus);
+                             return finalStatus;
+                         })()}
                      />
                      <ModernMetricCard
                          title="SSL Certificate"
                          value={healthData.ssl ? 'Secure' : 'Not Secure'}
                          subtitle={healthData.ssl ? 'HTTPS enabled' : 'HTTPS required'}
                          icon={<ShieldCheck className="w-6 h-6" />}
-                         status={healthData.ssl ? 'excellent' : 'error'}
+                         status={(() => {
+                             const finalStatus = healthData.ssl ? 'excellent' : 'error';
+                             console.log('SSL Card - ssl:', healthData.ssl, 'finalStatus:', finalStatus);
+                             return finalStatus;
+                         })()}
                      />
                  </div>
             </div>
