@@ -2289,39 +2289,53 @@ const WebsiteStats = ({ data }) => {
         </div>
     );
 
-        // Enhanced gauge component with animation
+        // Enhanced gauge component with smooth animation
     const ModernGauge = ({ score, size = 200 }) => {
-        const [isAnimating, setIsAnimating] = useState(false);
+        const [isDisableTransition, setIsDisableTransition] = useState(false);
+        const [isAnimationCooldown, setIsAnimationCooldown] = useState(false);
         const circumference = 2 * Math.PI * 85;
         const strokeDasharray = circumference;
-        const targetOffset = circumference - (score / 100) * circumference;
+        
+        // Cap visual progress to ensure there's always a small gap (max 94% visual)
+        const visualScore = Math.min(score, 94);
+        const targetOffset = circumference - (visualScore / 100) * circumference;
         
         // Animation state - start empty, animate to target
         const [currentOffset, setCurrentOffset] = useState(circumference);
         
         useEffect(() => {
-            // Initial load animation
+            // Initial load animation with delay
             const timer = setTimeout(() => {
                 setCurrentOffset(targetOffset);
-            }, 300);
+            }, 500);
             return () => clearTimeout(timer);
         }, [targetOffset]);
 
         const handleHover = () => {
-            if (!isAnimating) {
-                setIsAnimating(true);
-                setCurrentOffset(circumference); // Reset to empty
+            if (!isAnimationCooldown) {
+                setIsAnimationCooldown(true);
+                
+                // Step 1: Disable transitions and reset to empty
+                setIsDisableTransition(true);
+                setCurrentOffset(circumference);
+                
+                // Step 2: Small delay, then enable transitions and animate to target
                 setTimeout(() => {
-                    setCurrentOffset(targetOffset); // Animate to target
-                    setTimeout(() => setIsAnimating(false), 1000);
-                }, 50);
+                    setIsDisableTransition(false);
+                    setCurrentOffset(targetOffset);
+                }, 100);
+                
+                // Step 3: Reset cooldown after animation completes
+                setTimeout(() => {
+                    setIsAnimationCooldown(false);
+                }, 1500);
             }
         };
 
         return (
             <div className="relative flex flex-col items-center">
                 <div 
-                    className="relative cursor-pointer" 
+                    className="relative cursor-pointer group" 
                     style={{ width: size, height: size }}
                     onMouseEnter={handleHover}
                 >
@@ -2332,6 +2346,7 @@ const WebsiteStats = ({ data }) => {
                                 <stop offset="100%" stopColor={scoreColors.secondary} />
                             </linearGradient>
                         </defs>
+                        {/* Background circle */}
                         <circle
                             cx={size / 2}
                             cy={size / 2}
@@ -2340,6 +2355,7 @@ const WebsiteStats = ({ data }) => {
                             stroke="#f3f4f6"
                             strokeWidth="12"
                         />
+                        {/* Progress circle */}
                         <circle
                             cx={size / 2}
                             cy={size / 2}
@@ -2350,14 +2366,18 @@ const WebsiteStats = ({ data }) => {
                             strokeDasharray={strokeDasharray}
                             strokeDashoffset={currentOffset}
                             strokeLinecap="round"
-                            className="transition-all duration-1000 ease-out"
-                            style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }}
+                            className={isDisableTransition ? '' : 'transition-all duration-1000 ease-out'}
+                            style={{ 
+                                filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
+                            }}
                         />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                         <span className="text-4xl font-bold text-gray-900">{score.toFixed(1)}</span>
                         <span className="text-sm text-gray-500 font-medium">out of 100</span>
                     </div>
+                    {/* Subtle pulse effect on hover */}
+                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500/5 to-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
                 <div className="mt-4 text-center">
                     <h3 className="text-lg font-semibold text-gray-900">Website Health Score</h3>
