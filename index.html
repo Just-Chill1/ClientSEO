@@ -1995,44 +1995,32 @@ const checkCategories = {
 };
 
 /* ------------------------------------------------------------------ */
-/* WEBSITE STATS – polished gauge, colour rules, horizontal bars      */
+/* WEBSITE STATS – Modern SEO Dashboard Design                        */
 /* ------------------------------------------------------------------ */
 const WebsiteStats = ({ data }) => {
-    /* pull Recharts only in this page */
-    const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } = window.Recharts;
+    const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, RadialBarChart, RadialBar, Legend, PieChart, Pie, LineChart, Line, Area, AreaChart } = window.Recharts;
 
-    /* fallback if no data yet */
     if (!data) {
-        console.log('No data received in WebsiteStats');
         return <PageContent><div className="p-8 text-center text-gray-500">No Website Stats data available.</div></PageContent>;
     }
 
-    console.log('WebsiteStats received data:', data);
     const { healthData, competitorPerfData: rawCompetitorPerfData, technicalSeoData } = data;
-    console.log('healthData:', healthData);
     
-    // More robust handling of AI Notes from On-Page Insights
+    // AI Report handling
     let aiReport = null;
     try {
-        // Get aiNotes from healthData (comes from On-Page Insights column CP)
         const aiNotes = healthData?.aiNotes;
-        console.log('Raw aiNotes from On-Page Insights:', aiNotes);
-        
-        // Handle any non-null value as valid content
         if (aiNotes !== null && aiNotes !== undefined) {
             const cleanedNotes = String(aiNotes).trim();
-            // Only use the notes if they're not empty or just "true"/"false"
             if (cleanedNotes && !['true', 'false'].includes(cleanedNotes.toLowerCase())) {
                 aiReport = cleanedNotes;
             }
         }
     } catch (error) {
         console.error('Error processing AI Notes:', error);
-        aiReport = null;
     }
-    console.log('Processed aiReport:', aiReport);
 
-    // Clean and parse competitor data for charting to prevent NaN errors
+    // Enhanced competitor data processing
     const competitorPerfData = (rawCompetitorPerfData || []).map(comp => ({
         name: comp.name || 'Unknown',
         isClient: comp.isClient || false,
@@ -2042,233 +2030,340 @@ const WebsiteStats = ({ data }) => {
         'Total Backlinks': parseInt(String(comp['Total Backlinks'] || '0').replace(/,/g, ''), 10) || 0
     }));
 
-    /* ---------- colour helpers ---------- */
-    const gaugeColour = healthData.pageScore >= 90 ? '#16a34a' : healthData.pageScore >= 70 ? '#eab308' : '#dc2626';
+    // Enhanced color schemes
+    const getScoreColor = (score) => {
+        if (score >= 90) return { primary: '#10b981', secondary: '#065f46', bg: 'from-emerald-500 to-green-600' };
+        if (score >= 70) return { primary: '#f59e0b', secondary: '#92400e', bg: 'from-yellow-500 to-orange-500' };
+        return { primary: '#ef4444', secondary: '#991b1b', bg: 'from-red-500 to-red-600' };
+    };
+
+    const scoreColors = getScoreColor(healthData.pageScore);
     const speedSec = parseFloat(String(healthData.siteSpeed).replace(/[^\d.]/g, '')) || 0;
-    const speedCol = speedSec < 1.5 ? 'text-green-600' : speedSec < 3 ? 'text-yellow-600' : 'text-red-600';
-
-    // Fix for broken links NaN display by treating it as a boolean
+    const speedStatus = speedSec < 1.5 ? 'excellent' : speedSec < 3 ? 'good' : 'needs-improvement';
+    
     const hasBrokenLinks = healthData.brokenLinks === true || String(healthData.brokenLinks).toLowerCase() === 'true';
-    const brokenLinksText = hasBrokenLinks ? 'Found' : '0';
-    const linkCol = hasBrokenLinks ? 'text-red-600' : 'text-green-600';
-
-    const sslCol   = healthData.ssl ? 'text-green-600' : 'text-red-600';
-
-    // Restore color logic for Checks Passed based on absolute numbers
     const checksPassed = healthData.checks.checksPassed;
-    const passCol = checksPassed >= 46 ? 'text-green-600' : checksPassed >= 36 ? 'text-yellow-600' : 'text-red-600';
+    const checksPercentage = (checksPassed / healthData.checks.totalChecks) * 100;
 
-    const CHART_COLORS = ['#3b82f6', '#16a34a', '#eab308', '#a855f7', '#ec4899', '#0ea5e9'];
+    // Enhanced gradient colors for charts
+    const GRADIENT_COLORS = [
+        { client: '#3b82f6', competitor: '#1e40af' },
+        { client: '#10b981', competitor: '#047857' },
+        { client: '#f59e0b', competitor: '#d97706' },
+        { client: '#8b5cf6', competitor: '#7c3aed' },
+        { client: '#ec4899', competitor: '#db2777' },
+        { client: '#06b6d4', competitor: '#0891b2' }
+    ];
 
-    /* ---------- stat-cards data with new tooltips ---------- */
-    const cards = [
-        { 
-            label: 'Site Speed', 
-            value: { text: healthData.siteSpeed, color: speedCol }, 
-            icon: <TrendingUp className="w-5 h-5 text-blue-600" />,
-            tooltip: {
-                header: 'Detailed Speed Metrics',
-                content: (
-                    <div className="space-y-1.5 text-xs">
-                        {healthData.speedDetails && Object.entries(healthData.speedDetails).map(([key, val]) => (
-                            <div key={key} className="flex justify-between items-center">
-                                <span>{key}:</span>
-                                <span className="font-semibold">{val != null && val !== '' ? val : 'N/A'}</span>
+    // Enhanced metric cards with better design
+    const ModernMetricCard = ({ title, value, subtitle, icon, status, trend, details }) => (
+        <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200 group">
+            <div className="flex items-start justify-between mb-4">
+                <div className={`p-3 rounded-xl ${status === 'good' ? 'bg-green-100 text-green-600' : 
+                    status === 'warning' ? 'bg-yellow-100 text-yellow-600' : 
+                    status === 'error' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
+                    {icon}
+                </div>
+                {trend && (
+                    <div className={`flex items-center text-sm ${trend.direction === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                        {trend.direction === 'up' ? <ArrowUp className="w-4 h-4 mr-1" /> : <ArrowDown className="w-4 h-4 mr-1" />}
+                        {trend.value}
+                    </div>
+                )}
+            </div>
+            <h3 className="text-gray-600 text-sm font-medium mb-2">{title}</h3>
+            <p className="text-2xl font-bold text-gray-900 mb-1">{value}</p>
+            {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+            {details && (
+                <div className="mt-4 pt-4 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                        {Object.entries(details).slice(0, 4).map(([key, val]) => (
+                            <div key={key} className="flex justify-between">
+                                <span className="text-gray-500">{key}:</span>
+                                <span className="font-medium">{val || 'N/A'}</span>
                             </div>
                         ))}
                     </div>
-                ),
-                width: 'small'
-            }
-        },
-        { 
-            label: 'Broken Links', 
-            value: { text: brokenLinksText, color: linkCol }, 
-            icon: <Link2 className="w-5 h-5 text-blue-600" />
-        },
-        {
-            label: 'Last Updated',
-            value: { text: (healthData.lastUpdated && healthData.lastUpdated.length > 0 ? formatDate(healthData.lastUpdated[0]) : 'N/A'), color: 'text-gray-800'},
-            icon: <CalendarIcon className="w-5 h-5 text-blue-600" />
-        },
-        { 
-            label: 'SSL', 
-            value: { text: healthData.ssl ? 'Active' : 'Inactive', color: sslCol }, 
-            icon: <ShieldCheck className="w-5 h-5 text-blue-600" /> 
-        },
-        {
-            label: 'Checks Passed',
-            value: { text: `${healthData.checks.checksPassed}/${healthData.checks.totalChecks}`, color: passCol },
-            icon: <CheckCircle className="w-5 h-5 text-blue-600" />,
-            tooltip: {
-                header: 'Health Check Results',
-                width: 'large',
-                content: (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {Object.entries(checkCategories).map(([category, categoryData]) => {
-                            const categoryChecks = Object.entries(categoryData.checks).filter(([checkName]) => healthData.checks.passedList.includes(checkName) || healthData.checks.failedList.includes(checkName));
-                            if (categoryChecks.length === 0) return null;
-                            return (
-                                <div key={category} className="space-y-1.5">
-                                    <h4 className="font-semibold flex items-center text-gray-300 text-xs"><span className="mr-1.5">{categoryData.icon}</span>{categoryData.title}</h4>
-                                    <ul className="space-y-1">
-                                        {categoryChecks.map(([checkName, description]) => {
-                                            const isPassed = healthData.checks.passedList.includes(checkName);
-                                            return (
-                                                <li key={checkName} className="flex items-start text-xs leading-tight">
-                                                    <span className="mr-1.5 flex-shrink-0 text-[11px]">{isPassed ? '✅' : '❌'}</span>
-                                                    <span className={isPassed ? 'text-green-300' : 'text-red-300'}>{description}</span>
-                                                </li>
-                                            );
-                                        })}
-                                    </ul>
-                                </div>
-                            );
-                        })}
+                </div>
+            )}
+        </div>
+    );
+
+    // Enhanced gauge component
+    const ModernGauge = ({ score, size = 200 }) => {
+        const circumference = 2 * Math.PI * 85;
+        const strokeDasharray = circumference;
+        const strokeDashoffset = circumference - (score / 100) * circumference;
+        
+        return (
+            <div className="relative flex flex-col items-center">
+                <div className="relative" style={{ width: size, height: size }}>
+                    <svg width={size} height={size} className="transform -rotate-90">
+                        <defs>
+                            <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor={scoreColors.primary} />
+                                <stop offset="100%" stopColor={scoreColors.secondary} />
+                            </linearGradient>
+                        </defs>
+                        <circle
+                            cx={size / 2}
+                            cy={size / 2}
+                            r="85"
+                            fill="transparent"
+                            stroke="#f3f4f6"
+                            strokeWidth="12"
+                        />
+                        <circle
+                            cx={size / 2}
+                            cy={size / 2}
+                            r="85"
+                            fill="transparent"
+                            stroke="url(#gaugeGradient)"
+                            strokeWidth="12"
+                            strokeDasharray={strokeDasharray}
+                            strokeDashoffset={strokeDashoffset}
+                            strokeLinecap="round"
+                            className="transition-all duration-1000 ease-out"
+                        />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="text-4xl font-bold text-gray-900">{score.toFixed(1)}</span>
+                        <span className="text-sm text-gray-500 font-medium">out of 100</span>
                     </div>
-                )
-            },
-        }
-    ];
+                </div>
+                <div className="mt-4 text-center">
+                    <h3 className="text-lg font-semibold text-gray-900">Website Health Score</h3>
+                    <p className={`text-sm font-medium ${score >= 90 ? 'text-green-600' : score >= 70 ? 'text-yellow-600' : 'text-red-600'}`}>
+                        {score >= 90 ? 'Excellent' : score >= 70 ? 'Good' : 'Needs Improvement'}
+                    </p>
+                </div>
+            </div>
+        );
+    };
+
+    // Modern comparison chart
+    const ModernComparisonChart = ({ data, dataKey, title, color, isInverted = false }) => (
+        <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
+            <p className="text-sm text-gray-500 mb-4">{isInverted ? 'Lower is better' : 'Higher is better'}</p>
+            <ResponsiveContainer width="100%" height={280}>
+                <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                    <defs>
+                        {data.map((entry, index) => (
+                            <linearGradient key={`gradient-${index}`} id={`gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor={entry.isClient ? color.client : color.competitor} />
+                                <stop offset="100%" stopColor={entry.isClient ? `${color.client}80` : `${color.competitor}80`} />
+                            </linearGradient>
+                        ))}
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                    <XAxis 
+                        dataKey="name" 
+                        tick={{ fontSize: 12, fill: '#64748b' }}
+                        angle={-45}
+                        textAnchor="end"
+                        height={80}
+                    />
+                    <YAxis tick={{ fontSize: 12, fill: '#64748b' }} />
+                    <Tooltip 
+                        contentStyle={{ 
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                            border: '1px solid #e2e8f0', 
+                            borderRadius: '12px',
+                            boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)'
+                        }}
+                    />
+                    <Bar dataKey={dataKey} radius={[6, 6, 0, 0]} barSize={40}>
+                        {data.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={`url(#gradient-${index})`} />
+                        ))}
+                    </Bar>
+                </BarChart>
+            </ResponsiveContainer>
+        </div>
+    );
 
     return (
         <PageContent>
-            <Card className="mb-8">
-                <h2 className="text-xl font-bold mb-6">Website Health</h2>
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-                    {/* Left side: Gauge */}
-                    <div className="flex flex-col items-center justify-center">
-                             <div className="relative">
-                                 <svg className="w-32 h-32">
-                                <circle r="54" cx="64" cy="64" fill="transparent" stroke="currentColor" strokeWidth="8" className="text-gray-200" />
-                                <circle r="54" cx="64" cy="64" fill="transparent" stroke={gaugeColour} strokeWidth="8" strokeDasharray={2 * Math.PI * 54} strokeDashoffset={healthData.pageScore >= 99.9 ? 0 : 2 * Math.PI * 54 * (1 - healthData.pageScore / 100)} strokeLinecap="round" style={{ transform: 'rotate(-90deg)', transformOrigin: '50% 50%' }} />
-                                 </svg>
-                                 <span className="absolute inset-0 flex items-center justify-center text-3xl font-bold text-black">{healthData.pageScore.toFixed(1)}</span>
-                             </div>
-                        <p className="text-gray-600 mt-2 font-semibold">Page Score</p>
-                        <div className="flex space-x-6 mt-4">
-                            <HealthCheckItem icon={<AlertTriangle className="w-5 h-5 text-yellow-500" />} color="text-yellow-500" title="Warnings" items={healthData.warnings || []}/>
-                            <HealthCheckItem icon={<XCircle className="w-5 h-5 text-red-500" />} color="text-red-500" title="Errors" items={healthData.errors || []}/>
+            {/* Header Section */}
+            <div className="mb-8">
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">Website Performance</h1>
+                        <p className="text-gray-600 mt-1">Comprehensive technical SEO analysis and competitor comparison</p>
+                    </div>
+                    <button 
+                        onClick={() => alert('Refresh triggered!')}
+                        className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-2 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+                    >
+                        Refresh Data
+                    </button>
+                </div>
+            </div>
+
+            {/* Main Health Dashboard */}
+            <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 mb-8">
+                {/* Health Score Gauge */}
+                <div className="xl:col-span-4">
+                    <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 h-full flex flex-col justify-center">
+                        <ModernGauge score={healthData.pageScore} />
+                        <div className="flex justify-center space-x-8 mt-6">
+                            <div className="text-center">
+                                <div className="flex items-center justify-center mb-2">
+                                    <AlertTriangle className="w-5 h-5 text-yellow-500 mr-2" />
+                                    <span className="text-2xl font-bold text-yellow-600">{(healthData.warnings || []).length}</span>
+                                </div>
+                                <p className="text-sm text-gray-600">Warnings</p>
+                            </div>
+                            <div className="text-center">
+                                <div className="flex items-center justify-center mb-2">
+                                    <XCircle className="w-5 h-5 text-red-500 mr-2" />
+                                    <span className="text-2xl font-bold text-red-600">{(healthData.errors || []).length}</span>
+                                </div>
+                                <p className="text-sm text-gray-600">Errors</p>
+                            </div>
                         </div>
                     </div>
-                    {/* Right side: Stat Cards */}
-                    <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-8 gap-x-6 content-center">
-                        {cards.map((c) => (
-                            <StatCard 
-                                key={c.label} 
-                                label={c.label}
-                                value={c.value}
-                                icon={c.icon}
-                                tooltip={c.tooltip}
-                            />
-                        ))}
-                    </div>
-                 </div>
-            </Card>
-  
-            <Card className="mb-8">
-                <h2 className="text-lg font-semibold mb-4">Performance vs. Competitors</h2>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-12">
-                    <div>
-                        <h3 className="text-lg font-semibold text-center text-gray-700 mb-2">Site Speed (s)</h3>
-                        <p className="text-xs text-gray-500 text-center mb-2">(Lower is better)</p>
-                        <ResponsiveContainer width="100%" height={260}>
-                            <BarChart data={competitorPerfData} layout="vertical" margin={{ left: 80, right: 20, top: 5, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                                <XAxis type="number" tick={{ fontSize: 12 }} domain={[0, (dataMax) => Math.round(dataMax * 1.2)]} />
-                                <YAxis dataKey="name" type="category" width={120} tick={{ fontSize: 12 }} />
-                                <Tooltip />
-                                <Bar dataKey="Site Speed (s)" barSize={18}>
-                                    {competitorPerfData.map((entry, idx) => <Cell key={idx} fill={entry.isClient ? '#0ea5e9' : CHART_COLORS[idx % CHART_COLORS.length]} />)}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
                 </div>
-                    <div>
-                        <h3 className="text-lg font-semibold text-center text-gray-700 mb-2">Est. Monthly Traffic</h3>
-                        <p className="text-xs text-gray-500 text-center mb-2">(Higher is better)</p>
-                        <ResponsiveContainer width="100%" height={260}>
-                             <BarChart data={competitorPerfData} margin={{ top: 5, right: 20, left: 0, bottom: 50 }}>
-                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                 <XAxis dataKey="name" type="category" tick={{ fontSize: 10 }} interval={0} angle={-45} textAnchor="end"/>
-                                 <YAxis type="number" domain={[0, dataMax => Math.round(dataMax * 1.1)]} />
-                                 <Tooltip cursor={{fill: 'rgba(241, 245, 249, 0.7)'}} contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.9)', borderColor: 'rgba(255,255,255,0.2)', borderRadius: '0.5rem' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff', fontWeight: 'bold' }} />
-                                 <Bar dataKey='Est. Monthly Traffic' barSize={35}>
-                                     {competitorPerfData.map((entry, index) => <Cell key={`cell-${entry.name}`} fill={entry.isClient ? '#0ea5e9' : CHART_COLORS[index % CHART_COLORS.length]} /> )}
-                                 </Bar>
-                             </BarChart>
-                        </ResponsiveContainer>
-                            </div>
-                    <div>
-                         <h3 className="text-lg font-semibold text-center text-gray-700 mb-2">Referring Domains</h3>
-                         <p className="text-xs text-gray-500 text-center mb-2">(Higher is better)</p>
-                         <ResponsiveContainer width="100%" height={260}>
-                             <BarChart data={competitorPerfData} margin={{ top: 5, right: 20, left: 0, bottom: 50 }}>
-                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                 <XAxis dataKey="name" type="category" tick={{ fontSize: 10 }} interval={0} angle={-45} textAnchor="end"/>
-                                 <YAxis type="number" domain={[0, dataMax => Math.round(dataMax * 1.1)]} />
-                                 <Tooltip cursor={{fill: 'rgba(241, 245, 249, 0.7)'}} contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.9)', borderColor: 'rgba(255,255,255,0.2)', borderRadius: '0.5rem' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff', fontWeight: 'bold' }} />
-                                 <Bar dataKey='Referring Domains' barSize={35}>
-                                     {competitorPerfData.map((entry, index) => <Cell key={`cell-${entry.name}`} fill={entry.isClient ? '#0ea5e9' : CHART_COLORS[index % CHART_COLORS.length]} /> )}
-                                 </Bar>
-                             </BarChart>
-                         </ResponsiveContainer>
-                    </div>
-                      <div>
-                         <h3 className="text-lg font-semibold text-center text-gray-700 mb-2">Total Backlinks</h3>
-                         <p className="text-xs text-gray-500 text-center mb-2">(Higher is better)</p>
-                         <ResponsiveContainer width="100%" height={260}>
-                            <BarChart data={competitorPerfData} margin={{ top: 5, right: 20, left: 0, bottom: 50 }}>
-                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                 <XAxis dataKey="name" type="category" tick={{ fontSize: 10 }} interval={0} angle={-45} textAnchor="end"/>
-                                 <YAxis type="number" domain={[0, dataMax => Math.round(dataMax * 1.1)]} />
-                                 <Tooltip cursor={{fill: 'rgba(241, 245, 249, 0.7)'}} contentStyle={{ backgroundColor: 'rgba(31, 41, 55, 0.9)', borderColor: 'rgba(255,255,255,0.2)', borderRadius: '0.5rem' }} itemStyle={{ color: '#fff' }} labelStyle={{ color: '#fff', fontWeight: 'bold' }} />
-                                 <Bar dataKey='Total Backlinks' barSize={35}>
-                                     {competitorPerfData.map((entry, index) => <Cell key={`cell-${entry.name}`} fill={entry.isClient ? '#0ea5e9' : CHART_COLORS[index % CHART_COLORS.length]} /> )}
-                                 </Bar>
-                        </BarChart>
-                    </ResponsiveContainer>
-                     </div>
-                </div>
-            </Card>
 
-            {/* Always render AIReportSection with appropriate placeholder */}
-            <div className="col-span-12">
+                {/* Key Metrics Grid */}
+                <div className="xl:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <ModernMetricCard
+                        title="Page Load Speed"
+                        value={healthData.siteSpeed}
+                        subtitle={`${speedStatus === 'excellent' ? 'Excellent' : speedStatus === 'good' ? 'Good' : 'Needs Improvement'}`}
+                        icon={<TrendingUp className="w-6 h-6" />}
+                        status={speedStatus === 'excellent' ? 'good' : speedStatus === 'good' ? 'warning' : 'error'}
+                        details={healthData.speedDetails}
+                    />
+                    <ModernMetricCard
+                        title="SSL Certificate"
+                        value={healthData.ssl ? 'Secure' : 'Not Secure'}
+                        subtitle={healthData.ssl ? 'HTTPS enabled' : 'HTTPS required'}
+                        icon={<ShieldCheck className="w-6 h-6" />}
+                        status={healthData.ssl ? 'good' : 'error'}
+                    />
+                    <ModernMetricCard
+                        title="Broken Links"
+                        value={hasBrokenLinks ? 'Issues Found' : 'All Good'}
+                        subtitle={hasBrokenLinks ? 'Fix required' : 'No broken links'}
+                        icon={<Link2 className="w-6 h-6" />}
+                        status={hasBrokenLinks ? 'error' : 'good'}
+                    />
+                    <ModernMetricCard
+                        title="Technical Checks"
+                        value={`${checksPassed}/${healthData.checks.totalChecks}`}
+                        subtitle={`${checksPercentage.toFixed(1)}% passed`}
+                        icon={<CheckCircle className="w-6 h-6" />}
+                        status={checksPercentage >= 80 ? 'good' : checksPercentage >= 60 ? 'warning' : 'error'}
+                    />
+                </div>
+            </div>
+
+            {/* Performance Comparison Section */}
+            <div className="mb-8">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Competitive Analysis</h2>
+                    <p className="text-gray-600 mb-6">Compare your website performance against key competitors</p>
+                    
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <ModernComparisonChart 
+                            data={competitorPerfData} 
+                            dataKey="Site Speed (s)" 
+                            title="Site Speed Comparison"
+                            color={GRADIENT_COLORS[0]}
+                            isInverted={true}
+                        />
+                        <ModernComparisonChart 
+                            data={competitorPerfData} 
+                            dataKey="Est. Monthly Traffic" 
+                            title="Monthly Traffic"
+                            color={GRADIENT_COLORS[1]}
+                        />
+                        <ModernComparisonChart 
+                            data={competitorPerfData} 
+                            dataKey="Referring Domains" 
+                            title="Referring Domains"
+                            color={GRADIENT_COLORS[2]}
+                        />
+                        <ModernComparisonChart 
+                            data={competitorPerfData} 
+                            dataKey="Total Backlinks" 
+                            title="Total Backlinks"
+                            color={GRADIENT_COLORS[3]}
+                        />
+                    </div>
+                </div>
+            </div>
+
+            {/* AI Report Section */}
+            <div className="mb-8">
                 <AIReportSection 
                     reportText={aiReport || 'AI Report will appear here once generated in the On-Page Insights sheet (column CP)'} 
-                    title="On-Page AI Notes" 
+                    title="AI-Powered Analysis" 
                 />
             </div>
 
-            <Card className="mt-8">
-                <h2 className="text-lg font-semibold mb-4">Technical SEO Checklist</h2>
+            {/* Modern Technical SEO Table */}
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
+                    <h2 className="text-xl font-semibold text-gray-900">Technical SEO Checklist</h2>
+                    <p className="text-sm text-gray-600 mt-1">Essential technical elements across all websites</p>
+                </div>
                 <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                        <thead className="text-left bg-slate-50">
+                    <table className="w-full">
+                        <thead className="bg-gray-50">
                             <tr>
-                                <th className="p-3 font-semibold text-slate-700">Website</th>
-                                <th className="p-3 text-center font-semibold text-slate-700">SSL</th>
-                                <th className="p-3 text-center font-semibold text-slate-700">Schema</th>
-                                <th className="p-3 font-semibold text-slate-700">H1 Tag</th>
-                                <th className="p-3 font-semibold text-slate-700">Title Tag</th>
-                                <th className="p-3 font-semibold text-slate-700">Meta Description</th>
-                             </tr>
-                         </thead>
-                         <tbody>
+                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Website</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">SSL</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Schema</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">H1 Tag</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Title Tag</th>
+                                <th className="px-6 py-4 text-center text-sm font-semibold text-gray-900">Meta Description</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
                             {technicalSeoData.map((site, index) => (
-                                <tr key={site.name} className={`border-b border-slate-100 ${index % 2 !== 0 ? 'bg-slate-50/50' : 'bg-white'}`}>
-                                    <td className="p-3 pr-4 font-semibold text-slate-800">{site.name}</td>
-                                    <td className="p-3 text-center"><BooleanCheck value={site.hasSSL} /></td>
-                                    <td className="p-3 text-center"><BooleanCheck value={site.hasSchema} /></td>
-                                    <td className="p-3"><BooleanCheck value={site.h1} tooltipContent={site.h1} /></td>
-                                    <td className="p-3"><BooleanCheck value={site.title} tooltipContent={site.title} /></td>
-                                    <td className="p-3"><BooleanCheck value={site.description} tooltipContent={site.description} /></td>
-                                 </tr>
-                             ))}
-                         </tbody>
-                     </table>
-                 </div>
-            </Card>
+                                <tr key={site.name} className={`hover:bg-gray-50 transition-colors ${site.name.toLowerCase().includes('client') ? 'bg-blue-50' : ''}`}>
+                                    <td className="px-6 py-4">
+                                        <div className="flex items-center">
+                                            <div className={`w-3 h-3 rounded-full mr-3 ${site.name.toLowerCase().includes('client') ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+                                            <span className="font-medium text-gray-900">{site.name}</span>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
+                                        <div className="inline-flex items-center">
+                                            {site.hasSSL ? (
+                                                <CheckCircle className="w-5 h-5 text-green-500" />
+                                            ) : (
+                                                <XCircle className="w-5 h-5 text-red-500" />
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
+                                        <div className="inline-flex items-center">
+                                            {site.hasSchema ? (
+                                                <CheckCircle className="w-5 h-5 text-green-500" />
+                                            ) : (
+                                                <XCircle className="w-5 h-5 text-red-500" />
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
+                                        <BooleanCheck value={site.h1} tooltipContent={site.h1} />
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
+                                        <BooleanCheck value={site.title} tooltipContent={site.title} />
+                                    </td>
+                                    <td className="px-6 py-4 text-center">
+                                        <BooleanCheck value={site.description} tooltipContent={site.description} />
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </PageContent>
     );
 };
