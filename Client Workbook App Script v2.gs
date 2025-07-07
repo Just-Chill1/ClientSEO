@@ -275,16 +275,18 @@ function getWebhookUrls(spreadsheet) {
     const webhooks = {};
     
     values.forEach(row => {
-        const action = row[0]; // Column A
-        const tabName = row[1]; // Column B  
-        const webhookUrl = row[2]; // Column C
+        const action = row[0]; // Column A - Action name
+        const tabName = row[1]; // Column B - Tab Name
+        const webhookUrl = row[2]; // Column C - Webhook URL
         
-        // Look for rows that contain refresh actions
-        if (action && action.toString().toLowerCase().includes('refresh') && tabName && webhookUrl) {
-            webhooks[tabName] = webhookUrl;
+        // Include any row that has all three values (action, tabName, webhookUrl)
+        if (action && tabName && webhookUrl) {
+            console.log(`Found webhook: ${action} -> ${webhookUrl}`);
+            webhooks[action] = webhookUrl;
         }
     });
     
+    console.log('All webhooks found:', webhooks);
     return webhooks;
 }
 

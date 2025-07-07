@@ -2019,8 +2019,12 @@ const WebsiteStats = ({ data, webhooks }) => {
 
     // Refresh functionality
     const triggerRefresh = async () => {
+        console.log('Webhooks data:', webhooks);
+        console.log('All data keys:', Object.keys(data || {}));
+        
         if (!webhooks || !webhooks['On-Page Insights']) {
             alert('Refresh webhook not configured for this workbook');
+            console.log('Webhook check failed. Webhooks:', webhooks);
             return;
         }
 
@@ -2986,7 +2990,13 @@ const App = () => {
 
     fetch(`https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${id}`)
       .then(r => r.json())
-      .then(j => { if (j.error) throw new Error(j.error); setData(j); setLoad(false); })
+      .then(j => { 
+        if (j.error) throw new Error(j.error); 
+        console.log('Data loaded successfully:', Object.keys(j));
+        console.log('Webhooks in data:', j.webhooks);
+        setData(j); 
+        setLoad(false); 
+      })
       .catch(e => { console.error(e); setErr(e.message); setLoad(false); });
   }, []);
 
