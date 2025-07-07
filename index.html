@@ -218,16 +218,16 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
     // More robust type checking and conversion
     let formattedText = '';
     try {
-        if (reportText === null || reportText === undefined) {
-            console.log('reportText is null or undefined');
+        if (!reportText) {
+            console.log('reportText is empty');
             return null;
         }
         
         // Convert to string if it's not already a string
-        formattedText = String(reportText);
+        formattedText = String(reportText).trim();
         console.log('Converted formattedText:', formattedText);
         
-        if (!formattedText.trim()) {
+        if (!formattedText) {
             console.log('formattedText is empty after trimming');
             return null;
         }
@@ -241,19 +241,31 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
 
     return (
         <Card className="mt-8">
-             <div className="flex items-center space-x-2 mb-1">
-                 <h2 className="text-xl font-bold text-gray-800">AI Report</h2>
-                 <InfoTooltip text="An automated SWOT (Strengths, Weaknesses, Opportunities, Threats) analysis based on the collected data, providing strategic insights and recommendations." />
-             </div>
-             <h3 className="text-md font-semibold text-gray-600 mb-3">{title}</h3>
-             <div className={`prose prose-sm max-w-none text-gray-600 overflow-hidden relative transition-all duration-300 ${isExpanded ? 'max-h-full' : 'max-h-24'}`}>
-                <div dangerouslySetInnerHTML={{ __html: formattedText.replace(/\n/g, '<br />') }} />
-                 {!isExpanded && <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent"></div>}
-             </div>
-             <button onClick={() => setIsExpanded(!isExpanded)} className="mt-2 text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center">
-                 {isExpanded ? 'Show Less' : 'Show More'}
-                 {isExpanded ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
-             </button>
+            <div className="flex items-center space-x-2 mb-1">
+                <h2 className="text-xl font-bold text-gray-800">AI Report</h2>
+                <InfoTooltip text="AI-generated analysis of your website's technical health, performance metrics, and competitive positioning." />
+            </div>
+            <h3 className="text-md font-semibold text-gray-600 mb-3">{title}</h3>
+            <div className={`prose prose-sm max-w-none text-gray-600 overflow-hidden relative transition-all duration-300 ${isExpanded ? 'max-h-full' : 'max-h-24'}`}>
+                <div 
+                    dangerouslySetInnerHTML={{ 
+                        __html: formattedText
+                            .replace(/\n/g, '<br />')
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    }} 
+                />
+                {!isExpanded && (
+                    <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent"></div>
+                )}
+            </div>
+            <button 
+                onClick={() => setIsExpanded(!isExpanded)} 
+                className="mt-2 text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center"
+            >
+                {isExpanded ? 'Show Less' : 'Show More'}
+                {isExpanded ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+            </button>
         </Card>
     );
 };
@@ -2006,8 +2018,12 @@ const WebsiteStats = ({ data }) => {
         const aiNotes = healthData?.aiNotes;
         console.log('Raw aiNotes:', aiNotes);
         
+        // Only set aiReport if aiNotes is a non-empty string
         if (typeof aiNotes === 'string' && aiNotes.trim()) {
             aiReport = aiNotes.trim();
+        } else if (aiNotes) {
+            // If aiNotes exists but isn't a string, convert it
+            aiReport = String(aiNotes).trim();
         }
     } catch (error) {
         console.error('Error processing AI Notes:', error);
