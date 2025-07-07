@@ -2030,14 +2030,30 @@ const WebsiteStats = ({ data, webhooks }) => {
         refreshStartTimeRef.current = Date.now();
 
         try {
-            // Trigger the webhook
-            const webhookUrl = webhooks['On-Page Insights'];
+            // Get the workbook ID from URL parameters
+            const params = new URLSearchParams(window.location.search);
+            const workbookId = params.get('workbookId');
+            
+            if (!workbookId) {
+                throw new Error('No workbook ID found in URL');
+            }
+
+            // Construct the webhook URL with required parameters
+            const baseWebhookUrl = webhooks['On-Page Insights'];
+            const webhookUrl = `${baseWebhookUrl}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('On-Page Insights')}`;
+            
             console.log('Triggering webhook:', webhookUrl);
+            console.log('Base webhook URL:', baseWebhookUrl);
+            console.log('Workbook ID:', workbookId);
             
             const response = await fetch(webhookUrl, {
                 method: 'GET',
                 mode: 'no-cors' // Many webhooks don't support CORS
             });
+            
+            // Show success message
+            console.log('Webhook triggered successfully!');
+            alert('Refresh triggered! The automation is starting...');
             
             setRefreshProgress(15);
             setRefreshMessage('Automation started! Fetching fresh data...');
@@ -2050,7 +2066,7 @@ const WebsiteStats = ({ data, webhooks }) => {
             setIsRefreshing(false);
             setRefreshProgress(0);
             setRefreshMessage('');
-            alert('Failed to trigger refresh. Please try again.');
+            alert(`Failed to trigger refresh: ${error.message}`);
         }
     };
 
