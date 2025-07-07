@@ -1151,55 +1151,55 @@ const Keywords = ({ summary, table }) => {
 
 const Backlinks = () => {
     // Destructure chart components here, as they are only used in this component.
-    const { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } = window.Recharts;
+    const { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } = window.Recharts;
 
     // --- Additional Icon Components for this page ---
     const PlusCircle = createIcon(
-        <>
-            <circle cx="12" cy="12" r="10" />
-            <line x1="12" y1="8" x2="12" y2="16" />
-            <line x1="8" y1="12" x2="16" y2="12" />
-        </>
+      <>
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="16" />
+        <line x1="8" y1="12" x2="16" y2="12" />
+      </>
     );
     const MinusCircle = createIcon(
-        <>
-            <circle cx="12" cy="12" r="10" />
-            <line x1="8" y1="12" x2="16" y2="12" />
-        </>
+      <>
+        <circle cx="12" cy="12" r="10" />
+        <line x1="8" y1="12" x2="16" y2="12" />
+      </>
     );
     const Search = createIcon(
-        <>
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </>
+      <>
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </>
     );
     const ExternalLink = createIcon(
-        <>
-            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-            <polyline points="15 3 21 3 21 9" />
-            <line x1="10" y1="14" x2="21" y2="3" />
-        </>
+      <>
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+        <polyline points="15 3 21 3 21 9" />
+        <line x1="10" y1="14" x2="21" y2="3" />
+      </>
     );
     const LinkIcon = createIcon(
-        <>
-            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-        </>
+      <>
+        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+      </>
     );
     const ShieldCheck = createIcon(
-        <>
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-            <path d="M9 12l2 2 4-4" />
-        </>
+      <>
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+        <path d="M9 12l2 2 4-4" />
+      </>
     );
     const Globe = createIcon(
-        <>
-            <circle cx="12" cy="12" r="10" />
-            <line x1="2" y1="12" x2="22" y2="12" />
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-        </>
+      <>
+        <circle cx="12" cy="12" r="10" />
+        <line x1="2" y1="12" x2="22" y2="12" />
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+      </>
     );
-    
+
     // --- Component State and Data ---
     const [backlinksData, setBacklinksData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -1336,50 +1336,67 @@ const Backlinks = () => {
 
                     {/* Column 2: Link Types Distribution */}
                     <div className="space-y-3">
-                        <div className="flex items-center space-x-2 px-2 mb-2">
-                            <h3 className="text-lg font-semibold text-gray-700">Link Types</h3>
-                            <InfoTooltip text="Dofollow links pass SEO value to your site, while nofollow links don't. A healthy backlink profile should have more dofollow links." />
-                        </div>
+                        <h3 className="text-lg font-semibold text-gray-700 px-2 mb-2">Link Types</h3>
                         <div className="bg-slate-50 rounded-lg p-4">
-                            <ResponsiveContainer width="100%" height={200}>
-                                <PieChart>
-                                    <Pie
-                                        data={followData}
-                                        dataKey="value"
-                                        nameKey="name"
-                                        cx="50%"
-                                        cy="50%"
-                                        outerRadius={80}
-                                        fill="#3b82f6"
-                                    >
+                            <ResponsiveContainer width="100%" height={160}>
+                                <BarChart data={followData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                                    <XAxis type="number" />
+                                    <YAxis dataKey="name" type="category" />
+                                    <Tooltip 
+                                        contentStyle={{ 
+                                            backgroundColor: 'rgba(31, 41, 55, 0.9)', 
+                                            borderColor: 'rgba(255,255,255,0.2)', 
+                                            borderRadius: '0.5rem' 
+                                        }} 
+                                        itemStyle={{ color: '#fff' }} 
+                                        labelStyle={{ color: '#fff', fontWeight: 'bold' }}
+                                    />
+                                    <Bar dataKey="value" barSize={20}>
                                         {followData.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={entry.color} />
                                         ))}
-                                    </Pie>
-                                    <Legend verticalAlign="bottom" height={36} />
-                                    <Tooltip />
-                                </PieChart>
+                                    </Bar>
+                                </BarChart>
                             </ResponsiveContainer>
+                            <div className="flex justify-center space-x-6 text-sm mt-4">
+                                <div className="flex items-center">
+                                    <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                                    <span className="font-medium">{(backlinksSummary.totalDofollow || 0).toLocaleString()} Dofollow</span>
+                                </div>
+                                <div className="flex items-center">
+                                    <div className="w-3 h-3 rounded-full bg-gray-400 mr-2"></div>
+                                    <span className="font-medium">{(backlinksSummary.totalNofollow || 0).toLocaleString()} Nofollow</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     {/* Column 3: Link Dynamics */}
                     <div className="space-y-3">
-                        <div className="flex items-center space-x-2 px-2 mb-2">
-                            <h3 className="text-lg font-semibold text-gray-700">Link Dynamics</h3>
-                            <InfoTooltip text="Shows how your backlinks change over time. New links indicate growth, while lost links may need investigation." />
-                        </div>
-                        <div className="bg-slate-50 rounded-lg p-4">
-                            <ResponsiveContainer width="100%" height={200}>
-                                <BarChart data={followData}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="name" />
-                                    <YAxis />
-                                    <Tooltip />
-                                    <Bar dataKey="value" fill="#8884d8" />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </div>
+                        <h3 className="text-lg font-semibold text-gray-700 px-2 mb-2">Link Dynamics</h3>
+                        <SummaryStat
+                            label="New Links"
+                            value={backlinksSummary.newLinks || 0}
+                            color="text-green-600"
+                            icon={<PlusCircle className="w-5 h-5" />}
+                            valuePrefix="+"
+                            subtitle="Gained this month"
+                        />
+                        <SummaryStat
+                            label="Lost Links"
+                            value={backlinksSummary.lostLinks || 0}
+                            color="text-red-600"
+                            icon={<MinusCircle className="w-5 h-5" />}
+                            subtitle="Lost this month"
+                        />
+                        <SummaryStat
+                            label="Spam Score"
+                            value={`${backlinksSummary.avgSpamScore || 0}%`}
+                            color={(Number(backlinksSummary.avgSpamScore) || 0) <= 30 ? 'text-green-600' : (Number(backlinksSummary.avgSpamScore) || 0) <= 60 ? 'text-yellow-600' : 'text-red-600'}
+                            icon={<ShieldCheck className="w-5 h-5" />}
+                            subtitle={`${(Number(backlinksSummary.spamScoreChange) || 0) <= 0 ? '↓' : '↑'} ${Math.abs(Number(backlinksSummary.spamScoreChange) || 0)}% from last month`}
+                        />
                     </div>
                 </div>
             </Card>
@@ -1496,7 +1513,7 @@ const Backlinks = () => {
 
 const ToolsPage     = () => <PageContent><h2 className="text-center text-gray-500">Tools – coming soon</h2></PageContent>;
 const GeogridMaps = () => {
-    const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, LabelList, Legend, PieChart, Pie } = window.Recharts;
+    const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, LabelList } = window.Recharts;
     const [geogridData, setGeogridData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -1855,24 +1872,58 @@ const StatCard = ({ label, value, icon, tooltip }) => {
 
         const cardElement = cardRef.current;
         if (!cardElement || !tooltip) return;
+
+        const handleMouseEnter = () => {
+            const cardRect = cardElement.getBoundingClientRect();
+            const spaceAbove = cardRect.top;
+            
+            // A simple heuristic to decide tooltip position
+            // Estimate tooltip height. large is w-[600px] so it can be tall.
+            const estimatedHeight = tooltip.width === 'large' ? 350 : 150;
+
+            if (spaceAbove < estimatedHeight && (window.innerHeight - cardRect.bottom) > spaceAbove) {
+                setTooltipPosition('bottom');
+            } else {
+                setTooltipPosition('top');
+            }
+        };
+
+        cardElement.addEventListener('mouseenter', handleMouseEnter);
+
+        return () => {
+            if (cardElement) {
+                cardElement.removeEventListener('mouseenter', handleMouseEnter);
+            }
+        };
     }, [tooltip]);
 
-    return (
-        <div ref={cardRef} className="relative flex items-center justify-between p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
-            <div className="flex items-center">
-                {icon}
-                <span className="ml-3 text-gray-600">{label}</span>
-                {tooltip && (
-                    <div className="ml-2">
-                        <InfoTooltip text={tooltip.content ? tooltip.content : tooltip} />
-                    </div>
-                )}
+    const content = (
+        <div className="flex items-center space-x-3">
+            <div className="p-2 bg-blue-100 rounded-full">{icon}</div>
+            <div>
+                <p className="text-sm text-gray-500">{label}</p>
+                <p className={`font-bold text-lg ${value.color || 'text-gray-800'}`}>{value.text}</p>
             </div>
-            <span className={`${value?.color || 'text-gray-800'} ${value?.text === 'N/A' ? 'font-normal' : 'font-bold'}`}>
-                {value?.text === 'N/A' ? '-' : value?.text}
-            </span>
         </div>
     );
+
+    if (tooltip && tooltip.content) {
+        return (
+            <div ref={cardRef} className="relative group cursor-help">
+                {content}
+                <div className={`absolute left-1/2 -translate-x-1/2 ${tooltipWidthClass} bg-gray-800 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50 pointer-events-none ${tooltipPosition === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'}`}>
+                    {tooltip.header && (
+                         <div className="px-3 py-1.5 bg-gray-700 rounded-t-lg font-semibold border-b border-gray-600">
+                            {tooltip.header}
+                        </div>
+                    )}
+                    <div className="p-3">{tooltip.content}</div>
+                    <div className={`absolute left-1/2 -translate-x-[6px] w-3 h-3 bg-gray-800 transform rotate-45 ${tooltipPosition === 'top' ? 'bottom-[-6px]' : 'top-[-6px]'}`}></div>
+                </div>
+            </div>
+        );
+    }
+    return content;
 };
 
 const HealthCheckItem = ({ icon, color, title, items }) => (
