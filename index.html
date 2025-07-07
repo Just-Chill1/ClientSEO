@@ -2055,9 +2055,9 @@ const WebsiteStats = ({ data }) => {
         { client: '#06b6d4', competitor: '#0891b2' }
     ];
 
-    // Enhanced metric cards with better design
-    const ModernMetricCard = ({ title, value, subtitle, icon, status, trend, details }) => (
-        <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200 group">
+    // Enhanced metric cards with better design and tooltip support
+    const ModernMetricCard = ({ title, value, subtitle, icon, status, trend, details, tooltip }) => (
+        <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200 group relative">
             <div className="flex items-start justify-between mb-4">
                 <div className={`p-3 rounded-xl ${status === 'good' ? 'bg-green-100 text-green-600' : 
                     status === 'warning' ? 'bg-yellow-100 text-yellow-600' : 
@@ -2086,6 +2086,51 @@ const WebsiteStats = ({ data }) => {
                     </div>
                 </div>
             )}
+            {/* Modern Tooltip */}
+            {tooltip && (
+                <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-3 ${tooltip.width === 'large' ? 'w-[600px]' : 'w-80'} bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 z-50 pointer-events-none`}>
+                    {tooltip.header && (
+                        <div className="px-4 py-3 bg-gray-800 rounded-t-xl font-semibold border-b border-gray-700">
+                            {tooltip.header}
+                        </div>
+                    )}
+                    <div className="p-4">{tooltip.content}</div>
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[8px] border-r-[8px] border-t-[8px] border-l-transparent border-r-transparent border-t-gray-900"></div>
+                </div>
+            )}
+        </div>
+    );
+
+    // Modern warnings/errors display with tooltips
+    const ModernIssueCounter = ({ icon, color, title, items, textColor }) => (
+        <div className="text-center relative group cursor-help">
+            <div className="flex items-center justify-center mb-2">
+                {icon}
+                <span className={`text-2xl font-bold ${textColor} ml-2`}>{items.length}</span>
+            </div>
+            <p className="text-sm text-gray-600">{title}</p>
+            
+            {/* Modern Tooltip */}
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-3 w-80 bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 z-50 pointer-events-none">
+                <div className="px-4 py-3 bg-gray-800 rounded-t-xl font-semibold border-b border-gray-700">
+                    {title} Found ({items.length})
+                </div>
+                <div className="p-4 max-h-48 overflow-y-auto">
+                    {items.length > 0 ? (
+                        <ul className="space-y-2">
+                            {items.map((item, index) => (
+                                <li key={index} className="flex items-start text-xs leading-relaxed">
+                                    <span className="mr-2 mt-1 w-1 h-1 bg-gray-400 rounded-full flex-shrink-0"></span>
+                                    <span>{item.description}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="text-gray-400 text-xs">No issues found.</p>
+                    )}
+                </div>
+                <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[8px] border-r-[8px] border-t-[8px] border-l-transparent border-r-transparent border-t-gray-900"></div>
+            </div>
         </div>
     );
 
@@ -2203,61 +2248,94 @@ const WebsiteStats = ({ data }) => {
 
             {/* Main Health Dashboard */}
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 mb-8">
-                {/* Health Score Gauge */}
-                <div className="xl:col-span-4">
-                    <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 h-full flex flex-col justify-center">
-                        <ModernGauge score={healthData.pageScore} />
-                        <div className="flex justify-center space-x-8 mt-6">
-                            <div className="text-center">
-                                <div className="flex items-center justify-center mb-2">
-                                    <AlertTriangle className="w-5 h-5 text-yellow-500 mr-2" />
-                                    <span className="text-2xl font-bold text-yellow-600">{(healthData.warnings || []).length}</span>
-                                </div>
-                                <p className="text-sm text-gray-600">Warnings</p>
-                            </div>
-                            <div className="text-center">
-                                <div className="flex items-center justify-center mb-2">
-                                    <XCircle className="w-5 h-5 text-red-500 mr-2" />
-                                    <span className="text-2xl font-bold text-red-600">{(healthData.errors || []).length}</span>
-                                </div>
-                                <p className="text-sm text-gray-600">Errors</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                                 {/* Health Score Gauge */}
+                 <div className="xl:col-span-4">
+                     <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 h-full flex flex-col justify-center">
+                         <ModernGauge score={healthData.pageScore} />
+                         <div className="flex justify-center space-x-8 mt-6">
+                             <ModernIssueCounter
+                                 icon={<AlertTriangle className="w-5 h-5 text-yellow-500" />}
+                                 title="Warnings"
+                                 items={healthData.warnings || []}
+                                 textColor="text-yellow-600"
+                             />
+                             <ModernIssueCounter
+                                 icon={<XCircle className="w-5 h-5 text-red-500" />}
+                                 title="Errors"
+                                 items={healthData.errors || []}
+                                 textColor="text-red-600"
+                             />
+                         </div>
+                     </div>
+                 </div>
 
-                {/* Key Metrics Grid */}
-                <div className="xl:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <ModernMetricCard
-                        title="Page Load Speed"
-                        value={healthData.siteSpeed}
-                        subtitle={`${speedStatus === 'excellent' ? 'Excellent' : speedStatus === 'good' ? 'Good' : 'Needs Improvement'}`}
-                        icon={<TrendingUp className="w-6 h-6" />}
-                        status={speedStatus === 'excellent' ? 'good' : speedStatus === 'good' ? 'warning' : 'error'}
-                        details={healthData.speedDetails}
-                    />
-                    <ModernMetricCard
-                        title="SSL Certificate"
-                        value={healthData.ssl ? 'Secure' : 'Not Secure'}
-                        subtitle={healthData.ssl ? 'HTTPS enabled' : 'HTTPS required'}
-                        icon={<ShieldCheck className="w-6 h-6" />}
-                        status={healthData.ssl ? 'good' : 'error'}
-                    />
-                    <ModernMetricCard
-                        title="Broken Links"
-                        value={hasBrokenLinks ? 'Issues Found' : 'All Good'}
-                        subtitle={hasBrokenLinks ? 'Fix required' : 'No broken links'}
-                        icon={<Link2 className="w-6 h-6" />}
-                        status={hasBrokenLinks ? 'error' : 'good'}
-                    />
-                    <ModernMetricCard
-                        title="Technical Checks"
-                        value={`${checksPassed}/${healthData.checks.totalChecks}`}
-                        subtitle={`${checksPercentage.toFixed(1)}% passed`}
-                        icon={<CheckCircle className="w-6 h-6" />}
-                        status={checksPercentage >= 80 ? 'good' : checksPercentage >= 60 ? 'warning' : 'error'}
-                    />
-                </div>
+                                 {/* Key Metrics Grid */}
+                 <div className="xl:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <ModernMetricCard
+                         title="Page Load Speed"
+                         value={healthData.siteSpeed}
+                         subtitle={`${speedStatus === 'excellent' ? 'Excellent' : speedStatus === 'good' ? 'Good' : 'Needs Improvement'}`}
+                         icon={<TrendingUp className="w-6 h-6" />}
+                         status={speedStatus === 'excellent' ? 'good' : speedStatus === 'good' ? 'warning' : 'error'}
+                         details={healthData.speedDetails}
+                     />
+                     <ModernMetricCard
+                         title="Technical Checks"
+                         value={`${checksPassed}/${healthData.checks.totalChecks}`}
+                         subtitle={`${checksPercentage.toFixed(1)}% passed`}
+                         icon={<CheckCircle className="w-6 h-6" />}
+                         status={checksPercentage >= 80 ? 'good' : checksPercentage >= 60 ? 'warning' : 'error'}
+                         tooltip={{
+                             header: 'Technical SEO Health Check Results',
+                             width: 'large',
+                             content: (
+                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                     {Object.entries(checkCategories).map(([category, categoryData]) => {
+                                         const categoryChecks = Object.entries(categoryData.checks).filter(([checkName]) => 
+                                             healthData.checks.passedList.includes(checkName) || healthData.checks.failedList.includes(checkName)
+                                         );
+                                         if (categoryChecks.length === 0) return null;
+                                         return (
+                                             <div key={category} className="space-y-2">
+                                                 <h4 className="font-semibold flex items-center text-gray-300 text-sm">
+                                                     <span className="mr-2">{categoryData.icon}</span>
+                                                     {categoryData.title}
+                                                 </h4>
+                                                 <ul className="space-y-1.5">
+                                                     {categoryChecks.map(([checkName, description]) => {
+                                                         const isPassed = healthData.checks.passedList.includes(checkName);
+                                                         return (
+                                                             <li key={checkName} className="flex items-start text-xs leading-relaxed">
+                                                                 <span className="mr-2 flex-shrink-0 text-sm">{isPassed ? '✅' : '❌'}</span>
+                                                                 <span className={isPassed ? 'text-green-300' : 'text-red-300'}>
+                                                                     {description}
+                                                                 </span>
+                                                             </li>
+                                                         );
+                                                     })}
+                                                 </ul>
+                                             </div>
+                                         );
+                                     })}
+                                 </div>
+                             )
+                         }}
+                     />
+                     <ModernMetricCard
+                         title="Broken Links"
+                         value={hasBrokenLinks ? 'Issues Found' : 'All Good'}
+                         subtitle={hasBrokenLinks ? 'Fix required' : 'No broken links'}
+                         icon={<Link2 className="w-6 h-6" />}
+                         status={hasBrokenLinks ? 'error' : 'good'}
+                     />
+                     <ModernMetricCard
+                         title="SSL Certificate"
+                         value={healthData.ssl ? 'Secure' : 'Not Secure'}
+                         subtitle={healthData.ssl ? 'HTTPS enabled' : 'HTTPS required'}
+                         icon={<ShieldCheck className="w-6 h-6" />}
+                         status={healthData.ssl ? 'good' : 'error'}
+                     />
+                 </div>
             </div>
 
             {/* Performance Comparison Section */}
