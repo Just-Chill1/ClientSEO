@@ -140,12 +140,14 @@ function getWebsiteStats(spreadsheet) {
         })),
         technicalSeoData: onPageInsights.map(site => ({
             name: site.name,
-            url: site.website,
+            clinicName: site.name,
+            website: site.website,
             hasSchema: site.hasMicromarkup,
             h1: site.h1,
             title: site.title,
             description: site.meta,
-            hasSSL: site.ssl
+            hasSSL: site.ssl,
+            isClient: site.isClient
         }))
     };
 }

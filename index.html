@@ -2045,6 +2045,12 @@ const WebsiteStats = ({ data }) => {
     const checksPassed = healthData.checks.checksPassed;
     const checksPercentage = (checksPassed / healthData.checks.totalChecks) * 100;
 
+    // Debug logging
+    console.log('Health Data:', healthData);
+    console.log('Speed:', healthData.siteSpeed, 'Parsed:', speedSec, 'Status:', speedStatus);
+    console.log('SSL:', healthData.ssl);
+    console.log('Broken Links:', healthData.brokenLinks, 'Has Broken Links:', hasBrokenLinks);
+
     // Enhanced gradient colors for charts
     const GRADIENT_COLORS = [
         { client: '#3b82f6', competitor: '#1e40af' },
@@ -2155,6 +2161,8 @@ const WebsiteStats = ({ data }) => {
             }
         };
 
+
+        
         return (
             <div ref={cardRef} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200 group relative">
                 <div className="flex items-start justify-between mb-4">
