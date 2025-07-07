@@ -1997,7 +1997,7 @@ const checkCategories = {
 /* ------------------------------------------------------------------ */
 /* WEBSITE STATS – Modern SEO Dashboard Design                        */
 /* ------------------------------------------------------------------ */
-const WebsiteStats = ({ data, webhooks }) => {
+const WebsiteStats = ({ data, webhooks, setData }) => {
     const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, RadialBarChart, RadialBar, Legend, PieChart, Pie, LineChart, Line, Area, AreaChart } = window.Recharts;
     
     // Refresh state management
@@ -2108,16 +2108,21 @@ const WebsiteStats = ({ data, webhooks }) => {
                     
                     // Check specifically for AI Report and other key changes
                     if (newData.websiteStats && hasDataChanged(data, newData.websiteStats)) {
-                        // Data has changed! Stop polling and refresh
+                        // Data has changed! Stop polling and update in-place
                         clearInterval(pollIntervalRef.current);
                         setRefreshProgress(100);
-                        setRefreshMessage('Update complete! Refreshing page...');
+                        setRefreshMessage('Update complete! Loading fresh data...');
+                        
+                        // Update the data in-place instead of page reload
+                        setData(newData);
                         setLastRefresh(new Date());
                         
-                        // Wait a moment then reload the page
+                        // Clear refresh state after a brief success message
                         setTimeout(() => {
-                            window.location.reload();
-                        }, 1500);
+                            setIsRefreshing(false);
+                            setRefreshProgress(0);
+                            setRefreshMessage('');
+                        }, 2000);
                         return;
                     }
                 }
@@ -2132,9 +2137,27 @@ const WebsiteStats = ({ data, webhooks }) => {
                 setRefreshProgress(0);
                 setRefreshMessage('');
                 
-                // Show manual refresh option
-                if (confirm('Automation completed but some data may still be processing. Would you like to manually refresh the page to see the latest updates?')) {
-                    window.location.reload();
+                // Try one final check for updates
+                try {
+                    const params = new URLSearchParams(window.location.search);
+                    const workbookId = params.get('workbookId');
+                    
+                    if (workbookId) {
+                        const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
+                        
+                        fetch(scriptUrl)
+                            .then(response => response.json())
+                            .then(finalData => {
+                                if (finalData.websiteStats) {
+                                    setData(finalData);
+                                    setLastRefresh(new Date());
+                                    console.log('Final data update applied');
+                                }
+                            })
+                            .catch(e => console.log('Final check failed:', e));
+                    }
+                } catch (error) {
+                    console.error('Error in final update check:', error);
                 }
             }
         };
@@ -3099,7 +3122,7 @@ const App = () => {
         body = <Dashboard setActiveTab={setTab} />;
         break;
       case 'Website Stats':
-        body = <WebsiteStats data={data.websiteStats} webhooks={data.webhooks} />;
+        body = <WebsiteStats data={data.websiteStats} webhooks={data.webhooks} setData={setData} />;
         break;
       case 'Geogrid Maps':
         body = <GeogridMaps data={data.geogridData} />;
