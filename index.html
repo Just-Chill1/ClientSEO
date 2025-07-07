@@ -2056,7 +2056,7 @@ const WebsiteStats = ({ data }) => {
     ];
 
     // Enhanced metric cards with smart tooltip positioning
-    const ModernMetricCard = ({ title, value, subtitle, icon, status, trend, details, tooltip }) => {
+    const ModernMetricCard = ({ title, value, subtitle, icon, status, trend, details, tooltip, alwaysShowDetails, categoryBreakdown }) => {
         const cardRef = useRef(null);
         const [tooltipPosition, setTooltipPosition] = useState('center-top');
 
@@ -2109,22 +2109,22 @@ const WebsiteStats = ({ data }) => {
 
         // Generate tooltip classes based on position
         const getTooltipClasses = () => {
-            const baseClasses = `absolute ${tooltip?.width === 'large' ? 'w-[600px]' : 'w-80'} bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 z-50 pointer-events-none`;
+            const baseClasses = `absolute ${tooltip?.width === 'large' ? 'w-[600px]' : 'w-80'} bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 z-50 pointer-events-auto`;
             
-            switch (tooltipPosition) {
-                case 'left-top':
-                    return `${baseClasses} left-0 bottom-full mb-3`;
-                case 'right-top':
-                    return `${baseClasses} right-0 bottom-full mb-3`;
-                case 'center-bottom':
-                    return `${baseClasses} left-1/2 -translate-x-1/2 top-full mt-3`;
-                case 'left-bottom':
-                    return `${baseClasses} left-0 top-full mt-3`;
-                case 'right-bottom':
-                    return `${baseClasses} right-0 top-full mt-3`;
-                default: // center-top
-                    return `${baseClasses} left-1/2 -translate-x-1/2 bottom-full mb-3`;
-            }
+                         switch (tooltipPosition) {
+                 case 'left-top':
+                     return `${baseClasses} left-0 bottom-full mb-1`;
+                 case 'right-top':
+                     return `${baseClasses} right-0 bottom-full mb-1`;
+                 case 'center-bottom':
+                     return `${baseClasses} left-1/2 -translate-x-1/2 top-full mt-1`;
+                 case 'left-bottom':
+                     return `${baseClasses} left-0 top-full mt-1`;
+                 case 'right-bottom':
+                     return `${baseClasses} right-0 top-full mt-1`;
+                 default: // center-top
+                     return `${baseClasses} left-1/2 -translate-x-1/2 bottom-full mb-1`;
+             }
         };
 
         // Generate arrow classes based on position
@@ -2173,7 +2173,45 @@ const WebsiteStats = ({ data }) => {
                 <h3 className="text-gray-600 text-sm font-medium mb-2">{title}</h3>
                 <p className="text-2xl font-bold text-gray-900 mb-1">{value}</p>
                 {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
-                {details && (
+                
+                {/* Always show details for certain cards */}
+                {details && alwaysShowDetails && (
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                            {Object.entries(details).slice(0, 8).map(([key, val]) => (
+                                <div key={key} className="flex justify-between">
+                                    <span className="text-gray-500">{key}:</span>
+                                    <span className="font-medium">{val || 'N/A'}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+                
+                {/* Category breakdown for technical checks */}
+                {categoryBreakdown && (
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                        <div className="grid grid-cols-1 gap-2">
+                            {categoryBreakdown.map((category, index) => (
+                                <div key={index} className="flex items-center justify-between text-xs">
+                                    <div className="flex items-center">
+                                        <span className="mr-2">{category.icon}</span>
+                                        <span className="text-gray-600">{category.title}</span>
+                                    </div>
+                                    <div className="flex items-center">
+                                        <span className={`mr-1 ${category.hasErrors ? 'text-red-500' : 'text-green-500'}`}>
+                                            {category.hasErrors ? '❌' : '✅'}
+                                        </span>
+                                        <span className="text-gray-500">{category.passed}/{category.total}</span>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+                
+                {/* Hover-only details for cards without alwaysShowDetails */}
+                {details && !alwaysShowDetails && !categoryBreakdown && (
                     <div className="mt-4 pt-4 border-t border-gray-100 opacity-0 group-hover:opacity-100 transition-opacity">
                         <div className="grid grid-cols-2 gap-2 text-xs">
                             {Object.entries(details).slice(0, 4).map(([key, val]) => (
@@ -2193,7 +2231,7 @@ const WebsiteStats = ({ data }) => {
                                 {tooltip.header}
                             </div>
                         )}
-                        <div className="p-4 max-h-80 overflow-y-auto">{tooltip.content}</div>
+                        <div className="p-4">{tooltip.content}</div>
                         <div className={getArrowClasses()}></div>
                     </div>
                 )}
@@ -2401,6 +2439,7 @@ const WebsiteStats = ({ data }) => {
                          subtitle={`${speedStatus === 'excellent' ? 'Excellent' : speedStatus === 'good' ? 'Good' : 'Needs Improvement'}`}
                          icon={<TrendingUp className="w-6 h-6" />}
                          status={speedStatus === 'excellent' ? 'good' : speedStatus === 'good' ? 'warning' : 'error'}
+                         alwaysShowDetails={true}
                          details={healthData.speedDetails}
                      />
                      <ModernMetricCard
@@ -2409,6 +2448,19 @@ const WebsiteStats = ({ data }) => {
                          subtitle={`${checksPercentage.toFixed(1)}% passed`}
                          icon={<CheckCircle className="w-6 h-6" />}
                          status={checksPercentage >= 80 ? 'good' : checksPercentage >= 60 ? 'warning' : 'error'}
+                         categoryBreakdown={Object.entries(checkCategories).map(([category, categoryData]) => {
+                             const categoryChecks = Object.entries(categoryData.checks).filter(([checkName]) => 
+                                 healthData.checks.passedList.includes(checkName) || healthData.checks.failedList.includes(checkName)
+                             );
+                             const passedCount = categoryChecks.filter(([checkName]) => healthData.checks.passedList.includes(checkName)).length;
+                             return {
+                                 title: categoryData.title,
+                                 icon: categoryData.icon,
+                                 passed: passedCount,
+                                 total: categoryChecks.length,
+                                 hasErrors: passedCount < categoryChecks.length
+                             };
+                         }).filter(cat => cat.total > 0)}
                          tooltip={{
                              header: 'Technical SEO Health Check Results',
                              width: 'large',
