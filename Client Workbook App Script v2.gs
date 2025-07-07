@@ -124,7 +124,7 @@ function getWebsiteStats(spreadsheet) {
             'Request Sent Time': clientData?.request_sent_time,
             'Waiting Time (TTFB)': clientData?.waiting_time,
             'Download Time': clientData?.download_time,
-            'Full Page Load': clientData?.duration_time,
+            'Full Page Load': clientData?.duration_time
         }
     };
 

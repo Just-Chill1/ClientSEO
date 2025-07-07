@@ -2174,19 +2174,36 @@ const WebsiteStats = ({ data }) => {
                 <p className="text-2xl font-bold text-gray-900 mb-1">{value}</p>
                 {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
                 
-                {/* Always show details for certain cards */}
-                {details && alwaysShowDetails && (
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                        <div className="grid grid-cols-2 gap-2 text-xs">
-                            {Object.entries(details).slice(0, 8).map(([key, val]) => (
-                                <div key={key} className="flex justify-between">
-                                    <span className="text-gray-500">{key}:</span>
-                                    <span className="font-medium">{val || 'N/A'}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
+                                 {/* Always show details for certain cards */}
+                 {details && alwaysShowDetails && (
+                     <div className="mt-4 pt-4 border-t border-gray-100">
+                         <div className="grid grid-cols-2 gap-2 text-xs">
+                             {Object.entries(details).slice(0, 10).map(([key, val]) => {
+                                 // Convert technical terms to user-friendly labels
+                                 const friendlyLabels = {
+                                     'Time to Interactive': 'Time to Interactive',
+                                     'DOM Complete': 'Page Structure Ready',
+                                     'Largest Contentful Paint': 'Main Content Loaded',
+                                     'First Input Delay': 'Response Time',
+                                     'Connection Time': 'Server Connection',
+                                     'Time to Secure Connection': 'Security Setup',
+                                     'Request Sent Time': 'Request Processing',
+                                     'Waiting Time (TTFB)': 'Server Response',
+                                     'Download Time': 'Content Download',
+                                     'Full Page Load': 'Complete Load Time'
+                                 };
+                                 const displayLabel = friendlyLabels[key] || key;
+                                 
+                                 return (
+                                     <div key={key} className="flex justify-between">
+                                         <span className="text-gray-500">{displayLabel}:</span>
+                                         <span className="font-medium">{val || 'N/A'}</span>
+                                     </div>
+                                 );
+                             })}
+                         </div>
+                     </div>
+                 )}
                 
                 {/* Category breakdown for technical checks */}
                 {categoryBreakdown && (
@@ -2272,15 +2289,42 @@ const WebsiteStats = ({ data }) => {
         </div>
     );
 
-    // Enhanced gauge component
+        // Enhanced gauge component with animation
     const ModernGauge = ({ score, size = 200 }) => {
+        const [isAnimating, setIsAnimating] = useState(false);
         const circumference = 2 * Math.PI * 85;
         const strokeDasharray = circumference;
-        const strokeDashoffset = circumference - (score / 100) * circumference;
+        const targetOffset = circumference - (score / 100) * circumference;
         
+        // Animation state - start empty, animate to target
+        const [currentOffset, setCurrentOffset] = useState(circumference);
+        
+        useEffect(() => {
+            // Initial load animation
+            const timer = setTimeout(() => {
+                setCurrentOffset(targetOffset);
+            }, 300);
+            return () => clearTimeout(timer);
+        }, [targetOffset]);
+
+        const handleHover = () => {
+            if (!isAnimating) {
+                setIsAnimating(true);
+                setCurrentOffset(circumference); // Reset to empty
+                setTimeout(() => {
+                    setCurrentOffset(targetOffset); // Animate to target
+                    setTimeout(() => setIsAnimating(false), 1000);
+                }, 50);
+            }
+        };
+
         return (
             <div className="relative flex flex-col items-center">
-                <div className="relative" style={{ width: size, height: size }}>
+                <div 
+                    className="relative cursor-pointer" 
+                    style={{ width: size, height: size }}
+                    onMouseEnter={handleHover}
+                >
                     <svg width={size} height={size} className="transform -rotate-90">
                         <defs>
                             <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -2304,9 +2348,10 @@ const WebsiteStats = ({ data }) => {
                             stroke="url(#gaugeGradient)"
                             strokeWidth="12"
                             strokeDasharray={strokeDasharray}
-                            strokeDashoffset={strokeDashoffset}
+                            strokeDashoffset={currentOffset}
                             strokeLinecap="round"
                             className="transition-all duration-1000 ease-out"
+                            style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }}
                         />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -2319,6 +2364,7 @@ const WebsiteStats = ({ data }) => {
                     <p className={`text-sm font-medium ${score >= 90 ? 'text-green-600' : score >= 70 ? 'text-yellow-600' : 'text-red-600'}`}>
                         {score >= 90 ? 'Excellent' : score >= 70 ? 'Good' : 'Needs Improvement'}
                     </p>
+                    <p className="text-xs text-gray-400 mt-1">Hover to replay animation</p>
                 </div>
             </div>
         );
