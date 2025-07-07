@@ -2011,17 +2011,18 @@ const WebsiteStats = ({ data }) => {
     const { healthData, competitorPerfData: rawCompetitorPerfData, technicalSeoData } = data;
     console.log('healthData:', healthData);
     
-    // More robust handling of AI Notes
+    // More robust handling of AI Notes from On-Page Insights
     let aiReport = null;
     try {
-        // Get aiNotes from healthData
+        // Get aiNotes from healthData (comes from On-Page Insights column CP)
         const aiNotes = healthData?.aiNotes;
-        console.log('Raw aiNotes:', aiNotes);
+        console.log('Raw aiNotes from On-Page Insights:', aiNotes);
         
-        // Only set aiReport if aiNotes is a non-empty string
-        if (aiNotes && typeof aiNotes === 'string') {
-            const cleanedNotes = aiNotes.trim();
-            if (cleanedNotes && cleanedNotes !== 'true' && cleanedNotes !== 'false') {
+        // Handle any non-null value as valid content
+        if (aiNotes !== null && aiNotes !== undefined) {
+            const cleanedNotes = String(aiNotes).trim();
+            // Only use the notes if they're not empty or just "true"/"false"
+            if (cleanedNotes && !['true', 'false'].includes(cleanedNotes.toLowerCase())) {
                 aiReport = cleanedNotes;
             }
         }
@@ -2231,12 +2232,13 @@ const WebsiteStats = ({ data }) => {
                 </div>
             </Card>
 
-            {/* Only render AIReportSection if aiReport is a non-empty string */}
-            {aiReport && (
-                <div className="col-span-12">
-                    <AIReportSection reportText={aiReport} title="On-Page AI Notes" />
-                </div>
-            )}
+            {/* Always render AIReportSection with appropriate placeholder */}
+            <div className="col-span-12">
+                <AIReportSection 
+                    reportText={aiReport || 'AI Report will appear here once generated in the On-Page Insights sheet (column CP)'} 
+                    title="On-Page AI Notes" 
+                />
+            </div>
 
             <Card className="mt-8">
                 <h2 className="text-lg font-semibold mb-4">Technical SEO Checklist</h2>
