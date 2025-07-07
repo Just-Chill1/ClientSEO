@@ -531,7 +531,7 @@ const Dashboard = ({ setActiveTab }) => {
                         <h2 className="text-xl font-bold text-gray-800">Overview</h2>
                          <InfoTooltip text="A high-level comparison of your clinic against key competitors on important metrics like online reviews, site performance, and advertising." />
                     </div>
-                    <button onClick={() => alert('Webhook for Overview refresh triggered!')} className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-1 px-3 rounded-lg text-xs transition-colors duration-300">Refresh</button>
+                    <button onClick={() => console.log('Overview refresh requested')} className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-1 px-3 rounded-lg text-xs transition-colors duration-300">Refresh</button>
                 </div>
                 <table className="w-full text-left text-sm whitespace-nowrap">
                     <thead>
@@ -991,7 +991,7 @@ const Keywords = ({ summary, table }) => {
                         <InfoTooltip text="Analyze keyword rankings for your site and competitors. Use the tabs to switch between different sites." />
                 </div>
                     <button
-                        onClick={() => alert('Webhook for Keywords refresh triggered!')}
+                        onClick={() => console.log('Keywords refresh requested')}
                         className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-1 px-3 rounded-lg text-xs transition-colors duration-300"
                     >
                         Refresh
@@ -1408,7 +1408,7 @@ const Backlinks = () => {
                         <InfoTooltip text="Analyze backlinks for your site and competitors. Use the tabs to switch between different sites." />
                     </div>
                     <button
-                        onClick={() => alert('Webhook for Backlinks refresh triggered!')}
+                        onClick={() => console.log('Backlinks refresh requested')}
                         className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-1 px-3 rounded-lg text-xs transition-colors duration-300"
                     >
                         Refresh
@@ -1835,7 +1835,7 @@ const GeogridMaps = () => {
                     <p className="text-gray-500 mt-1">Track your local search rankings across different keywords</p>
                 </div>
                 <button
-                    onClick={() => alert('Webhook for Geogrid refresh triggered!')}
+                    onClick={() => console.log('Geogrid refresh requested')}
                     className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-1 px-3 rounded-lg text-xs transition-colors duration-300"
                 >
                     Refresh
@@ -2057,7 +2057,6 @@ const WebsiteStats = ({ data, webhooks }) => {
             
             // Show success message
             console.log('Webhook triggered successfully!');
-            alert('Refresh triggered! The automation is starting...');
             
             setRefreshProgress(15);
             setRefreshMessage('Automation started! Fetching fresh data...');
@@ -2767,12 +2766,7 @@ const WebsiteStats = ({ data, webhooks }) => {
                         <ModernMetricCard
                             title="Technical Checks"
                             value={`${checksPassed}/${healthData.checks.totalChecks}`}
-                            subtitle={<span className={`${checksPercentage >= 90 ? 'text-green-600' : 
-                                checksPercentage >= 80 ? 'text-green-500' : 
-                                checksPercentage >= 70 ? 'text-yellow-500' : 
-                                checksPercentage >= 60 ? 'text-orange-500' : 'text-red-500'}`}>
-                                {checksPercentage.toFixed(1)}% passed
-                            </span>}
+                            subtitle={`${checksPercentage.toFixed(1)}% passed`}
                             icon={<CheckCircle className="w-6 h-6" />}
                             status={checksPercentage >= 90 ? 'excellent' : checksPercentage >= 80 ? 'good' : checksPercentage >= 60 ? 'warning' : 'error'}
                             categoryBreakdown={Object.entries(checkCategories).map(([category, categoryData]) => {
@@ -3044,10 +3038,30 @@ const Header = ({active,setActive}) => {
 /* MAIN APP – fetches data, routes tabs                               */
 /* ------------------------------------------------------------------ */
 const App = () => {
-  const [tab, setTab]   = useState('Dashboard');
+  // Initialize tab from URL parameter, fallback to 'Dashboard'
+  const getInitialTab = () => {
+    const urlParams = new URLSearchParams(location.search);
+    const tabFromUrl = urlParams.get('tab');
+    const validTabs = ['Dashboard', 'Website Stats', 'Geogrid Maps', 'Keywords', 'Backlinks', 'Tools'];
+    return validTabs.includes(tabFromUrl) ? tabFromUrl : 'Dashboard';
+  };
+
+  const [tab, setTab]   = useState(getInitialTab());
   const [data, setData] = useState(null);
   const [err,  setErr]  = useState(null);
   const [load, setLoad] = useState(true);
+
+  // Update URL when tab changes
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    if (tab !== 'Dashboard') {
+      urlParams.set('tab', tab);
+    } else {
+      urlParams.delete('tab');
+    }
+    const newUrl = `${location.pathname}?${urlParams.toString()}`;
+    window.history.replaceState({}, '', newUrl);
+  }, [tab]);
 
   useEffect(() => {
     const id = new URLSearchParams(location.search).get('workbookId');
