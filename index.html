@@ -2059,57 +2059,81 @@ const WebsiteStats = ({ data }) => {
             const ModernMetricCard = ({ title, value, subtitle, icon, status, trend, details, tooltip, alwaysShowDetails, categoryBreakdown }) => {
             const cardRef = useRef(null);
             const [tooltipPosition, setTooltipPosition] = useState('center-top');
+            const [showTooltip, setShowTooltip] = useState(false);
+            const hoverTimeoutRef = useRef(null);
 
         useEffect(() => {
             if (!tooltip || !cardRef.current) return;
 
             const handleMouseEnter = () => {
-                const cardRect = cardRef.current.getBoundingClientRect();
-                const tooltipWidth = tooltip.width === 'large' ? 600 : 320;
-                const viewportWidth = window.innerWidth;
-                const viewportHeight = window.innerHeight;
-                
-                // Calculate if tooltip would overflow horizontally
-                const tooltipLeft = cardRect.left + cardRect.width / 2 - tooltipWidth / 2;
-                const tooltipRight = tooltipLeft + tooltipWidth;
-                
-                // Calculate if tooltip would overflow vertically
-                const estimatedTooltipHeight = tooltip.width === 'large' ? 400 : 200;
-                const spaceAbove = cardRect.top;
-                const spaceBelow = viewportHeight - cardRect.bottom;
-                
-                let position = 'center-top';
-                
-                // Determine horizontal positioning
-                if (tooltipLeft < 20) {
-                    // Not enough space on left, align to left edge of card
-                    position = 'left-top';
-                } else if (tooltipRight > viewportWidth - 20) {
-                    // Not enough space on right, align to right edge of card
-                    position = 'right-top';
+                // Clear any existing timeout
+                if (hoverTimeoutRef.current) {
+                    clearTimeout(hoverTimeoutRef.current);
                 }
                 
-                // Determine vertical positioning
-                if (spaceAbove < estimatedTooltipHeight && spaceBelow > spaceAbove) {
-                    position = position.replace('-top', '-bottom');
+                // Add a small delay to prevent accidental triggers
+                hoverTimeoutRef.current = setTimeout(() => {
+                    const cardRect = cardRef.current?.getBoundingClientRect();
+                    if (!cardRect) return;
+                    
+                    const tooltipWidth = tooltip.width === 'large' ? 600 : 320;
+                    const viewportWidth = window.innerWidth;
+                    const viewportHeight = window.innerHeight;
+                    
+                    // Calculate if tooltip would overflow horizontally
+                    const tooltipLeft = cardRect.left + cardRect.width / 2 - tooltipWidth / 2;
+                    const tooltipRight = tooltipLeft + tooltipWidth;
+                    
+                    // Calculate if tooltip would overflow vertically
+                    const estimatedTooltipHeight = tooltip.width === 'large' ? 400 : 200;
+                    const spaceAbove = cardRect.top;
+                    const spaceBelow = viewportHeight - cardRect.bottom;
+                    
+                    let position = 'center-top';
+                    
+                    // Determine horizontal positioning
+                    if (tooltipLeft < 20) {
+                        position = 'left-top';
+                    } else if (tooltipRight > viewportWidth - 20) {
+                        position = 'right-top';
+                    }
+                    
+                    // Determine vertical positioning
+                    if (spaceAbove < estimatedTooltipHeight && spaceBelow > spaceAbove) {
+                        position = position.replace('-top', '-bottom');
+                    }
+                    
+                    setTooltipPosition(position);
+                    setShowTooltip(true);
+                }, 200); // 200ms delay
+            };
+
+            const handleMouseLeave = () => {
+                // Clear timeout and hide tooltip
+                if (hoverTimeoutRef.current) {
+                    clearTimeout(hoverTimeoutRef.current);
                 }
-                
-                setTooltipPosition(position);
+                setShowTooltip(false);
             };
 
             const cardElement = cardRef.current;
             cardElement.addEventListener('mouseenter', handleMouseEnter);
+            cardElement.addEventListener('mouseleave', handleMouseLeave);
             
             return () => {
                 if (cardElement) {
                     cardElement.removeEventListener('mouseenter', handleMouseEnter);
+                    cardElement.removeEventListener('mouseleave', handleMouseLeave);
+                }
+                if (hoverTimeoutRef.current) {
+                    clearTimeout(hoverTimeoutRef.current);
                 }
             };
         }, [tooltip]);
 
         // Generate tooltip classes based on position
         const getTooltipClasses = () => {
-            const baseClasses = `absolute ${tooltip?.width === 'large' ? 'w-[600px]' : 'w-80'} bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-all duration-300 z-50 pointer-events-auto`;
+            const baseClasses = `absolute ${tooltip?.width === 'large' ? 'w-[600px]' : 'w-80'} bg-gray-900 text-white text-sm rounded-xl shadow-2xl transition-all duration-300 z-50 pointer-events-none ${showTooltip ? 'opacity-100' : 'opacity-0'}`;
             
                          switch (tooltipPosition) {
                  case 'left-top':
@@ -2157,16 +2181,16 @@ const WebsiteStats = ({ data }) => {
 
 
         
-        // Debug for ModernMetricCard
-        console.log(`ModernMetricCard "${title}" received status:`, status);
+        // Determine icon styling based on status
+        const iconClasses = status === 'excellent' ? 'bg-green-100 text-green-600' : 
+            status === 'good' ? 'bg-green-100 text-green-600' : 
+            status === 'warning' ? 'bg-yellow-100 text-yellow-600' : 
+            status === 'error' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600';
         
         return (
             <div ref={cardRef} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200 group relative">
                 <div className="flex items-start justify-between mb-4">
-                    <div className={`p-3 rounded-xl ${status === 'excellent' ? 'bg-green-100 text-green-600' : 
-                        status === 'good' ? 'bg-green-100 text-green-600' : 
-                        status === 'warning' ? 'bg-yellow-100 text-yellow-600' : 
-                        status === 'error' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
+                    <div className={`p-3 rounded-xl ${iconClasses}`}>
                         {icon}
                     </div>
                     {trend && (
@@ -2246,7 +2270,7 @@ const WebsiteStats = ({ data }) => {
                         </div>
                     </div>
                 )}
-                {/* Smart Positioned Tooltip */}
+                {/* Smart Positioned Tooltip - Only show on direct card hover */}
                 {tooltip && (
                     <div className={getTooltipClasses()}>
                         {tooltip.header && (
@@ -2509,11 +2533,7 @@ const WebsiteStats = ({ data }) => {
                          value={healthData.siteSpeed}
                          subtitle={`${speedStatus === 'excellent' ? 'Excellent' : speedStatus === 'good' ? 'Good' : 'Poor Performance'}`}
                          icon={<TrendingUp className="w-6 h-6" />}
-                         status={(() => {
-                             const finalStatus = speedStatus === 'excellent' ? 'excellent' : speedStatus === 'good' ? 'good' : 'error';
-                             console.log('Speed Card - speedSec:', speedSec, 'speedStatus:', speedStatus, 'finalStatus:', finalStatus);
-                             return finalStatus;
-                         })()}
+                         status={speedStatus === 'excellent' ? 'excellent' : speedStatus === 'good' ? 'good' : 'error'}
                          alwaysShowDetails={true}
                          details={healthData.speedDetails}
                      />
@@ -2582,22 +2602,14 @@ const WebsiteStats = ({ data }) => {
                          value={hasBrokenLinks ? 'Issues Found' : 'All Good'}
                          subtitle={hasBrokenLinks ? 'Fix required' : 'No broken links'}
                          icon={<Link2 className="w-6 h-6" />}
-                         status={(() => {
-                             const finalStatus = hasBrokenLinks ? 'error' : 'excellent';
-                             console.log('Broken Links Card - brokenLinks:', healthData.brokenLinks, 'hasBrokenLinks:', hasBrokenLinks, 'finalStatus:', finalStatus);
-                             return finalStatus;
-                         })()}
+                         status={hasBrokenLinks ? 'error' : 'excellent'}
                      />
                      <ModernMetricCard
                          title="SSL Certificate"
                          value={healthData.ssl ? 'Secure' : 'Not Secure'}
                          subtitle={healthData.ssl ? 'HTTPS enabled' : 'HTTPS required'}
                          icon={<ShieldCheck className="w-6 h-6" />}
-                         status={(() => {
-                             const finalStatus = healthData.ssl ? 'excellent' : 'error';
-                             console.log('SSL Card - ssl:', healthData.ssl, 'finalStatus:', finalStatus);
-                             return finalStatus;
-                         })()}
+                         status={healthData.ssl ? 'excellent' : 'error'}
                      />
                  </div>
             </div>
