@@ -1151,55 +1151,55 @@ const Keywords = ({ summary, table }) => {
 
 const Backlinks = () => {
     // Destructure chart components here, as they are only used in this component.
-    const { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } = window.Recharts;
+    const { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } = window.Recharts;
 
     // --- Additional Icon Components for this page ---
     const PlusCircle = createIcon(
-      <>
-        <circle cx="12" cy="12" r="10" />
-        <line x1="12" y1="8" x2="12" y2="16" />
-        <line x1="8" y1="12" x2="16" y2="12" />
-      </>
+        <>
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="16" />
+            <line x1="8" y1="12" x2="16" y2="12" />
+        </>
     );
     const MinusCircle = createIcon(
-      <>
-        <circle cx="12" cy="12" r="10" />
-        <line x1="8" y1="12" x2="16" y2="12" />
-      </>
+        <>
+            <circle cx="12" cy="12" r="10" />
+            <line x1="8" y1="12" x2="16" y2="12" />
+        </>
     );
     const Search = createIcon(
-      <>
-        <circle cx="11" cy="11" r="8" />
-        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-      </>
+        <>
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </>
     );
     const ExternalLink = createIcon(
-      <>
-        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-        <polyline points="15 3 21 3 21 9" />
-        <line x1="10" y1="14" x2="21" y2="3" />
-      </>
+        <>
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            <polyline points="15 3 21 3 21 9" />
+            <line x1="10" y1="14" x2="21" y2="3" />
+        </>
     );
     const LinkIcon = createIcon(
-      <>
-        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-      </>
+        <>
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+        </>
     );
     const ShieldCheck = createIcon(
-      <>
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-        <path d="M9 12l2 2 4-4" />
-      </>
+        <>
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <path d="M9 12l2 2 4-4" />
+        </>
     );
     const Globe = createIcon(
-      <>
-        <circle cx="12" cy="12" r="10" />
-        <line x1="2" y1="12" x2="22" y2="12" />
-        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-      </>
+        <>
+            <circle cx="12" cy="12" r="10" />
+            <line x1="2" y1="12" x2="22" y2="12" />
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+        </>
     );
-
+    
     // --- Component State and Data ---
     const [backlinksData, setBacklinksData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -1338,7 +1338,7 @@ const Backlinks = () => {
                     <div className="space-y-3">
                         <div className="flex items-center space-x-2 px-2 mb-2">
                             <h3 className="text-lg font-semibold text-gray-700">Link Types</h3>
-                            <InfoTooltip text="Dofollow links pass SEO value to your site, while nofollow links typically don't. A healthy backlink profile should have a mix of both, with more dofollow links being preferable." />
+                            <InfoTooltip text="Dofollow links pass SEO value to your site, while nofollow links don't. A healthy backlink profile should have more dofollow links." />
                         </div>
                         <div className="bg-slate-50 rounded-lg p-4">
                             <ResponsiveContainer width="100%" height={200}>
@@ -1367,30 +1367,19 @@ const Backlinks = () => {
                     <div className="space-y-3">
                         <div className="flex items-center space-x-2 px-2 mb-2">
                             <h3 className="text-lg font-semibold text-gray-700">Link Dynamics</h3>
-                            <InfoTooltip text="Shows how your backlink profile is changing over time. New links indicate growth, while lost links may need investigation. A low spam score (under 30%) is ideal." />
+                            <InfoTooltip text="Shows how your backlinks change over time. New links indicate growth, while lost links may need investigation." />
                         </div>
-                        <SummaryStat
-                            label="New Links"
-                            value={backlinksSummary.newLinks || 0}
-                            color="text-green-600"
-                            icon={<PlusCircle className="w-5 h-5" />}
-                            valuePrefix="+"
-                            subtitle="Gained this month"
-                        />
-                        <SummaryStat
-                            label="Lost Links"
-                            value={backlinksSummary.lostLinks || 0}
-                            color="text-red-600"
-                            icon={<MinusCircle className="w-5 h-5" />}
-                            subtitle="Lost this month"
-                        />
-                        <SummaryStat
-                            label="Spam Score"
-                            value={`${backlinksSummary.avgSpamScore || 0}%`}
-                            color={(Number(backlinksSummary.avgSpamScore) || 0) <= 30 ? 'text-green-600' : (Number(backlinksSummary.avgSpamScore) || 0) <= 60 ? 'text-yellow-600' : 'text-red-600'}
-                            icon={<ShieldCheck className="w-5 h-5" />}
-                            subtitle={`${(Number(backlinksSummary.spamScoreChange) || 0) <= 0 ? '↓' : '↑'} ${Math.abs(Number(backlinksSummary.spamScoreChange) || 0)}% from last month`}
-                        />
+                        <div className="bg-slate-50 rounded-lg p-4">
+                            <ResponsiveContainer width="100%" height={200}>
+                                <BarChart data={followData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="name" />
+                                    <YAxis />
+                                    <Tooltip />
+                                    <Bar dataKey="value" fill="#8884d8" />
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
                     </div>
                 </div>
             </Card>
@@ -1507,7 +1496,7 @@ const Backlinks = () => {
 
 const ToolsPage     = () => <PageContent><h2 className="text-center text-gray-500">Tools – coming soon</h2></PageContent>;
 const GeogridMaps = () => {
-    const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, LabelList } = window.Recharts;
+    const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, LabelList, Legend, PieChart, Pie } = window.Recharts;
     const [geogridData, setGeogridData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
