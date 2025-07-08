@@ -29,8 +29,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>MedSpa SEO Dashboard</title>
   
-  <!-- Prevent favicon 404 -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+  <!-- Custom favicon matching header icon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><defs><linearGradient id='favicon-gradient' x1='0%25' y1='0%25' x2='100%25' y2='0%25'><stop offset='0%25' stop-color='%233b82f6'/><stop offset='100%25' stop-color='%23ec4899'/></linearGradient></defs><path d='M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' stroke='url(%23favicon-gradient)'/></svg>">
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -2698,38 +2698,125 @@ const GeogridMaps = () => {
             }
             
             try {
-                // Helper function to fix date parsing
+                // Enhanced helper function to fix date parsing and handle missing months
                 const fixDateFormatting = (monthlyData) => {
-                    if (!Array.isArray(monthlyData)) return monthlyData;
+                    if (!Array.isArray(monthlyData) || monthlyData.length === 0) return monthlyData;
                     
-                    return monthlyData.map((monthData, index) => {
-                        // If all dates are showing as the same month, we need to infer the correct month
-                        // Based on the sorting order (newest first), we can calculate the correct month
-                        const currentDate = new Date();
-                        const currentMonth = currentDate.getMonth(); // 0-based
-                        const currentYear = currentDate.getFullYear();
+                    console.log('📅 Original monthly data:', monthlyData.map(m => ({ 
+                        date: m.date, 
+                        originalDate: m.date, 
+                        rawDate: m.rawDate,
+                        parsedDate: m.parsedDate 
+                    })));
+                    
+                    // Try to parse the original dates first
+                    const parsedDates = monthlyData.map((monthData, index) => {
+                        let parsedDate = null;
                         
-                        // Calculate the month for this entry (going backwards from current month)
-                        let targetMonth = currentMonth - index;
-                        let targetYear = currentYear;
-                        
-                        // Handle year rollover
-                        if (targetMonth < 0) {
-                            targetMonth += 12;
-                            targetYear--;
+                        // If we have a parsedDate from the backend, use it
+                        if (monthData.parsedDate) {
+                            parsedDate = new Date(monthData.parsedDate);
                         }
                         
-                        // Create the corrected date
-                        const correctedDate = new Date(targetYear, targetMonth, 1);
-                        const formattedDate = correctedDate.toLocaleString('default', { 
+                        // If no parsedDate from backend, try multiple parsing approaches
+                        if (!parsedDate || isNaN(parsedDate.getTime())) {
+                            if (monthData.date) {
+                                // First try parsing as-is
+                                parsedDate = new Date(monthData.date);
+                                
+                                // If that fails, try US date format parsing
+                                if (isNaN(parsedDate.getTime())) {
+                                    // Try parsing MM/DD/YYYY format
+                                    const dateStr = monthData.date.toString();
+                                    const parts = dateStr.split('/');
+                                    if (parts.length === 3) {
+                                        const month = parseInt(parts[0]) - 1; // Convert to 0-based
+                                        const day = parseInt(parts[1]);
+                                        const year = parseInt(parts[2]);
+                                        parsedDate = new Date(year, month, day);
+                                    }
+                                }
+                            }
+                            
+                            // Try parsing rawDate if available
+                            if ((!parsedDate || isNaN(parsedDate.getTime())) && monthData.rawDate) {
+                                parsedDate = new Date(monthData.rawDate);
+                                
+                                // If that fails, try US date format parsing on rawDate
+                                if (isNaN(parsedDate.getTime())) {
+                                    const dateStr = monthData.rawDate.toString();
+                                    const parts = dateStr.split('/');
+                                    if (parts.length === 3) {
+                                        const month = parseInt(parts[0]) - 1; // Convert to 0-based
+                                        const day = parseInt(parts[1]);
+                                        const year = parseInt(parts[2]);
+                                        parsedDate = new Date(year, month, day);
+                                    }
+                                }
+                            }
+                        }
+                        
+                        return {
+                            ...monthData,
+                            originalDate: monthData.date,
+                            parsedDate: parsedDate,
+                            index: index
+                        };
+                    });
+                    
+                    // Check if we have valid parsed dates
+                    const validDates = parsedDates.filter(item => item.parsedDate && !isNaN(item.parsedDate.getTime()));
+                    
+                    if (validDates.length === 0) {
+                        console.log('⚠️ No valid dates found, using fallback sequential logic');
+                        // Fallback to sequential month logic
+                        return monthlyData.map((monthData, index) => {
+                            const currentDate = new Date();
+                            const currentMonth = currentDate.getMonth();
+                            const currentYear = currentDate.getFullYear();
+                            
+                            let targetMonth = currentMonth - index;
+                            let targetYear = currentYear;
+                            
+                            if (targetMonth < 0) {
+                                targetMonth += 12;
+                                targetYear--;
+                            }
+                            
+                            const correctedDate = new Date(targetYear, targetMonth, 1);
+                            const formattedDate = correctedDate.toLocaleString('default', { 
+                                month: 'long', 
+                                year: 'numeric'
+                            });
+                            
+                            return {
+                                ...monthData,
+                                date: formattedDate,
+                                originalDate: monthData.date,
+                                correctedDate: correctedDate
+                            };
+                        });
+                    }
+                    
+                    // If we have valid dates, sort by date (newest first) and format properly
+                    validDates.sort((a, b) => b.parsedDate.getTime() - a.parsedDate.getTime());
+                    
+                    console.log('✅ Valid dates after sorting:', validDates.map(v => ({
+                        date: v.parsedDate.toLocaleString('default', { month: 'long', year: 'numeric' }),
+                        parsedDate: v.parsedDate,
+                        originalDate: v.originalDate
+                    })));
+                    
+                    return validDates.map(item => {
+                        const formattedDate = item.parsedDate.toLocaleString('default', { 
                             month: 'long', 
                             year: 'numeric'
                         });
                         
                         return {
-                            ...monthData,
+                            ...item,
                             date: formattedDate,
-                            originalDate: monthData.date // Keep original for debugging
+                            correctedDate: item.parsedDate
                         };
                     });
                 };
@@ -2743,14 +2830,11 @@ const GeogridMaps = () => {
                     if (Array.isArray(value)) {
                         console.log(`📅 Processing keyword "${key}" with ${value.length} months:`, value.map(v => v.date));
                         
-                        // Check if all dates are the same (indicating a parsing issue)
-                        const uniqueDates = [...new Set(value.map(v => v.date))];
-                        if (uniqueDates.length === 1 && value.length > 1) {
-                            console.log(`⚠️ All dates are the same (${uniqueDates[0]}) - applying date fix`);
-                            normalizedData[key.toLowerCase().trim()] = fixDateFormatting(value);
-                        } else {
-                            normalizedData[key.toLowerCase().trim()] = value;
-                        }
+                        // Always apply our enhanced date formatting
+                        const processedData = fixDateFormatting(value);
+                        console.log(`✅ Processed "${key}":`, processedData.map(v => ({ date: v.date, originalDate: v.originalDate })));
+                        
+                        normalizedData[key.toLowerCase().trim()] = processedData;
                     } else {
                         normalizedData[key.toLowerCase().trim()] = value;
                     }
@@ -2804,7 +2888,9 @@ const GeogridMaps = () => {
             monthlyDataLength: monthlyData?.length,
             monthlyData: monthlyData,
             currentMonthIndex,
-            dates: monthlyData?.map(m => m.date)
+            dates: monthlyData?.map(m => m.date),
+            currentData: monthlyData?.[currentMonthIndex],
+            availableIndices: monthlyData?.map((_, i) => i)
         });
 
         // Validate monthlyData
@@ -2833,8 +2919,20 @@ const GeogridMaps = () => {
 
         const handleDateChange = (direction) => {
             const newIndex = currentMonthIndex + direction;
+            console.log(`📅 Month navigation for "${keyword}":`, {
+                direction,
+                currentIndex: currentMonthIndex,
+                newIndex,
+                maxIndex: monthlyData.length - 1,
+                isValidIndex: newIndex >= 0 && newIndex < monthlyData.length,
+                availableDates: monthlyData.map((m, i) => ({ index: i, date: m.date }))
+            });
+            
             if (newIndex >= 0 && newIndex < monthlyData.length) {
                 setCurrentMonthIndex(newIndex);
+                console.log(`✅ Changed to month index ${newIndex}: ${monthlyData[newIndex]?.date}`);
+            } else {
+                console.log(`❌ Invalid month index ${newIndex} for keyword "${keyword}"`);
             }
         };
 
@@ -2890,6 +2988,22 @@ const GeogridMaps = () => {
                             {monthlyData.length > 1 && (
                                 <div className="text-xs text-gray-500">
                                     {currentMonthIndex + 1} of {monthlyData.length}
+                                </div>
+                            )}
+                            {monthlyData.length > 1 && (
+                                <div className="flex items-center justify-center space-x-1 mt-1">
+                                    {monthlyData.map((_, index) => (
+                                        <div
+                                            key={index}
+                                            className={`w-2 h-2 rounded-full ${
+                                                index === currentMonthIndex 
+                                                    ? 'bg-blue-600' 
+                                                    : 'bg-gray-300 hover:bg-gray-400'
+                                            } cursor-pointer transition-colors`}
+                                            onClick={() => setCurrentMonthIndex(index)}
+                                            title={`Go to ${monthlyData[index]?.date || 'Unknown month'}`}
+                                        />
+                                    ))}
                                 </div>
                             )}
                         </div>

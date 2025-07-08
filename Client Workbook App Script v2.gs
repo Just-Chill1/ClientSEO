@@ -570,8 +570,51 @@ function getGeogridData(spreadsheet) {
             groupedByKeyword[keyword] = [];
         }
         
-        const runDate = new Date(row[0]);
-        const formattedDate = runDate.toLocaleString('default', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+        // Enhanced date parsing to handle US date formats better
+        const rawDate = row[0];
+        let runDate;
+        let formattedDate;
+        
+        try {
+            // Try parsing the date as-is first
+            runDate = new Date(rawDate);
+            
+            // If that fails and it looks like a US date format, try parsing differently
+            if (isNaN(runDate.getTime()) && typeof rawDate === 'string') {
+                // Try MM/DD/YYYY format parsing
+                const parts = rawDate.split('/');
+                if (parts.length === 3) {
+                    const month = parseInt(parts[0]) - 1; // Convert to 0-based month
+                    const day = parseInt(parts[1]);
+                    const year = parseInt(parts[2]);
+                    runDate = new Date(year, month, day);
+                }
+            }
+            
+            // If we still don't have a valid date, use current date as fallback
+            if (isNaN(runDate.getTime())) {
+                console.log(`Row ${index + 2}: Invalid date format: ${rawDate}, using current date`);
+                runDate = new Date();
+            }
+            
+            // Format the date consistently
+            formattedDate = runDate.toLocaleString('en-US', { 
+                month: 'long', 
+                year: 'numeric',
+                timeZone: 'UTC'
+            });
+            
+            console.log(`Row ${index + 2}: Raw date: ${rawDate}, Parsed: ${runDate}, Formatted: ${formattedDate}`);
+            
+        } catch (e) {
+            console.log(`Row ${index + 2}: Error parsing date ${rawDate}:`, e.message);
+            runDate = new Date();
+            formattedDate = runDate.toLocaleString('en-US', { 
+                month: 'long', 
+                year: 'numeric',
+                timeZone: 'UTC'
+            });
+        }
         
         const competitors = [];
         // Starting from column K (index 10), each competitor now takes 5 columns
@@ -605,6 +648,8 @@ function getGeogridData(spreadsheet) {
 
         groupedByKeyword[keyword].push({
             date: formattedDate,
+            rawDate: rawDate, // Keep original for debugging
+            parsedDate: runDate.toISOString(), // ISO format for consistent parsing
             mapLink: row[9],  // Column J
             competitors: competitors,
         });
@@ -616,8 +661,13 @@ function getGeogridData(spreadsheet) {
         console.log(`${keyword}: ${groupedByKeyword[keyword].length} entries`);
     }
 
+    // Sort by parsed date (newest first) to handle missing months properly
     for (const keyword in groupedByKeyword) {
-        groupedByKeyword[keyword].sort((a, b) => new Date(b.date) - new Date(a.date));
+        groupedByKeyword[keyword].sort((a, b) => {
+            const dateA = new Date(a.parsedDate);
+            const dateB = new Date(b.parsedDate);
+            return dateB.getTime() - dateA.getTime();
+        });
     }
 
     return groupedByKeyword;
