@@ -599,7 +599,7 @@ const Dashboard = ({ setActiveTab }) => {
         );
     };
 
-    const OverviewTable = ({ overviewData, loading, error }) => {
+    const OverviewTable = ({ overviewData, loading, error, onRefresh, isRefreshing, refreshProgress, refreshMessage }) => {
         if (loading) {
             return <Card className="col-span-12 overflow-x-auto flex items-center justify-center"><p className="text-gray-500">Loading Overview data...</p></Card>;
         }
@@ -617,7 +617,36 @@ const Dashboard = ({ setActiveTab }) => {
                         <h2 className="text-xl font-bold text-gray-800">Overview</h2>
                          <InfoTooltip text="A high-level comparison of your clinic against key competitors on important metrics like online reviews, site performance, and advertising." />
                     </div>
-                    <button onClick={() => console.log('Overview refresh requested')} className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-1 px-3 rounded-lg text-xs transition-colors duration-300">Refresh</button>
+                    <div className="flex items-center space-x-4">
+                        {/* Inline Progress Indicator */}
+                        {isRefreshing && (
+                            <div className="flex items-center space-x-3 bg-white rounded-xl shadow-md px-4 py-2 border border-gray-100">
+                                <div className="flex items-center space-x-2">
+                                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                    <span className="text-sm font-medium text-gray-700">{refreshMessage}</span>
+                                </div>
+                                <div className="w-16 bg-gray-200 rounded-full h-2">
+                                    <div 
+                                        className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
+                                        style={{ width: `${refreshProgress}%` }}
+                                    ></div>
+                                </div>
+                                <span className="text-xs font-medium text-blue-600 min-w-[2rem]">{refreshProgress}%</span>
+                            </div>
+                        )}
+                        
+                        <button 
+                            onClick={onRefresh}
+                            disabled={isRefreshing}
+                            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg text-sm ${
+                                isRefreshing 
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                                    : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
+                            }`}
+                        >
+                            {isRefreshing ? 'Updating...' : 'Update Analytics'}
+                        </button>
+                    </div>
                 </div>
                 <table className="w-full text-left text-sm whitespace-nowrap">
                     <thead>
@@ -876,6 +905,208 @@ const Dashboard = ({ setActiveTab }) => {
     const [dashboardData, setDashboardData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    
+    // Overview table refresh state management
+    const [isOverviewRefreshing, setIsOverviewRefreshing] = useState(false);
+    const [overviewRefreshProgress, setOverviewRefreshProgress] = useState(0);
+    const [overviewRefreshMessage, setOverviewRefreshMessage] = useState('');
+    const overviewPollIntervalRef = useRef(null);
+    const overviewRefreshStartTimeRef = useRef(null);
+
+    // Cleanup polling on unmount
+    useEffect(() => {
+        return () => {
+            if (overviewPollIntervalRef.current) {
+                clearInterval(overviewPollIntervalRef.current);
+            }
+        };
+    }, []);
+
+    // Overview table refresh functionality
+    const triggerOverviewRefresh = async () => {
+        console.log('Overview table refresh triggered');
+        
+        const webhooks = {
+            onPageInsights: 'https://hook.us1.make.com/rytnhogl86u66kb84c8x4jvb9crkhwwv',
+            gbpInsights: 'https://hook.us1.make.com/njgvoslc2tis3l5dkm1smswmwlvs91pb',
+            facebookAds: 'https://hook.us1.make.com/rc54yq5e4b6erln6qbyltcbswgul4vj7'
+        };
+        
+        setIsOverviewRefreshing(true);
+        setOverviewRefreshProgress(5);
+        setOverviewRefreshMessage('Triggering overview automation...');
+        overviewRefreshStartTimeRef.current = Date.now();
+
+        try {
+            // Get the workbook ID from URL parameters
+            const params = new URLSearchParams(window.location.search);
+            const workbookId = params.get('workbookId');
+            
+            if (!workbookId) {
+                throw new Error('No workbook ID found in URL');
+            }
+
+            // Trigger all three webhooks in parallel
+            const webhookPromises = [
+                fetch(`${webhooks.onPageInsights}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('On-Page Insights')}`, { method: 'GET', mode: 'no-cors' }),
+                fetch(`${webhooks.gbpInsights}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('GBP Insights')}`, { method: 'GET', mode: 'no-cors' }),
+                fetch(`${webhooks.facebookAds}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('Links')}`, { method: 'GET', mode: 'no-cors' })
+            ];
+            
+            console.log('Triggering all overview webhooks:', {
+                onPageInsights: `${webhooks.onPageInsights}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('On-Page Insights')}`,
+                gbpInsights: `${webhooks.gbpInsights}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('GBP Insights')}`,
+                facebookAds: `${webhooks.facebookAds}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('Links')}`
+            });
+            
+            await Promise.all(webhookPromises);
+            
+            // Show success message
+            console.log('All overview webhooks triggered successfully!');
+            
+            setOverviewRefreshProgress(15);
+            setOverviewRefreshMessage('Overview automation started! (~60s expected)...');
+            
+            // Start polling for data changes
+            startOverviewPolling();
+            
+        } catch (error) {
+            console.error('Error triggering overview refresh:', error);
+            setIsOverviewRefreshing(false);
+            setOverviewRefreshProgress(0);
+            setOverviewRefreshMessage('');
+            alert(`Failed to trigger overview refresh: ${error.message}`);
+        }
+    };
+
+    const startOverviewPolling = () => {
+        let attempts = 0;
+        const maxAttempts = 4; // Poll for ~3 minutes (45s intervals)
+        
+        const poll = async () => {
+            attempts++;
+            const elapsed = (Date.now() - overviewRefreshStartTimeRef.current) / 1000;
+            const progress = Math.min(15 + (attempts * 20), 95);
+            
+            setOverviewRefreshProgress(progress);
+            
+            let message;
+            if (elapsed < 60) {
+                message = `Overview automation running... (~60s expected)`;
+            } else {
+                message = `Checking for data updates...`;
+            }
+            setOverviewRefreshMessage(message);
+            
+            try {
+                // Check if data has been updated by fetching fresh data
+                const params = new URLSearchParams(window.location.search);
+                const workbookId = params.get('workbookId');
+                
+                if (workbookId) {
+                    const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
+                    
+                    const response = await fetch(scriptUrl);
+                    const newData = await response.json();
+                    
+                    // Check for changes in overview data
+                    if (newData.dashboard && hasOverviewDataChanged(dashboardData, newData.dashboard)) {
+                        // Data has changed! Stop polling and update in-place
+                        clearInterval(overviewPollIntervalRef.current);
+                        setOverviewRefreshProgress(100);
+                        setOverviewRefreshMessage('Overview updated! Loading fresh data...');
+                        
+                        // Update the dashboard data
+                        const cacheKey = `dashboard_data_${workbookId}`;
+                        sessionStorage.setItem(cacheKey, JSON.stringify(newData.dashboard));
+                        
+                        setDashboardData(newData.dashboard);
+                        
+                        // Clear refresh state after a brief success message
+                        setTimeout(() => {
+                            setIsOverviewRefreshing(false);
+                            setOverviewRefreshProgress(0);
+                            setOverviewRefreshMessage('');
+                        }, 2000);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error('Error polling for overview updates:', error);
+            }
+            
+            // Auto-refresh after max attempts
+            if (attempts >= maxAttempts) {
+                clearInterval(overviewPollIntervalRef.current);
+                setOverviewRefreshProgress(100);
+                setOverviewRefreshMessage('Automation complete! Refreshing with latest data...');
+                
+                try {
+                    const params = new URLSearchParams(window.location.search);
+                    const workbookId = params.get('workbookId');
+                    
+                    if (workbookId) {
+                        const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
+                        
+                        fetch(scriptUrl)
+                            .then(response => response.json())
+                            .then(finalData => {
+                                if (finalData.dashboard) {
+                                    const cacheKey = `dashboard_data_${workbookId}`;
+                                    sessionStorage.setItem(cacheKey, JSON.stringify(finalData.dashboard));
+                                    
+                                    setDashboardData(finalData.dashboard);
+                                    console.log('Fallback: Overview data refreshed after timeout');
+                                    
+                                    setTimeout(() => {
+                                        setIsOverviewRefreshing(false);
+                                        setOverviewRefreshProgress(0);
+                                        setOverviewRefreshMessage('');
+                                    }, 1500);
+                                } else {
+                                    setIsOverviewRefreshing(false);
+                                    setOverviewRefreshProgress(0);
+                                    setOverviewRefreshMessage('');
+                                }
+                            })
+                            .catch(e => {
+                                console.log('Fallback failed:', e);
+                                setIsOverviewRefreshing(false);
+                                setOverviewRefreshProgress(0);
+                                setOverviewRefreshMessage('');
+                            });
+                    } else {
+                        setIsOverviewRefreshing(false);
+                        setOverviewRefreshProgress(0);
+                        setOverviewRefreshMessage('');
+                    }
+                } catch (error) {
+                    console.error('Error in fallback:', error);
+                    setIsOverviewRefreshing(false);
+                    setOverviewRefreshProgress(0);
+                    setOverviewRefreshMessage('');
+                }
+            }
+        };
+        
+        // Start with immediate poll, then continue with 45-second intervals
+        overviewPollIntervalRef.current = setInterval(poll, 45000);
+        
+        // Poll immediately to start
+        poll();
+    };
+
+    const hasOverviewDataChanged = (oldData, newData) => {
+        // Check if any key overview data has changed
+        const hasChanges = (
+            JSON.stringify(oldData?.overviewData) !== JSON.stringify(newData?.overviewData) ||
+            oldData?.aiReport !== newData?.aiReport ||
+            oldData?.censusData !== newData?.censusData
+        );
+        
+        console.log('Overview change detected:', hasChanges);
+        return hasChanges;
+    };
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -928,7 +1159,15 @@ const Dashboard = ({ setActiveTab }) => {
             <div className="grid grid-cols-12 gap-6">
                 <GeogridSection setActiveTab={setActiveTab} />
                 <CensusInfo censusData={dashboardData?.censusData} loading={loading} error={error} />
-                <OverviewTable overviewData={dashboardData?.overviewData} loading={loading} error={error}/>
+                <OverviewTable 
+                    overviewData={dashboardData?.overviewData} 
+                    loading={loading} 
+                    error={error}
+                    onRefresh={triggerOverviewRefresh}
+                    isRefreshing={isOverviewRefreshing}
+                    refreshProgress={overviewRefreshProgress}
+                    refreshMessage={overviewRefreshMessage}
+                />
                 
                 {!loading && !error && dashboardData?.aiReport && (
                     <div className="col-span-12">
@@ -1682,7 +1921,7 @@ const Backlinks = () => {
             console.log('Backlinks webhook triggered successfully!');
             
             setRefreshProgress(15);
-            setRefreshMessage('Backlinks automation started! (~60s expected)...');
+            setRefreshMessage('Backlinks automation started! (~10s expected)...');
             
             // Start polling for data changes
             startPolling();
@@ -1698,7 +1937,7 @@ const Backlinks = () => {
 
     const startPolling = () => {
         let attempts = 0;
-        const maxAttempts = 4; // Poll for ~3 minutes (45s intervals)
+        const maxAttempts = 3; // Poll for ~1.5 minutes (30s intervals) since backlinks completes in ~10s
         
         const poll = async () => {
             attempts++;
@@ -1708,8 +1947,8 @@ const Backlinks = () => {
             setRefreshProgress(progress);
             
             let message;
-            if (elapsed < 60) {
-                message = `Backlinks automation running... (~60s expected)`;
+            if (elapsed < 15) {
+                message = `Backlinks automation running... (~10s expected)`;
             } else {
                 message = `Checking for data updates...`;
             }
@@ -1820,8 +2059,8 @@ const Backlinks = () => {
             }
         };
         
-        // Start with immediate poll, then continue with 45-second intervals
-        pollIntervalRef.current = setInterval(poll, 45000);
+        // Start with immediate poll, then continue with 30-second intervals
+        pollIntervalRef.current = setInterval(poll, 30000);
         
         // Poll immediately to start
         poll();
