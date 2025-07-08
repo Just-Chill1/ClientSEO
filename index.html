@@ -1185,6 +1185,24 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                                 Last updated: {lastRefresh.toLocaleTimeString()}
                             </span>
                         )}
+                        
+                        {/* Inline Progress Indicator */}
+                        {isRefreshing && (
+                            <div className="flex items-center space-x-3 bg-white rounded-xl shadow-md px-4 py-2 border border-gray-100">
+                                <div className="flex items-center space-x-2">
+                                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                    <span className="text-sm font-medium text-gray-700">{refreshMessage}</span>
+                                </div>
+                                <div className="w-16 bg-gray-200 rounded-full h-2">
+                                    <div 
+                                        className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
+                                        style={{ width: `${refreshProgress}%` }}
+                                    ></div>
+                                </div>
+                                <span className="text-xs font-medium text-blue-600 min-w-[2rem]">{refreshProgress}%</span>
+                            </div>
+                        )}
+                        
                         <button 
                             onClick={isRefreshing ? cancelRefresh : triggerRefresh}
                             disabled={!webhooks}
@@ -1194,39 +1212,11 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                                     : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
                             } disabled:opacity-50 disabled:cursor-not-allowed`}
                         >
-                            {isRefreshing ? 'Cancel Refresh' : 'Refresh Data'}
+                            {isRefreshing ? 'Cancel' : 'Refresh Data'}
                         </button>
                     </div>
                 </div>
             </div>
-
-            {/* Refresh Progress Bar */}
-            {isRefreshing && (
-                <div className="mb-6 bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-                    <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-lg font-semibold text-gray-900">Refreshing Keywords Data</h3>
-                        <span className="text-sm font-medium text-blue-600">{refreshProgress}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
-                        <div 
-                            className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
-                            style={{ width: `${refreshProgress}%` }}
-                        ></div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <p className="text-sm text-gray-600">{refreshMessage}</p>
-                        <button 
-                            onClick={cancelRefresh}
-                            className="text-sm text-red-600 hover:text-red-800 font-medium"
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                                         <p className="text-xs text-gray-500 mt-2">
-                         💡 Keywords automation typically completes in 8-10 seconds. We'll auto-refresh when data changes are detected.
-                     </p>
-                </div>
-            )}
 
             <Card className="mb-6">
                 <div className="flex items-center space-x-2 mb-4">
@@ -3045,6 +3035,24 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                 Last updated: {lastRefresh.toLocaleTimeString()}
                             </span>
                         )}
+                        
+                        {/* Inline Progress Indicator */}
+                        {isRefreshing && (
+                            <div className="flex items-center space-x-3 bg-white rounded-xl shadow-md px-4 py-2 border border-gray-100">
+                                <div className="flex items-center space-x-2">
+                                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                    <span className="text-sm font-medium text-gray-700">{refreshMessage}</span>
+                                </div>
+                                <div className="w-16 bg-gray-200 rounded-full h-2">
+                                    <div 
+                                        className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
+                                        style={{ width: `${refreshProgress}%` }}
+                                    ></div>
+                                </div>
+                                <span className="text-xs font-medium text-blue-600 min-w-[2rem]">{refreshProgress}%</span>
+                            </div>
+                        )}
+                        
                         <button 
                             onClick={isRefreshing ? cancelRefresh : triggerRefresh}
                             disabled={!webhooks}
@@ -3054,39 +3062,11 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                     : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
                             } disabled:opacity-50 disabled:cursor-not-allowed`}
                         >
-                            {isRefreshing ? 'Cancel Refresh' : 'Refresh Data'}
+                            {isRefreshing ? 'Cancel' : 'Refresh Data'}
                         </button>
                     </div>
                 </div>
             </div>
-
-            {/* Refresh Progress Bar */}
-            {isRefreshing && (
-                <div className="mb-6 bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-                    <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-lg font-semibold text-gray-900">Refreshing Website Stats</h3>
-                        <span className="text-sm font-medium text-blue-600">{refreshProgress}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
-                        <div 
-                            className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
-                            style={{ width: `${refreshProgress}%` }}
-                        ></div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                        <p className="text-sm text-gray-600">{refreshMessage}</p>
-                        <button 
-                            onClick={cancelRefresh}
-                            className="text-sm text-red-600 hover:text-red-800 font-medium"
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                        💡 The automation typically takes 2-3 minutes to complete. We'll automatically refresh when new data is available.
-                    </p>
-                </div>
-            )}
 
             {/* Main Health Dashboard */}
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-8">
@@ -3159,7 +3139,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                         return (
                                             <div key={key} className="flex justify-between">
                                                 <span className="text-gray-500">{displayLabel}:</span>
-                                                <span className="font-medium">{val || 'N/A'}</span>
+                                                <span className="font-medium">{val || '-'}</span>
                                             </div>
                                         );
                                     })}
