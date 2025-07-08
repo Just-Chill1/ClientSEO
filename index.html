@@ -944,12 +944,12 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
 
     const startPolling = () => {
         let attempts = 0;
-        const maxAttempts = 4; // Poll for ~20 seconds (5s intervals), then fallback to auto-refresh
+        const maxAttempts = 6; // Poll for ~30 seconds (5s intervals), then fallback to auto-refresh
         
         const poll = async () => {
             attempts++;
             const elapsed = (Date.now() - refreshStartTimeRef.current) / 1000;
-            const progress = Math.min(15 + (attempts * 20), 95);
+            const progress = Math.min(15 + (attempts * 13), 95);
             
             setRefreshProgress(progress);
             
@@ -958,9 +958,9 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
             if (elapsed < 15) {
                 message = `Keywords automation running... (${Math.floor(elapsed)}s / ~10s expected)`;
             } else if (elapsed < 30) {
-                message = `Checking for Keywords Archive updates... (${Math.floor(elapsed)}s)`;
+                message = `Checking for data updates... (${Math.floor(elapsed)}s)`;
             } else {
-                message = `Still checking for data updates... (${Math.floor(elapsed)}s)`;
+                message = `Finalizing automation... (${Math.floor(elapsed)}s)`;
             }
             setRefreshMessage(message);
             
@@ -1220,7 +1220,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                         </button>
                     </div>
                                          <p className="text-xs text-gray-500 mt-2">
-                         💡 Keywords automation typically completes in 8-10 seconds. We'll auto-refresh when data changes are detected, or after 20 seconds regardless.
+                         💡 Keywords automation typically completes in 8-10 seconds. We'll auto-refresh when data changes are detected, or after 30 seconds regardless.
                      </p>
                 </div>
             )}
@@ -1255,10 +1255,24 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                     {/* Column 2: Ranking Distribution */}
                     <div className="space-y-3">
                         <h3 className="text-lg font-semibold text-gray-700 px-2 mb-2">Ranking Distribution</h3>
-                        <SummaryStat label="Position 1" value={parseInt(summary.pos1) || 0} color={(parseInt(summary.pos1) || 0) > 0 ? 'text-emerald-600' : 'text-gray-500'} />
-                        <SummaryStat label="Positions 2-3" value={parseInt(summary.pos2_3) || 0} color={(parseInt(summary.pos2_3) || 0) > 0 ? 'text-emerald-500' : 'text-gray-500'} />
-                        <SummaryStat label="Positions 4-10" value={parseInt(summary.pos4_10) || 0} color={(parseInt(summary.pos4_10) || 0) > 0 ? 'text-blue-500' : 'text-gray-500'} />
-                        <SummaryStat label="Positions 11-20" value={parseInt(summary.pos11_20) || 0} color={(parseInt(summary.pos11_20) || 0) > 0 ? 'text-yellow-500' : 'text-gray-500'} />
+                        {(() => {
+                            // Debug logging for ranking distribution
+                            console.log('Ranking Distribution Debug:', {
+                                pos1: summary.pos1,
+                                pos2_3: summary.pos2_3,
+                                pos4_10: summary.pos4_10,
+                                pos11_20: summary.pos11_20,
+                                parsed_pos1: parseInt(String(summary.pos1 || 0).replace(/[^\d]/g, '')) || 0,
+                                parsed_pos2_3: parseInt(String(summary.pos2_3 || 0).replace(/[^\d]/g, '')) || 0,
+                                parsed_pos4_10: parseInt(String(summary.pos4_10 || 0).replace(/[^\d]/g, '')) || 0,
+                                parsed_pos11_20: parseInt(String(summary.pos11_20 || 0).replace(/[^\d]/g, '')) || 0
+                            });
+                            return null;
+                        })()}
+                        <SummaryStat label="Position 1" value={parseInt(String(summary.pos1 || 0).replace(/[^\d]/g, '')) || 0} color={(parseInt(String(summary.pos1 || 0).replace(/[^\d]/g, '')) || 0) > 0 ? 'text-emerald-600' : 'text-gray-500'} />
+                        <SummaryStat label="Positions 2-3" value={parseInt(String(summary.pos2_3 || 0).replace(/[^\d]/g, '')) || 0} color={(parseInt(String(summary.pos2_3 || 0).replace(/[^\d]/g, '')) || 0) > 0 ? 'text-emerald-500' : 'text-gray-500'} />
+                        <SummaryStat label="Positions 4-10" value={parseInt(String(summary.pos4_10 || 0).replace(/[^\d]/g, '')) || 0} color={(parseInt(String(summary.pos4_10 || 0).replace(/[^\d]/g, '')) || 0) > 0 ? 'text-blue-500' : 'text-gray-500'} />
+                        <SummaryStat label="Positions 11-20" value={parseInt(String(summary.pos11_20 || 0).replace(/[^\d]/g, '')) || 0} color={(parseInt(String(summary.pos11_20 || 0).replace(/[^\d]/g, '')) || 0) > 0 ? 'text-yellow-500' : 'text-gray-500'} />
                     </div>
 
                     {/* Column 3: Keyword Dynamics */}
@@ -3093,16 +3107,18 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                 <div className={`p-3 rounded-xl ${speedStatus === 'excellent' ? 'bg-green-100 text-green-600' : speedStatus === 'good' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
                                     <TrendingUp className="w-6 h-6" />
                                 </div>
-                                <div className="relative group">
-                                    <Info className="w-4 h-4 text-gray-400 cursor-help" />
-                                    <div className="absolute right-0 bottom-full mb-2 w-80 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none">
+                            </div>
+                            <div className="flex items-center space-x-2 mb-2">
+                                <h3 className="text-gray-600 text-sm font-medium">Page Load Speed</h3>
+                                <div className="relative flex items-center group">
+                                    <Info className="w-4 h-4 text-gray-400" />
+                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-80 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none">
                                         <div className="font-semibold mb-2 border-b border-gray-600 pb-2">Page Load Speed Testing</div>
                                         <div>Each test loads your page in a fresh browser and measures it in real time. Shifts in network traffic, server load, or third-party scripts may vary results.</div>
-                                        <div className="absolute right-4 top-full w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-gray-800"></div>
+                                        <svg className="absolute text-gray-800 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255"><polygon className="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
                                     </div>
                                 </div>
                             </div>
-                            <h3 className="text-gray-600 text-sm font-medium mb-2">Page Load Speed</h3>
                             <p className="text-2xl font-bold text-gray-900 mb-1">{healthData.siteSpeed}</p>
                             <p className="text-sm text-gray-500">{speedStatus === 'excellent' ? 'Excellent' : speedStatus === 'good' ? 'Good' : 'Poor Performance'}</p>
                             
