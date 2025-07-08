@@ -45,6 +45,45 @@
     .info-tooltip-trigger:hover + .info-tooltip-content {
       opacity: 1;
     }
+    
+    /* Map scroll zoom prevention */
+    .map-container {
+      position: relative;
+    }
+    
+    /* Disable pointer events by default to prevent scroll zoom */
+    .map-iframe {
+      pointer-events: none;
+    }
+    
+    /* Enable pointer events only when clicked/active */
+    .map-container:active .map-iframe {
+      pointer-events: auto;
+    }
+    
+    /* Add a subtle overlay to indicate click-to-interact */
+    .map-container::before {
+      content: 'Click to interact with map';
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .map-container:hover::before {
+      opacity: 1;
+    }
+    
+    .map-container:active::before {
+      opacity: 0;
+    }
   </style>
 
   <!-- React / Babel / Recharts -->
@@ -471,10 +510,10 @@ const Dashboard = ({ setActiveTab }) => {
                             <span className="font-semibold text-gray-700">{geogridData.date}</span>
                         </div>
                         {geogridData.mapLink ? (
-                            <div className="relative w-full h-[600px] overflow-hidden">
+                            <div className="relative w-full h-[600px] overflow-hidden map-container">
                                 <iframe 
                                     src={geogridData.mapLink}
-                                    className="w-full h-full rounded-lg border border-gray-200"
+                                    className="w-full h-full rounded-lg border border-gray-200 map-iframe"
                                     style={{ background: '#f9fafb' }}
                                     loading="lazy"
                                     allowFullScreen
@@ -2699,10 +2738,10 @@ const GeogridMaps = () => {
                     {/* Right Column: Map */}
                     <div className="md:col-span-3">
                         {currentData.mapLink ? (
-                            <div className="relative w-full h-[550px] overflow-hidden -mx-2">
+                            <div className="relative w-full h-[550px] overflow-hidden -mx-2 map-container">
                                 <iframe 
                                     src={currentData.mapLink}
-                                    className="w-full h-full rounded-lg"
+                                    className="w-full h-full rounded-lg map-iframe"
                                     style={{ background: '#f9fafb' }}
                                     loading="lazy"
                                     allowFullScreen
@@ -3760,7 +3799,17 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                     </div>
                                 </div>
                             </div>
-                            <p className="text-2xl font-bold text-gray-900 mb-1">{healthData.siteSpeed}</p>
+                            <p className="text-2xl font-bold text-gray-900 mb-1">
+                                {(() => {
+                                    const speed = healthData.siteSpeed;
+                                    if (speed && !isNaN(speed)) {
+                                        // Convert milliseconds to seconds
+                                        const seconds = (parseFloat(speed) / 1000).toFixed(2);
+                                        return `${seconds}s`;
+                                    }
+                                    return speed || 'N/A';
+                                })()}
+                            </p>
                             <p className="text-sm text-gray-500">{speedStatus === 'excellent' ? 'Excellent' : speedStatus === 'good' ? 'Good' : 'Poor Performance'}</p>
                             
                             {/* Speed Details */}
