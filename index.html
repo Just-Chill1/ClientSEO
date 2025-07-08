@@ -1640,7 +1640,10 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
 
                     {/* Column 2: Ranking Distribution */}
                     <div className="space-y-3">
-                        <h3 className="text-lg font-semibold text-gray-700 px-2 mb-2">Ranking Distribution</h3>
+                        <div className="flex items-center space-x-2 px-2 mb-2">
+                            <h3 className="text-lg font-semibold text-gray-700">Ranking Distribution</h3>
+                            <InfoTooltip text="Shows how many keywords rank in different position ranges. Higher positions (1-3) drive more traffic and are more valuable for SEO." />
+                        </div>
                         {(() => {
                             // Comprehensive debug logging for ranking distribution
                             console.log('Full Keywords Summary Object:', summary);
@@ -1698,7 +1701,10 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
 
                     {/* Column 3: Keyword Dynamics */}
                     <div className="space-y-3">
-                        <h3 className="text-lg font-semibold text-gray-700 px-2 mb-2">Keyword Dynamics</h3>
+                        <div className="flex items-center space-x-2 px-2 mb-2">
+                            <h3 className="text-lg font-semibold text-gray-700">Keyword Dynamics</h3>
+                            <InfoTooltip text="Tracks keyword movement over time. Shows which keywords are improving, declining, newly ranking, or have been lost since the last update." />
+                        </div>
                         <SummaryStat
                             label="Improved"
                             value={parseInt(summary.isUp) || 0}
@@ -4009,7 +4015,10 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                     <Link2 className="w-5 h-5" />
                                 </div>
                             </div>
-                            <h3 className="text-gray-600 text-sm font-medium mt-3 mb-1">Broken Links</h3>
+                            <div className="flex items-center space-x-1 mt-3 mb-1">
+                                <h3 className="text-gray-600 text-sm font-medium">Broken Links</h3>
+                                <InfoTooltip text="Checks for broken internal and external links on your website. Broken links hurt user experience and can negatively impact SEO rankings." />
+                            </div>
                             <p className="text-lg font-bold text-gray-900">{hasBrokenLinks ? 'Issues Found' : 'All Good'}</p>
                             <p className="text-xs text-gray-500">{hasBrokenLinks ? 'Fix required' : 'No broken links'}</p>
                         </div>
@@ -4020,7 +4029,10 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                     <ShieldCheck className="w-5 h-5" />
                                 </div>
                             </div>
-                            <h3 className="text-gray-600 text-sm font-medium mt-3 mb-1">SSL Certificate</h3>
+                            <div className="flex items-center space-x-1 mt-3 mb-1">
+                                <h3 className="text-gray-600 text-sm font-medium">SSL Certificate</h3>
+                                <InfoTooltip text="Ensures your website uses HTTPS encryption to protect user data and improve search rankings. Google requires SSL certificates for secure browsing." />
+                            </div>
                             <p className="text-lg font-bold text-gray-900">{healthData.ssl ? 'Secure' : 'Not Secure'}</p>
                             <p className="text-xs text-gray-500">{healthData.ssl ? 'HTTPS enabled' : 'HTTPS required'}</p>
                         </div>
@@ -4037,7 +4049,10 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                     </svg>
                                 </div>
                             </div>
-                            <h3 className="text-gray-600 text-sm font-medium mt-3 mb-1">Schema Markup</h3>
+                            <div className="flex items-center space-x-1 mt-3 mb-1">
+                                <h3 className="text-gray-600 text-sm font-medium">Schema Markup</h3>
+                                <InfoTooltip text="Structured data that helps search engines understand your content better. Schema markup can improve rich snippets and local business visibility in search results." />
+                            </div>
                             <p className="text-lg font-bold text-gray-900">{healthData.hasSchema ? 'Implemented' : 'Missing'}</p>
                             <p className="text-xs text-gray-500">
                                 {healthData.hasSchema 
