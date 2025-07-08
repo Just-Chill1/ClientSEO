@@ -36,7 +36,7 @@
   <!-- Preload critical JavaScript -->
   <link rel="preload" href="https://unpkg.com/react@18/umd/react.production.min.js" as="script">
   <link rel="preload" href="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" as="script">
-  <link rel="preload" href="https://unpkg.com/recharts@2.8.0/umd/Recharts.min.js" as="script">
+  <link rel="preload" href="https://unpkg.com/recharts@2.8.0/umd/Recharts.js" as="script">
   
   <!-- Preconnect to external domains -->
   <link rel="preconnect" href="https://cdn.tailwindcss.com">
@@ -197,11 +197,19 @@
     }
   </style>
 
-  <!-- React / Babel / Recharts - Optimized loading with integrity checks -->
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js" defer></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" defer></script>
-  <script src="https://unpkg.com/@babel/standalone@7.23.1/babel.min.js" defer></script>
-  <script src="https://unpkg.com/recharts@2.8.0/umd/Recharts.min.js" defer></script>
+  <!-- React / Babel / Recharts - Fixed loading order with error handling -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js" 
+          onload="console.log('✅ React loaded')" 
+          onerror="console.error('❌ React failed to load')"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" 
+          onload="console.log('✅ ReactDOM loaded')" 
+          onerror="console.error('❌ ReactDOM failed to load')"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.23.1/babel.min.js" 
+          onload="console.log('✅ Babel loaded')" 
+          onerror="console.error('❌ Babel failed to load')"></script>
+  <script src="https://unpkg.com/recharts@2.8.0/umd/Recharts.js" 
+          onload="console.log('✅ Recharts loaded')" 
+          onerror="console.error('❌ Recharts failed to load'); console.log('🔄 Will try fallback CDN')"></script>
 </head>
 
 <body class="bg-gray-50">
@@ -4697,10 +4705,15 @@ const App = () => {
 /* Optimized App Initialization                                       */
 /* ------------------------------------------------------------------ */
 
-// Optimized app initialization with faster dependency checking
+// Optimized app initialization with timeout and fallback
+let initAttempts = 0;
+const MAX_INIT_ATTEMPTS = 200; // 5 seconds max wait time
+
 const initializeApp = () => {
   const requiredGlobals = ['React', 'ReactDOM', 'Recharts'];
   const missingGlobals = requiredGlobals.filter(global => !window[global]);
+  
+  initAttempts++;
   
   if (missingGlobals.length === 0) {
     performanceMonitor.log('Dependencies Ready', 'Mounting React app');
@@ -4711,11 +4724,55 @@ const initializeApp = () => {
     root.render(<App />);
     
     performanceMonitor.log('React App Mounted');
-  } else {
-    console.log('⏳ Waiting for dependencies...', missingGlobals);
+  } else if (initAttempts < MAX_INIT_ATTEMPTS) {
+    console.log('⏳ Waiting for dependencies...', missingGlobals, `(${initAttempts}/${MAX_INIT_ATTEMPTS})`);
     // Reduced polling interval for faster startup
     setTimeout(initializeApp, 25);
+  } else {
+    // Fallback: try to load missing dependencies or show error
+    console.error('❌ Failed to load dependencies after 5 seconds:', missingGlobals);
+    
+    if (missingGlobals.includes('Recharts')) {
+      console.log('🔄 Attempting to load Recharts fallback...');
+      // Try alternative Recharts CDN
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/recharts@2.8.0/umd/Recharts.min.js';
+      script.onload = () => {
+        console.log('✅ Recharts fallback loaded successfully');
+        initAttempts = 0; // Reset attempts
+        setTimeout(initializeApp, 100);
+      };
+      script.onerror = () => {
+        console.error('❌ Recharts fallback also failed');
+        showErrorMessage('Failed to load required dependencies. Please refresh the page.');
+      };
+      document.head.appendChild(script);
+    } else {
+      showErrorMessage('Failed to load required dependencies. Please refresh the page.');
+    }
   }
+};
+
+const showErrorMessage = (message) => {
+  const root = document.getElementById('root');
+  root.innerHTML = `
+    <div class="loader-container">
+      <div class="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
+        <div class="flex items-center mb-4">
+          <div class="bg-red-100 rounded-full p-2 mr-3">
+            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L4.316 15.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
+          </div>
+          <h3 class="text-lg font-semibold text-red-800">Loading Error</h3>
+        </div>
+        <p class="text-red-700 mb-4">${message}</p>
+        <button onclick="location.reload()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors">
+          Refresh Page
+        </button>
+      </div>
+    </div>
+  `;
 };
 
 // Performance monitoring
@@ -4727,14 +4784,32 @@ const performanceMonitor = {
   }
 };
 
+// Debug: Check what's available immediately
+console.log('🔍 Initial dependency check:', {
+  React: !!window.React,
+  ReactDOM: !!window.ReactDOM,
+  Recharts: !!window.Recharts,
+  readyState: document.readyState
+});
+
 // Start initialization when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     performanceMonitor.log('DOM Content Loaded');
+    console.log('🔍 After DOM loaded:', {
+      React: !!window.React,
+      ReactDOM: !!window.ReactDOM,
+      Recharts: !!window.Recharts
+    });
     initializeApp();
   });
 } else {
   performanceMonitor.log('DOM Already Ready');
+  console.log('🔍 DOM already ready:', {
+    React: !!window.React,
+    ReactDOM: !!window.ReactDOM,
+    Recharts: !!window.Recharts
+  });
   initializeApp();
 }
 
@@ -4745,11 +4820,12 @@ window.addEventListener('load', () => {
   // Register service worker for caching (optional)
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('data:text/javascript,' + encodeURIComponent(`
-      const CACHE_NAME = 'medspa-seo-v1';
+      const CACHE_NAME = 'medspa-seo-v2';
       const urlsToCache = [
         'https://unpkg.com/react@18/umd/react.production.min.js',
         'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
-        'https://unpkg.com/recharts@2.8.0/umd/Recharts.min.js',
+        'https://unpkg.com/recharts@2.8.0/umd/Recharts.js',
+        'https://cdn.jsdelivr.net/npm/recharts@2.8.0/umd/Recharts.min.js',
         'https://unpkg.com/@babel/standalone@7.23.1/babel.min.js',
         'https://cdn.tailwindcss.com',
         'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
