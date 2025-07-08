@@ -216,6 +216,7 @@ const InfoTooltip = ({ text }) => (
 /* ------------------------------------------------------------------ */
 const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
     const [isExpanded, setIsExpanded] = useState(false);
+    const [copySuccess, setCopySuccess] = useState(false);
     
     console.log('AIReportSection received reportText:', reportText);
     console.log('Type of reportText:', typeof reportText);
@@ -243,12 +244,63 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
 
     const ChevronDown = createIcon(<polyline points="6 9 12 15 18 9" />);
     const ChevronUp = createIcon(<polyline points="18 15 12 9 6 15" />);
+    const Copy = createIcon(
+        <>
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+        </>
+    );
+    const Check = createIcon(<polyline points="20 6 9 17 4 12" />);
+
+    const handleCopyReport = async () => {
+        try {
+            // Get plain text version of the report
+            const plainText = formattedText
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
+                .replace(/<em>(.*?)<\/em>/gi, '*$1*')
+                .replace(/<[^>]*>/g, ''); // Remove any remaining HTML tags
+            
+            await navigator.clipboard.writeText(plainText);
+            setCopySuccess(true);
+            setTimeout(() => setCopySuccess(false), 2000);
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+        }
+    };
 
     return (
         <Card className="mt-8">
-            <div className="flex items-center space-x-2 mb-1">
-                <h2 className="text-xl font-bold text-gray-800">AI Report</h2>
-                <InfoTooltip text="AI-generated analysis of your website's technical health, performance metrics, and competitive positioning." />
+            <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center space-x-2">
+                    <h2 className="text-xl font-bold text-gray-800">AI Report</h2>
+                    <InfoTooltip text="AI-generated analysis of your website's technical health, performance metrics, and competitive positioning." />
+                </div>
+                <div className="flex items-center space-x-2">
+                    <button 
+                        onClick={() => setIsExpanded(!isExpanded)} 
+                        className="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center transition-colors"
+                    >
+                        {isExpanded ? 'Show Less' : 'Show More'}
+                        {isExpanded ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+                    </button>
+                    <button 
+                        onClick={handleCopyReport}
+                        className="flex items-center space-x-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
+                    >
+                        {copySuccess ? (
+                            <>
+                                <Check className="w-4 h-4 text-green-600" />
+                                <span className="text-green-600">Copied!</span>
+                            </>
+                        ) : (
+                            <>
+                                <Copy className="w-4 h-4" />
+                                <span>Copy Report</span>
+                            </>
+                        )}
+                    </button>
+                </div>
             </div>
             <h3 className="text-md font-semibold text-gray-600 mb-3">{title}</h3>
             <div className={`prose prose-sm max-w-none text-gray-600 overflow-hidden relative transition-all duration-300 ${isExpanded ? 'max-h-full' : 'max-h-24'}`}>
@@ -264,13 +316,6 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
                     <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent"></div>
                 )}
             </div>
-            <button 
-                onClick={() => setIsExpanded(!isExpanded)} 
-                className="mt-2 text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center"
-            >
-                {isExpanded ? 'Show Less' : 'Show More'}
-                {isExpanded ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
-            </button>
         </Card>
     );
 };
@@ -3221,7 +3266,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             
                             {/* Speed Details */}
                             <div className="mt-4 pt-4 border-t border-gray-100">
-                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                <div className="grid grid-cols-1 gap-2 text-xs">
                                     {Object.entries(healthData.speedDetails).slice(0, 10).map(([key, val]) => {
                                         // Convert technical terms to user-friendly labels
                                         const friendlyLabels = {
@@ -3238,10 +3283,24 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                         };
                                         const displayLabel = friendlyLabels[key] || key;
                                         
+                                        // Format the value - convert to seconds if it's a number
+                                        let formattedVal = val || '-';
+                                        if (val && !isNaN(val)) {
+                                            // Convert milliseconds to seconds and format to 4 decimal places
+                                            const seconds = (parseFloat(val) / 1000).toFixed(4);
+                                            formattedVal = `${seconds}s`;
+                                        } else if (val && typeof val === 'string' && val.includes('ms')) {
+                                            // If already in ms format, convert to seconds
+                                            const msValue = parseFloat(val.replace('ms', ''));
+                                            if (!isNaN(msValue)) {
+                                                formattedVal = `${(msValue / 1000).toFixed(4)}s`;
+                                            }
+                                        }
+                                        
                                         return (
-                                            <div key={key} className="flex justify-between">
-                                                <span className="text-gray-500">{displayLabel}:</span>
-                                                <span className="font-medium">{val || '-'}</span>
+                                            <div key={key} className="text-gray-600">
+                                                <span className="text-gray-500">{displayLabel}: </span>
+                                                <span className="font-medium">{formattedVal}</span>
                                             </div>
                                         );
                                     })}
@@ -3309,11 +3368,11 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             </div>
                             
                             {/* Detailed Hover Tooltip with improved hover behavior */}
-                            <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[600px] bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50 hover:opacity-100 pointer-events-none group-hover:pointer-events-auto">
+                            <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[600px] bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50 pointer-events-none group-hover:pointer-events-auto">
                                 <div className="px-4 py-3 bg-gray-800 rounded-t-xl font-semibold border-b border-gray-700">
                                     Technical SEO Health Check Results
                                 </div>
-                                <div className="p-4 max-h-80 overflow-y-auto">
+                                <div className="p-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                         {(() => {
                                             // Reorder categories - SEO first in top row, content quality moved to bottom
