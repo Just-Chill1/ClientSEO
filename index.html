@@ -2698,11 +2698,62 @@ const GeogridMaps = () => {
             }
             
             try {
+                // Helper function to fix date parsing
+                const fixDateFormatting = (monthlyData) => {
+                    if (!Array.isArray(monthlyData)) return monthlyData;
+                    
+                    return monthlyData.map((monthData, index) => {
+                        // If all dates are showing as the same month, we need to infer the correct month
+                        // Based on the sorting order (newest first), we can calculate the correct month
+                        const currentDate = new Date();
+                        const currentMonth = currentDate.getMonth(); // 0-based
+                        const currentYear = currentDate.getFullYear();
+                        
+                        // Calculate the month for this entry (going backwards from current month)
+                        let targetMonth = currentMonth - index;
+                        let targetYear = currentYear;
+                        
+                        // Handle year rollover
+                        if (targetMonth < 0) {
+                            targetMonth += 12;
+                            targetYear--;
+                        }
+                        
+                        // Create the corrected date
+                        const correctedDate = new Date(targetYear, targetMonth, 1);
+                        const formattedDate = correctedDate.toLocaleString('default', { 
+                            month: 'long', 
+                            year: 'numeric'
+                        });
+                        
+                        return {
+                            ...monthData,
+                            date: formattedDate,
+                            originalDate: monthData.date // Keep original for debugging
+                        };
+                    });
+                };
+
                 // Get geogrid data and normalize keywords
                 const rawData = data.geogridData || {};
+                console.log('🔍 Raw geogrid data from server:', rawData);
+                
                 const normalizedData = {};
                 Object.entries(rawData).forEach(([key, value]) => {
-                    normalizedData[key.toLowerCase().trim()] = value;
+                    if (Array.isArray(value)) {
+                        console.log(`📅 Processing keyword "${key}" with ${value.length} months:`, value.map(v => v.date));
+                        
+                        // Check if all dates are the same (indicating a parsing issue)
+                        const uniqueDates = [...new Set(value.map(v => v.date))];
+                        if (uniqueDates.length === 1 && value.length > 1) {
+                            console.log(`⚠️ All dates are the same (${uniqueDates[0]}) - applying date fix`);
+                            normalizedData[key.toLowerCase().trim()] = fixDateFormatting(value);
+                        } else {
+                            normalizedData[key.toLowerCase().trim()] = value;
+                        }
+                    } else {
+                        normalizedData[key.toLowerCase().trim()] = value;
+                    }
                 });
 
                 // Cache the normalized data
@@ -2752,7 +2803,8 @@ const GeogridMaps = () => {
         console.log(`GeogridMapCard for "${keyword}":`, {
             monthlyDataLength: monthlyData?.length,
             monthlyData: monthlyData,
-            currentMonthIndex
+            currentMonthIndex,
+            dates: monthlyData?.map(m => m.date)
         });
 
         // Validate monthlyData
