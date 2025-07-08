@@ -390,7 +390,7 @@ const Dashboard = ({ setActiveTab }) => {
     };
 
     // --- Sub-components for Dashboard ---
-    const GeogridSection = ({ setActiveTab }) => {
+    const GeogridSection = React.memo(({ setActiveTab }) => {
         const [geogridData, setGeogridData] = useState(null);
         const [loading, setLoading] = useState(true);
         const [error, setError] = useState(null);
@@ -546,7 +546,7 @@ const Dashboard = ({ setActiveTab }) => {
                 </div>
             </Card>
         );
-    };
+    });
 
     const CensusInfo = ({ censusData, loading, error }) => {
         if (loading) {
@@ -725,9 +725,9 @@ const Dashboard = ({ setActiveTab }) => {
                                     {(() => {
                                         const speed = c.speed;
                                         if (speed && !isNaN(parseFloat(speed))) {
-                                            // Convert milliseconds to seconds
-                                            const seconds = (parseFloat(speed) / 1000).toFixed(2);
-                                            return `${seconds}s`;
+                                            // Convert milliseconds to seconds with 4 decimal places
+                                            const seconds = (parseFloat(speed) / 1000).toFixed(4);
+                                            return `${seconds} sec`;
                                         }
                                         return speed || 'N/A';
                                     })()}
@@ -973,6 +973,12 @@ const Dashboard = ({ setActiveTab }) => {
 
     // Overview table refresh functionality
     const triggerOverviewRefresh = async () => {
+        // Prevent multiple simultaneous refreshes
+        if (isOverviewRefreshing) {
+            console.log('Overview refresh already in progress, ignoring request');
+            return;
+        }
+        
         console.log('Overview table refresh triggered');
         
         const webhooks = {
@@ -1076,6 +1082,7 @@ const Dashboard = ({ setActiveTab }) => {
                             overviewData: newData.dashboard.overviewData
                         };
                         
+                        // Only update the dashboard cache, don't touch geogrid cache
                         const cacheKey = `dashboard_data_${workbookId}`;
                         sessionStorage.setItem(cacheKey, JSON.stringify(updatedDashboardData));
                         
@@ -1117,6 +1124,7 @@ const Dashboard = ({ setActiveTab }) => {
                                         overviewData: finalData.dashboard.overviewData
                                     };
                                     
+                                    // Only update the dashboard cache, don't touch geogrid cache
                                     const cacheKey = `dashboard_data_${workbookId}`;
                                     sessionStorage.setItem(cacheKey, JSON.stringify(updatedDashboardData));
                                     
@@ -3871,9 +3879,9 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                         }
                                         
                                         return (
-                                            <div key={key} className="text-gray-600">
-                                                <span className="text-gray-500">{displayLabel}: </span>
-                                                <span className="font-medium">{formattedVal}</span>
+                                            <div key={key} className="text-gray-600 flex">
+                                                <span className="text-gray-500 w-32">{displayLabel}:</span>
+                                                <span className="font-medium ml-4">{formattedVal}</span>
                                             </div>
                                         );
                                     })}
