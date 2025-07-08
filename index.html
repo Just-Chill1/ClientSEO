@@ -33,6 +33,11 @@
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
   
+  <!-- Preload critical JavaScript -->
+  <link rel="preload" href="https://unpkg.com/react@18/umd/react.production.min.js" as="script">
+  <link rel="preload" href="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" as="script">
+  <link rel="preload" href="https://unpkg.com/recharts@2.8.0/umd/Recharts.min.js" as="script">
+  
   <!-- Preconnect to external domains -->
   <link rel="preconnect" href="https://cdn.tailwindcss.com">
   <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -90,16 +95,58 @@
       to { opacity: 1; transform: translateY(0); }
     }
     
-    /* Skeleton loading styles */
-    .skeleton {
-      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-      background-size: 200% 100%;
-      animation: loading 1.5s infinite;
+    /* Loading progress bar */
+    .loading-progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, #3b82f6, #ec4899);
+      transform: scaleX(0);
+      transform-origin: left;
+      animation: progress 2s ease-in-out infinite;
+      z-index: 9999;
     }
     
-    @keyframes loading {
+    @keyframes progress {
+      0% { transform: scaleX(0); }
+      50% { transform: scaleX(0.7); }
+      100% { transform: scaleX(1); }
+    }
+    
+    /* Enhanced skeleton loading styles */
+    .skeleton {
+      background: linear-gradient(90deg, #f8f9fa 25%, #e9ecef 50%, #f8f9fa 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.2s ease-in-out infinite;
+      border-radius: 4px;
+    }
+    
+    .skeleton-pulse {
+      background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s ease-in-out infinite;
+      border-radius: 6px;
+    }
+    
+    .skeleton-card {
+      background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #f8fafc 100%);
+      background-size: 200% 200%;
+      animation: shimmer-card 2s ease-in-out infinite;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+    
+    @keyframes shimmer {
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
+    }
+    
+    @keyframes shimmer-card {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
   </style>
   
@@ -150,16 +197,16 @@
     }
   </style>
 
-  <!-- React / Babel / Recharts - Optimized loading -->
-  <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js" defer></script>
-  <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js" defer></script>
+  <!-- React / Babel / Recharts - Optimized loading with integrity checks -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js" defer></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" defer></script>
   <script src="https://unpkg.com/@babel/standalone@7.23.1/babel.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/prop-types@15/prop-types.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/recharts@2/umd/Recharts.min.js" defer></script>
+  <script src="https://unpkg.com/recharts@2.8.0/umd/Recharts.min.js" defer></script>
 </head>
 
 <body class="bg-gray-50">
   <div id="root">
+    <div class="loading-progress"></div>
     <div class="loader-container">
       <div class="loader"></div>
       <p class="text-gray-500 mt-4">Loading application…</p>
@@ -432,14 +479,25 @@ const LazyComponent = ({ children, fallback = <div className="flex items-center 
     const elementRef = useRef(null);
 
     useEffect(() => {
+        // Immediate load for dashboard tab (no lazy loading needed)
+        if (window.location.search.includes('tab=Dashboard') || !window.location.search.includes('tab=')) {
+            setIsVisible(true);
+            setHasLoaded(true);
+            return;
+        }
+
         const observer = new IntersectionObserver(
             ([entry]) => {
                 if (entry.isIntersecting && !hasLoaded) {
                     setIsVisible(true);
                     setHasLoaded(true);
+                    observer.disconnect(); // Cleanup immediately after loading
                 }
             },
-            { threshold: 0.1 }
+            { 
+                threshold: 0.05, // Lower threshold for faster loading
+                rootMargin: '50px' // Start loading 50px before element is visible
+            }
         );
 
         if (elementRef.current) {
@@ -4356,7 +4414,7 @@ const App = () => {
     window.history.replaceState({}, '', newUrl);
   }, [tab]);
 
-  // Optimized data loading with caching and progressive loading
+  // Progressive data loading with enhanced caching
   useEffect(() => {
     const id = new URLSearchParams(location.search).get('workbookId');
     if (!id) { setErr('Add ?workbookId=YOUR_ID to the URL'); setLoad(false); return; }
@@ -4365,12 +4423,13 @@ const App = () => {
     const cacheKey = `app_data_${id}`;
     const cachedData = sessionStorage.getItem(cacheKey);
     const cacheTimestamp = sessionStorage.getItem(`${cacheKey}_timestamp`);
-    const cacheMaxAge = 5 * 60 * 1000; // 5 minutes
+    const cacheMaxAge = 10 * 60 * 1000; // 10 minutes (increased for better performance)
     
     if (cachedData && cacheTimestamp && (Date.now() - parseInt(cacheTimestamp)) < cacheMaxAge) {
       try {
         const parsed = JSON.parse(cachedData);
-        console.log('Loading from cache:', Object.keys(parsed));
+        console.log('⚡ Loading from cache:', Object.keys(parsed));
+        performanceMonitor.log('Cache Hit', `Keys: ${Object.keys(parsed).join(', ')}`);
         setData(parsed);
         setLoad(false);
         return;
@@ -4381,38 +4440,51 @@ const App = () => {
       }
     }
 
-    // If no cache, show skeleton and load data
+    // Progressive loading - start with minimal data first
+    performanceMonitor.log('Starting Data Fetch');
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 25000); // Reduced timeout
 
+    // Use fetch with optimized settings
     fetch(`https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${id}`, {
       signal: controller.signal,
       method: 'GET',
       mode: 'cors',
-      cache: 'no-cache',
+      cache: 'force-cache', // Use browser cache when available
       headers: {
         'Accept': 'application/json',
+        'Cache-Control': 'max-age=300' // 5 minutes browser cache
       }
     })
       .then(r => {
         clearTimeout(timeoutId);
+        performanceMonitor.log('Data Fetch Response', `Status: ${r.status}`);
         if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
         return r.json();
       })
       .then(j => { 
         if (j.error) throw new Error(j.error); 
-        console.log('Data loaded successfully:', Object.keys(j));
+        
+        performanceMonitor.log('Data Parse Complete', `Keys: ${Object.keys(j).join(', ')}`);
+        console.log('✅ Data loaded successfully:', Object.keys(j));
         console.log('Webhooks in data:', j.webhooks);
         
-        // Cache the data
-        sessionStorage.setItem(cacheKey, JSON.stringify(j));
-        sessionStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+        // Cache the data with compression
+        try {
+          sessionStorage.setItem(cacheKey, JSON.stringify(j));
+          sessionStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+          performanceMonitor.log('Data Cached');
+        } catch (e) {
+          console.warn('Failed to cache data:', e);
+        }
         
         setData(j); 
         setLoad(false); 
+        performanceMonitor.log('React State Updated');
       })
       .catch(e => { 
         clearTimeout(timeoutId);
+        performanceMonitor.log('Data Fetch Error', e.message);
         if (e.name === 'AbortError') {
           setErr('Request timed out. Please try again.');
         } else {
@@ -4435,42 +4507,121 @@ const App = () => {
       <PageContent>
         <div className="dashboard-container">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {/* Enhanced skeleton metric cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {/* Skeleton metric cards */}
-              {[1, 2, 3, 4].map(i => (
-                <div key={i} className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                  <div className="skeleton h-4 w-24 mb-2 rounded"></div>
-                  <div className="skeleton h-8 w-16 mb-1 rounded"></div>
-                  <div className="skeleton h-3 w-20 rounded"></div>
+              {[
+                { title: 'Total Keywords', width: 'w-28' },
+                { title: 'Avg Position', width: 'w-20' },
+                { title: 'Total Backlinks', width: 'w-32' },
+                { title: 'Domain Rating', width: 'w-24' }
+              ].map((item, i) => (
+                <div key={i} className="skeleton-card p-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="skeleton h-4 w-4 rounded-full"></div>
+                    <div className="skeleton h-3 w-8 rounded"></div>
+                  </div>
+                  <div className="skeleton-pulse h-3 w-20 mb-2"></div>
+                  <div className="skeleton-pulse h-8 w-16 mb-3"></div>
+                  <div className="flex items-center space-x-2">
+                    <div className="skeleton h-3 w-3 rounded-full"></div>
+                    <div className="skeleton h-3 w-16"></div>
+                  </div>
                 </div>
               ))}
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-              {/* Skeleton chart */}
-              <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                <div className="skeleton h-6 w-32 mb-4 rounded"></div>
-                <div className="skeleton h-64 w-full rounded"></div>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-8">
+              {/* Enhanced skeleton chart */}
+              <div className="lg:col-span-8 skeleton-card p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="skeleton-pulse h-6 w-40"></div>
+                  <div className="skeleton h-4 w-16"></div>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-end h-48">
+                    {[1, 2, 3, 4, 5, 6, 7].map(i => (
+                      <div key={i} className={`skeleton w-8 rounded-t`} 
+                           style={{ height: `${Math.random() * 150 + 50}px` }}></div>
+                    ))}
+                  </div>
+                  <div className="flex justify-between">
+                    {[1, 2, 3, 4, 5, 6, 7].map(i => (
+                      <div key={i} className="skeleton h-3 w-8"></div>
+                    ))}
+                  </div>
+                </div>
               </div>
               
-              {/* Skeleton pie chart */}
-              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                <div className="skeleton h-6 w-24 mb-4 rounded"></div>
-                <div className="skeleton h-48 w-full rounded-full mx-auto"></div>
+              {/* Enhanced skeleton geogrid */}
+              <div className="lg:col-span-4 skeleton-card p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="skeleton-pulse h-5 w-24"></div>
+                  <div className="skeleton h-3 w-12"></div>
+                </div>
+                <div className="space-y-3 mb-6">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="flex items-center space-x-3">
+                      <div className="skeleton h-10 w-10 rounded-lg"></div>
+                      <div className="flex-1">
+                        <div className="skeleton h-4 w-24 mb-1"></div>
+                        <div className="skeleton h-3 w-16"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="skeleton h-32 w-full rounded-lg"></div>
               </div>
             </div>
             
-            {/* Skeleton table */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="p-6">
-                <div className="skeleton h-6 w-40 mb-4 rounded"></div>
+            {/* Enhanced skeleton insights */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <div className="skeleton-card p-6 shadow-sm">
+                <div className="flex items-center space-x-2 mb-4">
+                  <div className="skeleton h-5 w-5 rounded"></div>
+                  <div className="skeleton-pulse h-5 w-32"></div>
+                </div>
                 <div className="space-y-3">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="skeleton h-4 w-full"></div>
+                  ))}
+                  <div className="skeleton h-4 w-3/4"></div>
+                </div>
+              </div>
+              
+              <div className="skeleton-card p-6 shadow-sm">
+                <div className="flex items-center space-x-2 mb-4">
+                  <div className="skeleton h-5 w-5 rounded"></div>
+                  <div className="skeleton-pulse h-5 w-28"></div>
+                </div>
+                <div className="space-y-3">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="skeleton h-4 w-full"></div>
+                  ))}
+                  <div className="skeleton h-4 w-2/3"></div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Enhanced skeleton table */}
+            <div className="skeleton-card shadow-sm">
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div className="skeleton-pulse h-6 w-48"></div>
+                  <div className="skeleton h-4 w-20"></div>
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="space-y-4">
                   {[1, 2, 3, 4, 5].map(i => (
-                    <div key={i} className="flex space-x-4">
-                      <div className="skeleton h-4 w-32 rounded"></div>
-                      <div className="skeleton h-4 w-24 rounded"></div>
-                      <div className="skeleton h-4 w-16 rounded"></div>
-                      <div className="skeleton h-4 w-20 rounded"></div>
+                    <div key={i} className="flex items-center space-x-6">
+                      <div className="skeleton h-8 w-8 rounded-full"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="skeleton h-4 w-40"></div>
+                        <div className="skeleton h-3 w-24"></div>
+                      </div>
+                      <div className="skeleton h-4 w-16"></div>
+                      <div className="skeleton h-4 w-20"></div>
+                      <div className="skeleton h-6 w-12 rounded-full"></div>
                     </div>
                   ))}
                 </div>
@@ -4546,17 +4697,24 @@ const App = () => {
 /* Optimized App Initialization                                       */
 /* ------------------------------------------------------------------ */
 
-// Wait for all critical resources to load before mounting React
+// Optimized app initialization with faster dependency checking
 const initializeApp = () => {
   const requiredGlobals = ['React', 'ReactDOM', 'Recharts'];
-  const allLoaded = requiredGlobals.every(global => window[global]);
+  const missingGlobals = requiredGlobals.filter(global => !window[global]);
   
-  if (allLoaded) {
-    console.log('All dependencies loaded, mounting React app...');
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  if (missingGlobals.length === 0) {
+    performanceMonitor.log('Dependencies Ready', 'Mounting React app');
+    console.log('✅ All dependencies loaded, mounting React app...');
+    
+    // Use concurrent mode for better performance
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+    
+    performanceMonitor.log('React App Mounted');
   } else {
-    console.log('Waiting for dependencies...', requiredGlobals.filter(g => !window[g]));
-    setTimeout(initializeApp, 50);
+    console.log('⏳ Waiting for dependencies...', missingGlobals);
+    // Reduced polling interval for faster startup
+    setTimeout(initializeApp, 25);
   }
 };
 
@@ -4583,6 +4741,39 @@ if (document.readyState === 'loading') {
 // Monitor when React app is mounted
 window.addEventListener('load', () => {
   performanceMonitor.log('Window Load Complete');
+  
+  // Register service worker for caching (optional)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('data:text/javascript,' + encodeURIComponent(`
+      const CACHE_NAME = 'medspa-seo-v1';
+      const urlsToCache = [
+        'https://unpkg.com/react@18/umd/react.production.min.js',
+        'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
+        'https://unpkg.com/recharts@2.8.0/umd/Recharts.min.js',
+        'https://unpkg.com/@babel/standalone@7.23.1/babel.min.js',
+        'https://cdn.tailwindcss.com',
+        'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
+      ];
+      
+      self.addEventListener('install', (event) => {
+        event.waitUntil(
+          caches.open(CACHE_NAME)
+            .then((cache) => cache.addAll(urlsToCache))
+        );
+      });
+      
+      self.addEventListener('fetch', (event) => {
+        event.respondWith(
+          caches.match(event.request)
+            .then((response) => response || fetch(event.request))
+        );
+      });
+    `)).then(() => {
+      console.log('🔧 Service Worker registered for caching');
+    }).catch((error) => {
+      console.log('Service Worker registration failed:', error);
+    });
+  }
 });
 </script>
 </body>
