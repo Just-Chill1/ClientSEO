@@ -275,8 +275,6 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
                 <div className="flex items-center space-x-2">
                     <h2 className="text-xl font-bold text-gray-800">AI Report</h2>
                     <InfoTooltip text="AI-generated analysis of your website's technical health, performance metrics, and competitive positioning." />
-                </div>
-                <div className="flex items-center space-x-2">
                     <button 
                         onClick={() => setIsExpanded(!isExpanded)} 
                         className="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center transition-colors"
@@ -284,6 +282,8 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
                         {isExpanded ? 'Show Less' : 'Show More'}
                         {isExpanded ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
                     </button>
+                </div>
+                <div className="flex items-center">
                     <button 
                         onClick={handleCopyReport}
                         className="flex items-center space-x-1 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
@@ -3266,7 +3266,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             
                             {/* Speed Details */}
                             <div className="mt-4 pt-4 border-t border-gray-100">
-                                <div className="grid grid-cols-1 gap-2 text-xs">
+                                <div className="grid grid-cols-2 gap-2 text-xs">
                                     {Object.entries(healthData.speedDetails).slice(0, 10).map(([key, val]) => {
                                         // Convert technical terms to user-friendly labels
                                         const friendlyLabels = {
@@ -3333,8 +3333,8 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             <div className="mt-4 pt-4 border-t border-gray-100">
                                 <div className="grid grid-cols-1 gap-2">
                                     {(() => {
-                                        // Reorder categories - SEO first, then others
-                                        const orderedCategories = ['seo', 'performance', 'security', 'accessibility', 'content'];
+                                        // Reorder categories as requested: Performance, Security & Technical, SEO Optimization, Content Quality, Accessibility
+                                        const orderedCategories = ['performance', 'security', 'seo', 'content', 'accessibility'];
                                         return orderedCategories.map(category => {
                                             const categoryData = checkCategories[category];
                                             if (!categoryData) return null;
@@ -3375,9 +3375,9 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                 <div className="p-4">
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                         {(() => {
-                                            // Reorder categories - SEO first in top row, content quality moved to bottom
-                                            const topRowCategories = ['seo', 'performance', 'security'];
-                                            const bottomRowCategories = ['accessibility', 'content'];
+                                            // Reorder categories as requested: Performance, Security & Technical, SEO Optimization, Content Quality, Accessibility
+                                            const topRowCategories = ['performance', 'security', 'seo'];
+                                            const bottomRowCategories = ['content', 'accessibility'];
                                             const allCategories = [...topRowCategories, ...bottomRowCategories];
                                             
                                             return allCategories.map(category => {
