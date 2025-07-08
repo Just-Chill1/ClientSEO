@@ -40,6 +40,11 @@
     .loader-container {display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh}
     .loader {border:4px solid #f3f3f3;border-top:4px solid #3498db;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite}
     @keyframes spin {0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+    
+    /* Tooltip specific hover behavior */
+    .info-tooltip-trigger:hover + .info-tooltip-content {
+      opacity: 1;
+    }
   </style>
 
   <!-- React / Babel / Recharts -->
@@ -944,23 +949,21 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
 
     const startPolling = () => {
         let attempts = 0;
-        const maxAttempts = 6; // Poll for ~30 seconds (5s intervals), then fallback to auto-refresh
+        const maxAttempts = 4; // Poll for ~20 seconds (5s intervals), then fallback to auto-refresh
         
         const poll = async () => {
             attempts++;
             const elapsed = (Date.now() - refreshStartTimeRef.current) / 1000;
-            const progress = Math.min(15 + (attempts * 13), 95);
+            const progress = Math.min(15 + (attempts * 20), 95);
             
             setRefreshProgress(progress);
             
-            // More informative messages based on elapsed time
+            // Simple messaging without exposing timeout details
             let message;
             if (elapsed < 15) {
-                message = `Keywords automation running... (${Math.floor(elapsed)}s / ~10s expected)`;
-            } else if (elapsed < 30) {
-                message = `Checking for data updates... (${Math.floor(elapsed)}s)`;
+                message = `Keywords automation running... (~10s expected)`;
             } else {
-                message = `Finalizing automation... (${Math.floor(elapsed)}s)`;
+                message = `Checking for data updates...`;
             }
             setRefreshMessage(message);
             
@@ -1220,7 +1223,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                         </button>
                     </div>
                                          <p className="text-xs text-gray-500 mt-2">
-                         💡 Keywords automation typically completes in 8-10 seconds. We'll auto-refresh when data changes are detected, or after 30 seconds regardless.
+                         💡 Keywords automation typically completes in 8-10 seconds. We'll auto-refresh when data changes are detected.
                      </p>
                 </div>
             )}
@@ -2845,6 +2848,8 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
     const ModernGauge = ({ score, size = 200 }) => {
         const [isDisableTransition, setIsDisableTransition] = useState(false);
         const [isAnimationCooldown, setIsAnimationCooldown] = useState(false);
+        const [hasInitialized, setHasInitialized] = useState(false);
+        const [lastScore, setLastScore] = useState(score);
         const circumference = 2 * Math.PI * 85;
         const strokeDasharray = circumference;
         
@@ -2856,12 +2861,20 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
         const [currentOffset, setCurrentOffset] = useState(circumference);
         
         useEffect(() => {
-            // Initial load animation with delay
-            const timer = setTimeout(() => {
+            // Only animate on initial load or significant score changes
+            if (!hasInitialized) {
+                const timer = setTimeout(() => {
+                    setCurrentOffset(targetOffset);
+                    setHasInitialized(true);
+                    setLastScore(score);
+                }, 500);
+                return () => clearTimeout(timer);
+            } else if (Math.abs(score - lastScore) > 0.5) {
+                // Only re-animate if score changed significantly
                 setCurrentOffset(targetOffset);
-            }, 500);
-            return () => clearTimeout(timer);
-        }, [targetOffset]);
+                setLastScore(score);
+            }
+        }, [targetOffset, hasInitialized, score, lastScore]);
 
         const handleHover = () => {
             if (!isAnimationCooldown) {
@@ -3102,7 +3115,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                 <div className="xl:col-span-8 space-y-4">
                     {/* Top Row - 2 Large Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200 group relative">
+                        <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200 relative">
                             <div className="flex items-start justify-between mb-4">
                                 <div className={`p-3 rounded-xl ${speedStatus === 'excellent' ? 'bg-green-100 text-green-600' : speedStatus === 'good' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
                                     <TrendingUp className="w-6 h-6" />
@@ -3110,9 +3123,11 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             </div>
                             <div className="flex items-center space-x-2 mb-2">
                                 <h3 className="text-gray-600 text-sm font-medium">Page Load Speed</h3>
-                                <div className="relative flex items-center group">
-                                    <Info className="w-4 h-4 text-gray-400" />
-                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-80 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none">
+                                <div className="relative">
+                                    <div className="info-tooltip-trigger cursor-help">
+                                        <Info className="w-4 h-4 text-gray-400" />
+                                    </div>
+                                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-80 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 transition-opacity duration-300 z-30 pointer-events-none info-tooltip-content">
                                         <div className="font-semibold mb-2 border-b border-gray-600 pb-2">Page Load Speed Testing</div>
                                         <div>Each test loads your page in a fresh browser and measures it in real time. Shifts in network traffic, server load, or third-party scripts may vary results.</div>
                                         <svg className="absolute text-gray-800 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255"><polygon className="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
