@@ -487,7 +487,43 @@ const Dashboard = ({ setActiveTab }) => {
                         
                         // Special formatting for multi-line values
                         if (['Age Ranges', 'Ethnicity', 'Gender', 'Languages'].includes(key)) {
-                            const items = (key === 'Gender' || key === 'Languages') ? value.split(' / ') : value.split(' ');
+                            let items = [];
+                            
+                            if (key === 'Gender' || key === 'Languages') {
+                                items = value.split(' / ');
+                            } else if (key === 'Age Ranges' || key === 'Ethnicity') {
+                                // Parse age ranges and ethnicity data that comes in format like "0-17 11.3% 18-34: 19.1%"
+                                // Split by patterns that indicate new entries (age range followed by percentage)
+                                const regex = /(\d+[-\w\s]+?):\s*(\d+\.?\d*%)/g;
+                                let match;
+                                const parsedItems = [];
+                                
+                                while ((match = regex.exec(value)) !== null) {
+                                    parsedItems.push(`${match[1].trim()}: ${match[2]}`);
+                                }
+                                
+                                // If regex parsing didn't work, fall back to simpler splitting
+                                if (parsedItems.length === 0) {
+                                    // Try alternative parsing - split on percentage signs and rebuild
+                                    const parts = value.split('%');
+                                    for (let i = 0; i < parts.length - 1; i++) {
+                                        const part = parts[i].trim();
+                                        const lastSpaceIndex = part.lastIndexOf(' ');
+                                        if (lastSpaceIndex > 0) {
+                                            const label = part.substring(0, lastSpaceIndex).trim();
+                                            const percentage = part.substring(lastSpaceIndex + 1).trim();
+                                            if (label && percentage) {
+                                                parsedItems.push(`${label}: ${percentage}%`);
+                                            }
+                                        }
+                                    }
+                                }
+                                
+                                items = parsedItems.length > 0 ? parsedItems : value.split(' ');
+                            } else {
+                                items = value.split(' ');
+                            }
+                            
                             return (
                                 <div key={key} className="flex justify-between text-sm py-3 border-t border-gray-100 first:border-t-0 first:pt-0">
                                     <span className="text-gray-600">{key}</span>
@@ -1679,25 +1715,54 @@ const Backlinks = () => {
 
                     {/* Column 2: Link Types Distribution */}
                     <div className="space-y-3">
-                        <h3 className="text-lg font-semibold text-gray-700 px-2 mb-2">Link Types</h3>
+                        <div className="flex items-center space-x-2 px-2 mb-2">
+                            <h3 className="text-lg font-semibold text-gray-700">Link Types</h3>
+                            <InfoTooltip text="Dofollow links pass SEO authority and help improve search rankings. Nofollow links don't pass authority but can still drive traffic and provide value." />
+                        </div>
                         <div className="bg-slate-50 rounded-lg p-4">
-                            <ResponsiveContainer width="100%" height={160}>
-                                <BarChart data={followData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-                                    <XAxis type="number" />
-                                    <YAxis dataKey="name" type="category" />
+                            <ResponsiveContainer width="100%" height={180}>
+                                <BarChart data={followData} layout="vertical" margin={{ top: 20, right: 30, left: 60, bottom: 20 }}>
+                                    <defs>
+                                        <linearGradient id="dofollowGradient" x1="0" y1="0" x2="1" y2="0">
+                                            <stop offset="0%" stopColor="#3b82f6" />
+                                            <stop offset="100%" stopColor="#1e40af" />
+                                        </linearGradient>
+                                        <linearGradient id="nofollowGradient" x1="0" y1="0" x2="1" y2="0">
+                                            <stop offset="0%" stopColor="#9ca3af" />
+                                            <stop offset="100%" stopColor="#6b7280" />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+                                    <XAxis 
+                                        type="number" 
+                                        tick={{ fontSize: 12, fill: '#64748b' }}
+                                        tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toString()}
+                                        domain={[0, 'dataMax']}
+                                        interval={0}
+                                    />
+                                    <YAxis 
+                                        dataKey="name" 
+                                        type="category" 
+                                        tick={{ fontSize: 12, fill: '#64748b' }}
+                                        width={50}
+                                    />
                                     <Tooltip 
                                         contentStyle={{ 
-                                            backgroundColor: 'rgba(31, 41, 55, 0.9)', 
-                                            borderColor: 'rgba(255,255,255,0.2)', 
-                                            borderRadius: '0.5rem' 
-                                        }} 
-                                        itemStyle={{ color: '#fff' }} 
-                                        labelStyle={{ color: '#fff', fontWeight: 'bold' }}
+                                            backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                                            border: '1px solid #e2e8f0', 
+                                            borderRadius: '12px',
+                                            boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)'
+                                        }}
+                                        itemStyle={{ color: '#374151' }}
+                                        labelStyle={{ color: '#374151', fontWeight: 'bold' }}
+                                        formatter={(value, name) => [value.toLocaleString(), name]}
                                     />
-                                    <Bar dataKey="value" barSize={20}>
+                                    <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={30}>
                                         {followData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                            <Cell 
+                                                key={`cell-${index}`} 
+                                                fill={entry.name === 'Dofollow' ? 'url(#dofollowGradient)' : 'url(#nofollowGradient)'} 
+                                            />
                                         ))}
                                     </Bar>
                                 </BarChart>
@@ -1717,7 +1782,10 @@ const Backlinks = () => {
 
                     {/* Column 3: Link Dynamics */}
                     <div className="space-y-3">
-                        <h3 className="text-lg font-semibold text-gray-700 px-2 mb-2">Link Dynamics</h3>
+                        <div className="flex items-center space-x-2 px-2 mb-2">
+                            <h3 className="text-lg font-semibold text-gray-700">Link Dynamics</h3>
+                            <InfoTooltip text="New Links: Recently acquired backlinks. Lost Links: Previously detected links that are no longer active. Spam Score: Average percentage indicating potential low-quality or spammy linking domains." />
+                        </div>
                         <SummaryStat
                             label="New Links"
                             value={backlinksSummary.newLinks || 0}
