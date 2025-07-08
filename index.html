@@ -929,7 +929,8 @@ const Dashboard = ({ setActiveTab }) => {
         const webhooks = {
             onPageInsights: 'https://hook.us1.make.com/rytnhogl86u66kb84c8x4jvb9crkhwwv',
             gbpInsights: 'https://hook.us1.make.com/njgvoslc2tis3l5dkm1smswmwlvs91pb',
-            facebookAds: 'https://hook.us1.make.com/rc54yq5e4b6erln6qbyltcbswgul4vj7'
+            facebookAds: 'https://hook.us1.make.com/rc54yq5e4b6erln6qbyltcbswgul4vj7',
+            googleAds: 'https://justchill.app.n8n.cloud/webhook/718a9a18-d40f-4240-a381-761ca4ec4f82'
         };
         
         setIsOverviewRefreshing(true);
@@ -946,17 +947,19 @@ const Dashboard = ({ setActiveTab }) => {
                 throw new Error('No workbook ID found in URL');
             }
 
-            // Trigger all three webhooks in parallel
+            // Trigger all four webhooks in parallel
             const webhookPromises = [
                 fetch(`${webhooks.onPageInsights}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('On-Page Insights')}`, { method: 'GET', mode: 'no-cors' }),
                 fetch(`${webhooks.gbpInsights}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('GBP Insights')}`, { method: 'GET', mode: 'no-cors' }),
-                fetch(`${webhooks.facebookAds}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('Links')}`, { method: 'GET', mode: 'no-cors' })
+                fetch(`${webhooks.facebookAds}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('Links')}`, { method: 'GET', mode: 'no-cors' }),
+                fetch(`${webhooks.googleAds}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('Links')}`, { method: 'GET', mode: 'no-cors' })
             ];
             
             console.log('Triggering all overview webhooks:', {
                 onPageInsights: `${webhooks.onPageInsights}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('On-Page Insights')}`,
                 gbpInsights: `${webhooks.gbpInsights}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('GBP Insights')}`,
-                facebookAds: `${webhooks.facebookAds}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('Links')}`
+                facebookAds: `${webhooks.facebookAds}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('Links')}`,
+                googleAds: `${webhooks.googleAds}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('Links')}`
             });
             
             await Promise.all(webhookPromises);
@@ -981,7 +984,7 @@ const Dashboard = ({ setActiveTab }) => {
 
     const startOverviewPolling = () => {
         let attempts = 0;
-        const maxAttempts = 4; // Poll for ~3 minutes (45s intervals)
+        const maxAttempts = 3; // Poll for ~3 minutes (60s intervals)
         
         const poll = async () => {
             attempts++;
@@ -1089,8 +1092,8 @@ const Dashboard = ({ setActiveTab }) => {
             }
         };
         
-        // Start with immediate poll, then continue with 45-second intervals
-        overviewPollIntervalRef.current = setInterval(poll, 45000);
+        // Start with immediate poll, then continue with 60-second intervals
+        overviewPollIntervalRef.current = setInterval(poll, 60000);
         
         // Poll immediately to start
         poll();
