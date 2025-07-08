@@ -1212,7 +1212,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                                     : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
                             } disabled:opacity-50 disabled:cursor-not-allowed`}
                         >
-                            {isRefreshing ? 'Cancel' : 'Refresh Data'}
+                            {isRefreshing ? 'Cancel' : 'Update Analytics'}
                         </button>
                     </div>
                 </div>
@@ -1249,23 +1249,58 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                     <div className="space-y-3">
                         <h3 className="text-lg font-semibold text-gray-700 px-2 mb-2">Ranking Distribution</h3>
                         {(() => {
-                            // Debug logging for ranking distribution
+                            // Comprehensive debug logging for ranking distribution
+                            console.log('Full Keywords Summary Object:', summary);
+                            console.log('All Summary Keys:', Object.keys(summary || {}));
                             console.log('Ranking Distribution Debug:', {
+                                // Try different possible field names
                                 pos1: summary.pos1,
+                                'Position 1': summary['Position 1'],
                                 pos2_3: summary.pos2_3,
+                                'Position 2-3': summary['Position 2-3'],
+                                'Positions 2-3': summary['Positions 2-3'],
                                 pos4_10: summary.pos4_10,
+                                'Position 4-10': summary['Position 4-10'],
+                                'Positions 4-10': summary['Positions 4-10'],
                                 pos11_20: summary.pos11_20,
-                                parsed_pos1: parseInt(String(summary.pos1 || 0).replace(/[^\d]/g, '')) || 0,
-                                parsed_pos2_3: parseInt(String(summary.pos2_3 || 0).replace(/[^\d]/g, '')) || 0,
-                                parsed_pos4_10: parseInt(String(summary.pos4_10 || 0).replace(/[^\d]/g, '')) || 0,
-                                parsed_pos11_20: parseInt(String(summary.pos11_20 || 0).replace(/[^\d]/g, '')) || 0
+                                'Position 11-20': summary['Position 11-20'],
+                                'Positions 11-20': summary['Positions 11-20']
                             });
                             return null;
                         })()}
-                        <SummaryStat label="Position 1" value={parseInt(String(summary.pos1 || 0).replace(/[^\d]/g, '')) || 0} color={(parseInt(String(summary.pos1 || 0).replace(/[^\d]/g, '')) || 0) > 0 ? 'text-emerald-600' : 'text-gray-500'} />
-                        <SummaryStat label="Positions 2-3" value={parseInt(String(summary.pos2_3 || 0).replace(/[^\d]/g, '')) || 0} color={(parseInt(String(summary.pos2_3 || 0).replace(/[^\d]/g, '')) || 0) > 0 ? 'text-emerald-500' : 'text-gray-500'} />
-                        <SummaryStat label="Positions 4-10" value={parseInt(String(summary.pos4_10 || 0).replace(/[^\d]/g, '')) || 0} color={(parseInt(String(summary.pos4_10 || 0).replace(/[^\d]/g, '')) || 0) > 0 ? 'text-blue-500' : 'text-gray-500'} />
-                        <SummaryStat label="Positions 11-20" value={parseInt(String(summary.pos11_20 || 0).replace(/[^\d]/g, '')) || 0} color={(parseInt(String(summary.pos11_20 || 0).replace(/[^\d]/g, '')) || 0) > 0 ? 'text-yellow-500' : 'text-gray-500'} />
+                        {(() => {
+                            // Helper function to get ranking value from different possible field names
+                            const getRankingValue = (position) => {
+                                const possibleFields = {
+                                    pos1: [summary.pos1, summary['Position 1'], summary['Positions 1']],
+                                    pos2_3: [summary.pos2_3, summary['Position 2-3'], summary['Positions 2-3']],
+                                    pos4_10: [summary.pos4_10, summary['Position 4-10'], summary['Positions 4-10']],
+                                    pos11_20: [summary.pos11_20, summary['Position 11-20'], summary['Positions 11-20']]
+                                };
+                                
+                                const values = possibleFields[position] || [];
+                                for (let value of values) {
+                                    if (value !== undefined && value !== null && value !== '') {
+                                        return parseInt(String(value).replace(/[^\d]/g, '')) || 0;
+                                    }
+                                }
+                                return 0;
+                            };
+                            
+                            const pos1Value = getRankingValue('pos1');
+                            const pos2_3Value = getRankingValue('pos2_3');
+                            const pos4_10Value = getRankingValue('pos4_10');
+                            const pos11_20Value = getRankingValue('pos11_20');
+                            
+                            return (
+                                <>
+                                    <SummaryStat label="Position 1" value={pos1Value} color={pos1Value > 0 ? 'text-emerald-600' : 'text-gray-500'} />
+                                    <SummaryStat label="Positions 2-3" value={pos2_3Value} color={pos2_3Value > 0 ? 'text-emerald-500' : 'text-gray-500'} />
+                                    <SummaryStat label="Positions 4-10" value={pos4_10Value} color={pos4_10Value > 0 ? 'text-blue-500' : 'text-gray-500'} />
+                                    <SummaryStat label="Positions 11-20" value={pos11_20Value} color={pos11_20Value > 0 ? 'text-yellow-500' : 'text-gray-500'} />
+                                </>
+                            );
+                        })()}
                     </div>
 
                     {/* Column 3: Keyword Dynamics */}
@@ -2383,23 +2418,21 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
 
     const startPolling = () => {
         let attempts = 0;
-        const maxAttempts = 12; // Poll for ~6 minutes (30s intervals) to account for 1min automation + buffer
+        const maxAttempts = 6; // Poll for ~4.5 minutes (45s intervals) - reduced to avoid jarring refreshes
         
         const poll = async () => {
             attempts++;
             const elapsed = (Date.now() - refreshStartTimeRef.current) / 1000;
-            const progress = Math.min(15 + (attempts * 7), 95); // Slower progress increment for longer polling
+            const progress = Math.min(15 + (attempts * 14), 95); // Adjusted for fewer attempts
             
             setRefreshProgress(progress);
             
-            // More informative messages based on elapsed time
+            // Simplified messaging to avoid jarring updates
             let message;
-            if (elapsed < 60) {
-                message = `Automation running... (${Math.floor(elapsed)}s / ~60s expected)`;
-            } else if (elapsed < 120) {
-                message = `Checking for AI Report updates... (${Math.floor(elapsed / 60)}:${String(Math.floor(elapsed % 60)).padStart(2, '0')})`;
+            if (elapsed < 90) {
+                message = `Running automation... (~60s expected)`;
             } else {
-                message = `Finalizing updates... (${Math.floor(elapsed / 60)}:${String(Math.floor(elapsed % 60)).padStart(2, '0')})`;
+                message = `Finalizing updates...`;
             }
             setRefreshMessage(message);
             
@@ -2470,8 +2503,8 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             }
         };
         
-        // Start with immediate poll, then continue with 30-second intervals
-        pollIntervalRef.current = setInterval(poll, 30000);
+        // Start with immediate poll, then continue with 45-second intervals to reduce jarring refreshes
+        pollIntervalRef.current = setInterval(poll, 45000);
         
         // Poll immediately to start
         poll();
@@ -3062,7 +3095,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                     : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
                             } disabled:opacity-50 disabled:cursor-not-allowed`}
                         >
-                            {isRefreshing ? 'Cancel' : 'Refresh Data'}
+                            {isRefreshing ? 'Cancel' : 'Update Analytics'}
                         </button>
                     </div>
                 </div>
