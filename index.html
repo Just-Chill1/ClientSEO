@@ -40,6 +40,50 @@
     .loader-container {display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh}
     .loader {border:4px solid #f3f3f3;border-top:4px solid #3498db;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite}
     @keyframes spin {0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+    
+    /* Tooltip specific hover behavior */
+    .info-tooltip-trigger:hover + .info-tooltip-content {
+      opacity: 1;
+    }
+    
+    /* Map scroll zoom prevention */
+    .map-container {
+      position: relative;
+    }
+    
+    /* Disable pointer events by default to prevent scroll zoom */
+    .map-iframe {
+      pointer-events: none;
+    }
+    
+    /* Enable pointer events only when clicked/active */
+    .map-container:active .map-iframe {
+      pointer-events: auto;
+    }
+    
+    /* Add a subtle overlay to indicate click-to-interact */
+    .map-container::before {
+      content: 'Click to interact with map';
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .map-container:hover::before {
+      opacity: 1;
+    }
+    
+    .map-container:active::before {
+      opacity: 0;
+    }
   </style>
   
   <!-- Non-critical CSS loaded after page load -->
@@ -89,7 +133,7 @@
     }
   </style>
 
-  <!-- React / Babel / Recharts - Simple loading -->
+  <!-- React / Babel / Recharts -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.23.1/babel.min.js"></script>
@@ -4264,90 +4308,27 @@ const App = () => {
     window.history.replaceState({}, '', newUrl);
   }, [tab]);
 
-  // Progressive data loading with enhanced caching
   useEffect(() => {
     const id = new URLSearchParams(location.search).get('workbookId');
     if (!id) { setErr('Add ?workbookId=YOUR_ID to the URL'); setLoad(false); return; }
 
-    // Check cache first
-    const cacheKey = `app_data_${id}`;
-    const cachedData = sessionStorage.getItem(cacheKey);
-    const cacheTimestamp = sessionStorage.getItem(`${cacheKey}_timestamp`);
-    const cacheMaxAge = 10 * 60 * 1000; // 10 minutes (increased for better performance)
-    
-    if (cachedData && cacheTimestamp && (Date.now() - parseInt(cacheTimestamp)) < cacheMaxAge) {
-      try {
-        const parsed = JSON.parse(cachedData);
-        console.log('⚡ Loading from cache:', Object.keys(parsed));
-        performanceMonitor.log('Cache Hit', `Keys: ${Object.keys(parsed).join(', ')}`);
-        setData(parsed);
+    fetchWithCorsWorkaround(`https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${id}`, (err, j) => {
+      if (err) {
+        console.error(err);
+        setErr(err.message);
         setLoad(false);
         return;
-      } catch (e) {
-        console.error('Cache parsing error:', e);
-        sessionStorage.removeItem(cacheKey);
-        sessionStorage.removeItem(`${cacheKey}_timestamp`);
       }
-    }
-
-    // Progressive loading - start with minimal data first
-    performanceMonitor.log('Starting Data Fetch');
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 25000); // Reduced timeout
-
-    // Use fetch with optimized settings
-    fetch(`https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${id}`, {
-      signal: controller.signal,
-      method: 'GET',
-      mode: 'cors',
-      cache: 'force-cache', // Use browser cache when available
-      headers: {
-        'Accept': 'application/json',
-        'Cache-Control': 'max-age=300' // 5 minutes browser cache
+      if (j.error) {
+        setErr(`Script error: ${j.error}`);
+        setLoad(false);
+        return;
       }
-    })
-      .then(r => {
-        clearTimeout(timeoutId);
-        performanceMonitor.log('Data Fetch Response', `Status: ${r.status}`);
-        if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
-        return r.json();
-      })
-      .then(j => { 
-        if (j.error) throw new Error(j.error); 
-        
-        performanceMonitor.log('Data Parse Complete', `Keys: ${Object.keys(j).join(', ')}`);
-        console.log('✅ Data loaded successfully:', Object.keys(j));
-        console.log('Webhooks in data:', j.webhooks);
-        
-        // Cache the data with compression
-        try {
-          sessionStorage.setItem(cacheKey, JSON.stringify(j));
-          sessionStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
-          performanceMonitor.log('Data Cached');
-        } catch (e) {
-          console.warn('Failed to cache data:', e);
-        }
-        
-        setData(j); 
-        setLoad(false); 
-        performanceMonitor.log('React State Updated');
-      })
-      .catch(e => { 
-        clearTimeout(timeoutId);
-        performanceMonitor.log('Data Fetch Error', e.message);
-        if (e.name === 'AbortError') {
-          setErr('Request timed out. Please try again.');
-        } else {
-          console.error('Data loading error:', e); 
-          setErr(e.message || 'Failed to load data');
-        }
-        setLoad(false); 
-      });
-
-    return () => {
-      controller.abort();
-      clearTimeout(timeoutId);
-    };
+      console.log('Data loaded successfully:', Object.keys(j));
+      console.log('Webhooks in data:', j.webhooks);
+      setData(j); 
+      setLoad(false); 
+    });
   }, []);
 
   /* routing */
