@@ -1630,6 +1630,226 @@ const Backlinks = () => {
     const [error, setError] = useState(null);
     const [activeTableTab, setActiveTableTab] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
+    
+    // Refresh state management
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const [refreshProgress, setRefreshProgress] = useState(0);
+    const [refreshMessage, setRefreshMessage] = useState('');
+    const [lastRefresh, setLastRefresh] = useState(null);
+    const pollIntervalRef = useRef(null);
+    const refreshStartTimeRef = useRef(null);
+
+    // Cleanup polling on unmount
+    useEffect(() => {
+        return () => {
+            if (pollIntervalRef.current) {
+                clearInterval(pollIntervalRef.current);
+            }
+        };
+    }, []);
+
+    // Refresh functionality
+    const triggerRefresh = async () => {
+        console.log('Backlinks refresh triggered');
+        
+        const webhookUrl = 'https://hook.us1.make.com/r6f9bfom4a3tflibf7hdpkuz928klx1p';
+        
+        setIsRefreshing(true);
+        setRefreshProgress(5);
+        setRefreshMessage('Triggering backlinks automation...');
+        refreshStartTimeRef.current = Date.now();
+
+        try {
+            // Get the workbook ID from URL parameters
+            const params = new URLSearchParams(window.location.search);
+            const workbookId = params.get('workbookId');
+            
+            if (!workbookId) {
+                throw new Error('No workbook ID found in URL');
+            }
+
+            // Construct the webhook URL with required parameters
+            const fullWebhookUrl = `${webhookUrl}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('Backlinks')}`;
+            
+            console.log('Triggering backlinks webhook:', fullWebhookUrl);
+            
+            const response = await fetch(fullWebhookUrl, {
+                method: 'GET',
+                mode: 'no-cors' // Many webhooks don't support CORS
+            });
+            
+            // Show success message
+            console.log('Backlinks webhook triggered successfully!');
+            
+            setRefreshProgress(15);
+            setRefreshMessage('Backlinks automation started! (~60s expected)...');
+            
+            // Start polling for data changes
+            startPolling();
+            
+        } catch (error) {
+            console.error('Error triggering backlinks refresh:', error);
+            setIsRefreshing(false);
+            setRefreshProgress(0);
+            setRefreshMessage('');
+            alert(`Failed to trigger backlinks refresh: ${error.message}`);
+        }
+    };
+
+    const startPolling = () => {
+        let attempts = 0;
+        const maxAttempts = 4; // Poll for ~3 minutes (45s intervals)
+        
+        const poll = async () => {
+            attempts++;
+            const elapsed = (Date.now() - refreshStartTimeRef.current) / 1000;
+            const progress = Math.min(15 + (attempts * 20), 95);
+            
+            setRefreshProgress(progress);
+            
+            let message;
+            if (elapsed < 60) {
+                message = `Backlinks automation running... (~60s expected)`;
+            } else {
+                message = `Checking for data updates...`;
+            }
+            setRefreshMessage(message);
+            
+            try {
+                // Check if data has been updated by fetching fresh data
+                const params = new URLSearchParams(window.location.search);
+                const workbookId = params.get('workbookId');
+                
+                if (workbookId) {
+                    const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
+                    
+                    const response = await fetch(scriptUrl);
+                    const newData = await response.json();
+                    
+                    // Check for changes in backlinks data
+                    if (newData.backlinksSummary && newData.backlinksTable && hasBacklinksDataChanged(backlinksData, { backlinksSummary: newData.backlinksSummary, backlinksTable: newData.backlinksTable })) {
+                        // Data has changed! Stop polling and update in-place
+                        clearInterval(pollIntervalRef.current);
+                        setRefreshProgress(100);
+                        setRefreshMessage('Backlinks updated! Loading fresh data...');
+                        
+                        // Update the data in-place
+                        const newBacklinksData = {
+                            backlinksSummary: newData.backlinksSummary,
+                            backlinksTable: newData.backlinksTable
+                        };
+                        
+                        // Update cache
+                        const cacheKey = `backlinks_${workbookId}`;
+                        sessionStorage.setItem(cacheKey, JSON.stringify(newBacklinksData));
+                        
+                        setBacklinksData(newBacklinksData);
+                        setLastRefresh(new Date());
+                        
+                        // Clear refresh state after a brief success message
+                        setTimeout(() => {
+                            setIsRefreshing(false);
+                            setRefreshProgress(0);
+                            setRefreshMessage('');
+                        }, 2000);
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error('Error polling for backlinks updates:', error);
+            }
+            
+            // Auto-refresh after max attempts
+            if (attempts >= maxAttempts) {
+                clearInterval(pollIntervalRef.current);
+                setRefreshProgress(100);
+                setRefreshMessage('Automation complete! Refreshing with latest data...');
+                
+                try {
+                    const params = new URLSearchParams(window.location.search);
+                    const workbookId = params.get('workbookId');
+                    
+                    if (workbookId) {
+                        const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
+                        
+                        fetch(scriptUrl)
+                            .then(response => response.json())
+                            .then(finalData => {
+                                if (finalData.backlinksSummary && finalData.backlinksTable) {
+                                    const finalBacklinksData = {
+                                        backlinksSummary: finalData.backlinksSummary,
+                                        backlinksTable: finalData.backlinksTable
+                                    };
+                                    
+                                    // Update cache
+                                    const cacheKey = `backlinks_${workbookId}`;
+                                    sessionStorage.setItem(cacheKey, JSON.stringify(finalBacklinksData));
+                                    
+                                    setBacklinksData(finalBacklinksData);
+                                    setLastRefresh(new Date());
+                                    console.log('Fallback: Backlinks data refreshed after timeout');
+                                    
+                                    setTimeout(() => {
+                                        setIsRefreshing(false);
+                                        setRefreshProgress(0);
+                                        setRefreshMessage('');
+                                    }, 1500);
+                                } else {
+                                    setIsRefreshing(false);
+                                    setRefreshProgress(0);
+                                    setRefreshMessage('');
+                                }
+                            })
+                            .catch(e => {
+                                console.log('Fallback failed:', e);
+                                setIsRefreshing(false);
+                                setRefreshProgress(0);
+                                setRefreshMessage('');
+                            });
+                    } else {
+                        setIsRefreshing(false);
+                        setRefreshProgress(0);
+                        setRefreshMessage('');
+                    }
+                } catch (error) {
+                    console.error('Error in fallback:', error);
+                    setIsRefreshing(false);
+                    setRefreshProgress(0);
+                    setRefreshMessage('');
+                }
+            }
+        };
+        
+        // Start with immediate poll, then continue with 45-second intervals
+        pollIntervalRef.current = setInterval(poll, 45000);
+        
+        // Poll immediately to start
+        poll();
+    };
+
+    const hasBacklinksDataChanged = (oldData, newData) => {
+        // Check if any key backlinks data has changed
+        const hasChanges = (
+            oldData?.backlinksSummary?.totalBacklinks !== newData?.backlinksSummary?.totalBacklinks ||
+            oldData?.backlinksSummary?.newLinks !== newData?.backlinksSummary?.newLinks ||
+            oldData?.backlinksSummary?.lostLinks !== newData?.backlinksSummary?.lostLinks ||
+            oldData?.backlinksSummary?.totalDofollow !== newData?.backlinksSummary?.totalDofollow ||
+            oldData?.backlinksSummary?.totalNofollow !== newData?.backlinksSummary?.totalNofollow ||
+            JSON.stringify(oldData?.backlinksTable) !== JSON.stringify(newData?.backlinksTable)
+        );
+        
+        console.log('Backlinks change detected:', hasChanges);
+        return hasChanges;
+    };
+
+    const cancelRefresh = () => {
+        if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current);
+        }
+        setIsRefreshing(false);
+        setRefreshProgress(0);
+        setRefreshMessage('');
+    };
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -1722,7 +1942,50 @@ const Backlinks = () => {
 
     return (
         <PageContent>
-            <h1 className="text-3xl font-bold text-gray-800 mb-6">Backlinks Analysis</h1>
+            {/* Header Section */}
+            <div className="mb-6">
+                <div className="flex justify-between items-center">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-800">Backlinks Analysis</h1>
+                        <p className="text-gray-600 mt-1">Track your backlink profile and analyze link quality metrics</p>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                        {lastRefresh && (
+                            <span className="text-sm text-gray-500">
+                                Last updated: {lastRefresh.toLocaleTimeString()}
+                            </span>
+                        )}
+                        
+                        {/* Inline Progress Indicator */}
+                        {isRefreshing && (
+                            <div className="flex items-center space-x-3 bg-white rounded-xl shadow-md px-4 py-2 border border-gray-100">
+                                <div className="flex items-center space-x-2">
+                                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                    <span className="text-sm font-medium text-gray-700">{refreshMessage}</span>
+                                </div>
+                                <div className="w-16 bg-gray-200 rounded-full h-2">
+                                    <div 
+                                        className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
+                                        style={{ width: `${refreshProgress}%` }}
+                                    ></div>
+                                </div>
+                                <span className="text-xs font-medium text-blue-600 min-w-[2rem]">{refreshProgress}%</span>
+                            </div>
+                        )}
+                        
+                        <button 
+                            onClick={isRefreshing ? cancelRefresh : triggerRefresh}
+                            className={`px-6 py-2 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl ${
+                                isRefreshing 
+                                    ? 'bg-red-500 hover:bg-red-600 text-white' 
+                                    : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
+                            }`}
+                        >
+                            {isRefreshing ? 'Cancel' : 'Update Analytics'}
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <Card className="mb-6">
                 <div className="flex items-center space-x-2 mb-4">
@@ -1864,12 +2127,6 @@ const Backlinks = () => {
                         <h2 className="text-xl font-bold text-gray-800">Backlinks</h2>
                         <InfoTooltip text="Analyze backlinks for your site and competitors. Use the tabs to switch between different sites." />
                     </div>
-                    <button
-                        onClick={() => console.log('Backlinks refresh requested')}
-                        className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-1 px-3 rounded-lg text-xs transition-colors duration-300"
-                    >
-                        Refresh
-                    </button>
                 </div>
 
                 <div className="mb-4">
