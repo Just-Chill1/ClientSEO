@@ -29,18 +29,82 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
   <title>MedSpa SEO Dashboard</title>
 
-  <!-- Tailwind (dev CDN) -->
-  <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Inter font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <!-- Preload critical resources -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"></noscript>
+  
+  <!-- Preconnect to external domains -->
+  <link rel="preconnect" href="https://cdn.tailwindcss.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://script.google.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <!-- DNS prefetch for additional performance -->
+  <link rel="dns-prefetch" href="https://justchill.app.n8n.cloud">
+  
+  <!-- Tailwind (dev CDN) - defer for non-critical CSS -->
+  <script src="https://cdn.tailwindcss.com" defer></script>
 
   <style>
-    body { font-family:'Inter',sans-serif }
-    .loader-container {display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh}
-    .loader {border:4px solid #f3f3f3;border-top:4px solid #3498db;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite}
-    @keyframes spin {0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+    /* Critical CSS - Above the fold styles */
+    body { 
+      font-family:'Inter',sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9fafb;
+    }
     
+    /* Loading states - Critical for first paint */
+    .loader-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f9fafb;
+    }
+    
+    .loader {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg) }
+      100% { transform: rotate(360deg) }
+    }
+    
+    /* Basic layout styles - Critical */
+    .dashboard-container {
+      opacity: 0;
+      animation: fadeIn 0.3s ease-in-out 0.1s forwards;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Skeleton loading styles */
+    .skeleton {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: loading 1.5s infinite;
+    }
+    
+    @keyframes loading {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+  </style>
+  
+  <!-- Non-critical CSS loaded after page load -->
+  <style id="non-critical-css">
     /* Tooltip specific hover behavior */
     .info-tooltip-trigger:hover + .info-tooltip-content {
       opacity: 1;
@@ -86,12 +150,12 @@
     }
   </style>
 
-  <!-- React / Babel / Recharts -->
-  <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone@7.23.1/babel.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prop-types@15/prop-types.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/recharts@2/umd/Recharts.min.js"></script>
+  <!-- React / Babel / Recharts - Optimized loading -->
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js" defer></script>
+  <script crossorigin src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js" defer></script>
+  <script src="https://unpkg.com/@babel/standalone@7.23.1/babel.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/prop-types@15/prop-types.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/recharts@2/umd/Recharts.min.js" defer></script>
 </head>
 
 <body class="bg-gray-50">
@@ -356,6 +420,39 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
                 )}
             </div>
         </Card>
+    );
+};
+
+/* ------------------------------------------------------------------ */
+/* Lazy Loading Utilities                                             */
+/* ------------------------------------------------------------------ */
+const LazyComponent = ({ children, fallback = <div className="flex items-center justify-center p-8"><div className="loader"></div></div> }) => {
+    const [isVisible, setIsVisible] = useState(false);
+    const [hasLoaded, setHasLoaded] = useState(false);
+    const elementRef = useRef(null);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting && !hasLoaded) {
+                    setIsVisible(true);
+                    setHasLoaded(true);
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (elementRef.current) {
+            observer.observe(elementRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [hasLoaded]);
+
+    return (
+        <div ref={elementRef}>
+            {isVisible ? children : fallback}
+        </div>
     );
 };
 
@@ -4259,20 +4356,76 @@ const App = () => {
     window.history.replaceState({}, '', newUrl);
   }, [tab]);
 
+  // Optimized data loading with caching and progressive loading
   useEffect(() => {
     const id = new URLSearchParams(location.search).get('workbookId');
     if (!id) { setErr('Add ?workbookId=YOUR_ID to the URL'); setLoad(false); return; }
 
-    fetch(`https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${id}`)
-      .then(r => r.json())
+    // Check cache first
+    const cacheKey = `app_data_${id}`;
+    const cachedData = sessionStorage.getItem(cacheKey);
+    const cacheTimestamp = sessionStorage.getItem(`${cacheKey}_timestamp`);
+    const cacheMaxAge = 5 * 60 * 1000; // 5 minutes
+    
+    if (cachedData && cacheTimestamp && (Date.now() - parseInt(cacheTimestamp)) < cacheMaxAge) {
+      try {
+        const parsed = JSON.parse(cachedData);
+        console.log('Loading from cache:', Object.keys(parsed));
+        setData(parsed);
+        setLoad(false);
+        return;
+      } catch (e) {
+        console.error('Cache parsing error:', e);
+        sessionStorage.removeItem(cacheKey);
+        sessionStorage.removeItem(`${cacheKey}_timestamp`);
+      }
+    }
+
+    // If no cache, show skeleton and load data
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+
+    fetch(`https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${id}`, {
+      signal: controller.signal,
+      method: 'GET',
+      mode: 'cors',
+      cache: 'no-cache',
+      headers: {
+        'Accept': 'application/json',
+      }
+    })
+      .then(r => {
+        clearTimeout(timeoutId);
+        if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+        return r.json();
+      })
       .then(j => { 
         if (j.error) throw new Error(j.error); 
         console.log('Data loaded successfully:', Object.keys(j));
         console.log('Webhooks in data:', j.webhooks);
+        
+        // Cache the data
+        sessionStorage.setItem(cacheKey, JSON.stringify(j));
+        sessionStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+        
         setData(j); 
         setLoad(false); 
       })
-      .catch(e => { console.error(e); setErr(e.message); setLoad(false); });
+      .catch(e => { 
+        clearTimeout(timeoutId);
+        if (e.name === 'AbortError') {
+          setErr('Request timed out. Please try again.');
+        } else {
+          console.error('Data loading error:', e); 
+          setErr(e.message || 'Failed to load data');
+        }
+        setLoad(false); 
+      });
+
+    return () => {
+      controller.abort();
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   /* routing */
@@ -4280,7 +4433,51 @@ const App = () => {
   if (load) {
     body = (
       <PageContent>
-        <div className="p-8 text-center text-gray-500">Loading data…</div>
+        <div className="dashboard-container">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {/* Skeleton metric cards */}
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                  <div className="skeleton h-4 w-24 mb-2 rounded"></div>
+                  <div className="skeleton h-8 w-16 mb-1 rounded"></div>
+                  <div className="skeleton h-3 w-20 rounded"></div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+              {/* Skeleton chart */}
+              <div className="lg:col-span-2 bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <div className="skeleton h-6 w-32 mb-4 rounded"></div>
+                <div className="skeleton h-64 w-full rounded"></div>
+              </div>
+              
+              {/* Skeleton pie chart */}
+              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <div className="skeleton h-6 w-24 mb-4 rounded"></div>
+                <div className="skeleton h-48 w-full rounded-full mx-auto"></div>
+              </div>
+            </div>
+            
+            {/* Skeleton table */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+              <div className="p-6">
+                <div className="skeleton h-6 w-40 mb-4 rounded"></div>
+                <div className="space-y-3">
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <div key={i} className="flex space-x-4">
+                      <div className="skeleton h-4 w-32 rounded"></div>
+                      <div className="skeleton h-4 w-24 rounded"></div>
+                      <div className="skeleton h-4 w-16 rounded"></div>
+                      <div className="skeleton h-4 w-20 rounded"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </PageContent>
     );
   } else if (err) {
@@ -4295,26 +4492,44 @@ const App = () => {
         body = <Dashboard setActiveTab={setTab} />;
         break;
       case 'Website Stats':
-        body = <WebsiteStats data={data.websiteStats} webhooks={data.webhooks} setData={setData} />;
+        body = (
+          <LazyComponent fallback={<PageContent><div className="p-8 text-center text-gray-500">Loading Website Stats...</div></PageContent>}>
+            <WebsiteStats data={data.websiteStats} webhooks={data.webhooks} setData={setData} />
+          </LazyComponent>
+        );
         break;
       case 'Geogrid Maps':
-        body = <GeogridMaps data={data.geogridData} />;
+        body = (
+          <LazyComponent fallback={<PageContent><div className="p-8 text-center text-gray-500">Loading Geogrid Maps...</div></PageContent>}>
+            <GeogridMaps data={data.geogridData} />
+          </LazyComponent>
+        );
         break;
       case 'Keywords':
         body = (
-          <Keywords
-            summary={data.keywordsSummary}
-            table={data.keywordsTable}
-            webhooks={data.webhooks}
-            setData={setData}
-          />
+          <LazyComponent fallback={<PageContent><div className="p-8 text-center text-gray-500">Loading Keywords...</div></PageContent>}>
+            <Keywords
+              summary={data.keywordsSummary}
+              table={data.keywordsTable}
+              webhooks={data.webhooks}
+              setData={setData}
+            />
+          </LazyComponent>
         );
         break;
       case 'Backlinks':
-        body = <Backlinks />;
+        body = (
+          <LazyComponent fallback={<PageContent><div className="p-8 text-center text-gray-500">Loading Backlinks...</div></PageContent>}>
+            <Backlinks />
+          </LazyComponent>
+        );
         break;
       default:
-        body = <ToolsPage />;
+        body = (
+          <LazyComponent fallback={<PageContent><div className="p-8 text-center text-gray-500">Loading Tools...</div></PageContent>}>
+            <ToolsPage />
+          </LazyComponent>
+        );
     }
   }
 
@@ -4327,8 +4542,48 @@ const App = () => {
   );
 };
 
-/* mount React app */
-ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+/* ------------------------------------------------------------------ */
+/* Optimized App Initialization                                       */
+/* ------------------------------------------------------------------ */
+
+// Wait for all critical resources to load before mounting React
+const initializeApp = () => {
+  const requiredGlobals = ['React', 'ReactDOM', 'Recharts'];
+  const allLoaded = requiredGlobals.every(global => window[global]);
+  
+  if (allLoaded) {
+    console.log('All dependencies loaded, mounting React app...');
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  } else {
+    console.log('Waiting for dependencies...', requiredGlobals.filter(g => !window[g]));
+    setTimeout(initializeApp, 50);
+  }
+};
+
+// Performance monitoring
+const performanceMonitor = {
+  start: performance.now(),
+  log: (event, detail = '') => {
+    const elapsed = (performance.now() - performanceMonitor.start).toFixed(2);
+    console.log(`⚡ ${event}: ${elapsed}ms ${detail}`);
+  }
+};
+
+// Start initialization when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    performanceMonitor.log('DOM Content Loaded');
+    initializeApp();
+  });
+} else {
+  performanceMonitor.log('DOM Already Ready');
+  initializeApp();
+}
+
+// Monitor when React app is mounted
+window.addEventListener('load', () => {
+  performanceMonitor.log('Window Load Complete');
+});
 </script>
 </body>
 </html>
