@@ -944,12 +944,12 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
 
     const startPolling = () => {
         let attempts = 0;
-        const maxAttempts = 24; // Poll for ~2 minutes (5s intervals)
+        const maxAttempts = 4; // Poll for ~20 seconds (5s intervals), then fallback to auto-refresh
         
         const poll = async () => {
             attempts++;
             const elapsed = (Date.now() - refreshStartTimeRef.current) / 1000;
-            const progress = Math.min(15 + (attempts * 3.5), 95);
+            const progress = Math.min(15 + (attempts * 20), 95);
             
             setRefreshProgress(progress);
             
@@ -999,14 +999,13 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                 console.error('Error polling for keywords updates:', error);
             }
             
-            // Stop polling after max attempts
+            // Hybrid approach: After max attempts, auto-refresh with latest data
             if (attempts >= maxAttempts) {
                 clearInterval(pollIntervalRef.current);
-                setIsRefreshing(false);
-                setRefreshProgress(0);
-                setRefreshMessage('');
+                setRefreshProgress(100);
+                setRefreshMessage('Automation complete! Refreshing with latest data...');
                 
-                // Try one final check for updates
+                // Auto-refresh after timeout - fetch the latest data regardless
                 try {
                     const params = new URLSearchParams(window.location.search);
                     const workbookId = params.get('workbookId');
@@ -1020,13 +1019,37 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                                 if (finalData.keywordsSummary && finalData.keywordsTable) {
                                     setData(finalData);
                                     setLastRefresh(new Date());
-                                    console.log('Final keywords data update applied');
+                                    console.log('Hybrid fallback: Keywords data refreshed after timeout');
+                                    
+                                    // Clear refresh state after updating
+                                    setTimeout(() => {
+                                        setIsRefreshing(false);
+                                        setRefreshProgress(0);
+                                        setRefreshMessage('');
+                                    }, 1500);
+                                } else {
+                                    // Fallback failed, clear state
+                                    setIsRefreshing(false);
+                                    setRefreshProgress(0);
+                                    setRefreshMessage('');
                                 }
                             })
-                            .catch(e => console.log('Final keywords check failed:', e));
+                            .catch(e => {
+                                console.log('Hybrid fallback failed:', e);
+                                setIsRefreshing(false);
+                                setRefreshProgress(0);
+                                setRefreshMessage('');
+                            });
+                    } else {
+                        setIsRefreshing(false);
+                        setRefreshProgress(0);
+                        setRefreshMessage('');
                     }
                 } catch (error) {
-                    console.error('Error in final keywords update check:', error);
+                    console.error('Error in hybrid fallback:', error);
+                    setIsRefreshing(false);
+                    setRefreshProgress(0);
+                    setRefreshMessage('');
                 }
             }
         };
@@ -1039,23 +1062,42 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
     };
 
     const hasKeywordsDataChanged = (oldSummary, oldTable, newSummary, newTable) => {
-        // Focus on Keywords Archive table changes since that's where new entries are always added
-        const hasTableChanges = (
-            // Check if table structure changed (new sites added)
-            JSON.stringify(Object.keys(oldTable || {})) !== JSON.stringify(Object.keys(newTable || {})) ||
-            // Check if any site has different number of keywords (most reliable indicator)
-            Object.keys(oldTable || {}).some(siteName => {
-                const oldCount = (oldTable[siteName] || []).length;
-                const newCount = (newTable[siteName] || []).length;
-                const changed = oldCount !== newCount;
-                if (changed) {
-                    console.log(`Keywords Archive change detected for ${siteName}: ${oldCount} -> ${newCount} entries`);
-                }
-                return changed;
-            })
-        );
+        // Hybrid approach: Check for actual keyword data changes in individual entries
+        let hasActualChanges = false;
         
-        // Also check if summary changed as a backup
+        // Check if any keyword data has actually changed (positions, URLs, etc.)
+        Object.keys(oldTable || {}).forEach(siteName => {
+            const oldKeywords = oldTable[siteName] || [];
+            const newKeywords = newTable[siteName] || [];
+            
+            // Quick check - different number of keywords
+            if (oldKeywords.length !== newKeywords.length) {
+                console.log(`Keywords count changed for ${siteName}: ${oldKeywords.length} -> ${newKeywords.length}`);
+                hasActualChanges = true;
+                return;
+            }
+            
+            // Deeper check - compare first few keyword entries for changes
+            const checkCount = Math.min(5, oldKeywords.length); // Check first 5 keywords
+            for (let i = 0; i < checkCount; i++) {
+                const oldKw = oldKeywords[i];
+                const newKw = newKeywords[i];
+                
+                if (oldKw && newKw) {
+                    // Check key fields that would indicate fresh data
+                    if (oldKw.rank_now !== newKw.rank_now || 
+                        oldKw.rank_prev !== newKw.rank_prev ||
+                        oldKw.ranking_url !== newKw.ranking_url ||
+                        oldKw.ranking_title !== newKw.ranking_title) {
+                        console.log(`Keyword data changed for ${siteName}: ${oldKw.keyword} position ${oldKw.rank_now} -> ${newKw.rank_now}`);
+                        hasActualChanges = true;
+                        return;
+                    }
+                }
+            }
+        });
+        
+        // Also check summary changes as backup
         const hasSummaryChanges = (
             parseInt(oldSummary?.totalKeywords) !== parseInt(newSummary?.totalKeywords) ||
             parseInt(oldSummary?.pos1) !== parseInt(newSummary?.pos1) ||
@@ -1065,14 +1107,12 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
             parseInt(oldSummary?.isLost) !== parseInt(newSummary?.isLost)
         );
         
-        const hasChanges = hasTableChanges || hasSummaryChanges;
+        const hasChanges = hasActualChanges || hasSummaryChanges;
         
-        console.log('Keywords data change detected:', hasChanges);
-        console.log('Table changes:', hasTableChanges, 'Summary changes:', hasSummaryChanges);
-        
-        // Log table sizes for debugging
-        Object.keys(oldTable || {}).forEach(siteName => {
-            console.log(`${siteName}: ${(oldTable[siteName] || []).length} -> ${(newTable[siteName] || []).length} entries`);
+        console.log('Keywords change detection:', {
+            actualDataChanges: hasActualChanges,
+            summaryChanges: hasSummaryChanges,
+            overallChange: hasChanges
         });
         
         return hasChanges;
@@ -1180,7 +1220,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                         </button>
                     </div>
                                          <p className="text-xs text-gray-500 mt-2">
-                         💡 Keywords automation updates 7 tabs and typically completes in 8-10 seconds. We'll automatically refresh when new entries are added to Keywords Archive.
+                         💡 Keywords automation typically completes in 8-10 seconds. We'll auto-refresh when data changes are detected, or after 20 seconds regardless.
                      </p>
                 </div>
             )}
@@ -3048,19 +3088,53 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                 <div className="xl:col-span-8 space-y-4">
                     {/* Top Row - 2 Large Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <ModernMetricCard
-                            title="Page Load Speed"
-                            value={healthData.siteSpeed}
-                            subtitle={`${speedStatus === 'excellent' ? 'Excellent' : speedStatus === 'good' ? 'Good' : 'Poor Performance'}`}
-                            icon={<TrendingUp className="w-6 h-6" />}
-                            status={speedStatus === 'excellent' ? 'excellent' : speedStatus === 'good' ? 'good' : 'error'}
-                            alwaysShowDetails={true}
-                            details={healthData.speedDetails}
-                            tooltip={{
-                                header: 'Page Load Speed Testing',
-                                content: 'Each test loads your page in a fresh browser and measures it in real time. Shifts in network traffic, server load, or third-party scripts may vary results.'
-                            }}
-                        />
+                        <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200 group relative">
+                            <div className="flex items-start justify-between mb-4">
+                                <div className={`p-3 rounded-xl ${speedStatus === 'excellent' ? 'bg-green-100 text-green-600' : speedStatus === 'good' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                                    <TrendingUp className="w-6 h-6" />
+                                </div>
+                                <div className="relative group">
+                                    <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                                    <div className="absolute right-0 bottom-full mb-2 w-80 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none">
+                                        <div className="font-semibold mb-2 border-b border-gray-600 pb-2">Page Load Speed Testing</div>
+                                        <div>Each test loads your page in a fresh browser and measures it in real time. Shifts in network traffic, server load, or third-party scripts may vary results.</div>
+                                        <div className="absolute right-4 top-full w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-gray-800"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <h3 className="text-gray-600 text-sm font-medium mb-2">Page Load Speed</h3>
+                            <p className="text-2xl font-bold text-gray-900 mb-1">{healthData.siteSpeed}</p>
+                            <p className="text-sm text-gray-500">{speedStatus === 'excellent' ? 'Excellent' : speedStatus === 'good' ? 'Good' : 'Poor Performance'}</p>
+                            
+                            {/* Speed Details */}
+                            <div className="mt-4 pt-4 border-t border-gray-100">
+                                <div className="grid grid-cols-2 gap-2 text-xs">
+                                    {Object.entries(healthData.speedDetails).slice(0, 10).map(([key, val]) => {
+                                        // Convert technical terms to user-friendly labels
+                                        const friendlyLabels = {
+                                            'Time to Interactive': 'Time to Interactive',
+                                            'DOM Complete': 'Page Structure Ready',
+                                            'Largest Contentful Paint': 'Main Content Loaded',
+                                            'First Input Delay': 'Response Time',
+                                            'Connection Time': 'Server Connection',
+                                            'Time to Secure Connection': 'Security Setup',
+                                            'Request Sent Time': 'Request Processing',
+                                            'Waiting Time (TTFB)': 'Server Response',
+                                            'Download Time': 'Content Download',
+                                            'Full Page Load': 'Complete Load Time'
+                                        };
+                                        const displayLabel = friendlyLabels[key] || key;
+                                        
+                                        return (
+                                            <div key={key} className="flex justify-between">
+                                                <span className="text-gray-500">{displayLabel}:</span>
+                                                <span className="font-medium">{val || 'N/A'}</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        </div>
                         <ModernMetricCard
                             title="Technical Checks"
                             value={`${checksPassed}/${healthData.checks.totalChecks}`}
