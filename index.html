@@ -2878,7 +2878,17 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                     <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500/5 to-green-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 </div>
                 <div className="mt-4 text-center">
-                    <h3 className="text-lg font-semibold text-gray-900">Website Health Score</h3>
+                    <div className="flex items-center justify-center space-x-2">
+                        <h3 className="text-lg font-semibold text-gray-900">Website Health Score</h3>
+                        <div className="relative group">
+                            <Info className="w-4 h-4 text-gray-400 cursor-help" />
+                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-80 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-30 pointer-events-none">
+                                <div className="font-semibold mb-2 border-b border-gray-600 pb-2">Website Health Score</div>
+                                <div>The score starts at 100 and deducts weighted points for any critical errors (e.g. slow load, insecure HTTP, broken links) and lesser warnings (e.g. missing meta tags, large page size).</div>
+                                <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-l-[6px] border-r-[6px] border-t-[6px] border-l-transparent border-r-transparent border-t-gray-800"></div>
+                            </div>
+                        </div>
+                    </div>
                     <p className={`text-sm font-medium ${score >= 90 ? 'text-green-600' : score >= 70 ? 'text-yellow-600' : 'text-red-600'}`}>
                         {score >= 90 ? 'Excellent' : score >= 70 ? 'Good' : 'Needs Improvement'}
                     </p>
@@ -3046,6 +3056,10 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             status={speedStatus === 'excellent' ? 'excellent' : speedStatus === 'good' ? 'good' : 'error'}
                             alwaysShowDetails={true}
                             details={healthData.speedDetails}
+                            tooltip={{
+                                header: 'Page Load Speed Testing',
+                                content: 'Each test loads your page in a fresh browser and measures it in real time. Shifts in network traffic, server load, or third-party scripts may vary results.'
+                            }}
                         />
                         <ModernMetricCard
                             title="Technical Checks"
@@ -3070,34 +3084,39 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                 header: 'Technical SEO Health Check Results',
                                 width: 'large',
                                 content: (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        {Object.entries(checkCategories).map(([category, categoryData]) => {
-                                            const categoryChecks = Object.entries(categoryData.checks).filter(([checkName]) => 
-                                                healthData.checks.passedList.includes(checkName) || healthData.checks.failedList.includes(checkName)
-                                            );
-                                            if (categoryChecks.length === 0) return null;
-                                            return (
-                                                <div key={category} className="space-y-2">
-                                                    <h4 className="font-semibold flex items-center text-gray-300 text-sm">
-                                                        <span className="mr-2">{categoryData.icon}</span>
-                                                        {categoryData.title}
-                                                    </h4>
-                                                    <ul className="space-y-1.5">
-                                                        {categoryChecks.map(([checkName, description]) => {
-                                                            const isPassed = healthData.checks.passedList.includes(checkName);
-                                                            return (
-                                                                <li key={checkName} className="flex items-start text-xs leading-relaxed">
-                                                                    <span className="mr-2 flex-shrink-0 text-sm">{isPassed ? '✅' : '❌'}</span>
-                                                                    <span className={isPassed ? 'text-green-300' : 'text-red-300'}>
-                                                                        {description}
-                                                                    </span>
-                                                                </li>
-                                                            );
-                                                        })}
-                                                    </ul>
-                                                </div>
-                                            );
-                                        })}
+                                    <div>
+                                        <p className="text-gray-300 text-sm mb-4">
+                                            Automated checks for essential SEO elements including performance, security, content quality, accessibility, and technical implementation. Each check validates best practices that impact search rankings and user experience.
+                                        </p>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            {Object.entries(checkCategories).map(([category, categoryData]) => {
+                                                const categoryChecks = Object.entries(categoryData.checks).filter(([checkName]) => 
+                                                    healthData.checks.passedList.includes(checkName) || healthData.checks.failedList.includes(checkName)
+                                                );
+                                                if (categoryChecks.length === 0) return null;
+                                                return (
+                                                    <div key={category} className="space-y-2">
+                                                        <h4 className="font-semibold flex items-center text-gray-300 text-sm">
+                                                            <span className="mr-2">{categoryData.icon}</span>
+                                                            {categoryData.title}
+                                                        </h4>
+                                                        <ul className="space-y-1.5">
+                                                            {categoryChecks.map(([checkName, description]) => {
+                                                                const isPassed = healthData.checks.passedList.includes(checkName);
+                                                                return (
+                                                                    <li key={checkName} className="flex items-start text-xs leading-relaxed">
+                                                                        <span className="mr-2 flex-shrink-0 text-sm">{isPassed ? '✅' : '❌'}</span>
+                                                                        <span className={isPassed ? 'text-green-300' : 'text-red-300'}>
+                                                                            {description}
+                                                                        </span>
+                                                                    </li>
+                                                                );
+                                                            })}
+                                                        </ul>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 )
                             }}
