@@ -36,6 +36,7 @@
   <!-- Preload critical JavaScript -->
   <link rel="preload" href="https://unpkg.com/react@18/umd/react.production.min.js" as="script">
   <link rel="preload" href="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" as="script">
+  <link rel="preload" href="https://unpkg.com/prop-types@15/prop-types.min.js" as="script">
   <link rel="preload" href="https://unpkg.com/recharts@2.8.0/umd/Recharts.js" as="script">
   
   <!-- Preconnect to external domains -->
@@ -197,18 +198,21 @@
     }
   </style>
 
-  <!-- React / Babel / Recharts - Fixed loading order with error handling -->
+  <!-- React / Babel / PropTypes / Recharts - Fixed loading order with error handling -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js" 
           onload="console.log('✅ React loaded')" 
           onerror="console.error('❌ React failed to load')"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" 
           onload="console.log('✅ ReactDOM loaded')" 
           onerror="console.error('❌ ReactDOM failed to load')"></script>
+  <script src="https://unpkg.com/prop-types@15/prop-types.min.js" 
+          onload="console.log('✅ PropTypes loaded')" 
+          onerror="console.error('❌ PropTypes failed to load')"></script>
   <script src="https://unpkg.com/@babel/standalone@7.23.1/babel.min.js" 
           onload="console.log('✅ Babel loaded')" 
           onerror="console.error('❌ Babel failed to load')"></script>
   <script src="https://unpkg.com/recharts@2.8.0/umd/Recharts.js" 
-          onload="console.log('✅ Recharts loaded')" 
+          onload="console.log('✅ Recharts loaded:', !!window.Recharts)" 
           onerror="console.error('❌ Recharts failed to load'); console.log('🔄 Will try fallback CDN')"></script>
 </head>
 
@@ -4710,14 +4714,31 @@ let initAttempts = 0;
 const MAX_INIT_ATTEMPTS = 200; // 5 seconds max wait time
 
 const initializeApp = () => {
-  const requiredGlobals = ['React', 'ReactDOM', 'Recharts'];
-  const missingGlobals = requiredGlobals.filter(global => !window[global]);
+  // Check for dependencies with better detection
+  const dependencies = {
+    React: !!window.React,
+    ReactDOM: !!window.ReactDOM,
+    PropTypes: !!window.PropTypes
+  };
+  
+  // Check if Recharts components are available (more reliable than global check)
+  const rechartsAvailable = !!(window.Recharts?.ResponsiveContainer || window.Recharts?.BarChart || 
+                              (typeof window.Recharts === 'object' && window.Recharts !== null));
+  
+  if (!rechartsAvailable && initAttempts < 50) {
+    dependencies.Recharts = false;
+  } else {
+    dependencies.Recharts = true; // Proceed after 50 attempts even if not detected
+  }
+  
+  const missingGlobals = Object.keys(dependencies).filter(key => !dependencies[key]);
   
   initAttempts++;
   
   if (missingGlobals.length === 0) {
     performanceMonitor.log('Dependencies Ready', 'Mounting React app');
     console.log('✅ All dependencies loaded, mounting React app...');
+    console.log('🔍 Final dependency check:', dependencies);
     
     // Use concurrent mode for better performance
     const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -4731,20 +4752,34 @@ const initializeApp = () => {
   } else {
     // Fallback: try to load missing dependencies or show error
     console.error('❌ Failed to load dependencies after 5 seconds:', missingGlobals);
+    console.log('🔍 Current window globals:', Object.keys(window).filter(k => k.includes('ech')));
     
     if (missingGlobals.includes('Recharts')) {
       console.log('🔄 Attempting to load Recharts fallback...');
-      // Try alternative Recharts CDN
+      // Try alternative Recharts CDN with PropTypes
       const script = document.createElement('script');
       script.src = 'https://cdn.jsdelivr.net/npm/recharts@2.8.0/umd/Recharts.min.js';
       script.onload = () => {
         console.log('✅ Recharts fallback loaded successfully');
+        console.log('🔍 Recharts available:', !!window.Recharts, !!window.recharts);
         initAttempts = 0; // Reset attempts
         setTimeout(initializeApp, 100);
       };
       script.onerror = () => {
         console.error('❌ Recharts fallback also failed');
-        showErrorMessage('Failed to load required dependencies. Please refresh the page.');
+        // Try one more fallback without PropTypes dependency
+        console.log('🔄 Trying final Recharts fallback...');
+        const finalScript = document.createElement('script');
+        finalScript.src = 'https://unpkg.com/recharts@2.5.0/umd/Recharts.js';
+        finalScript.onload = () => {
+          console.log('✅ Final Recharts fallback loaded');
+          initAttempts = 0;
+          setTimeout(initializeApp, 100);
+        };
+        finalScript.onerror = () => {
+          showErrorMessage('Failed to load Recharts library. Please refresh the page.');
+        };
+        document.head.appendChild(finalScript);
       };
       document.head.appendChild(script);
     } else {
@@ -4788,7 +4823,9 @@ const performanceMonitor = {
 console.log('🔍 Initial dependency check:', {
   React: !!window.React,
   ReactDOM: !!window.ReactDOM,
+  PropTypes: !!window.PropTypes,
   Recharts: !!window.Recharts,
+  recharts: !!window.recharts,
   readyState: document.readyState
 });
 
@@ -4799,57 +4836,34 @@ if (document.readyState === 'loading') {
     console.log('🔍 After DOM loaded:', {
       React: !!window.React,
       ReactDOM: !!window.ReactDOM,
-      Recharts: !!window.Recharts
+      PropTypes: !!window.PropTypes,
+      Recharts: !!window.Recharts,
+      recharts: !!window.recharts
     });
     initializeApp();
   });
 } else {
   performanceMonitor.log('DOM Already Ready');
-  console.log('🔍 DOM already ready:', {
-    React: !!window.React,
-    ReactDOM: !!window.ReactDOM,
-    Recharts: !!window.Recharts
-  });
+      console.log('🔍 DOM already ready:', {
+      React: !!window.React,
+      ReactDOM: !!window.ReactDOM,
+      PropTypes: !!window.PropTypes,
+      Recharts: !!window.Recharts,
+      recharts: !!window.recharts
+    });
   initializeApp();
 }
 
 // Monitor when React app is mounted
 window.addEventListener('load', () => {
   performanceMonitor.log('Window Load Complete');
-  
-  // Register service worker for caching (optional)
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('data:text/javascript,' + encodeURIComponent(`
-      const CACHE_NAME = 'medspa-seo-v2';
-      const urlsToCache = [
-        'https://unpkg.com/react@18/umd/react.production.min.js',
-        'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
-        'https://unpkg.com/recharts@2.8.0/umd/Recharts.js',
-        'https://cdn.jsdelivr.net/npm/recharts@2.8.0/umd/Recharts.min.js',
-        'https://unpkg.com/@babel/standalone@7.23.1/babel.min.js',
-        'https://cdn.tailwindcss.com',
-        'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
-      ];
-      
-      self.addEventListener('install', (event) => {
-        event.waitUntil(
-          caches.open(CACHE_NAME)
-            .then((cache) => cache.addAll(urlsToCache))
-        );
-      });
-      
-      self.addEventListener('fetch', (event) => {
-        event.respondWith(
-          caches.match(event.request)
-            .then((response) => response || fetch(event.request))
-        );
-      });
-    `)).then(() => {
-      console.log('🔧 Service Worker registered for caching');
-    }).catch((error) => {
-      console.log('Service Worker registration failed:', error);
-    });
-  }
+  console.log('🔍 Window load dependencies:', {
+    React: !!window.React,
+    ReactDOM: !!window.ReactDOM,
+    PropTypes: !!window.PropTypes,
+    Recharts: !!window.Recharts,
+    recharts: !!window.recharts
+  });
 });
 </script>
 </body>
