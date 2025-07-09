@@ -55,6 +55,7 @@ function doGet(e) {
       geogridData: getGeogridData(spreadsheet),
       backlinksSummary: getBacklinksSummary(spreadsheet),
       backlinksTable: getBacklinksTables(spreadsheet),
+      backlinksSummaryArchive: getBacklinksSummaryArchive(spreadsheet),
       keywordsSummary: getKeywordsSummary(spreadsheet),
       keywordsTable: getKeywordsTables(spreadsheet),
       webhooks: getWebhookUrls(spreadsheet)
@@ -417,6 +418,111 @@ function getBacklinksSummary(spreadsheet) {
         avgSpamScore: values[8], topReferringDomains: values[9], avgRefferRank: values[10],
         titlesCaptured: values[11], backlinksChange: values[12], spamScoreChange: values[13]
     };
+}
+
+function getBacklinksSummaryArchive(spreadsheet) {
+    const sheetName = 'Backlinks Summary Archive';
+    const sheet = spreadsheet.getSheetByName(sheetName);
+    if (!sheet || sheet.getLastRow() < 2) {
+        console.log('No Backlinks Summary Archive sheet found or no data');
+        return [];
+    }
+
+    const values = sheet.getDataRange().getValues().slice(1); // Skip header row
+    console.log('Total rows in Backlinks Summary Archive:', values.length);
+    
+    const archiveData = [];
+
+    values.forEach((row, index) => {
+        // Skip empty rows
+        if (!row[0] && !row[2]) return;
+        
+        const rawDate = row[0]; // crawl_date - Column A
+        const accountType = row[1]; // account_type - Column B
+        const website = row[2]; // website - Column C
+        
+        // Only process client data
+        if (accountType !== 'Client') return;
+        
+        let crawlDate;
+        let formattedDate;
+        
+        try {
+            // Try parsing the date as-is first
+            crawlDate = new Date(rawDate);
+            
+            // If that fails and it looks like a US date format, try parsing differently
+            if (isNaN(crawlDate.getTime()) && typeof rawDate === 'string') {
+                // Try MM/DD/YYYY format parsing
+                const parts = rawDate.split('/');
+                if (parts.length === 3) {
+                    const month = parseInt(parts[0]) - 1; // Convert to 0-based month
+                    const day = parseInt(parts[1]);
+                    const year = parseInt(parts[2]);
+                    crawlDate = new Date(year, month, day);
+                }
+            }
+            
+            // If we still don't have a valid date, skip this row
+            if (isNaN(crawlDate.getTime())) {
+                console.log(`Row ${index + 2}: Invalid date format: ${rawDate}, skipping`);
+                return;
+            }
+            
+            // Format the date consistently
+            formattedDate = crawlDate.toLocaleString('en-US', { 
+                month: 'long', 
+                year: 'numeric',
+                timeZone: 'UTC'
+            });
+            
+            console.log(`Row ${index + 2}: Raw date: ${rawDate}, Parsed: ${crawlDate}, Formatted: ${formattedDate}`);
+            
+        } catch (e) {
+            console.log(`Row ${index + 2}: Error parsing date ${rawDate}:`, e.message);
+            return;
+        }
+        
+        archiveData.push({
+            date: formattedDate,
+            rawDate: rawDate,
+            parsedDate: crawlDate.toISOString(),
+            website: website,
+            totalBacklinks: parseInt(row[3]) || 0,        // Total Backlinks - Column D
+            totalDofollow: parseInt(row[4]) || 0,         // Total Dofollow - Column E
+            totalNofollow: parseInt(row[5]) || 0,         // Total Nofollow - Column F
+            newLinks: parseInt(row[6]) || 0,              // New Links (this run) - Column G
+            lostLinks: parseInt(row[7]) || 0,             // Lost Links (this run) - Column H
+            avgSpamScore: parseFloat(row[8]) || 0,        // Avg Spam Score - Column I
+            topReferringDomains: parseInt(row[9]) || 0,   // Top Referring Domains - Column J
+            avgRefferRank: parseInt(row[10]) || 0,        // Avg. Reffer Rank - Column K
+            titlesCaptured: parseInt(row[11]) || 0,       // Titles Captured - Column L
+            // Calculate changes from previous month (we'll do this after sorting)
+            backlinksChange: 0,
+            spamScoreChange: 0
+        });
+    });
+
+    // Sort by parsed date (newest first)
+    archiveData.sort((a, b) => {
+        const dateA = new Date(a.parsedDate);
+        const dateB = new Date(b.parsedDate);
+        return dateB.getTime() - dateA.getTime();
+    });
+
+    // Calculate month-over-month changes
+    for (let i = 0; i < archiveData.length; i++) {
+        const current = archiveData[i];
+        const previous = archiveData[i + 1]; // Previous month (older)
+        
+        if (previous) {
+            current.backlinksChange = current.totalBacklinks - previous.totalBacklinks;
+            current.spamScoreChange = current.avgSpamScore - previous.avgSpamScore;
+        }
+    }
+
+    console.log('Processed backlinks archive data:', archiveData.length, 'entries');
+    return archiveData;
 }
 
 // Helper function to format website URL into a display name
