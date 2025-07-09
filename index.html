@@ -806,10 +806,10 @@ const Dashboard = ({ setActiveTab }) => {
 
         return (
             <Card className="col-span-12 lg:col-span-8">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* Competitor Rankings on the Left */}
                     {currentDashboardData.competitors && currentDashboardData.competitors.length > 0 && (
-                        <div className="md:col-span-1">
+                        <div className="lg:col-span-1">
                             <h3 className="text-lg font-semibold text-gray-800 mb-3">Avg Score</h3>
                             <div className="space-y-2">
                                 {currentDashboardData.competitors.map((comp, index) => (
@@ -830,7 +830,7 @@ const Dashboard = ({ setActiveTab }) => {
                     )}
                     
                     {/* Geogrid Map on the Right */}
-                    <div className="md:col-span-3">
+                    <div className="lg:col-span-3">
                         <div className="flex justify-between items-center mb-4">
                             <div className="flex items-center space-x-2">
                                 <h2 className="text-xl font-bold text-gray-800">Medspa Near Me</h2>
