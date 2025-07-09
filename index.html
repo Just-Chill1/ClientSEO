@@ -521,16 +521,15 @@ const Dashboard = ({ setActiveTab }) => {
                 }
                 
                 try {
-                    // Get the latest geogrid data for 'medspa near me'
+                    // Get the geogrid data for 'medspa near me' with all months
                     const allGeogridData = data.geogridData || {};
                     const medspaNearMe = allGeogridData['medspa near me'] || [];
-                    const latestData = medspaNearMe.length > 0 ? medspaNearMe[0] : null;
                     
                     // Store the full geogrid data in cache
                     sessionStorage.setItem(cacheKey, JSON.stringify(allGeogridData));
                     
-                    // Set only the latest data for dashboard display
-                    setGeogridData(latestData);
+                    // Set the full monthly data for dashboard display
+                    setGeogridData(medspaNearMe);
                     setLoading(false);
                 } catch (e) {
                     console.error('Data processing error:', e);
@@ -546,7 +545,7 @@ const Dashboard = ({ setActiveTab }) => {
         if (error) {
             return <Card className="col-span-12 lg:col-span-8 flex items-center justify-center"><p className="text-red-500">Geogrid Error: {error}</p></Card>;
         }
-        if (!geogridData) {
+        if (!geogridData || geogridData.length === 0) {
             return <Card className="col-span-12 lg:col-span-8 flex items-center justify-center"><p className="text-gray-500">No Geogrid data to display for 'medspa near me'.</p></Card>;
         }
 
@@ -559,15 +558,31 @@ const Dashboard = ({ setActiveTab }) => {
             return 'bg-red-500';
         };
 
+        // Dashboard month slider state
+        const [dashboardMonthIndex, setDashboardMonthIndex] = useState(0);
+        const currentDashboardData = geogridData[dashboardMonthIndex];
+        const displayMonthNumber = geogridData.length - dashboardMonthIndex;
+
+        const handleDashboardDateChange = (direction) => {
+            const newIndex = dashboardMonthIndex + direction;
+            if (newIndex >= 0 && newIndex < geogridData.length) {
+                setDashboardMonthIndex(newIndex);
+            }
+        };
+
+        if (!currentDashboardData) {
+            return <Card className="col-span-12 lg:col-span-8 flex items-center justify-center"><p className="text-gray-500">No current month data available.</p></Card>;
+        }
+
         return (
             <Card className="col-span-12 lg:col-span-8">
                 <div className="flex flex-col lg:flex-row gap-6">
                     {/* Competitor Rankings on the Left */}
-                    {geogridData.competitors && geogridData.competitors.length > 0 && (
+                    {currentDashboardData.competitors && currentDashboardData.competitors.length > 0 && (
                         <div className="lg:w-[300px] flex-shrink-0">
                             <h3 className="text-lg font-semibold text-gray-800 mb-3">Avg Score</h3>
                             <div className="space-y-2">
-                                {geogridData.competitors.map((comp, index) => (
+                                {currentDashboardData.competitors.map((comp, index) => (
                                     <div key={index} className="flex items-center space-x-3 p-2 rounded-lg bg-slate-50 border border-slate-200">
                                         <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white text-base ${getRankColor(comp.rank)}`}>
                                             {typeof comp.rank === 'number' ? comp.rank.toFixed(1) : '-'}
@@ -589,15 +604,69 @@ const Dashboard = ({ setActiveTab }) => {
                         <div className="flex justify-between items-center mb-4">
                             <div className="flex items-center space-x-2">
                                 <h2 className="text-xl font-bold text-gray-800">Medspa Near Me</h2>
-                                <InfoTooltip text="A snapshot of your latest Geogrid map for the keyword 'medspa near me'." />
+                                <InfoTooltip text="A snapshot of your Geogrid map for the keyword 'medspa near me'." />
                                 <button onClick={() => setActiveTab('Geogrid Maps')} className="text-xs font-normal text-blue-600 hover:text-blue-800">(See More)</button>
                             </div>
-                            <span className="font-semibold text-gray-700">{geogridData.date}</span>
+                            
+                            {/* Month slider controls */}
+                            {geogridData.length > 1 && (
+                                <div className="flex items-center space-x-3">
+                                    <button 
+                                        onClick={() => handleDashboardDateChange(1)} 
+                                        disabled={dashboardMonthIndex >= geogridData.length - 1}
+                                        className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-blue-600 transition-colors"
+                                        title="Go back to older month"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                    </button>
+                                    <div className="text-center">
+                                        <span className="font-semibold text-gray-700 text-sm">{currentDashboardData.date || 'No date'}</span>
+                                        <div className="text-xs text-gray-500">
+                                            {displayMonthNumber} of {geogridData.length}
+                                        </div>
+                                        <div className="flex items-center justify-center space-x-1 mt-1">
+                                            {geogridData.map((_, index) => {
+                                                const visualIndex = geogridData.length - 1 - index;
+                                                return (
+                                                    <div
+                                                        key={index}
+                                                        className={`w-2 h-2 rounded-full ${
+                                                            index === dashboardMonthIndex 
+                                                                ? 'bg-blue-600' 
+                                                                : 'bg-gray-300 hover:bg-gray-400'
+                                                        } cursor-pointer transition-colors`}
+                                                        onClick={() => setDashboardMonthIndex(index)}
+                                                        title={`Go to ${geogridData[index]?.date || 'Unknown month'} (${geogridData.length - index} of ${geogridData.length})`}
+                                                        style={{ order: visualIndex }}
+                                                    />
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={() => handleDashboardDateChange(-1)} 
+                                        disabled={dashboardMonthIndex <= 0}
+                                        className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed text-blue-600 transition-colors"
+                                        title="Go forward to newer month"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            )}
+                            
+                            {/* Single month display */}
+                            {geogridData.length === 1 && (
+                                <span className="font-semibold text-gray-700">{currentDashboardData.date}</span>
+                            )}
                         </div>
-                        {geogridData.mapLink ? (
+                        {currentDashboardData.mapLink ? (
                             <div className="relative w-full h-[600px] overflow-hidden map-container">
                                 <iframe 
-                                    src={geogridData.mapLink}
+                                    src={currentDashboardData.mapLink}
                                     className="w-full h-full rounded-lg border border-gray-200 map-iframe"
                                     style={{ background: '#f9fafb' }}
                                     loading="lazy"
@@ -605,7 +674,7 @@ const Dashboard = ({ setActiveTab }) => {
                                     scrolling="no"
                                 />
                                 <a 
-                                    href={geogridData.mapLink} 
+                                    href={currentDashboardData.mapLink} 
                                     target="_blank" 
                                     rel="noopener noreferrer"
                                     className="absolute bottom-2 right-2 bg-white/90 hover:bg-white text-gray-700 px-2 py-1 rounded text-xs flex items-center gap-1 shadow-sm transition-colors"
@@ -2998,18 +3067,23 @@ const GeogridMaps = () => {
                             )}
                             {monthlyData.length > 1 && (
                                 <div className="flex items-center justify-center space-x-1 mt-1">
-                                    {monthlyData.map((_, index) => (
-                                        <div
-                                            key={index}
-                                            className={`w-2 h-2 rounded-full ${
-                                                index === currentMonthIndex 
-                                                    ? 'bg-blue-600' 
-                                                    : 'bg-gray-300 hover:bg-gray-400'
-                                            } cursor-pointer transition-colors`}
-                                            onClick={() => setCurrentMonthIndex(index)}
-                                            title={`Go to ${monthlyData[index]?.date || 'Unknown month'} (${monthlyData.length - index} of ${monthlyData.length})`}
-                                        />
-                                    ))}
+                                    {monthlyData.map((_, index) => {
+                                        // Reverse the visual order so newest (index 0) appears on the right
+                                        const visualIndex = monthlyData.length - 1 - index;
+                                        return (
+                                            <div
+                                                key={index}
+                                                className={`w-2 h-2 rounded-full ${
+                                                    index === currentMonthIndex 
+                                                        ? 'bg-blue-600' 
+                                                        : 'bg-gray-300 hover:bg-gray-400'
+                                                } cursor-pointer transition-colors`}
+                                                onClick={() => setCurrentMonthIndex(index)}
+                                                title={`Go to ${monthlyData[index]?.date || 'Unknown month'} (${monthlyData.length - index} of ${monthlyData.length})`}
+                                                style={{ order: visualIndex }}
+                                            />
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
@@ -3174,12 +3248,7 @@ const GeogridMaps = () => {
                         </div>
                     )}
                 </div>
-                <button
-                    onClick={() => console.log('Geogrid refresh requested')}
-                    className="bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-1 px-3 rounded-lg text-xs transition-colors duration-300"
-                >
-                    Refresh
-                </button>
+
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
