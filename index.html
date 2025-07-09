@@ -2392,6 +2392,71 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                     </nav>
                 </div>
 
+                {/* Website Keywords Summary Bar */}
+                {active && (
+                    <div className="mb-3 py-2 px-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                        <div className="flex items-center justify-start space-x-6">
+                            {(() => {
+                                const siteData = table[active] || [];
+                                const totalKeywords = siteData.length;
+                                const newKeywords = siteData.filter(kw => kw.is_new).length;
+                                const upKeywords = siteData.filter(kw => kw.is_up).length;
+                                const downKeywords = siteData.filter(kw => kw.is_down).length;
+                                const lostKeywords = siteData.filter(kw => kw.is_lost).length;
+                                const avgPosition = siteData.length > 0 && siteData.some(kw => kw.rank_now > 0)
+                                    ? (siteData.filter(kw => kw.rank_now > 0).reduce((sum, kw) => sum + (kw.rank_now || 0), 0) / siteData.filter(kw => kw.rank_now > 0).length).toFixed(1)
+                                    : 0;
+                                const avgVolume = siteData.length > 0 && siteData.some(kw => kw.search_vol > 0)
+                                    ? Math.round(siteData.filter(kw => kw.search_vol > 0).reduce((sum, kw) => sum + (kw.search_vol || 0), 0) / siteData.filter(kw => kw.search_vol > 0).length)
+                                    : 0;
+                                const avgDifficulty = siteData.length > 0 && siteData.some(kw => kw.keyword_difficulty > 0)
+                                    ? (siteData.filter(kw => kw.keyword_difficulty > 0).reduce((sum, kw) => sum + (kw.keyword_difficulty || 0), 0) / siteData.filter(kw => kw.keyword_difficulty > 0).length).toFixed(0)
+                                    : 0;
+
+                                return (
+                                    <>
+                                        <div className="text-center">
+                                            <div className="text-base font-bold text-blue-600">{totalKeywords}</div>
+                                            <div className="text-xs text-gray-600">Total Keywords</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-base font-bold text-green-600">{newKeywords}</div>
+                                            <div className="text-xs text-gray-600">New Keywords</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-base font-bold text-orange-600">{avgPosition}</div>
+                                            <div className="text-xs text-gray-600">Avg Position</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-base font-bold text-gray-700">{avgVolume.toLocaleString()}</div>
+                                            <div className="text-xs text-gray-600">Avg Volume</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className={`text-base font-bold ${avgDifficulty <= 30 ? 'text-green-600' : avgDifficulty <= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                                {avgDifficulty}
+                                            </div>
+                                            <div className="text-xs text-gray-600">Avg Difficulty</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="flex justify-center items-center space-x-2">
+                                                <div className="text-center">
+                                                    <div className="text-sm font-bold text-green-600">{upKeywords}</div>
+                                                    <div className="text-xs text-gray-600">Up</div>
+                                                </div>
+                                                <div className="text-gray-400 text-sm">|</div>
+                                                <div className="text-center">
+                                                    <div className="text-sm font-bold text-red-600">{downKeywords}</div>
+                                                    <div className="text-xs text-gray-600">Down</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                );
+                            })()}
+                        </div>
+                    </div>
+                )}
+
                 <div className="mt-4 overflow-x-auto">
                     <table className="w-full text-left text-sm whitespace-nowrap">
                         <thead>
