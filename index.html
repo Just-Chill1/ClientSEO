@@ -3240,67 +3240,71 @@ const Backlinks = () => {
 
                 {/* Website Summary Bar */}
                 {activeTableTab && (
-                    <div className="mb-4 p-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-                        <div className="flex items-center">
-                            {(() => {
-                                const siteData = backlinksTable[activeTableTab] || [];
-                                const totalBacklinks = siteData.length;
-                                const newBacklinks = siteData.filter(link => link.isNew).length;
-                                const dofollowCount = siteData.filter(link => link.following).length;
-                                const nofollowCount = siteData.filter(link => !link.following).length;
-                                const avgSpamScore = siteData.length > 0 
-                                    ? (siteData.reduce((sum, link) => sum + (link.spamScore || 0), 0) / siteData.length).toFixed(1)
-                                    : 0;
-                                const avgRank = siteData.length > 0 
-                                    ? (siteData.reduce((sum, link) => sum + (link.rank || 0), 0) / siteData.length).toFixed(0)
-                                    : 0;
+                    <div className="mb-4 p-2 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 overflow-x-auto">
+                        <table className="w-full text-left text-sm whitespace-nowrap">
+                            <tbody>
+                                <tr>
+                                    {(() => {
+                                        const siteData = backlinksTable[activeTableTab] || [];
+                                        const totalBacklinks = siteData.length;
+                                        const newBacklinks = siteData.filter(link => link.isNew).length;
+                                        const dofollowCount = siteData.filter(link => link.following).length;
+                                        const nofollowCount = siteData.filter(link => !link.following).length;
+                                        const avgSpamScore = siteData.length > 0 
+                                            ? (siteData.reduce((sum, link) => sum + (link.spamScore || 0), 0) / siteData.length).toFixed(1)
+                                            : 0;
+                                        const avgRank = siteData.length > 0 
+                                            ? (siteData.reduce((sum, link) => sum + (link.rank || 0), 0) / siteData.length).toFixed(0)
+                                            : 0;
 
-                                return (
-                                    <>
-                                        {/* Backlink URL column alignment */}
-                                        <div className="py-2 px-3 text-center flex-1">
-                                            <div className="text-lg font-bold text-blue-600">{totalBacklinks}</div>
-                                            <div className="text-xs text-gray-600">Total Backlinks</div>
-                                        </div>
-                                        {/* Status column alignment */}
-                                        <div className="py-2 px-3 text-center flex-1">
-                                            <div className="text-lg font-bold text-green-600">{newBacklinks}</div>
-                                            <div className="text-xs text-gray-600">New Links</div>
-                                        </div>
-                                        {/* Spam Score column alignment */}
-                                        <div className="py-2 px-3 text-center flex-1">
-                                            <div className={`text-lg font-bold ${avgSpamScore <= 30 ? 'text-green-600' : avgSpamScore <= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
-                                                {avgSpamScore}%
-                                            </div>
-                                            <div className="text-xs text-gray-600">Avg Spam Score</div>
-                                        </div>
-                                        {/* Rank column alignment */}
-                                        <div className="py-2 px-3 text-center flex-1">
-                                            <div className="text-lg font-bold text-gray-700">{avgRank}</div>
-                                            <div className="text-xs text-gray-600">Avg Rank</div>
-                                        </div>
-                                        {/* Type column alignment */}
-                                        <div className="py-2 px-3 text-center flex-1">
-                                            <div className="flex justify-center items-center space-x-2">
-                                                <div className="text-center">
-                                                    <div className="text-base font-bold text-blue-600">{dofollowCount}</div>
-                                                    <div className="text-xs text-gray-600">Dofollow</div>
-                                                </div>
-                                                <div className="text-gray-400 text-sm">|</div>
-                                                <div className="text-center">
-                                                    <div className="text-base font-bold text-gray-600">{nofollowCount}</div>
-                                                    <div className="text-xs text-gray-600">Nofollow</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {/* Title column - empty spacer */}
-                                        <div className="py-2 px-3 flex-1"></div>
-                                        {/* Link column - empty spacer */}
-                                        <div className="py-2 px-3 text-center flex-1"></div>
-                                    </>
-                                );
-                            })()}
-                        </div>
+                                        return (
+                                            <>
+                                                {/* Backlink URL column alignment */}
+                                                <td className="py-2 px-3 text-center">
+                                                    <div className="text-lg font-bold text-blue-600">{totalBacklinks}</div>
+                                                    <div className="text-xs text-gray-600">Total Backlinks</div>
+                                                </td>
+                                                {/* Status column alignment */}
+                                                <td className="py-2 px-3 text-center">
+                                                    <div className="text-lg font-bold text-green-600">{newBacklinks}</div>
+                                                    <div className="text-xs text-gray-600">New Links</div>
+                                                </td>
+                                                {/* Spam Score column alignment */}
+                                                <td className="py-2 px-3 text-center">
+                                                    <div className={`text-lg font-bold ${avgSpamScore <= 30 ? 'text-green-600' : avgSpamScore <= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                                        {avgSpamScore}%
+                                                    </div>
+                                                    <div className="text-xs text-gray-600">Avg Spam Score</div>
+                                                </td>
+                                                {/* Rank column alignment */}
+                                                <td className="py-2 px-3 text-center">
+                                                    <div className="text-lg font-bold text-gray-700">{avgRank}</div>
+                                                    <div className="text-xs text-gray-600">Avg Rank</div>
+                                                </td>
+                                                {/* Type column alignment */}
+                                                <td className="py-2 px-3 text-center">
+                                                    <div className="flex justify-center items-center space-x-2">
+                                                        <div className="text-center">
+                                                            <div className="text-base font-bold text-blue-600">{dofollowCount}</div>
+                                                            <div className="text-xs text-gray-600">Dofollow</div>
+                                                        </div>
+                                                        <div className="text-gray-400 text-sm">|</div>
+                                                        <div className="text-center">
+                                                            <div className="text-base font-bold text-gray-600">{nofollowCount}</div>
+                                                            <div className="text-xs text-gray-600">Nofollow</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                {/* Title column - empty spacer */}
+                                                <td className="py-2 px-3"></td>
+                                                {/* Link column - empty spacer */}
+                                                <td className="py-2 px-3 text-center"></td>
+                                            </>
+                                        );
+                                    })()}
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 )}
 
