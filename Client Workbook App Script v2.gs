@@ -183,7 +183,7 @@ function getDashboardOverview(spreadsheet) {
         const linksRow = linksValues[index] || [];
         const richTextLinksRow = linksRichTextValues[index] || [];
         
-        // --- More Robust Site Speed Parsing ---
+        // --- Site Speed Processing - Keep raw millisecond values ---
         let speedValue = 'N/A';
         const rawSpeed = onPageRow[10]; // Site Speed is in column K (index 10)
         if (rawSpeed) {
@@ -193,7 +193,8 @@ function getDashboardOverview(spreadsheet) {
             if (matches && matches[0]) {
                 const parsedSpeed = parseFloat(matches[0]);
                 if (!isNaN(parsedSpeed)) {
-                    speedValue = parsedSpeed.toFixed(2) + 's';
+                    // Keep the raw millisecond value for frontend conversion
+                    speedValue = parsedSpeed;
                 }
             }
         }
