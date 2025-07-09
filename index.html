@@ -3238,6 +3238,75 @@ const Backlinks = () => {
                     ))}
                 </div>
 
+                {/* Website Summary Bar */}
+                {activeTableTab && (
+                    <div className="mb-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                                <h3 className="text-lg font-semibold text-gray-800">{activeTableTab}</h3>
+                                <span className="text-sm text-gray-500">•</span>
+                                <span className="text-sm text-gray-600">Backlinks Summary</span>
+                            </div>
+                        </div>
+                        <div className="mt-3 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                            {(() => {
+                                const siteData = backlinksTable[activeTableTab] || [];
+                                const totalBacklinks = siteData.length;
+                                const newBacklinks = siteData.filter(link => link.isNew).length;
+                                const lostBacklinks = siteData.filter(link => link.isLost).length;
+                                const dofollowCount = siteData.filter(link => link.following).length;
+                                const nofollowCount = siteData.filter(link => !link.following).length;
+                                const avgSpamScore = siteData.length > 0 
+                                    ? (siteData.reduce((sum, link) => sum + (link.spamScore || 0), 0) / siteData.length).toFixed(1)
+                                    : 0;
+                                const avgRank = siteData.length > 0 
+                                    ? (siteData.reduce((sum, link) => sum + (link.rank || 0), 0) / siteData.length).toFixed(0)
+                                    : 0;
+
+                                return (
+                                    <>
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-blue-600">{totalBacklinks}</div>
+                                            <div className="text-xs text-gray-600">Total Backlinks</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-green-600">{newBacklinks}</div>
+                                            <div className="text-xs text-gray-600">New Links</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-red-600">{lostBacklinks}</div>
+                                            <div className="text-xs text-gray-600">Lost Links</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className={`text-2xl font-bold ${avgSpamScore <= 30 ? 'text-green-600' : avgSpamScore <= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                                                {avgSpamScore}%
+                                            </div>
+                                            <div className="text-xs text-gray-600">Avg Spam Score</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="text-2xl font-bold text-gray-700">{avgRank}</div>
+                                            <div className="text-xs text-gray-600">Avg Rank</div>
+                                        </div>
+                                        <div className="text-center">
+                                            <div className="flex justify-center space-x-2">
+                                                <div className="text-center">
+                                                    <div className="text-lg font-bold text-blue-600">{dofollowCount}</div>
+                                                    <div className="text-xs text-gray-600">Dofollow</div>
+                                                </div>
+                                                <div className="text-gray-400">|</div>
+                                                <div className="text-center">
+                                                    <div className="text-lg font-bold text-gray-600">{nofollowCount}</div>
+                                                    <div className="text-xs text-gray-600">Nofollow</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </>
+                                );
+                            })()}
+                        </div>
+                    </div>
+                )}
+
                 <div className="mt-4 overflow-x-auto">
                     <table className="w-full text-left text-sm whitespace-nowrap">
                         <thead>
