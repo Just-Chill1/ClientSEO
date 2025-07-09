@@ -2445,17 +2445,11 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                                                             <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
                                                         </svg>
                                                         <div className="text-sm font-bold text-green-600">{upKeywords}</div>
-                                                        <svg className="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                                                        </svg>
                                                     </div>
                                                     <div className="text-xs text-gray-600">Up</div>
                                                 </div>
                                                 <div className="text-center">
                                                     <div className="flex items-center justify-center space-x-1">
-                                                        <svg className="w-3 h-3 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                                                            <path fillRule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                        </svg>
                                                         <div className="text-sm font-bold text-red-600">{downKeywords}</div>
                                                         <svg className="w-3 h-3 text-red-600" fill="currentColor" viewBox="0 0 20 20">
                                                             <path fillRule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -4830,9 +4824,23 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
         );
     };
 
-    // Modern comparison chart with value labels
+    // Modern comparison chart with value labels and color legend
     const ModernComparisonChart = ({ data, dataKey, title, color, isInverted = false }) => {
         const { LabelList } = window.Recharts;
+        
+        // Define distinct gradient colors for client vs competitors
+        const clientGradient = {
+            start: color.client,
+            end: `${color.client}CC`
+        };
+        
+        const competitorGradients = [
+            { start: '#6366f1', end: '#6366f1CC' }, // Indigo
+            { start: '#8b5cf6', end: '#8b5cf6CC' }, // Purple  
+            { start: '#06b6d4', end: '#06b6d4CC' }, // Cyan
+            { start: '#f59e0b', end: '#f59e0bCC' }, // Amber
+            { start: '#ef4444', end: '#ef4444CC' }  // Red
+        ];
         
         // Custom label formatter for different data types
         const formatLabel = (value) => {
@@ -4886,6 +4894,17 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             ];
         };
 
+        // Assign colors to each entry
+        const dataWithColors = data.map((entry, index) => {
+            if (entry.isClient) {
+                return { ...entry, gradientId: 'client-gradient', color: clientGradient.start };
+            } else {
+                const competitorIndex = data.filter((e, i) => i < index && !e.isClient).length;
+                const gradient = competitorGradients[competitorIndex % competitorGradients.length];
+                return { ...entry, gradientId: `competitor-gradient-${competitorIndex}`, color: gradient.start };
+            }
+        });
+
         return (
             <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200">
                 <div className="flex justify-between items-start mb-4">
@@ -4896,24 +4915,20 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             {dataKey === 'Site Speed (seconds)' && ' • Measured in seconds'}
                         </p>
                     </div>
-                    <div className="flex items-center space-x-4 text-xs">
-                        <div className="flex items-center space-x-1">
-                            <div className="w-3 h-3 bg-blue-400 rounded shadow-sm"></div>
-                            <span className="text-gray-600 font-medium">Your Business</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                            <div className="w-3 h-3 bg-blue-700 rounded opacity-80"></div>
-                            <span className="text-gray-600">Competitors</span>
-                        </div>
-                    </div>
                 </div>
-                <ResponsiveContainer width="100%" height={300}>
-                    <BarChart data={data} margin={{ top: 40, right: 30, left: 20, bottom: 80 }}>
+                <ResponsiveContainer width="100%" height={280}>
+                    <BarChart data={dataWithColors} margin={{ top: 40, right: 30, left: 20, bottom: 20 }}>
                         <defs>
-                            {data.map((entry, index) => (
-                                <linearGradient key={`gradient-${index}`} id={`gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor={entry.isClient ? color.client : color.competitor} />
-                                    <stop offset="100%" stopColor={entry.isClient ? `${color.client}80` : `${color.competitor}80`} />
+                            {/* Client gradient */}
+                            <linearGradient id="client-gradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor={clientGradient.start} />
+                                <stop offset="100%" stopColor={clientGradient.end} />
+                            </linearGradient>
+                            {/* Competitor gradients */}
+                            {competitorGradients.map((gradient, index) => (
+                                <linearGradient key={`competitor-gradient-${index}`} id={`competitor-gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor={gradient.start} />
+                                    <stop offset="100%" stopColor={gradient.end} />
                                 </linearGradient>
                             ))}
                         </defs>
@@ -4921,9 +4936,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                         <XAxis 
                             dataKey="name" 
                             tick={{ fontSize: 12, fill: '#64748b' }}
-                            angle={-45}
-                            textAnchor="end"
-                            height={70}
+                            height={40}
                             interval={0}
                         />
                         <YAxis 
@@ -4953,11 +4966,10 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
                         />
                         <Bar dataKey={dataKey} radius={[6, 6, 0, 0]} barSize={40}>
-                            {data.map((entry, index) => (
+                            {dataWithColors.map((entry, index) => (
                                 <Cell 
                                     key={`cell-${index}`} 
-                                    fill={`url(#gradient-${index})`}
-                                    opacity={entry.isClient ? 1 : 0.8}
+                                    fill={`url(#${entry.gradientId})`}
                                 />
                             ))}
                             <LabelList 
@@ -4973,6 +4985,24 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                         </Bar>
                     </BarChart>
                 </ResponsiveContainer>
+                
+                {/* Color Legend at Bottom */}
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                    <div className="flex flex-wrap gap-3 justify-center">
+                        {dataWithColors.map((entry, index) => (
+                            <div key={index} className="flex items-center space-x-2">
+                                <div 
+                                    className="w-3 h-3 rounded shadow-sm" 
+                                    style={{ backgroundColor: entry.color }}
+                                ></div>
+                                <span className="text-xs text-gray-600 font-medium">
+                                    {entry.name}
+                                    {entry.isClient && ' ⭐'}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
             </div>
         );
     };
@@ -5364,12 +5394,11 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                          </thead>
                         <tbody className="divide-y divide-gray-100 bg-white">
                             {technicalSeoData.map((site, index) => (
-                                <tr key={site.name || site.id || index} className={`hover:bg-gray-50 transition-all duration-200 ${site.isClient ? 'bg-blue-50/50 hover:bg-blue-100/50 border-l-4 border-blue-400' : ''}`}>
+                                <tr key={site.name || site.id || index} className={`hover:bg-gray-50 transition-all duration-200 ${site.isClient ? 'bg-blue-50/50 hover:bg-blue-100/50' : ''}`}>
                                     <td className="px-8 py-6">
                                         <div>
                                             <div className={`font-semibold text-base ${site.isClient ? 'text-blue-900' : 'text-gray-900'}`}>
                                                 {site.clinicName || site.name}
-                                                {site.isClient && <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Client</span>}
                                             </div>
                                             {site.website && (
                                                 <div className="text-sm text-gray-500 mt-1">
