@@ -3923,41 +3923,159 @@ const GeogridMaps = () => {
                  {competitors.length > 0 && (
                      <div className="mt-8">
                          <h3 className="text-lg font-semibold text-gray-800 mb-3">Rankings in Top 5</h3>
-                         <ResponsiveContainer width="100%" height={300}>
-                             <BarChart data={competitors} margin={{ top: 30, right: 30, left: 0, bottom: 80 }}>
-                                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                         <ResponsiveContainer width="100%" height={280}>
+                             <BarChart data={competitors} margin={{ top: 40, right: 30, left: 20, bottom: 20 }}>
+                                  <defs>
+                                      {/* Client gradient - always blue */}
+                                      <linearGradient id="geogrid-client-gradient" x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="0%" stopColor="#3b82f6" />
+                                          <stop offset="50%" stopColor="#3b82f6" />
+                                          <stop offset="100%" stopColor="#3b82f640" />
+                                      </linearGradient>
+                                      {/* Competitor gradients */}
+                                      <linearGradient id="geogrid-competitor-gradient-0" x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="0%" stopColor="#6366f1" />
+                                          <stop offset="50%" stopColor="#6366f1" />
+                                          <stop offset="100%" stopColor="#6366f140" />
+                                      </linearGradient>
+                                      <linearGradient id="geogrid-competitor-gradient-1" x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="0%" stopColor="#8b5cf6" />
+                                          <stop offset="50%" stopColor="#8b5cf6" />
+                                          <stop offset="100%" stopColor="#8b5cf640" />
+                                      </linearGradient>
+                                      <linearGradient id="geogrid-competitor-gradient-2" x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="0%" stopColor="#10b981" />
+                                          <stop offset="50%" stopColor="#10b981" />
+                                          <stop offset="100%" stopColor="#10b98140" />
+                                      </linearGradient>
+                                      <linearGradient id="geogrid-competitor-gradient-3" x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="0%" stopColor="#ef4444" />
+                                          <stop offset="50%" stopColor="#ef4444" />
+                                          <stop offset="100%" stopColor="#ef444440" />
+                                      </linearGradient>
+                                  </defs>
+                                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                                   <XAxis 
                                       dataKey="name" 
-                                      type="category" 
-                                      interval={0} 
-                                      tick={<CustomXAxisTick />} 
-                                      height={90}
+                                      tick={{ fontSize: 12, fill: '#64748b' }}
+                                      height={40}
+                                      interval={0}
                                   />
                                   <YAxis 
-                                      type="number" 
-                                      allowDecimals={false} 
-                                      domain={[0, dataMax => (Math.ceil((dataMax || 5) * 1.1 / 5) * 5)]} 
-                                      tick={{ fontSize: 12, fill: '#6B7280' }}
+                                      tick={{ fontSize: 12, fill: '#64748b' }}
+                                      domain={[0, dataMax => {
+                                          const maxValue = Math.max(...competitors.map(c => c.top5Total || 0));
+                                          const increment = 5;
+                                          const suggestedMax = Math.max(10, Math.ceil(maxValue / increment) * increment);
+                                          return suggestedMax;
+                                      }]}
+                                      ticks={(() => {
+                                          const maxValue = Math.max(...competitors.map(c => c.top5Total || 0));
+                                          const increment = 5;
+                                          const suggestedMax = Math.max(10, Math.ceil(maxValue / increment) * increment);
+                                          return [0, increment, increment * 2, increment * 3, suggestedMax];
+                                      })()}
+                                      tickFormatter={(value) => value.toString()}
                                   />
-                                  <Tooltip
-                                      cursor={{ fill: 'rgba(241, 245, 249, 0.7)' }}
-                                      contentStyle={{
-                                          backgroundColor: 'rgba(31, 41, 55, 0.9)',
-                                          borderColor: 'rgba(255,255,255,0.2)',
-                                          borderRadius: '0.5rem',
-                                          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                                  <Tooltip 
+                                      contentStyle={{ 
+                                          backgroundColor: 'rgba(31, 41, 55, 0.95)', 
+                                          border: '1px solid #374151', 
+                                          borderRadius: '12px',
+                                          boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+                                          color: '#fff'
                                       }}
                                       itemStyle={{ color: '#fff' }}
                                       labelStyle={{ color: '#fff', fontWeight: 'bold' }}
-                                      formatter={(value, name, props) => [`${value}`, 'Top 5 Count']}
-                                      labelFormatter={(label) => `${label}`}
+                                      formatter={(value, name, props) => [
+                                          <div key="tooltip">
+                                              <div style={{ fontWeight: 'bold' }}>{value}</div>
+                                              <div style={{ fontSize: '11px', opacity: 0.8 }}>Top 5 Rankings</div>
+                                              {props.payload?.isClient && <div style={{ fontSize: '11px', color: '#60a5fa' }}>⭐ Your Business</div>}
+                                          </div>,
+                                          'Top 5 Count'
+                                      ]}
+                                      cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
                                   />
-                                  <Bar dataKey='top5Total' name="Top 5 Rankings" radius={[4, 4, 0, 0]}>
-                                      {competitors.map((entry, index) => <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} /> )}
-                                      <LabelList dataKey="top5Total" position="top" style={{ fill: '#4B5563', fontSize: 12, fontWeight: 'bold' }} />
+                                  <Bar dataKey='top5Total' name="Top 5 Rankings" radius={[6, 6, 0, 0]} barSize={40}>
+                                      {competitors.map((entry, index) => {
+                                          const isClient = entry.isClient || entry.name?.toLowerCase().includes('client') || entry.name?.toLowerCase().includes('your');
+                                          const gradientId = isClient ? 'geogrid-client-gradient' : `geogrid-competitor-gradient-${index % 4}`;
+                                          return (
+                                              <Cell 
+                                                  key={`cell-${index}`} 
+                                                  fill={`url(#${gradientId})`}
+                                              />
+                                          );
+                                      })}
+                                      <LabelList 
+                                          dataKey="top5Total" 
+                                          position="top" 
+                                          style={{ 
+                                              fill: '#374151', 
+                                              fontSize: 12, 
+                                              fontWeight: 'bold' 
+                                          }}
+                                      />
                                   </Bar>
                              </BarChart>
                          </ResponsiveContainer>
+                         
+                         {/* Color Legend at Bottom */}
+                         <div className="mt-4 pt-4 border-t border-gray-100">
+                             <div className="flex flex-col items-center space-y-2">
+                                 {/* Top row - 3 items */}
+                                 <div className="flex justify-center space-x-6">
+                                     {competitors.slice(0, 3).map((entry, index) => {
+                                         const isClient = entry.isClient || entry.name?.toLowerCase().includes('client') || entry.name?.toLowerCase().includes('your');
+                                         const colors = ['#3b82f6', '#6366f1', '#8b5cf6', '#10b981', '#ef4444'];
+                                         const color = isClient ? '#3b82f6' : colors[(index + 1) % colors.length];
+                                         const truncateName = (name, maxLength = 14) => {
+                                             if (!name || name.length <= maxLength) return name;
+                                             return name.substring(0, maxLength - 1) + '…';
+                                         };
+                                         return (
+                                             <div key={index} className="flex items-center space-x-2 min-w-0">
+                                                 <div 
+                                                     className="w-3 h-3 rounded shadow-sm flex-shrink-0" 
+                                                     style={{ backgroundColor: color }}
+                                                 ></div>
+                                                 <span className="text-xs text-gray-600 font-medium truncate" title={entry.name}>
+                                                     {truncateName(entry.name)}
+                                                     {isClient && ' ⭐'}
+                                                 </span>
+                                             </div>
+                                         );
+                                     })}
+                                 </div>
+                                 {/* Bottom row - 2 items (if they exist) */}
+                                 {competitors.length > 3 && (
+                                     <div className="flex justify-center space-x-6">
+                                         {competitors.slice(3).map((entry, index) => {
+                                             const isClient = entry.isClient || entry.name?.toLowerCase().includes('client') || entry.name?.toLowerCase().includes('your');
+                                             const colors = ['#3b82f6', '#6366f1', '#8b5cf6', '#10b981', '#ef4444'];
+                                             const color = isClient ? '#3b82f6' : colors[(index + 4) % colors.length];
+                                             const truncateName = (name, maxLength = 14) => {
+                                                 if (!name || name.length <= maxLength) return name;
+                                                 return name.substring(0, maxLength - 1) + '…';
+                                             };
+                                             return (
+                                                 <div key={index + 3} className="flex items-center space-x-2 min-w-0">
+                                                     <div 
+                                                         className="w-3 h-3 rounded shadow-sm flex-shrink-0" 
+                                                         style={{ backgroundColor: color }}
+                                                     ></div>
+                                                     <span className="text-xs text-gray-600 font-medium truncate" title={entry.name}>
+                                                         {truncateName(entry.name)}
+                                                         {isClient && ' ⭐'}
+                                                     </span>
+                                                 </div>
+                                             );
+                                         })}
+                                     </div>
+                                 )}
+                             </div>
+                         </div>
                      </div>
                  )}
             </Card>
@@ -4908,8 +5026,8 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             { start: '#6366f1', end: '#4f46e5', gradientStart: '#6366f1', gradientEnd: '#6366f140' }, // Indigo
             { start: '#8b5cf6', end: '#7c3aed', gradientStart: '#8b5cf6', gradientEnd: '#8b5cf640' }, // Purple  
             { start: '#10b981', end: '#059669', gradientStart: '#10b981', gradientEnd: '#10b98140' }, // Emerald (was Cyan)
-            { start: '#f97316', end: '#ea580c', gradientStart: '#f97316', gradientEnd: '#f9731640' }, // Orange (was Amber)
-            { start: '#ef4444', end: '#dc2626', gradientStart: '#ef4444', gradientEnd: '#ef444440' }  // Red
+            { start: '#ef4444', end: '#dc2626', gradientStart: '#ef4444', gradientEnd: '#ef444440' }, // Red (swapped with orange)
+            { start: '#f97316', end: '#ea580c', gradientStart: '#f97316', gradientEnd: '#f9731640' }  // Orange (swapped with red)
         ];
         
         // Truncate name function
