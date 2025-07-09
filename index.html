@@ -4833,9 +4833,9 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             const maxValue = Math.max(...data.map(item => item[dataKey] || 0));
             
             if (dataKey === 'Site Speed (seconds)') {
-                // For seconds: 0.25, 0.50, 0.75, then max or 1.0
-                const suggestedMax = Math.max(1.0, Math.ceil(maxValue * 4) / 4);
-                const ticks = [0, 0.25, 0.50, 0.75, suggestedMax];
+                // For seconds: 0.15, 0.30, 0.45, then max or 0.60
+                const suggestedMax = Math.max(0.60, Math.ceil(maxValue * 6.67) / 6.67);
+                const ticks = [0, 0.15, 0.30, 0.45, suggestedMax];
                 return {
                     domain: [0, suggestedMax],
                     ticks: ticks,
@@ -4898,17 +4898,17 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
 
         // Define enhanced gradient colors for client vs competitors
         const clientGradient = {
-            start: color.client,
-            end: color.client,
-            gradientStart: color.client,
-            gradientEnd: `${color.client}40`
+            start: '#3b82f6', // Always blue for client
+            end: '#3b82f6',
+            gradientStart: '#3b82f6',
+            gradientEnd: '#3b82f640'
         };
         
         const competitorGradients = [
             { start: '#6366f1', end: '#4f46e5', gradientStart: '#6366f1', gradientEnd: '#6366f140' }, // Indigo
             { start: '#8b5cf6', end: '#7c3aed', gradientStart: '#8b5cf6', gradientEnd: '#8b5cf640' }, // Purple  
-            { start: '#06b6d4', end: '#0891b2', gradientStart: '#06b6d4', gradientEnd: '#06b6d440' }, // Cyan
-            { start: '#f59e0b', end: '#d97706', gradientStart: '#f59e0b', gradientEnd: '#f59e0b40' }, // Amber
+            { start: '#10b981', end: '#059669', gradientStart: '#10b981', gradientEnd: '#10b98140' }, // Emerald (was Cyan)
+            { start: '#f97316', end: '#ea580c', gradientStart: '#f97316', gradientEnd: '#f9731640' }, // Orange (was Amber)
             { start: '#ef4444', end: '#dc2626', gradientStart: '#ef4444', gradientEnd: '#ef444440' }  // Red
         ];
         
@@ -5074,19 +5074,39 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                 
                 {/* Color Legend at Bottom */}
                 <div className="mt-4 pt-4 border-t border-gray-100">
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 justify-items-center">
-                        {dataWithColors.map((entry, index) => (
-                            <div key={index} className="flex items-center space-x-2 min-w-0">
-                                <div 
-                                    className="w-3 h-3 rounded shadow-sm flex-shrink-0" 
-                                    style={{ backgroundColor: entry.color }}
-                                ></div>
-                                <span className="text-xs text-gray-600 font-medium truncate" title={entry.originalName}>
-                                    {truncateName(entry.originalName, 14)}
-                                    {entry.isClient && ' ⭐'}
-                                </span>
+                    <div className="flex flex-col items-center space-y-2">
+                        {/* Top row - 3 items */}
+                        <div className="flex justify-center space-x-6">
+                            {dataWithColors.slice(0, 3).map((entry, index) => (
+                                <div key={index} className="flex items-center space-x-2 min-w-0">
+                                    <div 
+                                        className="w-3 h-3 rounded shadow-sm flex-shrink-0" 
+                                        style={{ backgroundColor: entry.color }}
+                                    ></div>
+                                    <span className="text-xs text-gray-600 font-medium truncate" title={entry.originalName}>
+                                        {truncateName(entry.originalName, 14)}
+                                        {entry.isClient && ' ⭐'}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                        {/* Bottom row - 2 items (if they exist) */}
+                        {dataWithColors.length > 3 && (
+                            <div className="flex justify-center space-x-6">
+                                {dataWithColors.slice(3).map((entry, index) => (
+                                    <div key={index + 3} className="flex items-center space-x-2 min-w-0">
+                                        <div 
+                                            className="w-3 h-3 rounded shadow-sm flex-shrink-0" 
+                                            style={{ backgroundColor: entry.color }}
+                                        ></div>
+                                        <span className="text-xs text-gray-600 font-medium truncate" title={entry.originalName}>
+                                            {truncateName(entry.originalName, 14)}
+                                            {entry.isClient && ' ⭐'}
+                                        </span>
+                                    </div>
+                                ))}
                             </div>
-                        ))}
+                        )}
                     </div>
                 </div>
             </div>
