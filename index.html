@@ -806,10 +806,10 @@ const Dashboard = ({ setActiveTab }) => {
 
         return (
             <Card className="col-span-12 lg:col-span-8">
-                <div className="flex flex-col lg:flex-row gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     {/* Competitor Rankings on the Left */}
                     {currentDashboardData.competitors && currentDashboardData.competitors.length > 0 && (
-                        <div className="lg:w-[300px] flex-shrink-0">
+                        <div className="md:col-span-1">
                             <h3 className="text-lg font-semibold text-gray-800 mb-3">Avg Score</h3>
                             <div className="space-y-2">
                                 {currentDashboardData.competitors.map((comp, index) => (
@@ -817,10 +817,10 @@ const Dashboard = ({ setActiveTab }) => {
                                         <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white text-base ${getRankColor(comp.rank)}`}>
                                             {typeof comp.rank === 'number' ? comp.rank.toFixed(1) : '-'}
                                         </div>
-                                        <div>
-                                            <p className="font-medium text-sm text-gray-800 leading-tight">{comp.name || 'Unknown'}</p>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="font-medium text-sm text-gray-800 leading-tight truncate" title={comp.name || 'Unknown'}>{comp.name || 'Unknown'}</p>
                                             {comp.domain && (
-                                                <p className="text-xs text-gray-500">{comp.domain}</p>
+                                                <p className="text-xs text-gray-500 truncate" title={comp.domain}>{comp.domain}</p>
                                             )}
                                         </div>
                                     </div>
@@ -830,7 +830,7 @@ const Dashboard = ({ setActiveTab }) => {
                     )}
                     
                     {/* Geogrid Map on the Right */}
-                    <div className="flex-1 min-w-0">
+                    <div className="md:col-span-3">
                         <div className="flex justify-between items-center mb-4">
                             <div className="flex items-center space-x-2">
                                 <h2 className="text-xl font-bold text-gray-800">Medspa Near Me</h2>
@@ -2964,10 +2964,10 @@ const Backlinks = () => {
                         />
                         <SummaryStat
                             label="Spam Score"
-                            value={`${currentSummaryData.avgSpamScore || 0}%`}
+                            value={`${(Number(currentSummaryData.avgSpamScore) || 0).toFixed(1)}%`}
                             color={(Number(currentSummaryData.avgSpamScore) || 0) <= 30 ? 'text-green-600' : (Number(currentSummaryData.avgSpamScore) || 0) <= 60 ? 'text-yellow-600' : 'text-red-600'}
                             icon={<ShieldCheck className="w-5 h-5" />}
-                            subtitle={`${(Number(currentSummaryData.spamScoreChange) || 0) <= 0 ? '↓' : '↑'} ${Math.abs(Number(currentSummaryData.spamScoreChange) || 0)}% vs prev month`}
+                            subtitle={`${(Number(currentSummaryData.spamScoreChange) || 0) <= 0 ? '↓' : '↑'} ${Math.abs(Number(currentSummaryData.spamScoreChange) || 0).toFixed(1)}% vs prev month`}
                         />
                     </div>
                 </div>
