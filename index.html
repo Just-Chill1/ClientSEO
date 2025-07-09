@@ -4120,25 +4120,47 @@ const GeogridMaps = () => {
 /* CONSISTENT COLOR MAPPING SYSTEM                                   */
 /* ------------------------------------------------------------------ */
 
-// Simple two-color system for all charts
-const getBusinessColor = (isClient) => {
+// Consistent color mapping system for competitors across all charts
+const getConsistentColor = (businessName, isClient, allBusinesses = []) => {
+    // Client always gets blue
     if (isClient) {
-        // Client always gets blue
         return {
             start: '#3b82f6',
             end: '#3b82f6',
             gradientStart: '#3b82f6',
             gradientEnd: '#3b82f640'
         };
-    } else {
-        // All competitors get emerald green
-        return {
-            start: '#10b981',
-            end: '#059669',
-            gradientStart: '#10b981',
-            gradientEnd: '#10b98140'
-        };
     }
+    
+    // Define consistent competitor colors (same as ModernComparisonChart)
+    const competitorColors = [
+        { start: '#6366f1', end: '#4f46e5', gradientStart: '#6366f1', gradientEnd: '#6366f140' }, // Indigo
+        { start: '#8b5cf6', end: '#7c3aed', gradientStart: '#8b5cf6', gradientEnd: '#8b5cf640' }, // Purple  
+        { start: '#10b981', end: '#059669', gradientStart: '#10b981', gradientEnd: '#10b98140' }, // Emerald
+        { start: '#ef4444', end: '#dc2626', gradientStart: '#ef4444', gradientEnd: '#ef444440' }, // Red
+        { start: '#f97316', end: '#ea580c', gradientStart: '#f97316', gradientEnd: '#f9731640' }  // Orange
+    ];
+    
+    // Get all non-client businesses and sort them consistently
+    const competitors = allBusinesses
+        .filter(business => !business.isClient)
+        .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    
+    // Find the index of this business in the sorted competitor list
+    const competitorIndex = competitors.findIndex(comp => comp.name === businessName);
+    
+    // If found, use the consistent color, otherwise use a fallback
+    if (competitorIndex !== -1 && competitorIndex < competitorColors.length) {
+        return competitorColors[competitorIndex];
+    }
+    
+    // Fallback for unknown competitors (use gray)
+    return {
+        start: '#6b7280',
+        end: '#4b5563',
+        gradientStart: '#6b7280',
+        gradientEnd: '#6b728040'
+    };
 };
 
 /* ------------------------------------------------------------------ */
