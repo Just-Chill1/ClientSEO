@@ -58,6 +58,7 @@ function doGet(e) {
       backlinksSummaryArchive: getBacklinksSummaryArchive(spreadsheet),
       keywordsSummary: getKeywordsSummary(spreadsheet),
       keywordsTable: getKeywordsTables(spreadsheet),
+      keywordsSummaryArchive: getKeywordsSummaryArchive(spreadsheet),
       webhooks: getWebhookUrls(spreadsheet)
     };
 
@@ -523,6 +524,117 @@ function getBacklinksSummaryArchive(spreadsheet) {
     }
 
     console.log('Processed backlinks archive data:', archiveData.length, 'entries');
+    return archiveData;
+}
+
+function getKeywordsSummaryArchive(spreadsheet) {
+    const sheetName = 'Keywords Summary Archive';
+    const sheet = spreadsheet.getSheetByName(sheetName);
+    if (!sheet || sheet.getLastRow() < 2) {
+        console.log('No Keywords Summary Archive sheet found or no data');
+        return [];
+    }
+
+    const values = sheet.getDataRange().getValues().slice(1); // Skip header row
+    console.log('Total rows in Keywords Summary Archive:', values.length);
+    
+    const archiveData = [];
+
+    values.forEach((row, index) => {
+        // Skip empty rows
+        if (!row[0] && !row[2]) return;
+        
+        const rawDate = row[0]; // crawl_date - Column A
+        const accountType = row[1]; // account_type - Column B
+        const website = row[2]; // website - Column C
+        
+        // Only process client data
+        if (accountType !== 'Client') return;
+        
+        let crawlDate;
+        let formattedDate;
+        
+        try {
+            // Try parsing the date as-is first
+            crawlDate = new Date(rawDate);
+            
+            // If that fails and it looks like a US date format, try parsing differently
+            if (isNaN(crawlDate.getTime()) && typeof rawDate === 'string') {
+                // Try MM/DD/YYYY format parsing
+                const parts = rawDate.split('/');
+                if (parts.length === 3) {
+                    const month = parseInt(parts[0]) - 1; // Convert to 0-based month
+                    const day = parseInt(parts[1]);
+                    const year = parseInt(parts[2]);
+                    crawlDate = new Date(year, month, day);
+                }
+            }
+            
+            // If we still don't have a valid date, skip this row
+            if (isNaN(crawlDate.getTime())) {
+                console.log(`Row ${index + 2}: Invalid date format: ${rawDate}, skipping`);
+                return;
+            }
+            
+            // Format the date consistently
+            formattedDate = crawlDate.toLocaleString('en-US', { 
+                month: 'long', 
+                year: 'numeric',
+                timeZone: 'UTC'
+            });
+            
+            console.log(`Row ${index + 2}: Raw date: ${rawDate}, Parsed: ${crawlDate}, Formatted: ${formattedDate}`);
+            
+        } catch (e) {
+            console.log(`Row ${index + 2}: Error parsing date ${rawDate}:`, e.message);
+            return;
+        }
+        
+        archiveData.push({
+            date: formattedDate,
+            rawDate: rawDate,
+            parsedDate: crawlDate.toISOString(),
+            website: website,
+            totalKeywords: parseInt(row[3]) || 0,         // Total Keywords - Column D
+            pos1: parseInt(row[4]) || 0,                  // Position 1 - Column E
+            pos2_3: parseInt(row[5]) || 0,                // Position 2-3 - Column F
+            pos4_10: parseInt(row[6]) || 0,               // Position 4-10 - Column G
+            pos11_20: parseInt(row[7]) || 0,              // Position 11-20 - Column H
+            isNew: parseInt(row[8]) || 0,                 // Is New - Column I
+            isUp: parseInt(row[9]) || 0,                  // Is Up - Column J
+            isDown: parseInt(row[10]) || 0,               // Is Down - Column K
+            isLost: parseInt(row[11]) || 0,               // Is Lost - Column L
+            etv: parseFloat(row[12]) || 0,                // Etv - Column M
+            estPaidCost: parseFloat(row[13]) || 0,        // Estimated Paid Cost - Column N
+            // Calculate changes from previous month (we'll do this after sorting)
+            totalKeywordsChange: 0,
+            pos1Change: 0,
+            etvChange: 0,
+            estPaidCostChange: 0
+        });
+    });
+
+    // Sort by parsed date (newest first)
+    archiveData.sort((a, b) => {
+        const dateA = new Date(a.parsedDate);
+        const dateB = new Date(b.parsedDate);
+        return dateB.getTime() - dateA.getTime();
+    });
+
+    // Calculate month-over-month changes
+    for (let i = 0; i < archiveData.length; i++) {
+        const current = archiveData[i];
+        const previous = archiveData[i + 1]; // Previous month (older)
+        
+        if (previous) {
+            current.totalKeywordsChange = current.totalKeywords - previous.totalKeywords;
+            current.pos1Change = current.pos1 - previous.pos1;
+            current.etvChange = current.etv - previous.etv;
+            current.estPaidCostChange = current.estPaidCost - previous.estPaidCost;
+        }
+    }
+
+    console.log('Processed keywords archive data:', archiveData.length, 'entries');
     return archiveData;
 }
 
