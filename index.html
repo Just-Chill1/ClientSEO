@@ -3926,18 +3926,17 @@ const GeogridMaps = () => {
                          <ResponsiveContainer width="100%" height={280}>
                              <BarChart data={competitors} margin={{ top: 40, right: 30, left: 20, bottom: 20 }}>
                                   <defs>
-                                      {/* Business gradients using consistent color mapping */}
-                                      {competitors.map((entry, index) => {
-                                          const isClient = entry.isClient || entry.name?.toLowerCase().includes('client') || entry.name?.toLowerCase().includes('your');
-                                          const colorInfo = getConsistentColor(entry.name, isClient, competitors);
-                                          return (
-                                              <linearGradient key={`geogrid-business-gradient-${index}`} id={`geogrid-business-gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
-                                                  <stop offset="0%" stopColor={colorInfo.gradientStart} />
-                                                  <stop offset="50%" stopColor={colorInfo.start} />
-                                                  <stop offset="100%" stopColor={colorInfo.gradientEnd} />
-                                              </linearGradient>
-                                          );
-                                      })}
+                                      {/* Simple two-color system for geogrid charts */}
+                                      <linearGradient id="geogrid-client-gradient" x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="0%" stopColor="#3b82f6" />
+                                          <stop offset="50%" stopColor="#3b82f6" />
+                                          <stop offset="100%" stopColor="#3b82f640" />
+                                      </linearGradient>
+                                      <linearGradient id="geogrid-competitor-gradient" x1="0" y1="0" x2="0" y2="1">
+                                          <stop offset="0%" stopColor="#64748b" />
+                                          <stop offset="50%" stopColor="#475569" />
+                                          <stop offset="100%" stopColor="#64748b40" />
+                                      </linearGradient>
                                   </defs>
                                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                                   <XAxis 
@@ -3985,7 +3984,7 @@ const GeogridMaps = () => {
                                   <Bar dataKey='top5Total' name="Top 5 Rankings" radius={[6, 6, 0, 0]} barSize={40}>
                                       {competitors.map((entry, index) => {
                                           const isClient = entry.isClient || entry.name?.toLowerCase().includes('client') || entry.name?.toLowerCase().includes('your');
-                                          const gradientId = `geogrid-business-gradient-${index}`;
+                                          const gradientId = isClient ? 'geogrid-client-gradient' : 'geogrid-competitor-gradient';
                                           return (
                                               <Cell 
                                                   key={`cell-${index}`} 
@@ -4013,7 +4012,7 @@ const GeogridMaps = () => {
                                  <div className="flex justify-center space-x-6">
                                      {competitors.slice(0, 3).map((entry, index) => {
                                          const isClient = entry.isClient || entry.name?.toLowerCase().includes('client') || entry.name?.toLowerCase().includes('your');
-                                         const colorInfo = getConsistentColor(entry.name, isClient, competitors);
+                                         const color = isClient ? '#3b82f6' : '#64748b';
                                          const truncateName = (name, maxLength = 14) => {
                                              if (!name || name.length <= maxLength) return name;
                                              return name.substring(0, maxLength - 1) + '…';
@@ -4022,7 +4021,7 @@ const GeogridMaps = () => {
                                              <div key={index} className="flex items-center space-x-2 min-w-0">
                                                  <div 
                                                      className="w-3 h-3 rounded shadow-sm flex-shrink-0" 
-                                                     style={{ backgroundColor: colorInfo.start }}
+                                                     style={{ backgroundColor: color }}
                                                  ></div>
                                                  <span className="text-xs text-gray-600 font-medium truncate" title={entry.name}>
                                                      {truncateName(entry.name)}
@@ -4037,7 +4036,7 @@ const GeogridMaps = () => {
                                      <div className="flex justify-center space-x-6">
                                          {competitors.slice(3).map((entry, index) => {
                                              const isClient = entry.isClient || entry.name?.toLowerCase().includes('client') || entry.name?.toLowerCase().includes('your');
-                                             const colorInfo = getConsistentColor(entry.name, isClient, competitors);
+                                             const color = isClient ? '#3b82f6' : '#64748b';
                                              const truncateName = (name, maxLength = 14) => {
                                                  if (!name || name.length <= maxLength) return name;
                                                  return name.substring(0, maxLength - 1) + '…';
@@ -4046,7 +4045,7 @@ const GeogridMaps = () => {
                                                  <div key={index + 3} className="flex items-center space-x-2 min-w-0">
                                                      <div 
                                                          className="w-3 h-3 rounded shadow-sm flex-shrink-0" 
-                                                         style={{ backgroundColor: colorInfo.start }}
+                                                         style={{ backgroundColor: color }}
                                                      ></div>
                                                      <span className="text-xs text-gray-600 font-medium truncate" title={entry.name}>
                                                          {truncateName(entry.name)}
@@ -4121,47 +4120,25 @@ const GeogridMaps = () => {
 /* CONSISTENT COLOR MAPPING SYSTEM                                   */
 /* ------------------------------------------------------------------ */
 
-// Consistent color mapping system for competitors across all charts
-const getConsistentColor = (businessName, isClient, allBusinesses = []) => {
-    // Client always gets blue
+// Simple two-color system for all charts
+const getBusinessColor = (isClient) => {
     if (isClient) {
+        // Client always gets blue
         return {
             start: '#3b82f6',
             end: '#3b82f6',
             gradientStart: '#3b82f6',
             gradientEnd: '#3b82f640'
         };
+    } else {
+        // All competitors get emerald green
+        return {
+            start: '#10b981',
+            end: '#059669',
+            gradientStart: '#10b981',
+            gradientEnd: '#10b98140'
+        };
     }
-    
-    // Define consistent competitor colors (same as ModernComparisonChart)
-    const competitorColors = [
-        { start: '#6366f1', end: '#4f46e5', gradientStart: '#6366f1', gradientEnd: '#6366f140' }, // Indigo
-        { start: '#8b5cf6', end: '#7c3aed', gradientStart: '#8b5cf6', gradientEnd: '#8b5cf640' }, // Purple  
-        { start: '#10b981', end: '#059669', gradientStart: '#10b981', gradientEnd: '#10b98140' }, // Emerald
-        { start: '#ef4444', end: '#dc2626', gradientStart: '#ef4444', gradientEnd: '#ef444440' }, // Red
-        { start: '#f97316', end: '#ea580c', gradientStart: '#f97316', gradientEnd: '#f9731640' }  // Orange
-    ];
-    
-    // Get all non-client businesses and sort them consistently
-    const competitors = allBusinesses
-        .filter(business => !business.isClient)
-        .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-    
-    // Find the index of this business in the sorted competitor list
-    const competitorIndex = competitors.findIndex(comp => comp.name === businessName);
-    
-    // If found, use the consistent color, otherwise use a fallback
-    if (competitorIndex !== -1 && competitorIndex < competitorColors.length) {
-        return competitorColors[competitorIndex];
-    }
-    
-    // Fallback for unknown competitors (use gray)
-    return {
-        start: '#6b7280',
-        end: '#4b5563',
-        gradientStart: '#6b7280',
-        gradientEnd: '#6b728040'
-    };
 };
 
 /* ------------------------------------------------------------------ */
