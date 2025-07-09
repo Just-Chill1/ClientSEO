@@ -3396,24 +3396,40 @@ const GeogridMaps = () => {
 
         const CustomXAxisTick = ({ x, y, payload }) => {
             const name = payload.value || '';
-            // A simple heuristic to split long names
-            if (name.length > 15) { 
-                const breakPoint = name.lastIndexOf(' ', 15);
-                const line1 = breakPoint > 0 ? name.substring(0, breakPoint) : name.substring(0, 15);
-                const line2 = breakPoint > 0 ? name.substring(breakPoint + 1) : name.substring(15);
-                return (
-                    <g transform={`translate(${x},${y})`}>
-                        <text x={0} y={0} dy={5} textAnchor="end" fill="#6B7280" fontSize={12} transform="rotate(-40)">
-                            <tspan x="0" dy="1em">{line1}</tspan>
-                            {line2 && <tspan x="0" dy="1.2em">{line2}</tspan>}
-                        </text>
-                    </g>
-                );
-            }
-
+            
+            // Enhanced text wrapping for long competitor names
+            const wrapText = (text, maxLength = 12) => {
+                if (text.length <= maxLength) return [text];
+                
+                const words = text.split(' ');
+                const lines = [];
+                let currentLine = '';
+                
+                for (const word of words) {
+                    if ((currentLine + word).length <= maxLength) {
+                        currentLine += (currentLine ? ' ' : '') + word;
+                    } else {
+                        if (currentLine) lines.push(currentLine);
+                        currentLine = word;
+                    }
+                }
+                if (currentLine) lines.push(currentLine);
+                
+                // If still too long, truncate with ellipsis
+                return lines.map(line => line.length > maxLength ? line.substring(0, maxLength - 1) + '…' : line);
+            };
+            
+            const lines = wrapText(name);
+            
             return (
                 <g transform={`translate(${x},${y})`}>
-                    <text x={0} y={0} dy={16} textAnchor="end" fill="#6B7280" fontSize={12} transform="rotate(-40)">{name}</text>
+                    <text x={0} y={0} textAnchor="end" fill="#6B7280" fontSize={11} transform="rotate(-40)">
+                        {lines.map((line, index) => (
+                            <tspan key={index} x="0" dy={index === 0 ? "0.5em" : "1.1em"}>
+                                {line}
+                            </tspan>
+                        ))}
+                    </text>
                 </g>
             );
         };
@@ -4464,29 +4480,71 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             return value.toString();
         };
         
-        // Custom tooltip formatter
-        const formatTooltip = (value, name) => {
+        // Custom tooltip formatter with performance indicators
+        const formatTooltip = (value, name, props) => {
+            const entry = props.payload;
+            const isClient = entry?.isClient;
+            
+            // Calculate average for comparison
+            const average = data.reduce((sum, item) => sum + item[dataKey], 0) / data.length;
+            const isAboveAverage = isInverted ? value < average : value > average;
+            
+            let formattedValue;
+            let displayName;
+            
             if (name === 'Site Speed (seconds)') {
-                return [`${value} seconds`, 'Site Speed'];
+                formattedValue = `${value} seconds`;
+                displayName = 'Site Speed';
             } else if (name.includes('Traffic')) {
-                return [value.toLocaleString(), 'Monthly Traffic'];
+                formattedValue = value.toLocaleString();
+                displayName = 'Monthly Traffic';
             } else if (name.includes('Domains')) {
-                return [value.toLocaleString(), 'Referring Domains'];
+                formattedValue = value.toLocaleString();
+                displayName = 'Referring Domains';
             } else if (name.includes('Backlinks')) {
-                return [value.toLocaleString(), 'Total Backlinks'];
+                formattedValue = value.toLocaleString();
+                displayName = 'Total Backlinks';
+            } else {
+                formattedValue = value.toLocaleString();
+                displayName = name;
             }
-            return [value.toLocaleString(), name];
+            
+            const indicator = isAboveAverage ? '📈 Above Average' : '📉 Below Average';
+            const clientBadge = isClient ? '⭐ Your Business' : '';
+            
+            return [
+                <div key="tooltip">
+                    <div style={{ fontWeight: 'bold' }}>{formattedValue}</div>
+                    <div style={{ fontSize: '11px', opacity: 0.8 }}>{indicator}</div>
+                    {clientBadge && <div style={{ fontSize: '11px', color: '#fbbf24' }}>{clientBadge}</div>}
+                </div>,
+                displayName
+            ];
         };
 
         return (
-            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
-                <p className="text-sm text-gray-500 mb-4">
-                    {isInverted ? 'Lower is better' : 'Higher is better'}
-                    {dataKey === 'Site Speed (seconds)' && ' • Measured in seconds'}
-                </p>
-                <ResponsiveContainer width="100%" height={280}>
-                    <BarChart data={data} margin={{ top: 40, right: 30, left: 20, bottom: 60 }}>
+            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200">
+                <div className="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
+                        <p className="text-sm text-gray-500">
+                            {isInverted ? 'Lower is better' : 'Higher is better'}
+                            {dataKey === 'Site Speed (seconds)' && ' • Measured in seconds'}
+                        </p>
+                    </div>
+                    <div className="flex items-center space-x-4 text-xs">
+                        <div className="flex items-center space-x-1">
+                            <div className="w-3 h-3 bg-blue-500 rounded border-2 border-yellow-400"></div>
+                            <span className="text-gray-600">Your Business</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                            <div className="w-3 h-3 bg-gray-400 rounded"></div>
+                            <span className="text-gray-600">Competitors</span>
+                        </div>
+                    </div>
+                </div>
+                <ResponsiveContainer width="100%" height={320}>
+                    <BarChart data={data} margin={{ top: 40, right: 30, left: 20, bottom: 120 }}>
                         <defs>
                             {data.map((entry, index) => (
                                 <linearGradient key={`gradient-${index}`} id={`gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
@@ -4498,10 +4556,11 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                         <XAxis 
                             dataKey="name" 
-                            tick={{ fontSize: 12, fill: '#64748b' }}
+                            tick={{ fontSize: 11, fill: '#64748b' }}
                             angle={-45}
                             textAnchor="end"
-                            height={80}
+                            height={100}
+                            interval={0}
                         />
                         <YAxis 
                             tick={{ fontSize: 12, fill: '#64748b' }}
@@ -4518,16 +4577,25 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                         />
                         <Tooltip 
                             contentStyle={{ 
-                                backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-                                border: '1px solid #e2e8f0', 
+                                backgroundColor: 'rgba(31, 41, 55, 0.95)', 
+                                border: '1px solid #374151', 
                                 borderRadius: '12px',
-                                boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)'
+                                boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+                                color: '#fff'
                             }}
+                            itemStyle={{ color: '#fff' }}
+                            labelStyle={{ color: '#fff', fontWeight: 'bold' }}
                             formatter={formatTooltip}
+                            cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
                         />
                         <Bar dataKey={dataKey} radius={[6, 6, 0, 0]} barSize={40}>
                             {data.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={`url(#gradient-${index})`} />
+                                <Cell 
+                                    key={`cell-${index}`} 
+                                    fill={`url(#gradient-${index})`}
+                                    stroke={entry.isClient ? '#fbbf24' : 'none'}
+                                    strokeWidth={entry.isClient ? 3 : 0}
+                                />
                             ))}
                             <LabelList 
                                 dataKey={dataKey} 
