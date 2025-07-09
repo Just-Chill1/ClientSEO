@@ -4828,19 +4828,95 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
     const ModernComparisonChart = ({ data, dataKey, title, color, isInverted = false }) => {
         const { LabelList } = window.Recharts;
         
-        // Define distinct gradient colors for client vs competitors
+        // Smart Y-axis calculation
+        const getSmartYAxisConfig = (data, dataKey) => {
+            const maxValue = Math.max(...data.map(item => item[dataKey] || 0));
+            
+            if (dataKey === 'Site Speed (seconds)') {
+                // For seconds: 0.25, 0.50, 0.75, then max or 1.0
+                const suggestedMax = Math.max(1.0, Math.ceil(maxValue * 4) / 4);
+                const ticks = [0, 0.25, 0.50, 0.75, suggestedMax];
+                return {
+                    domain: [0, suggestedMax],
+                    ticks: ticks,
+                    tickFormatter: (value) => `${value.toFixed(2)}s`
+                };
+            } else if (dataKey.includes('Traffic')) {
+                // For traffic: smart increments based on max value
+                let increment, suggestedMax;
+                if (maxValue <= 1000) {
+                    increment = 250;
+                    suggestedMax = Math.max(1000, Math.ceil(maxValue / increment) * increment);
+                } else if (maxValue <= 5000) {
+                    increment = 1000;
+                    suggestedMax = Math.ceil(maxValue / increment) * increment;
+                } else if (maxValue <= 20000) {
+                    increment = 5000;
+                    suggestedMax = Math.ceil(maxValue / increment) * increment;
+                } else {
+                    increment = 10000;
+                    suggestedMax = Math.ceil(maxValue / increment) * increment;
+                }
+                const ticks = [0, increment, increment * 2, increment * 3, suggestedMax];
+                return {
+                    domain: [0, suggestedMax],
+                    ticks: ticks,
+                    tickFormatter: (value) => value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value.toString()
+                };
+            } else if (dataKey.includes('Domains')) {
+                // For referring domains: 20, 40, 60, 80, or based on max
+                const increment = 20;
+                const suggestedMax = Math.max(80, Math.ceil(maxValue / increment) * increment);
+                const ticks = [0, increment, increment * 2, increment * 3, suggestedMax];
+                return {
+                    domain: [0, suggestedMax],
+                    ticks: ticks,
+                    tickFormatter: (value) => value.toString()
+                };
+            } else if (dataKey.includes('Backlinks')) {
+                // For backlinks: 50, 100, 150, 200, or based on max
+                let increment = 50;
+                if (maxValue > 1000) increment = 250;
+                else if (maxValue > 500) increment = 100;
+                
+                const suggestedMax = Math.max(200, Math.ceil(maxValue / increment) * increment);
+                const ticks = [0, increment, increment * 2, increment * 3, suggestedMax];
+                return {
+                    domain: [0, suggestedMax],
+                    ticks: ticks,
+                    tickFormatter: (value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toString()
+                };
+            }
+            
+            // Default fallback
+            return {
+                domain: [0, 'dataMax * 1.1'],
+                ticks: undefined,
+                tickFormatter: (value) => value.toString()
+            };
+        };
+
+        // Define enhanced gradient colors for client vs competitors
         const clientGradient = {
             start: color.client,
-            end: `${color.client}CC`
+            end: color.client,
+            gradientStart: color.client,
+            gradientEnd: `${color.client}40`
         };
         
         const competitorGradients = [
-            { start: '#6366f1', end: '#6366f1CC' }, // Indigo
-            { start: '#8b5cf6', end: '#8b5cf6CC' }, // Purple  
-            { start: '#06b6d4', end: '#06b6d4CC' }, // Cyan
-            { start: '#f59e0b', end: '#f59e0bCC' }, // Amber
-            { start: '#ef4444', end: '#ef4444CC' }  // Red
+            { start: '#6366f1', end: '#4f46e5', gradientStart: '#6366f1', gradientEnd: '#6366f140' }, // Indigo
+            { start: '#8b5cf6', end: '#7c3aed', gradientStart: '#8b5cf6', gradientEnd: '#8b5cf640' }, // Purple  
+            { start: '#06b6d4', end: '#0891b2', gradientStart: '#06b6d4', gradientEnd: '#06b6d440' }, // Cyan
+            { start: '#f59e0b', end: '#d97706', gradientStart: '#f59e0b', gradientEnd: '#f59e0b40' }, // Amber
+            { start: '#ef4444', end: '#dc2626', gradientStart: '#ef4444', gradientEnd: '#ef444440' }  // Red
         ];
+        
+        // Truncate name function
+        const truncateName = (name, maxLength = 12) => {
+            if (!name || name.length <= maxLength) return name;
+            return name.substring(0, maxLength - 1) + '…';
+        };
         
         // Custom label formatter for different data types
         const formatLabel = (value) => {
@@ -4894,16 +4970,31 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             ];
         };
 
-        // Assign colors to each entry
+        // Assign colors to each entry with truncated names
         const dataWithColors = data.map((entry, index) => {
+            const truncatedName = truncateName(entry.name);
             if (entry.isClient) {
-                return { ...entry, gradientId: 'client-gradient', color: clientGradient.start };
+                return { 
+                    ...entry, 
+                    name: truncatedName,
+                    gradientId: 'client-gradient', 
+                    color: clientGradient.start,
+                    originalName: entry.name
+                };
             } else {
                 const competitorIndex = data.filter((e, i) => i < index && !e.isClient).length;
                 const gradient = competitorGradients[competitorIndex % competitorGradients.length];
-                return { ...entry, gradientId: `competitor-gradient-${competitorIndex}`, color: gradient.start };
+                return { 
+                    ...entry, 
+                    name: truncatedName,
+                    gradientId: `competitor-gradient-${competitorIndex}`, 
+                    color: gradient.start,
+                    originalName: entry.name
+                };
             }
         });
+
+        const yAxisConfig = getSmartYAxisConfig(data, dataKey);
 
         return (
             <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200">
@@ -4921,14 +5012,16 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                         <defs>
                             {/* Client gradient */}
                             <linearGradient id="client-gradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor={clientGradient.start} />
-                                <stop offset="100%" stopColor={clientGradient.end} />
+                                <stop offset="0%" stopColor={clientGradient.gradientStart} />
+                                <stop offset="50%" stopColor={clientGradient.start} />
+                                <stop offset="100%" stopColor={clientGradient.gradientEnd} />
                             </linearGradient>
                             {/* Competitor gradients */}
                             {competitorGradients.map((gradient, index) => (
                                 <linearGradient key={`competitor-gradient-${index}`} id={`competitor-gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor={gradient.start} />
-                                    <stop offset="100%" stopColor={gradient.end} />
+                                    <stop offset="0%" stopColor={gradient.gradientStart} />
+                                    <stop offset="50%" stopColor={gradient.start} />
+                                    <stop offset="100%" stopColor={gradient.gradientEnd} />
                                 </linearGradient>
                             ))}
                         </defs>
@@ -4941,16 +5034,9 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                         />
                         <YAxis 
                             tick={{ fontSize: 12, fill: '#64748b' }}
-                            domain={dataKey === 'Site Speed (seconds)' ? [0, 'dataMax + 0.5'] : [0, 'dataMax * 1.1']}
-                            tickCount={dataKey === 'Site Speed (seconds)' ? 6 : undefined}
-                            tickFormatter={(value) => {
-                                if (dataKey === 'Site Speed (seconds)') {
-                                    return `${value.toFixed(1)}s`;
-                                } else if (value >= 1000) {
-                                    return `${(value / 1000).toFixed(1)}k`;
-                                }
-                                return value.toString();
-                            }}
+                            domain={yAxisConfig.domain}
+                            ticks={yAxisConfig.ticks}
+                            tickFormatter={yAxisConfig.tickFormatter}
                         />
                         <Tooltip 
                             contentStyle={{ 
@@ -4988,15 +5074,15 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                 
                 {/* Color Legend at Bottom */}
                 <div className="mt-4 pt-4 border-t border-gray-100">
-                    <div className="flex flex-wrap gap-3 justify-center">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 justify-items-center">
                         {dataWithColors.map((entry, index) => (
-                            <div key={index} className="flex items-center space-x-2">
+                            <div key={index} className="flex items-center space-x-2 min-w-0">
                                 <div 
-                                    className="w-3 h-3 rounded shadow-sm" 
+                                    className="w-3 h-3 rounded shadow-sm flex-shrink-0" 
                                     style={{ backgroundColor: entry.color }}
                                 ></div>
-                                <span className="text-xs text-gray-600 font-medium">
-                                    {entry.name}
+                                <span className="text-xs text-gray-600 font-medium truncate" title={entry.originalName}>
+                                    {truncateName(entry.originalName, 14)}
                                     {entry.isClient && ' ⭐'}
                                 </span>
                             </div>
