@@ -497,8 +497,122 @@ const Dashboard = ({ setActiveTab }) => {
                 try {
                     const parsed = JSON.parse(cachedData);
                     const medspaNearMe = parsed['medspa near me'] || [];
-                    const latestData = medspaNearMe.length > 0 ? medspaNearMe[0] : null;
-                    setGeogridData(latestData);
+                    
+                    // Apply same date formatting as fresh data
+                    const fixDateFormatting = (monthlyData) => {
+                        const parsedDates = monthlyData.map((monthData, index) => {
+                            let parsedDate = null;
+                            
+                            // First try to use the backend's parsedDate if available
+                            if (monthData.parsedDate) {
+                                parsedDate = new Date(monthData.parsedDate);
+                            }
+                            
+                            // If parsedDate is invalid or not available, try other approaches
+                            if (!parsedDate || isNaN(parsedDate.getTime())) {
+                                // Try parsing the date field directly
+                                if (monthData.date) {
+                                    parsedDate = new Date(monthData.date);
+                                    
+                                    // If that fails, try US date format parsing
+                                    if (isNaN(parsedDate.getTime())) {
+                                        const dateStr = monthData.date.toString();
+                                        const parts = dateStr.split('/');
+                                        if (parts.length === 3) {
+                                            const month = parseInt(parts[0]) - 1; // Convert to 0-based
+                                            const day = parseInt(parts[1]);
+                                            const year = parseInt(parts[2]);
+                                            parsedDate = new Date(year, month, day);
+                                        }
+                                    }
+                                }
+                                
+                                // Try parsing rawDate if available
+                                if ((!parsedDate || isNaN(parsedDate.getTime())) && monthData.rawDate) {
+                                    parsedDate = new Date(monthData.rawDate);
+                                    
+                                    // If that fails, try US date format parsing on rawDate
+                                    if (isNaN(parsedDate.getTime())) {
+                                        const dateStr = monthData.rawDate.toString();
+                                        const parts = dateStr.split('/');
+                                        if (parts.length === 3) {
+                                            const month = parseInt(parts[0]) - 1; // Convert to 0-based
+                                            const day = parseInt(parts[1]);
+                                            const year = parseInt(parts[2]);
+                                            parsedDate = new Date(year, month, day);
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            return {
+                                ...monthData,
+                                originalDate: monthData.date,
+                                parsedDate: parsedDate,
+                                index: index
+                            };
+                        });
+                        
+                        // Check if we have valid parsed dates
+                        const validDates = parsedDates.filter(item => item.parsedDate && !isNaN(item.parsedDate.getTime()));
+                        
+                        if (validDates.length === 0) {
+                            console.log('⚠️ Dashboard cache: No valid dates found, using fallback sequential logic');
+                            // Fallback to sequential month logic
+                            return monthlyData.map((monthData, index) => {
+                                const currentDate = new Date();
+                                const currentMonth = currentDate.getMonth();
+                                const currentYear = currentDate.getFullYear();
+                                
+                                let targetMonth = currentMonth - index;
+                                let targetYear = currentYear;
+                                
+                                if (targetMonth < 0) {
+                                    targetMonth += 12;
+                                    targetYear--;
+                                }
+                                
+                                const correctedDate = new Date(targetYear, targetMonth, 1);
+                                const formattedDate = correctedDate.toLocaleString('default', { 
+                                    month: 'long', 
+                                    year: 'numeric'
+                                });
+                                
+                                return {
+                                    ...monthData,
+                                    date: formattedDate,
+                                    originalDate: monthData.date,
+                                    correctedDate: correctedDate
+                                };
+                            });
+                        }
+                        
+                        // If we have valid dates, sort by date (newest first) and format properly
+                        validDates.sort((a, b) => b.parsedDate.getTime() - a.parsedDate.getTime());
+                        
+                        console.log('✅ Dashboard cache: Valid dates after sorting:', validDates.map(v => ({
+                            date: v.parsedDate.toLocaleString('default', { month: 'long', year: 'numeric' }),
+                            parsedDate: v.parsedDate,
+                            originalDate: v.originalDate
+                        })));
+                        
+                        return validDates.map(item => {
+                            const formattedDate = item.parsedDate.toLocaleString('default', { 
+                                month: 'long', 
+                                year: 'numeric'
+                            });
+                            
+                            return {
+                                ...item,
+                                date: formattedDate,
+                                correctedDate: item.parsedDate
+                            };
+                        });
+                    };
+                    
+                    // Process the cached data with proper date formatting
+                    const processedMedspaNearMe = medspaNearMe.length > 0 ? fixDateFormatting(medspaNearMe) : [];
+                    setGeogridData(processedMedspaNearMe);
                     setLoading(false);
                     return;
                 } catch (e) {
@@ -522,15 +636,131 @@ const Dashboard = ({ setActiveTab }) => {
                 }
                 
                 try {
+                    // Enhanced date formatting function (same as in GeogridMaps)
+                    const fixDateFormatting = (monthlyData) => {
+                        const parsedDates = monthlyData.map((monthData, index) => {
+                            let parsedDate = null;
+                            
+                            // First try to use the backend's parsedDate if available
+                            if (monthData.parsedDate) {
+                                parsedDate = new Date(monthData.parsedDate);
+                                console.log(`Using backend parsedDate for index ${index}:`, parsedDate);
+                            }
+                            
+                            // If parsedDate is invalid or not available, try other approaches
+                            if (!parsedDate || isNaN(parsedDate.getTime())) {
+                                // Try parsing the date field directly
+                                if (monthData.date) {
+                                    parsedDate = new Date(monthData.date);
+                                    
+                                    // If that fails, try US date format parsing
+                                    if (isNaN(parsedDate.getTime())) {
+                                        const dateStr = monthData.date.toString();
+                                        const parts = dateStr.split('/');
+                                        if (parts.length === 3) {
+                                            const month = parseInt(parts[0]) - 1; // Convert to 0-based
+                                            const day = parseInt(parts[1]);
+                                            const year = parseInt(parts[2]);
+                                            parsedDate = new Date(year, month, day);
+                                        }
+                                    }
+                                }
+                                
+                                // Try parsing rawDate if available
+                                if ((!parsedDate || isNaN(parsedDate.getTime())) && monthData.rawDate) {
+                                    parsedDate = new Date(monthData.rawDate);
+                                    
+                                    // If that fails, try US date format parsing on rawDate
+                                    if (isNaN(parsedDate.getTime())) {
+                                        const dateStr = monthData.rawDate.toString();
+                                        const parts = dateStr.split('/');
+                                        if (parts.length === 3) {
+                                            const month = parseInt(parts[0]) - 1; // Convert to 0-based
+                                            const day = parseInt(parts[1]);
+                                            const year = parseInt(parts[2]);
+                                            parsedDate = new Date(year, month, day);
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            return {
+                                ...monthData,
+                                originalDate: monthData.date,
+                                parsedDate: parsedDate,
+                                index: index
+                            };
+                        });
+                        
+                        // Check if we have valid parsed dates
+                        const validDates = parsedDates.filter(item => item.parsedDate && !isNaN(item.parsedDate.getTime()));
+                        
+                        if (validDates.length === 0) {
+                            console.log('⚠️ Dashboard: No valid dates found, using fallback sequential logic');
+                            // Fallback to sequential month logic
+                            return monthlyData.map((monthData, index) => {
+                                const currentDate = new Date();
+                                const currentMonth = currentDate.getMonth();
+                                const currentYear = currentDate.getFullYear();
+                                
+                                let targetMonth = currentMonth - index;
+                                let targetYear = currentYear;
+                                
+                                if (targetMonth < 0) {
+                                    targetMonth += 12;
+                                    targetYear--;
+                                }
+                                
+                                const correctedDate = new Date(targetYear, targetMonth, 1);
+                                const formattedDate = correctedDate.toLocaleString('default', { 
+                                    month: 'long', 
+                                    year: 'numeric'
+                                });
+                                
+                                return {
+                                    ...monthData,
+                                    date: formattedDate,
+                                    originalDate: monthData.date,
+                                    correctedDate: correctedDate
+                                };
+                            });
+                        }
+                        
+                        // If we have valid dates, sort by date (newest first) and format properly
+                        validDates.sort((a, b) => b.parsedDate.getTime() - a.parsedDate.getTime());
+                        
+                        console.log('✅ Dashboard: Valid dates after sorting:', validDates.map(v => ({
+                            date: v.parsedDate.toLocaleString('default', { month: 'long', year: 'numeric' }),
+                            parsedDate: v.parsedDate,
+                            originalDate: v.originalDate
+                        })));
+                        
+                        return validDates.map(item => {
+                            const formattedDate = item.parsedDate.toLocaleString('default', { 
+                                month: 'long', 
+                                year: 'numeric'
+                            });
+                            
+                            return {
+                                ...item,
+                                date: formattedDate,
+                                correctedDate: item.parsedDate
+                            };
+                        });
+                    };
+
                     // Get the geogrid data for 'medspa near me' with all months
                     const allGeogridData = data.geogridData || {};
                     const medspaNearMe = allGeogridData['medspa near me'] || [];
                     
-                    // Store the full geogrid data in cache
+                    // Apply date formatting to the dashboard data
+                    const processedMedspaNearMe = medspaNearMe.length > 0 ? fixDateFormatting(medspaNearMe) : [];
+                    
+                    // Store the full geogrid data in cache (but don't overwrite the processed data)
                     sessionStorage.setItem(cacheKey, JSON.stringify(allGeogridData));
                     
-                    // Set the full monthly data for dashboard display
-                    setGeogridData(medspaNearMe);
+                    // Set the processed monthly data for dashboard display
+                    setGeogridData(processedMedspaNearMe);
                     setLoading(false);
                 } catch (e) {
                     console.error('Data processing error:', e);
