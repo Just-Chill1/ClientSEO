@@ -2395,7 +2395,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                 {/* Website Keywords Summary Bar */}
                 {active && (
                     <div className="mb-3 py-1.5 px-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                        <div className="flex items-center justify-start space-x-8">
+                        <div className="flex items-center justify-start space-x-10">
                             {(() => {
                                 const siteData = table[active] || [];
                                 const totalKeywords = siteData.length;
@@ -2415,36 +2415,39 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
 
                                 return (
                                     <>
-                                        <div className="text-center border-r border-gray-200 pr-4">
+                                        <div className="flex-1 text-center border-r border-gray-200 pr-5">
                                             <div className="text-base font-bold text-blue-600">{totalKeywords}</div>
                                             <div className="text-xs text-gray-600">Total Keywords</div>
                                         </div>
-                                        <div className="text-center border-r border-gray-200 pr-4">
+                                        <div className="flex-1 text-center border-r border-gray-200 pr-5">
                                             <div className="text-base font-bold text-green-600">{newKeywords}</div>
                                             <div className="text-xs text-gray-600">New Keywords</div>
                                         </div>
-                                        <div className="text-center border-r border-gray-200 pr-4">
+                                        <div className="flex-1 text-center border-r border-gray-200 pr-5">
                                             <div className="text-base font-bold text-orange-600">{avgPosition}</div>
                                             <div className="text-xs text-gray-600">Avg Position</div>
                                         </div>
-                                        <div className="text-center border-r border-gray-200 pr-4">
+                                        <div className="flex-1 text-center border-r border-gray-200 pr-5">
                                             <div className="text-base font-bold text-gray-700">{avgVolume.toLocaleString()}</div>
                                             <div className="text-xs text-gray-600">Avg Volume</div>
                                         </div>
-                                        <div className="text-center border-r border-gray-200 pr-4">
+                                        <div className="flex-1 text-center border-r border-gray-200 pr-5">
                                             <div className={`text-base font-bold ${avgDifficulty <= 30 ? 'text-green-600' : avgDifficulty <= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
                                                 {avgDifficulty}
                                             </div>
                                             <div className="text-xs text-gray-600">Avg Difficulty</div>
                                         </div>
-                                        <div className="text-center border-r border-gray-200 pr-4">
-                                            <div className="flex justify-center items-center space-x-3">
+                                        <div className="flex-1 text-center border-r border-gray-200 pr-5">
+                                            <div className="flex justify-center items-center space-x-4">
                                                 <div className="text-center">
                                                     <div className="flex items-center justify-center space-x-1">
                                                         <svg className="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                                                             <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
                                                         </svg>
                                                         <div className="text-sm font-bold text-green-600">{upKeywords}</div>
+                                                        <svg className="w-3 h-3 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                                        </svg>
                                                     </div>
                                                     <div className="text-xs text-gray-600">Up</div>
                                                 </div>
@@ -2454,6 +2457,9 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                                                             <path fillRule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                                         </svg>
                                                         <div className="text-sm font-bold text-red-600">{downKeywords}</div>
+                                                        <svg className="w-3 h-3 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                        </svg>
                                                     </div>
                                                     <div className="text-xs text-gray-600">Down</div>
                                                 </div>
@@ -4105,7 +4111,9 @@ const HealthCheckItem = ({ icon, color, title, items }) => (
         );
 
 const BooleanCheck = ({ value, tooltipContent }) => {
-    const check = value ? <CheckCircle className="w-5 h-5 text-green-500 mx-auto" /> : <XCircle className="w-5 h-5 text-red-500 mx-auto" />;
+    const check = value ? 
+        <CheckCircle className="w-6 h-6 text-green-500 mx-auto hover:text-green-600 transition-colors cursor-pointer" /> : 
+        <XCircle className="w-6 h-6 text-red-500 mx-auto hover:text-red-600 transition-colors cursor-pointer" />;
     const ContentTooltip = ({ content, children }) => (
          <div className="relative group flex justify-center">
             {children}
@@ -5338,13 +5346,13 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
 
                         {/* Modern Technical SEO Table */}
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-6 border-b border-gray-200">
+                <div className="bg-gradient-to-r from-slate-50 to-blue-50 px-8 py-6 border-b border-gray-200">
                     <h2 className="text-2xl font-bold text-gray-900">Technical SEO Checklist</h2>
                     <p className="text-gray-600 mt-1">Essential technical elements across all websites</p>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
+                        <thead className="bg-gradient-to-r from-gray-50 to-slate-100">
                             <tr>
                                 <th className="px-8 py-5 text-left text-sm font-semibold text-gray-900">Clinic Name</th>
                                 <th className="px-6 py-5 text-center text-sm font-semibold text-gray-900">SSL Certificate</th>
@@ -5356,55 +5364,45 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                          </thead>
                         <tbody className="divide-y divide-gray-100 bg-white">
                             {technicalSeoData.map((site, index) => (
-                                <tr key={site.name || site.id || index} className={`hover:bg-gray-50 transition-all duration-200 ${site.isClient ? 'bg-blue-50 hover:bg-blue-100' : ''}`}>
+                                <tr key={site.name || site.id || index} className={`hover:bg-gray-50 transition-all duration-200 ${site.isClient ? 'bg-blue-50/50 hover:bg-blue-100/50 border-l-4 border-blue-400' : ''}`}>
                                     <td className="px-8 py-6">
-                                        <div className="flex items-center">
-                                            <div className={`w-3 h-3 rounded-full mr-4 ${site.isClient ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
-                                            <div>
-                                                <div className="font-semibold text-gray-900 text-base">{site.clinicName || site.name}</div>
-                                                {site.website && (
-                                                    <div className="text-sm text-gray-500 mt-1">
-                                                        <a href={site.website} target="_blank" rel="noopener noreferrer" 
-                                                           className="text-blue-600 hover:text-blue-800 hover:underline">
-                                                            {site.website.replace(/^https?:\/\//i, '')}
-                                                        </a>
-                                                    </div>
-                                                )}
+                                        <div>
+                                            <div className={`font-semibold text-base ${site.isClient ? 'text-blue-900' : 'text-gray-900'}`}>
+                                                {site.clinicName || site.name}
+                                                {site.isClient && <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">Client</span>}
                                             </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-6 text-center">
-                                        <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 transition-colors">
-                                            {site.hasSSL ? (
-                                                <CheckCircle className="w-6 h-6 text-green-500" />
-                                            ) : (
-                                                <XCircle className="w-6 h-6 text-red-500" />
+                                            {site.website && (
+                                                <div className="text-sm text-gray-500 mt-1">
+                                                    <a href={site.website} target="_blank" rel="noopener noreferrer" 
+                                                       className="text-blue-600 hover:text-blue-800 hover:underline transition-colors">
+                                                        {site.website.replace(/^https?:\/\//i, '')}
+                                                    </a>
+                                                </div>
                                             )}
                                         </div>
                                     </td>
                                     <td className="px-6 py-6 text-center">
-                                        <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 transition-colors">
-                                            {site.hasSchema ? (
-                                                <CheckCircle className="w-6 h-6 text-green-500" />
-                                            ) : (
-                                                <XCircle className="w-6 h-6 text-red-500" />
-                                            )}
-                                        </div>
+                                        {site.hasSSL ? (
+                                            <CheckCircle className="w-6 h-6 text-green-500 mx-auto hover:text-green-600 transition-colors cursor-pointer" />
+                                        ) : (
+                                            <XCircle className="w-6 h-6 text-red-500 mx-auto hover:text-red-600 transition-colors cursor-pointer" />
+                                        )}
                                     </td>
                                     <td className="px-6 py-6 text-center">
-                                        <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 transition-colors">
-                                            <BooleanCheck value={site.h1} tooltipContent={site.h1} />
-                                        </div>
+                                        {site.hasSchema ? (
+                                            <CheckCircle className="w-6 h-6 text-green-500 mx-auto hover:text-green-600 transition-colors cursor-pointer" />
+                                        ) : (
+                                            <XCircle className="w-6 h-6 text-red-500 mx-auto hover:text-red-600 transition-colors cursor-pointer" />
+                                        )}
                                     </td>
                                     <td className="px-6 py-6 text-center">
-                                        <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 transition-colors">
-                                            <BooleanCheck value={site.title} tooltipContent={site.title} />
-                                        </div>
+                                        <BooleanCheck value={site.h1} tooltipContent={site.h1} />
                                     </td>
                                     <td className="px-6 py-6 text-center">
-                                        <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-50 hover:bg-gray-100 transition-colors">
-                                            <BooleanCheck value={site.description} tooltipContent={site.description} />
-                                        </div>
+                                        <BooleanCheck value={site.title} tooltipContent={site.title} />
+                                    </td>
+                                    <td className="px-6 py-6 text-center">
+                                        <BooleanCheck value={site.description} tooltipContent={site.description} />
                                     </td>
                                  </tr>
                              ))}
