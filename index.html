@@ -1113,14 +1113,9 @@ const Dashboard = ({ setActiveTab }) => {
                                             const numericSpeed = parseFloat(String(speed).replace(/[^\d.]/g, ''));
                                             
                                             if (!isNaN(numericSpeed)) {
-                                                // If the number is very large (>100), it's likely in milliseconds, convert to seconds
-                                                if (numericSpeed > 100) {
-                                                    const seconds = (numericSpeed / 1000).toFixed(3);
-                                                    return `${seconds}s`;
-                                                } else {
-                                                    // Already in seconds
-                                                    return `${numericSpeed.toFixed(3)}s`;
-                                                }
+                                                // ALL data is in milliseconds, always convert to seconds
+                                                const seconds = (numericSpeed / 1000).toFixed(3);
+                                                return `${seconds}s`;
                                             }
                                         }
                                         return speed || 'N/A';
@@ -4019,9 +4014,9 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
         console.error('Error processing AI Notes:', error);
     }
 
-    // Enhanced competitor data processing with proper speed conversion
+    // Enhanced competitor data processing - ALL data is in milliseconds, convert to seconds
     const competitorPerfData = (rawCompetitorPerfData || []).map(comp => {
-        // Process site speed - convert to seconds if needed
+        // Process site speed - ALL data comes in milliseconds, always convert to seconds
         let siteSpeedSeconds = 0;
         const rawSpeed = String(comp['Site Speed (s)'] || '0');
         
@@ -4029,12 +4024,8 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             // Remove any non-numeric characters except decimal points
             const numericSpeed = parseFloat(rawSpeed.replace(/[^\d.]/g, '')) || 0;
             
-            // If the number is very large (>100), it's likely in milliseconds, convert to seconds
-            if (numericSpeed > 100) {
-                siteSpeedSeconds = (numericSpeed / 1000);
-            } else {
-                siteSpeedSeconds = numericSpeed;
-            }
+            // ALL data is in milliseconds, always convert to seconds
+            siteSpeedSeconds = numericSpeed / 1000;
         }
         
         return {
@@ -4055,16 +4046,9 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
     };
 
     const scoreColors = getScoreColor(healthData.pageScore);
-    // Enhanced speed processing for status calculation
+    // Speed processing for status calculation - ALL data is in milliseconds
     const rawSpeedValue = parseFloat(String(healthData.siteSpeed).replace(/[^\d.]/g, '')) || 0;
-    let speedSec;
-    
-    // If the number is very large (>100), it's likely in milliseconds, convert to seconds
-    if (rawSpeedValue > 100) {
-        speedSec = rawSpeedValue / 1000;
-    } else {
-        speedSec = rawSpeedValue;
-    }
+    const speedSec = rawSpeedValue / 1000; // Always convert from milliseconds to seconds
     
     const speedStatus = speedSec < 1.5 ? 'excellent' : speedSec < 3 ? 'good' : 'error';
     
@@ -4521,9 +4505,11 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                         />
                         <YAxis 
                             tick={{ fontSize: 12, fill: '#64748b' }}
+                            domain={dataKey === 'Site Speed (seconds)' ? [0, 'dataMax + 0.5'] : [0, 'dataMax * 1.1']}
+                            tickCount={dataKey === 'Site Speed (seconds)' ? 6 : undefined}
                             tickFormatter={(value) => {
                                 if (dataKey === 'Site Speed (seconds)') {
-                                    return `${value}s`;
+                                    return `${value.toFixed(1)}s`;
                                 } else if (value >= 1000) {
                                     return `${(value / 1000).toFixed(1)}k`;
                                 }
@@ -4658,17 +4644,9 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                 {(() => {
                                     const speed = healthData.siteSpeed;
                                     if (speed && !isNaN(speed)) {
-                                        // Convert milliseconds to seconds with proper precision
+                                        // ALL data comes in milliseconds, always convert to seconds
                                         const numericSpeed = parseFloat(speed);
-                                        let seconds;
-                                        
-                                        // If the number is very large (>100), it's likely in milliseconds
-                                        if (numericSpeed > 100) {
-                                            seconds = (numericSpeed / 1000).toFixed(3);
-                                        } else {
-                                            seconds = numericSpeed.toFixed(3);
-                                        }
-                                        
+                                        const seconds = (numericSpeed / 1000).toFixed(3);
                                         return `${seconds} seconds`;
                                     }
                                     return speed || 'N/A';
@@ -4695,18 +4673,13 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                         };
                                         const displayLabel = friendlyLabels[key] || key;
                                         
-                                        // Format the value - convert to seconds if it's a number
+                                        // Format the value - ALL data is in milliseconds, convert to seconds
                                         let formattedVal = val || '-';
                                         if (val && !isNaN(val)) {
                                             const numericVal = parseFloat(val);
-                                            // If the number is very large (>100), it's likely in milliseconds
-                                            if (numericVal > 100) {
-                                                const seconds = (numericVal / 1000).toFixed(3);
-                                                formattedVal = `${seconds}s`;
-                                            } else {
-                                                // Already in seconds
-                                                formattedVal = `${numericVal.toFixed(3)}s`;
-                                            }
+                                            // ALL data is in milliseconds, always convert to seconds
+                                            const seconds = (numericVal / 1000).toFixed(3);
+                                            formattedVal = `${seconds}s`;
                                         } else if (val && typeof val === 'string' && val.includes('ms')) {
                                             // If already in ms format, convert to seconds
                                             const msValue = parseFloat(val.replace('ms', ''));
