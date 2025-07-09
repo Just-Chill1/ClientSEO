@@ -479,6 +479,7 @@ const Dashboard = ({ setActiveTab }) => {
         const [geogridData, setGeogridData] = useState(null);
         const [loading, setLoading] = useState(true);
         const [error, setError] = useState(null);
+        const [dashboardMonthIndex, setDashboardMonthIndex] = useState(0);
 
         useEffect(() => {
             const params = new URLSearchParams(window.location.search);
@@ -558,9 +559,8 @@ const Dashboard = ({ setActiveTab }) => {
             return 'bg-red-500';
         };
 
-        // Dashboard month slider state
-        const [dashboardMonthIndex, setDashboardMonthIndex] = useState(0);
-        const currentDashboardData = geogridData[dashboardMonthIndex];
+        // Calculate current data based on state
+        const currentDashboardData = geogridData[dashboardMonthIndex] || geogridData[0];
         const displayMonthNumber = geogridData.length - dashboardMonthIndex;
 
         const handleDashboardDateChange = (direction) => {
