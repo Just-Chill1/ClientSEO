@@ -809,8 +809,10 @@ const Dashboard = ({ setActiveTab }) => {
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* Competitor Rankings on the Left */}
                     {currentDashboardData.competitors && currentDashboardData.competitors.length > 0 && (
-                        <div className="lg:col-span-1">
-                            <h3 className="text-lg font-semibold text-gray-800 mb-3">Avg Score</h3>
+                        <div className="lg:col-span-1 flex flex-col">
+                            <div className="h-12 flex items-center">
+                                <h3 className="text-lg font-semibold text-gray-800">Avg Score</h3>
+                            </div>
                             <div className="space-y-2">
                                 {currentDashboardData.competitors.map((comp, index) => (
                                     <div key={index} className="flex items-center space-x-3 p-2 rounded-lg bg-slate-50 border border-slate-200">
@@ -4530,11 +4532,11 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                     </div>
                     <div className="flex items-center space-x-4 text-xs">
                         <div className="flex items-center space-x-1">
-                            <div className="w-3 h-3 bg-blue-500 rounded shadow-sm"></div>
+                            <div className="w-3 h-3 bg-blue-400 rounded shadow-sm"></div>
                             <span className="text-gray-600 font-medium">Your Business</span>
                         </div>
                         <div className="flex items-center space-x-1">
-                            <div className="w-3 h-3 bg-gray-400 rounded opacity-80"></div>
+                            <div className="w-3 h-3 bg-blue-700 rounded opacity-80"></div>
                             <span className="text-gray-600">Competitors</span>
                         </div>
                     </div>
