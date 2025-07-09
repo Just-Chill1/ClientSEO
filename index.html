@@ -3926,33 +3926,18 @@ const GeogridMaps = () => {
                          <ResponsiveContainer width="100%" height={280}>
                              <BarChart data={competitors} margin={{ top: 40, right: 30, left: 20, bottom: 20 }}>
                                   <defs>
-                                      {/* Client gradient - always blue */}
-                                      <linearGradient id="geogrid-client-gradient" x1="0" y1="0" x2="0" y2="1">
-                                          <stop offset="0%" stopColor="#3b82f6" />
-                                          <stop offset="50%" stopColor="#3b82f6" />
-                                          <stop offset="100%" stopColor="#3b82f640" />
-                                      </linearGradient>
-                                      {/* Competitor gradients */}
-                                      <linearGradient id="geogrid-competitor-gradient-0" x1="0" y1="0" x2="0" y2="1">
-                                          <stop offset="0%" stopColor="#6366f1" />
-                                          <stop offset="50%" stopColor="#6366f1" />
-                                          <stop offset="100%" stopColor="#6366f140" />
-                                      </linearGradient>
-                                      <linearGradient id="geogrid-competitor-gradient-1" x1="0" y1="0" x2="0" y2="1">
-                                          <stop offset="0%" stopColor="#8b5cf6" />
-                                          <stop offset="50%" stopColor="#8b5cf6" />
-                                          <stop offset="100%" stopColor="#8b5cf640" />
-                                      </linearGradient>
-                                      <linearGradient id="geogrid-competitor-gradient-2" x1="0" y1="0" x2="0" y2="1">
-                                          <stop offset="0%" stopColor="#10b981" />
-                                          <stop offset="50%" stopColor="#10b981" />
-                                          <stop offset="100%" stopColor="#10b98140" />
-                                      </linearGradient>
-                                      <linearGradient id="geogrid-competitor-gradient-3" x1="0" y1="0" x2="0" y2="1">
-                                          <stop offset="0%" stopColor="#ef4444" />
-                                          <stop offset="50%" stopColor="#ef4444" />
-                                          <stop offset="100%" stopColor="#ef444440" />
-                                      </linearGradient>
+                                      {/* Business gradients using consistent color mapping */}
+                                      {competitors.map((entry, index) => {
+                                          const isClient = entry.isClient || entry.name?.toLowerCase().includes('client') || entry.name?.toLowerCase().includes('your');
+                                          const colorInfo = getConsistentColor(entry.name, isClient, competitors);
+                                          return (
+                                              <linearGradient key={`geogrid-business-gradient-${index}`} id={`geogrid-business-gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
+                                                  <stop offset="0%" stopColor={colorInfo.gradientStart} />
+                                                  <stop offset="50%" stopColor={colorInfo.start} />
+                                                  <stop offset="100%" stopColor={colorInfo.gradientEnd} />
+                                              </linearGradient>
+                                          );
+                                      })}
                                   </defs>
                                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                                   <XAxis 
@@ -4000,7 +3985,7 @@ const GeogridMaps = () => {
                                   <Bar dataKey='top5Total' name="Top 5 Rankings" radius={[6, 6, 0, 0]} barSize={40}>
                                       {competitors.map((entry, index) => {
                                           const isClient = entry.isClient || entry.name?.toLowerCase().includes('client') || entry.name?.toLowerCase().includes('your');
-                                          const gradientId = isClient ? 'geogrid-client-gradient' : `geogrid-competitor-gradient-${index % 4}`;
+                                          const gradientId = `geogrid-business-gradient-${index}`;
                                           return (
                                               <Cell 
                                                   key={`cell-${index}`} 
@@ -4028,8 +4013,7 @@ const GeogridMaps = () => {
                                  <div className="flex justify-center space-x-6">
                                      {competitors.slice(0, 3).map((entry, index) => {
                                          const isClient = entry.isClient || entry.name?.toLowerCase().includes('client') || entry.name?.toLowerCase().includes('your');
-                                         const colors = ['#3b82f6', '#6366f1', '#8b5cf6', '#10b981', '#ef4444'];
-                                         const color = isClient ? '#3b82f6' : colors[(index + 1) % colors.length];
+                                         const colorInfo = getConsistentColor(entry.name, isClient, competitors);
                                          const truncateName = (name, maxLength = 14) => {
                                              if (!name || name.length <= maxLength) return name;
                                              return name.substring(0, maxLength - 1) + '…';
@@ -4038,7 +4022,7 @@ const GeogridMaps = () => {
                                              <div key={index} className="flex items-center space-x-2 min-w-0">
                                                  <div 
                                                      className="w-3 h-3 rounded shadow-sm flex-shrink-0" 
-                                                     style={{ backgroundColor: color }}
+                                                     style={{ backgroundColor: colorInfo.start }}
                                                  ></div>
                                                  <span className="text-xs text-gray-600 font-medium truncate" title={entry.name}>
                                                      {truncateName(entry.name)}
@@ -4053,8 +4037,7 @@ const GeogridMaps = () => {
                                      <div className="flex justify-center space-x-6">
                                          {competitors.slice(3).map((entry, index) => {
                                              const isClient = entry.isClient || entry.name?.toLowerCase().includes('client') || entry.name?.toLowerCase().includes('your');
-                                             const colors = ['#3b82f6', '#6366f1', '#8b5cf6', '#10b981', '#ef4444'];
-                                             const color = isClient ? '#3b82f6' : colors[(index + 4) % colors.length];
+                                             const colorInfo = getConsistentColor(entry.name, isClient, competitors);
                                              const truncateName = (name, maxLength = 14) => {
                                                  if (!name || name.length <= maxLength) return name;
                                                  return name.substring(0, maxLength - 1) + '…';
@@ -4063,7 +4046,7 @@ const GeogridMaps = () => {
                                                  <div key={index + 3} className="flex items-center space-x-2 min-w-0">
                                                      <div 
                                                          className="w-3 h-3 rounded shadow-sm flex-shrink-0" 
-                                                         style={{ backgroundColor: color }}
+                                                         style={{ backgroundColor: colorInfo.start }}
                                                      ></div>
                                                      <span className="text-xs text-gray-600 font-medium truncate" title={entry.name}>
                                                          {truncateName(entry.name)}
@@ -4942,6 +4925,49 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
         );
     };
 
+    // Consistent color mapping system for competitors across all charts
+    const getConsistentColor = (businessName, isClient, allBusinesses = []) => {
+        // Client always gets blue
+        if (isClient) {
+            return {
+                start: '#3b82f6',
+                end: '#3b82f6',
+                gradientStart: '#3b82f6',
+                gradientEnd: '#3b82f640'
+            };
+        }
+        
+        // Define consistent competitor colors (same as ModernComparisonChart)
+        const competitorColors = [
+            { start: '#6366f1', end: '#4f46e5', gradientStart: '#6366f1', gradientEnd: '#6366f140' }, // Indigo
+            { start: '#8b5cf6', end: '#7c3aed', gradientStart: '#8b5cf6', gradientEnd: '#8b5cf640' }, // Purple  
+            { start: '#10b981', end: '#059669', gradientStart: '#10b981', gradientEnd: '#10b98140' }, // Emerald
+            { start: '#ef4444', end: '#dc2626', gradientStart: '#ef4444', gradientEnd: '#ef444440' }, // Red
+            { start: '#f97316', end: '#ea580c', gradientStart: '#f97316', gradientEnd: '#f9731640' }  // Orange
+        ];
+        
+        // Get all non-client businesses and sort them consistently
+        const competitors = allBusinesses
+            .filter(business => !business.isClient)
+            .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        
+        // Find the index of this business in the sorted competitor list
+        const competitorIndex = competitors.findIndex(comp => comp.name === businessName);
+        
+        // If found, use the consistent color, otherwise use a fallback
+        if (competitorIndex !== -1 && competitorIndex < competitorColors.length) {
+            return competitorColors[competitorIndex];
+        }
+        
+        // Fallback for unknown competitors (use gray)
+        return {
+            start: '#6b7280',
+            end: '#4b5563',
+            gradientStart: '#6b7280',
+            gradientEnd: '#6b728040'
+        };
+    };
+
     // Modern comparison chart with value labels and color legend
     const ModernComparisonChart = ({ data, dataKey, title, color, isInverted = false }) => {
         const { LabelList } = window.Recharts;
@@ -5014,21 +5040,18 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             };
         };
 
-        // Define enhanced gradient colors for client vs competitors
-        const clientGradient = {
-            start: '#3b82f6', // Always blue for client
-            end: '#3b82f6',
-            gradientStart: '#3b82f6',
-            gradientEnd: '#3b82f640'
+        // Use consistent color mapping across all charts
+        const getBusinessColors = () => {
+            return data.map(business => {
+                const colorInfo = getConsistentColor(business.name, business.isClient, data);
+                return {
+                    ...business,
+                    colorInfo
+                };
+            });
         };
-        
-        const competitorGradients = [
-            { start: '#6366f1', end: '#4f46e5', gradientStart: '#6366f1', gradientEnd: '#6366f140' }, // Indigo
-            { start: '#8b5cf6', end: '#7c3aed', gradientStart: '#8b5cf6', gradientEnd: '#8b5cf640' }, // Purple  
-            { start: '#10b981', end: '#059669', gradientStart: '#10b981', gradientEnd: '#10b98140' }, // Emerald (was Cyan)
-            { start: '#ef4444', end: '#dc2626', gradientStart: '#ef4444', gradientEnd: '#ef444440' }, // Red (swapped with orange)
-            { start: '#f97316', end: '#ea580c', gradientStart: '#f97316', gradientEnd: '#f9731640' }  // Orange (swapped with red)
-        ];
+
+        const businessesWithColors = getBusinessColors();
         
         // Truncate name function
         const truncateName = (name, maxLength = 12) => {
@@ -5089,27 +5112,15 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
         };
 
         // Assign colors to each entry with truncated names
-        const dataWithColors = data.map((entry, index) => {
+        const dataWithColors = businessesWithColors.map((entry, index) => {
             const truncatedName = truncateName(entry.name);
-            if (entry.isClient) {
-                return { 
-                    ...entry, 
-                    name: truncatedName,
-                    gradientId: 'client-gradient', 
-                    color: clientGradient.start,
-                    originalName: entry.name
-                };
-            } else {
-                const competitorIndex = data.filter((e, i) => i < index && !e.isClient).length;
-                const gradient = competitorGradients[competitorIndex % competitorGradients.length];
-                return { 
-                    ...entry, 
-                    name: truncatedName,
-                    gradientId: `competitor-gradient-${competitorIndex}`, 
-                    color: gradient.start,
-                    originalName: entry.name
-                };
-            }
+            return { 
+                ...entry, 
+                name: truncatedName,
+                gradientId: `business-gradient-${index}`, 
+                color: entry.colorInfo.start,
+                originalName: entry.name
+            };
         });
 
         const yAxisConfig = getSmartYAxisConfig(data, dataKey);
@@ -5128,18 +5139,12 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                 <ResponsiveContainer width="100%" height={280}>
                     <BarChart data={dataWithColors} margin={{ top: 40, right: 30, left: 20, bottom: 20 }}>
                         <defs>
-                            {/* Client gradient */}
-                            <linearGradient id="client-gradient" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor={clientGradient.gradientStart} />
-                                <stop offset="50%" stopColor={clientGradient.start} />
-                                <stop offset="100%" stopColor={clientGradient.gradientEnd} />
-                            </linearGradient>
-                            {/* Competitor gradients */}
-                            {competitorGradients.map((gradient, index) => (
-                                <linearGradient key={`competitor-gradient-${index}`} id={`competitor-gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stopColor={gradient.gradientStart} />
-                                    <stop offset="50%" stopColor={gradient.start} />
-                                    <stop offset="100%" stopColor={gradient.gradientEnd} />
+                            {/* Business gradients */}
+                            {businessesWithColors.map((business, index) => (
+                                <linearGradient key={`business-gradient-${index}`} id={`business-gradient-${index}`} x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stopColor={business.colorInfo.gradientStart} />
+                                    <stop offset="50%" stopColor={business.colorInfo.start} />
+                                    <stop offset="100%" stopColor={business.colorInfo.gradientEnd} />
                                 </linearGradient>
                             ))}
                         </defs>
