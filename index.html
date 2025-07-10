@@ -3944,6 +3944,14 @@ const GeogridMaps = () => {
                                       tick={{ fontSize: 12, fill: '#64748b' }}
                                       height={40}
                                       interval={0}
+                                      tickFormatter={(value) => {
+                                          // Truncate names for X-axis display
+                                          const truncateName = (name, maxLength = 12) => {
+                                              if (!name || name.length <= maxLength) return name;
+                                              return name.substring(0, maxLength - 1) + '…';
+                                          };
+                                          return truncateName(value);
+                                      }}
                                   />
                                   <YAxis 
                                       tick={{ fontSize: 12, fill: '#64748b' }}
@@ -3975,7 +3983,7 @@ const GeogridMaps = () => {
                                           <div key="tooltip">
                                               <div style={{ fontWeight: 'bold' }}>{value}</div>
                                               <div style={{ fontSize: '11px', opacity: 0.8 }}>Top 5 Rankings</div>
-                                              {props.payload?.isClient && <div style={{ fontSize: '11px', color: '#60a5fa' }}>⭐ Your Business</div>}
+                                              {props.payload?.isClient === true && <div style={{ fontSize: '11px', color: '#60a5fa' }}>⭐ Your Business</div>}
                                           </div>,
                                           'Top 5 Count'
                                       ]}
@@ -3983,7 +3991,7 @@ const GeogridMaps = () => {
                                   />
                                   <Bar dataKey='top5Total' name="Top 5 Rankings" radius={[6, 6, 0, 0]} barSize={40}>
                                       {competitors.map((entry, index) => {
-                                          const isClient = entry.isClient || entry.name?.toLowerCase().includes('client') || entry.name?.toLowerCase().includes('your');
+                                          const isClient = entry.isClient === true;
                                           const gradientId = isClient ? 'geogrid-client-gradient' : 'geogrid-competitor-gradient';
                                           return (
                                               <Cell 
@@ -4011,7 +4019,7 @@ const GeogridMaps = () => {
                                  {/* Top row - 3 items */}
                                  <div className="flex justify-center space-x-6">
                                      {competitors.slice(0, 3).map((entry, index) => {
-                                         const isClient = entry.isClient || entry.name?.toLowerCase().includes('client') || entry.name?.toLowerCase().includes('your');
+                                         const isClient = entry.isClient === true;
                                          const color = isClient ? '#3b82f6' : '#1e40af';
                                          const truncateName = (name, maxLength = 14) => {
                                              if (!name || name.length <= maxLength) return name;
@@ -4035,7 +4043,7 @@ const GeogridMaps = () => {
                                  {competitors.length > 3 && (
                                      <div className="flex justify-center space-x-6">
                                          {competitors.slice(3).map((entry, index) => {
-                                             const isClient = entry.isClient || entry.name?.toLowerCase().includes('client') || entry.name?.toLowerCase().includes('your');
+                                             const isClient = entry.isClient === true;
                                              const color = isClient ? '#3b82f6' : '#1e40af';
                                              const truncateName = (name, maxLength = 14) => {
                                                  if (!name || name.length <= maxLength) return name;
