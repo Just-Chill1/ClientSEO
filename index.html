@@ -3933,9 +3933,9 @@ const GeogridMaps = () => {
                                           <stop offset="100%" stopColor="#3b82f640" />
                                       </linearGradient>
                                       <linearGradient id="geogrid-competitor-gradient" x1="0" y1="0" x2="0" y2="1">
-                                          <stop offset="0%" stopColor="#64748b" />
-                                          <stop offset="50%" stopColor="#475569" />
-                                          <stop offset="100%" stopColor="#64748b40" />
+                                          <stop offset="0%" stopColor="#1e40af" />
+                                          <stop offset="50%" stopColor="#1d4ed8" />
+                                          <stop offset="100%" stopColor="#1e40af40" />
                                       </linearGradient>
                                   </defs>
                                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -4012,7 +4012,7 @@ const GeogridMaps = () => {
                                  <div className="flex justify-center space-x-6">
                                      {competitors.slice(0, 3).map((entry, index) => {
                                          const isClient = entry.isClient || entry.name?.toLowerCase().includes('client') || entry.name?.toLowerCase().includes('your');
-                                         const color = isClient ? '#3b82f6' : '#64748b';
+                                         const color = isClient ? '#3b82f6' : '#1e40af';
                                          const truncateName = (name, maxLength = 14) => {
                                              if (!name || name.length <= maxLength) return name;
                                              return name.substring(0, maxLength - 1) + '…';
@@ -4036,7 +4036,7 @@ const GeogridMaps = () => {
                                      <div className="flex justify-center space-x-6">
                                          {competitors.slice(3).map((entry, index) => {
                                              const isClient = entry.isClient || entry.name?.toLowerCase().includes('client') || entry.name?.toLowerCase().includes('your');
-                                             const color = isClient ? '#3b82f6' : '#64748b';
+                                             const color = isClient ? '#3b82f6' : '#1e40af';
                                              const truncateName = (name, maxLength = 14) => {
                                                  if (!name || name.length <= maxLength) return name;
                                                  return name.substring(0, maxLength - 1) + '…';

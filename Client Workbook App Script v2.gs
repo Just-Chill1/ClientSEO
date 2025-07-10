@@ -773,6 +773,18 @@ function getGeogridData(spreadsheet) {
         return {};
     }
 
+    // Get client info to identify which competitor is the client
+    const clientInfoSheet = spreadsheet.getSheetByName('Client & Competitor Info');
+    let clientName = '';
+    if (clientInfoSheet && clientInfoSheet.getLastRow() >= 2) {
+        const clientInfoValues = clientInfoSheet.getRange('A2:B' + clientInfoSheet.getLastRow()).getValues();
+        const clientRow = clientInfoValues.find(row => row[0] === 'Client');
+        if (clientRow) {
+            clientName = clientRow[1]; // Column B - Clinic Name
+        }
+    }
+    console.log('Client name from Client & Competitor Info:', clientName);
+
     const values = sheet.getDataRange().getValues().slice(1);
     console.log('Total rows in GeoGrid Maps:', values.length);
     const groupedByKeyword = {};
@@ -851,18 +863,26 @@ function getGeogridData(spreadsheet) {
                 const top5 = (typeof top5Raw === 'number') ? top5Raw : parseInt(top5Raw, 10);
                 const top10 = (typeof top10Raw === 'number') ? top10Raw : parseInt(top10Raw, 10);
 
+                // Check if this competitor is the client
+                const isClient = clientName && name === clientName;
+                
                 competitors.push({ 
                     name: name,
                     domain: domain,
                     rank: parseFloat(rank),
                     top5Total: !isNaN(top5) ? top5 : 0,
                     top10Total: !isNaN(top10) ? top10 : 0,
+                    isClient: isClient
                  });
             }
         }
 
         if (competitors.length === 0) {
             console.log(`Row ${index + 2}: No competitor data found for keyword: ${keyword}`);
+        } else {
+            const clientCount = competitors.filter(c => c.isClient).length;
+            const competitorCount = competitors.filter(c => !c.isClient).length;
+            console.log(`Row ${index + 2}: Found ${competitors.length} total (${clientCount} client, ${competitorCount} competitors)`);
         }
 
         groupedByKeyword[keyword].push({
