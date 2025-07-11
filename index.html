@@ -165,7 +165,7 @@
 /* ------------------------------------------------------------------ */
 /* shared helpers / icons / generic components                        */
 /* ------------------------------------------------------------------ */
-const {useState, useEffect, useRef} = React;
+const {useState, useEffect, useRef, useMemo} = React;
 
 // --- Helper function to fetch data with CORS workaround and caching ---
 const fetchWithCorsWorkaround = (url, callback) => {
