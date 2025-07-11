@@ -13,6 +13,12 @@
  * - Cost per click (CPC) averages
  * - Market share percentages
  * 
+ * SUPPORTED LOCATION PARAMETERS:
+ * - "USA" → Uses "US (Whole)" sheet, filters by Country column
+ * - "Canada" → Uses "Canada (Whole)" sheet, filters by Country column  
+ * - "City, State" (e.g., "New York, NY") → Uses "City (US & CA)" sheet, filters by City column
+ * - "State/Province" (e.g., "Alabama", "Ontario") → Uses "State & Province" sheet, filters by State column
+ * 
  * For other dashboard functionalities (Keywords, Backlinks, GeoGrid Maps),
  * please reference Client Workbook App Script.
  */
@@ -43,21 +49,26 @@ function doGet(e) {
 
     if (location === 'USA') {
         sheetName = 'US (Whole)';
-        locationColumnIndex = 4;
+        locationColumnIndex = 4; // Country column
     } else if (location === 'Canada') {
         sheetName = 'Canada (Whole)';
-        locationColumnIndex = 4;
-    } else if (location.includes(',')) { // City, State format
+        locationColumnIndex = 4; // Country column
+    } else if (location.includes(',')) { // City, State format (e.g., "New York, NY")
         sheetName = 'City (US & CA)';
-        locationColumnIndex = 2;
-    } else { // Assume it's a State or Province
+        locationColumnIndex = 2; // City column
+    } else { 
+        // Single location name - assume it's a State or Province
+        // This handles cases like "Alabama", "Alaska", "Ontario", "British Columbia", etc.
         sheetName = 'State & Province';
-        locationColumnIndex = 3;
+        locationColumnIndex = 3; // State column
+        console.log(`Processing state/province request for: ${location}`);
     }
 
+    console.log(`Request details: location="${location}", sheetName="${sheetName}", columnIndex=${locationColumnIndex}, filterValue="${locationFilterValue}"`);
+    
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
     if (!sheet) {
-      throw new Error(`Sheet "${sheetName}" not found.`);
+      throw new Error(`Sheet "${sheetName}" not found. Available sheets: ${SpreadsheetApp.getActiveSpreadsheet().getSheets().map(s => s.getName()).join(', ')}`);
     }
 
     const data = aggregateServiceData(sheet, locationColumnIndex, locationFilterValue);
@@ -118,10 +129,17 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue) {
   // Filter rows for the selected location
   const data = allData.filter(row => {
       const rowLocation = row[locationColumnIndex];
-      return rowLocation && rowLocation.toString().trim().toLowerCase() === locationFilterValue.trim().toLowerCase();
+      const matches = rowLocation && rowLocation.toString().trim().toLowerCase() === locationFilterValue.trim().toLowerCase();
+      return matches;
   });
 
-  if (data.length === 0) return { topServices: [], newServices: [] };
+  console.log(`Filtered data: Found ${data.length} rows for location "${locationFilterValue}" in column ${locationColumnIndex}`);
+  if (data.length === 0) {
+    // Log some sample values to help debug
+    const sampleValues = allData.slice(0, 5).map(row => row[locationColumnIndex]).filter(val => val);
+    console.log(`No matching data found. Sample values in column ${locationColumnIndex}:`, sampleValues);
+    return { topServices: [], newServices: [] };
+  }
 
   // Find the last two months that actually contain volume data
   let currentMonth = null;
