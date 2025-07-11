@@ -1186,6 +1186,373 @@ const Dashboard = ({ setActiveTab }) => {
         );
     };
     
+    // Modern Location Selector Component
+    const LocationSelector = ({ value, onChange }) => {
+        const [isOpen, setIsOpen] = useState(false);
+        const [searchTerm, setSearchTerm] = useState('');
+        const [focusedIndex, setFocusedIndex] = useState(-1);
+        const [recentSelections, setRecentSelections] = useState([]);
+        const selectorRef = useRef(null);
+        const inputRef = useRef(null);
+        const listRef = useRef(null);
+
+        // Comprehensive location data
+        const locations = {
+            countries: [
+                { id: 'USA', name: 'United States', flag: '🇺🇸', category: 'Countries' },
+                { id: 'Canada', name: 'Canada', flag: '🇨🇦', category: 'Countries' }
+            ],
+            usStates: [
+                { id: 'Alabama', name: 'Alabama', flag: '🇺🇸', category: 'US States' },
+                { id: 'Alaska', name: 'Alaska', flag: '🇺🇸', category: 'US States' },
+                { id: 'Arizona', name: 'Arizona', flag: '🇺🇸', category: 'US States' },
+                { id: 'Arkansas', name: 'Arkansas', flag: '🇺🇸', category: 'US States' },
+                { id: 'California', name: 'California', flag: '🇺🇸', category: 'US States' },
+                { id: 'Colorado', name: 'Colorado', flag: '🇺🇸', category: 'US States' },
+                { id: 'Connecticut', name: 'Connecticut', flag: '🇺🇸', category: 'US States' },
+                { id: 'Delaware', name: 'Delaware', flag: '🇺🇸', category: 'US States' },
+                { id: 'Florida', name: 'Florida', flag: '🇺🇸', category: 'US States' },
+                { id: 'Georgia', name: 'Georgia', flag: '🇺🇸', category: 'US States' },
+                { id: 'Hawaii', name: 'Hawaii', flag: '🇺🇸', category: 'US States' },
+                { id: 'Idaho', name: 'Idaho', flag: '🇺🇸', category: 'US States' },
+                { id: 'Illinois', name: 'Illinois', flag: '🇺🇸', category: 'US States' },
+                { id: 'Indiana', name: 'Indiana', flag: '🇺🇸', category: 'US States' },
+                { id: 'Iowa', name: 'Iowa', flag: '🇺🇸', category: 'US States' },
+                { id: 'Kansas', name: 'Kansas', flag: '🇺🇸', category: 'US States' },
+                { id: 'Kentucky', name: 'Kentucky', flag: '🇺🇸', category: 'US States' },
+                { id: 'Louisiana', name: 'Louisiana', flag: '🇺🇸', category: 'US States' },
+                { id: 'Maine', name: 'Maine', flag: '🇺🇸', category: 'US States' },
+                { id: 'Maryland', name: 'Maryland', flag: '🇺🇸', category: 'US States' },
+                { id: 'Massachusetts', name: 'Massachusetts', flag: '🇺🇸', category: 'US States' },
+                { id: 'Michigan', name: 'Michigan', flag: '🇺🇸', category: 'US States' },
+                { id: 'Minnesota', name: 'Minnesota', flag: '🇺🇸', category: 'US States' },
+                { id: 'Mississippi', name: 'Mississippi', flag: '🇺🇸', category: 'US States' },
+                { id: 'Missouri', name: 'Missouri', flag: '🇺🇸', category: 'US States' },
+                { id: 'Montana', name: 'Montana', flag: '🇺🇸', category: 'US States' },
+                { id: 'Nebraska', name: 'Nebraska', flag: '🇺🇸', category: 'US States' },
+                { id: 'Nevada', name: 'Nevada', flag: '🇺🇸', category: 'US States' },
+                { id: 'New Hampshire', name: 'New Hampshire', flag: '🇺🇸', category: 'US States' },
+                { id: 'New Jersey', name: 'New Jersey', flag: '🇺🇸', category: 'US States' },
+                { id: 'New Mexico', name: 'New Mexico', flag: '🇺🇸', category: 'US States' },
+                { id: 'New York', name: 'New York', flag: '🇺🇸', category: 'US States' },
+                { id: 'North Carolina', name: 'North Carolina', flag: '🇺🇸', category: 'US States' },
+                { id: 'North Dakota', name: 'North Dakota', flag: '🇺🇸', category: 'US States' },
+                { id: 'Ohio', name: 'Ohio', flag: '🇺🇸', category: 'US States' },
+                { id: 'Oklahoma', name: 'Oklahoma', flag: '🇺🇸', category: 'US States' },
+                { id: 'Oregon', name: 'Oregon', flag: '🇺🇸', category: 'US States' },
+                { id: 'Pennsylvania', name: 'Pennsylvania', flag: '🇺🇸', category: 'US States' },
+                { id: 'Rhode Island', name: 'Rhode Island', flag: '🇺🇸', category: 'US States' },
+                { id: 'South Carolina', name: 'South Carolina', flag: '🇺🇸', category: 'US States' },
+                { id: 'South Dakota', name: 'South Dakota', flag: '🇺🇸', category: 'US States' },
+                { id: 'Tennessee', name: 'Tennessee', flag: '🇺🇸', category: 'US States' },
+                { id: 'Texas', name: 'Texas', flag: '🇺🇸', category: 'US States' },
+                { id: 'Utah', name: 'Utah', flag: '🇺🇸', category: 'US States' },
+                { id: 'Vermont', name: 'Vermont', flag: '🇺🇸', category: 'US States' },
+                { id: 'Virginia', name: 'Virginia', flag: '🇺🇸', category: 'US States' },
+                { id: 'Washington', name: 'Washington', flag: '🇺🇸', category: 'US States' },
+                { id: 'West Virginia', name: 'West Virginia', flag: '🇺🇸', category: 'US States' },
+                { id: 'Wisconsin', name: 'Wisconsin', flag: '🇺🇸', category: 'US States' },
+                { id: 'Wyoming', name: 'Wyoming', flag: '🇺🇸', category: 'US States' }
+            ],
+            canadianProvinces: [
+                { id: 'Alberta', name: 'Alberta', flag: '🇨🇦', category: 'Canadian Provinces' },
+                { id: 'British Columbia', name: 'British Columbia', flag: '🇨🇦', category: 'Canadian Provinces' },
+                { id: 'Manitoba', name: 'Manitoba', flag: '🇨🇦', category: 'Canadian Provinces' },
+                { id: 'New Brunswick', name: 'New Brunswick', flag: '🇨🇦', category: 'Canadian Provinces' },
+                { id: 'Newfoundland and Labrador', name: 'Newfoundland and Labrador', flag: '🇨🇦', category: 'Canadian Provinces' },
+                { id: 'Northwest Territories', name: 'Northwest Territories', flag: '🇨🇦', category: 'Canadian Provinces' },
+                { id: 'Nova Scotia', name: 'Nova Scotia', flag: '🇨🇦', category: 'Canadian Provinces' },
+                { id: 'Nunavut', name: 'Nunavut', flag: '🇨🇦', category: 'Canadian Provinces' },
+                { id: 'Ontario', name: 'Ontario', flag: '🇨🇦', category: 'Canadian Provinces' },
+                { id: 'Prince Edward Island', name: 'Prince Edward Island', flag: '🇨🇦', category: 'Canadian Provinces' },
+                { id: 'Quebec', name: 'Quebec', flag: '🇨🇦', category: 'Canadian Provinces' },
+                { id: 'Saskatchewan', name: 'Saskatchewan', flag: '🇨🇦', category: 'Canadian Provinces' },
+                { id: 'Yukon', name: 'Yukon', flag: '🇨🇦', category: 'Canadian Provinces' }
+            ],
+            cities: [
+                { id: 'Lakeland, FL', name: 'Lakeland, FL', flag: '🇺🇸', category: 'Cities' }
+            ]
+        };
+
+        // Flatten all locations for searching
+        const allLocations = [
+            ...locations.countries,
+            ...locations.usStates,
+            ...locations.canadianProvinces,
+            ...locations.cities
+        ];
+
+        // Get current location display info
+        const currentLocation = allLocations.find(loc => loc.id === value) || allLocations[0];
+
+        // Load recent selections from localStorage
+        useEffect(() => {
+            const saved = localStorage.getItem('recentLocationSelections');
+            if (saved) {
+                try {
+                    setRecentSelections(JSON.parse(saved));
+                } catch (e) {
+                    console.error('Error loading recent selections:', e);
+                }
+            }
+        }, []);
+
+        // Save recent selections to localStorage
+        const saveRecentSelection = (locationId) => {
+            const updated = [locationId, ...recentSelections.filter(id => id !== locationId)].slice(0, 5);
+            setRecentSelections(updated);
+            localStorage.setItem('recentLocationSelections', JSON.stringify(updated));
+        };
+
+        // Filter locations based on search term
+        const filteredLocations = useMemo(() => {
+            if (!searchTerm.trim()) {
+                return allLocations;
+            }
+
+            const term = searchTerm.toLowerCase();
+            return allLocations.filter(location => 
+                location.name.toLowerCase().includes(term) ||
+                location.category.toLowerCase().includes(term)
+            ).sort((a, b) => {
+                // Prioritize exact matches at the beginning
+                const aStartsWith = a.name.toLowerCase().startsWith(term);
+                const bStartsWith = b.name.toLowerCase().startsWith(term);
+                if (aStartsWith && !bStartsWith) return -1;
+                if (!aStartsWith && bStartsWith) return 1;
+                return a.name.localeCompare(b.name);
+            });
+        }, [searchTerm, allLocations]);
+
+        // Group filtered locations by category
+        const groupedLocations = useMemo(() => {
+            const groups = {};
+            filteredLocations.forEach(location => {
+                if (!groups[location.category]) {
+                    groups[location.category] = [];
+                }
+                groups[location.category].push(location);
+            });
+            return groups;
+        }, [filteredLocations]);
+
+        // Get recent selections data
+        const recentLocationsData = recentSelections
+            .map(id => allLocations.find(loc => loc.id === id))
+            .filter(Boolean);
+
+        // Handle keyboard navigation
+        const handleKeyDown = (e) => {
+            if (!isOpen) {
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    setIsOpen(true);
+                    setFocusedIndex(0);
+                }
+                return;
+            }
+
+            switch (e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    setFocusedIndex(prev => 
+                        prev < filteredLocations.length - 1 ? prev + 1 : 0
+                    );
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    setFocusedIndex(prev => 
+                        prev > 0 ? prev - 1 : filteredLocations.length - 1
+                    );
+                    break;
+                case 'Enter':
+                    e.preventDefault();
+                    if (focusedIndex >= 0 && focusedIndex < filteredLocations.length) {
+                        const selected = filteredLocations[focusedIndex];
+                        onChange(selected.id);
+                        saveRecentSelection(selected.id);
+                        setIsOpen(false);
+                        setSearchTerm('');
+                        setFocusedIndex(-1);
+                    }
+                    break;
+                case 'Escape':
+                    e.preventDefault();
+                    setIsOpen(false);
+                    setSearchTerm('');
+                    setFocusedIndex(-1);
+                    break;
+            }
+        };
+
+        // Handle selection
+        const handleSelect = (location) => {
+            onChange(location.id);
+            saveRecentSelection(location.id);
+            setIsOpen(false);
+            setSearchTerm('');
+            setFocusedIndex(-1);
+        };
+
+        // Close dropdown when clicking outside
+        useEffect(() => {
+            const handleClickOutside = (event) => {
+                if (selectorRef.current && !selectorRef.current.contains(event.target)) {
+                    setIsOpen(false);
+                    setSearchTerm('');
+                    setFocusedIndex(-1);
+                }
+            };
+
+            document.addEventListener('mousedown', handleClickOutside);
+            return () => document.removeEventListener('mousedown', handleClickOutside);
+        }, []);
+
+        // Scroll focused item into view
+        useEffect(() => {
+            if (focusedIndex >= 0 && listRef.current) {
+                const focusedElement = listRef.current.querySelector(`[data-index="${focusedIndex}"]`);
+                if (focusedElement) {
+                    focusedElement.scrollIntoView({ block: 'nearest' });
+                }
+            }
+        }, [focusedIndex]);
+
+        return (
+            <div className="relative" ref={selectorRef}>
+                {/* Trigger Button */}
+                <button
+                    type="button"
+                    onClick={() => {
+                        setIsOpen(!isOpen);
+                        if (!isOpen) {
+                            setTimeout(() => inputRef.current?.focus(), 50);
+                        }
+                    }}
+                    onKeyDown={handleKeyDown}
+                    className="flex items-center justify-between w-full min-w-[200px] px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-lg shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                >
+                    <div className="flex items-center space-x-2">
+                        <span className="text-lg">{currentLocation.flag}</span>
+                        <span className="font-medium text-gray-900">{currentLocation.name}</span>
+                    </div>
+                    <svg 
+                        className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                    >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+
+                {/* Dropdown Panel */}
+                {isOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-hidden">
+                        {/* Search Input */}
+                        <div className="p-3 border-b border-gray-100">
+                            <div className="relative">
+                                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                <input
+                                    ref={inputRef}
+                                    type="text"
+                                    placeholder="Search locations..."
+                                    value={searchTerm}
+                                    onChange={(e) => {
+                                        setSearchTerm(e.target.value);
+                                        setFocusedIndex(0);
+                                    }}
+                                    onKeyDown={handleKeyDown}
+                                    className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Results */}
+                        <div className="max-h-80 overflow-y-auto" ref={listRef}>
+                            {/* Recent Selections */}
+                            {!searchTerm && recentLocationsData.length > 0 && (
+                                <div className="p-2">
+                                    <div className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        Recent
+                                    </div>
+                                    {recentLocationsData.map((location, index) => (
+                                        <button
+                                            key={`recent-${location.id}`}
+                                            onClick={() => handleSelect(location)}
+                                            className="w-full flex items-center space-x-3 px-3 py-2 text-left hover:bg-blue-50 rounded-md transition-colors"
+                                        >
+                                            <span className="text-lg">{location.flag}</span>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-medium text-gray-900 truncate">{location.name}</div>
+                                                <div className="text-xs text-gray-500">{location.category}</div>
+                                            </div>
+                                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </button>
+                                    ))}
+                                    <div className="border-t border-gray-100 mt-2 pt-2"></div>
+                                </div>
+                            )}
+
+                            {/* Grouped Results */}
+                            {Object.entries(groupedLocations).map(([category, locations]) => (
+                                <div key={category} className="p-2">
+                                    <div className="px-2 py-1 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                        {category}
+                                    </div>
+                                    {locations.map((location, index) => {
+                                        const globalIndex = filteredLocations.findIndex(loc => loc.id === location.id);
+                                        const isFocused = globalIndex === focusedIndex;
+                                        
+                                        return (
+                                            <button
+                                                key={location.id}
+                                                data-index={globalIndex}
+                                                onClick={() => handleSelect(location)}
+                                                className={`w-full flex items-center space-x-3 px-3 py-2 text-left rounded-md transition-colors ${
+                                                    isFocused 
+                                                        ? 'bg-blue-100 text-blue-900' 
+                                                        : 'hover:bg-gray-50 text-gray-900'
+                                                }`}
+                                            >
+                                                <span className="text-lg">{location.flag}</span>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="font-medium truncate">{location.name}</div>
+                                                    {location.category !== 'Countries' && (
+                                                        <div className="text-xs text-gray-500">{location.category}</div>
+                                                    )}
+                                                </div>
+                                                {value === location.id && (
+                                                    <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                    </svg>
+                                                )}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            ))}
+
+                            {/* No Results */}
+                            {searchTerm && filteredLocations.length === 0 && (
+                                <div className="p-4 text-center text-gray-500">
+                                    <svg className="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    <p className="text-sm">No locations found for "{searchTerm}"</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     const ServiceList = ({ title, dataSet, tooltipText }) => {
         const [serviceData, setServiceData] = useState(null);
         const [loading, setLoading] = useState(true);
@@ -1257,16 +1624,10 @@ const Dashboard = ({ setActiveTab }) => {
                         <h2 className="text-xl font-bold text-gray-800">{title}</h2>
                         <InfoTooltip text={tooltipText} />
                     </div>
-                    <select 
+                    <LocationSelector 
                         value={selectedLocation} 
-                        onChange={(e) => setSelectedLocation(e.target.value)}
-                        className="text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                    >
-                         <option value="USA">United States</option>
-                         <option value="Canada">Canada</option>
-                         <option value="Florida">Florida</option>
-                         <option value="Lakeland, FL">Lakeland, FL</option>
-                    </select>
+                        onChange={setSelectedLocation}
+                    />
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm whitespace-nowrap">
