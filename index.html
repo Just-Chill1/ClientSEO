@@ -1724,7 +1724,12 @@ const Dashboard = ({ setActiveTab }) => {
                                             {/* Service Info */}
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center space-x-2">
-                                                    <h3 className="font-semibold text-gray-900 truncate">{service.name}</h3>
+                                                    <h3 
+                                                        className="font-semibold text-gray-900 truncate max-w-xs" 
+                                                        title={service.name}
+                                                    >
+                                                        {service.name}
+                                                    </h3>
                                                     {/* Trend Badge */}
                                                     <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                                                         service.trend === 1 ? 'bg-green-100 text-green-700' :
@@ -1743,18 +1748,18 @@ const Dashboard = ({ setActiveTab }) => {
                                         </div>
 
                                         {/* Metrics */}
-                                        <div className="flex items-center space-x-6 text-sm">
-                                            <div className="text-center">
-                                                <div className="font-semibold text-gray-900">{service.avgCompetition}</div>
-                                                <div className="text-gray-500">Competition</div>
+                                        <div className="flex items-center space-x-8 text-sm">
+                                            <div className="text-center min-w-0">
+                                                <div className="font-semibold text-gray-900 whitespace-nowrap">{service.avgCompetition}</div>
+                                                <div className="text-gray-500 text-xs">Competition</div>
                                             </div>
-                                            <div className="text-center">
-                                                <div className="font-semibold text-gray-900">${service.avgCpc}</div>
-                                                <div className="text-gray-500">Avg CPC</div>
+                                            <div className="text-center min-w-0">
+                                                <div className="font-semibold text-gray-900 whitespace-nowrap">${service.avgCpc}</div>
+                                                <div className="text-gray-500 text-xs">Avg CPC</div>
                                             </div>
-                                            <div className="text-center">
-                                                <div className="font-bold text-lg text-blue-600">{service.volumePercentage}%</div>
-                                                <div className="text-gray-500">Volume</div>
+                                            <div className="text-center min-w-0">
+                                                <div className="font-bold text-lg text-blue-600 whitespace-nowrap">{service.volumePercentage}%</div>
+                                                <div className="text-gray-500 text-xs">Volume</div>
                                             </div>
                                         </div>
 
