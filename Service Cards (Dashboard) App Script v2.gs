@@ -129,15 +129,37 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue) {
   // Filter rows for the selected location
   const data = allData.filter(row => {
       const rowLocation = row[locationColumnIndex];
-      const matches = rowLocation && rowLocation.toString().trim().toLowerCase() === locationFilterValue.trim().toLowerCase();
-      return matches;
+      if (!rowLocation) return false;
+      
+      const rowLocationStr = rowLocation.toString().trim().toLowerCase();
+      const filterValueStr = locationFilterValue.trim().toLowerCase();
+      
+      // First try exact match
+      if (rowLocationStr === filterValueStr) return true;
+      
+      // For states, also try partial matching (in case of abbreviations or slight differences)
+      if (sheetName === 'State & Province') {
+          // Check if either contains the other (for cases like "NY" vs "New York")
+          if (rowLocationStr.includes(filterValueStr) || filterValueStr.includes(rowLocationStr)) {
+              return true;
+          }
+          // Also check without common state suffixes/prefixes
+          const cleanRow = rowLocationStr.replace(/\b(state|province)\b/g, '').trim();
+          const cleanFilter = filterValueStr.replace(/\b(state|province)\b/g, '').trim();
+          if (cleanRow === cleanFilter) return true;
+      }
+      
+      return false;
   });
 
   console.log(`Filtered data: Found ${data.length} rows for location "${locationFilterValue}" in column ${locationColumnIndex}`);
   if (data.length === 0) {
-    // Log some sample values to help debug
-    const sampleValues = allData.slice(0, 5).map(row => row[locationColumnIndex]).filter(val => val);
+    // Enhanced debugging: Log more sample values and show unique values
+    const sampleValues = allData.slice(0, 10).map(row => row[locationColumnIndex]).filter(val => val);
+    const uniqueValues = [...new Set(allData.map(row => row[locationColumnIndex]).filter(val => val))].slice(0, 20);
     console.log(`No matching data found. Sample values in column ${locationColumnIndex}:`, sampleValues);
+    console.log(`Unique values in column ${locationColumnIndex}:`, uniqueValues);
+    console.log(`Looking for exact match: "${locationFilterValue.trim().toLowerCase()}"`);
     return { topServices: [], newServices: [] };
   }
 
