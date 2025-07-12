@@ -812,15 +812,30 @@ const Dashboard = ({ setActiveTab }) => {
                         <div className="lg:col-span-1 flex flex-col">
                             <div className="h-16 flex items-end pb-3">
                                 <div className="flex items-center space-x-2">
-                                    <h3 className="text-lg font-semibold text-gray-800">Rankings</h3>
-                                    <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+                                    <h3 className="text-lg font-semibold text-gray-800">Avg Score</h3>
+                                    <div className="w-2 h-2 bg-gradient-to-r from-green-500 to-red-500 rounded-full"></div>
                                 </div>
                             </div>
                             <div className="space-y-3">
                                 {currentDashboardData.competitors.map((comp, index) => {
                                     const isClient = comp.isClient;
                                     const rank = typeof comp.rank === 'number' ? comp.rank : 0;
-                                    const rankColor = getRankColor(comp.rank);
+                                    
+                                    // Improved color gradient for geogrid scores (lower is better)
+                                    const getScoreGradient = (score) => {
+                                        if (score <= 3) {
+                                            // Green gradient for excellent scores (1-3)
+                                            return 'bg-gradient-to-br from-green-500 to-green-600';
+                                        } else if (score <= 7) {
+                                            // Yellow gradient for medium scores (4-7)
+                                            return 'bg-gradient-to-br from-yellow-500 to-yellow-600';
+                                        } else {
+                                            // Red gradient for poor scores (8+)
+                                            return 'bg-gradient-to-br from-red-500 to-red-600';
+                                        }
+                                    };
+                                    
+                                    const scoreGradient = getScoreGradient(rank);
                                     
                                     return (
                                         <div key={index} className={`group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg ${isClient ? 'bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 hover:border-blue-300' : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md'}`}>
@@ -828,15 +843,15 @@ const Dashboard = ({ setActiveTab }) => {
                                             <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent pointer-events-none"></div>
                                             
                                             <div className="relative p-4 flex items-center space-x-4">
-                                                {/* Rank Badge */}
+                                                {/* Score Badge with improved gradient */}
                                                 <div className="relative">
-                                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-white text-base shadow-lg ${rankColor} group-hover:scale-105 transition-transform duration-200`}>
+                                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-white text-base shadow-lg ${scoreGradient} group-hover:scale-105 transition-transform duration-200`}>
                                                         {rank > 0 ? rank.toFixed(1) : '-'}
                                                     </div>
-                                                    {/* Rank position indicator */}
-                                                    {index === 0 && (
+                                                    {/* Best score indicator (lowest number) */}
+                                                    {index === 0 && rank > 0 && (
                                                         <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center">
-                                                            <span className="text-xs font-bold text-yellow-900">1</span>
+                                                            <span className="text-xs font-bold text-yellow-900">★</span>
                                                         </div>
                                                     )}
                                                 </div>
@@ -854,34 +869,18 @@ const Dashboard = ({ setActiveTab }) => {
                                                         )}
                                                     </div>
                                                     {comp.domain && (
-                                                        <p className="text-xs text-gray-500 truncate mb-2" title={comp.domain}>{comp.domain}</p>
+                                                        <p className="text-xs text-gray-500 truncate" title={comp.domain}>{comp.domain}</p>
                                                     )}
                                                     
-                                                    {/* Performance Indicator */}
-                                                    <div className="flex items-center space-x-2">
-                                                        <div className="flex-1 bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                                                            <div 
-                                                                className={`h-full transition-all duration-500 ${
-                                                                    rank >= 8 ? 'bg-gradient-to-r from-green-400 to-green-500' :
-                                                                    rank >= 6 ? 'bg-gradient-to-r from-blue-400 to-blue-500' :
-                                                                    rank >= 4 ? 'bg-gradient-to-r from-yellow-400 to-yellow-500' :
-                                                                    rank >= 2 ? 'bg-gradient-to-r from-orange-400 to-orange-500' :
-                                                                    'bg-gradient-to-r from-red-400 to-red-500'
-                                                                }`}
-                                                                style={{ width: `${Math.min(rank * 10, 100)}%` }}
-                                                            ></div>
-                                                        </div>
-                                                        <span className={`text-xs font-medium ${
-                                                            rank >= 8 ? 'text-green-600' :
-                                                            rank >= 6 ? 'text-blue-600' :
-                                                            rank >= 4 ? 'text-yellow-600' :
-                                                            rank >= 2 ? 'text-orange-600' :
-                                                            'text-red-600'
+                                                    {/* Simple performance label */}
+                                                    <div className="mt-2">
+                                                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                                                            rank <= 3 ? 'bg-green-100 text-green-700' :
+                                                            rank <= 7 ? 'bg-yellow-100 text-yellow-700' :
+                                                            'bg-red-100 text-red-700'
                                                         }`}>
-                                                            {rank >= 8 ? 'Excellent' :
-                                                             rank >= 6 ? 'Good' :
-                                                             rank >= 4 ? 'Fair' :
-                                                             rank >= 2 ? 'Poor' : 'Very Poor'}
+                                                            {rank <= 3 ? 'Excellent' :
+                                                             rank <= 7 ? 'Good' : 'Needs Work'}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -4422,14 +4421,29 @@ const GeogridMaps = () => {
                         {competitors.length > 0 && (
                             <div>
                                 <div className="flex items-center space-x-2 mb-3">
-                                    <h3 className="text-lg font-semibold text-gray-800">Rankings</h3>
-                                    <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"></div>
+                                    <h3 className="text-lg font-semibold text-gray-800">Avg Score</h3>
+                                    <div className="w-2 h-2 bg-gradient-to-r from-green-500 to-red-500 rounded-full"></div>
                                 </div>
                                 <div className="space-y-3">
                                     {competitors.map((comp, index) => {
                                         const isClient = comp.isClient;
                                         const rank = typeof comp.rank === 'number' ? comp.rank : 0;
-                                        const rankColor = getRankColor(comp.rank);
+                                        
+                                        // Improved color gradient for geogrid scores (lower is better)
+                                        const getScoreGradient = (score) => {
+                                            if (score <= 3) {
+                                                // Green gradient for excellent scores (1-3)
+                                                return 'bg-gradient-to-br from-green-500 to-green-600';
+                                            } else if (score <= 7) {
+                                                // Yellow gradient for medium scores (4-7)
+                                                return 'bg-gradient-to-br from-yellow-500 to-yellow-600';
+                                            } else {
+                                                // Red gradient for poor scores (8+)
+                                                return 'bg-gradient-to-br from-red-500 to-red-600';
+                                            }
+                                        };
+                                        
+                                        const scoreGradient = getScoreGradient(rank);
                                         
                                         return (
                                             <div key={index} className={`group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg ${isClient ? 'bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 hover:border-blue-300' : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md'}`}>
@@ -4437,15 +4451,15 @@ const GeogridMaps = () => {
                                                 <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent pointer-events-none"></div>
                                                 
                                                 <div className="relative p-3 flex items-center space-x-3">
-                                                    {/* Rank Badge */}
+                                                    {/* Score Badge with improved gradient */}
                                                     <div className="relative">
-                                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white text-sm shadow-lg ${rankColor} group-hover:scale-105 transition-transform duration-200`}>
+                                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white text-sm shadow-lg ${scoreGradient} group-hover:scale-105 transition-transform duration-200`}>
                                                             {rank > 0 ? rank.toFixed(1) : '-'}
                                                         </div>
-                                                        {/* Rank position indicator */}
-                                                        {index === 0 && (
+                                                        {/* Best score indicator (lowest number) */}
+                                                        {index === 0 && rank > 0 && (
                                                             <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center">
-                                                                <span className="text-xs font-bold text-yellow-900">1</span>
+                                                                <span className="text-xs font-bold text-yellow-900">★</span>
                                                             </div>
                                                         )}
                                                     </div>
@@ -4466,31 +4480,15 @@ const GeogridMaps = () => {
                                                             <p className="text-xs text-gray-500 truncate mb-1" title={comp.domain}>{comp.domain}</p>
                                                         )}
                                                         
-                                                        {/* Performance Indicator */}
-                                                        <div className="flex items-center space-x-2">
-                                                            <div className="flex-1 bg-gray-200 rounded-full h-1 overflow-hidden">
-                                                                <div 
-                                                                    className={`h-full transition-all duration-500 ${
-                                                                        rank >= 8 ? 'bg-gradient-to-r from-green-400 to-green-500' :
-                                                                        rank >= 6 ? 'bg-gradient-to-r from-blue-400 to-blue-500' :
-                                                                        rank >= 4 ? 'bg-gradient-to-r from-yellow-400 to-yellow-500' :
-                                                                        rank >= 2 ? 'bg-gradient-to-r from-orange-400 to-orange-500' :
-                                                                        'bg-gradient-to-r from-red-400 to-red-500'
-                                                                    }`}
-                                                                    style={{ width: `${Math.min(rank * 10, 100)}%` }}
-                                                                ></div>
-                                                            </div>
-                                                            <span className={`text-xs font-medium ${
-                                                                rank >= 8 ? 'text-green-600' :
-                                                                rank >= 6 ? 'text-blue-600' :
-                                                                rank >= 4 ? 'text-yellow-600' :
-                                                                rank >= 2 ? 'text-orange-600' :
-                                                                'text-red-600'
+                                                        {/* Simple performance label */}
+                                                        <div className="mt-1">
+                                                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
+                                                                rank <= 3 ? 'bg-green-100 text-green-700' :
+                                                                rank <= 7 ? 'bg-yellow-100 text-yellow-700' :
+                                                                'bg-red-100 text-red-700'
                                                             }`}>
-                                                                {rank >= 8 ? 'Great' :
-                                                                 rank >= 6 ? 'Good' :
-                                                                 rank >= 4 ? 'Fair' :
-                                                                 rank >= 2 ? 'Poor' : 'Low'}
+                                                                {rank <= 3 ? 'Excellent' :
+                                                                 rank <= 7 ? 'Good' : 'Needs Work'}
                                                             </span>
                                                         </div>
                                                     </div>
