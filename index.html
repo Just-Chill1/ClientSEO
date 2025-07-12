@@ -821,25 +821,28 @@ const Dashboard = ({ setActiveTab }) => {
                                     const isClient = comp.isClient;
                                     const rank = typeof comp.rank === 'number' ? comp.rank : 0;
                                     
-                                    // Improved color gradient for geogrid scores (lower is better)
+                                    // Improved color scheme for geogrid scores (lower is better)
                                     const getScoreColors = (score) => {
                                         if (score <= 3) {
                                             return {
-                                                ring: 'ring-green-500',
-                                                bg: 'bg-gradient-to-br from-green-500 to-green-600',
-                                                shadow: 'shadow-green-500/30'
+                                                border: 'border-green-500',
+                                                bg: 'bg-green-50',
+                                                text: 'text-green-700',
+                                                accent: 'bg-green-500'
                                             };
                                         } else if (score <= 7) {
                                             return {
-                                                ring: 'ring-yellow-500',
-                                                bg: 'bg-gradient-to-br from-yellow-500 to-yellow-600',
-                                                shadow: 'shadow-yellow-500/30'
+                                                border: 'border-yellow-500',
+                                                bg: 'bg-yellow-50',
+                                                text: 'text-yellow-700',
+                                                accent: 'bg-yellow-500'
                                             };
                                         } else {
                                             return {
-                                                ring: 'ring-red-500',
-                                                bg: 'bg-gradient-to-br from-red-500 to-red-600',
-                                                shadow: 'shadow-red-500/30'
+                                                border: 'border-red-500',
+                                                bg: 'bg-red-50',
+                                                text: 'text-red-700',
+                                                accent: 'bg-red-500'
                                             };
                                         }
                                     };
@@ -854,44 +857,44 @@ const Dashboard = ({ setActiveTab }) => {
                                     
                                     return (
                                         <div key={index} className={`group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg ${isClient ? 'bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 hover:border-blue-300' : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md'}`}>
+                                            {/* Position Badge - Top Left */}
+                                            <div className="absolute top-2 left-2 z-10">
+                                                <span className={`inline-block px-2 py-1 rounded-full text-xs font-bold shadow-sm ${
+                                                    index === 0 ? 'bg-yellow-500 text-white' :
+                                                    index === 1 ? 'bg-gray-500 text-white' :
+                                                    index === 2 ? 'bg-orange-500 text-white' :
+                                                    'bg-blue-500 text-white'
+                                                }`}>
+                                                    {getPositionText(index)}
+                                                </span>
+                                            </div>
+                                            
                                             {/* Subtle background pattern */}
                                             <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent pointer-events-none"></div>
                                             
-                                            <div className="relative p-4 flex items-center space-x-4">
-                                                {/* Modern Score Badge */}
+                                            <div className="relative p-4 pt-8 flex items-center space-x-4">
+                                                {/* Modern Score Badge - Hexagonal style */}
                                                 <div className="relative">
-                                                    <div className={`w-14 h-14 rounded-full flex items-center justify-center font-bold text-white text-base shadow-lg ${scoreColors.bg} ${scoreColors.shadow} ring-2 ${scoreColors.ring} group-hover:scale-105 transition-all duration-200`}>
-                                                        {rank > 0 ? rank.toFixed(1) : '-'}
+                                                    <div className={`w-16 h-16 rounded-2xl ${scoreColors.bg} ${scoreColors.border} border-2 flex items-center justify-center font-bold ${scoreColors.text} text-lg shadow-lg group-hover:scale-105 transition-all duration-200 relative overflow-hidden`}>
+                                                        {/* Accent corner */}
+                                                        <div className={`absolute top-0 right-0 w-4 h-4 ${scoreColors.accent} transform rotate-45 translate-x-2 -translate-y-2`}></div>
+                                                        <span className="relative z-10">{rank > 0 ? rank.toFixed(1) : '-'}</span>
                                                     </div>
-                                                    {/* Subtle pulse effect */}
-                                                    <div className={`absolute inset-0 rounded-full ${scoreColors.bg} opacity-20 group-hover:animate-ping`}></div>
+                                                    {/* Subtle glow effect */}
+                                                    <div className={`absolute inset-0 rounded-2xl ${scoreColors.bg} opacity-30 group-hover:opacity-50 transition-opacity duration-200 blur-sm`}></div>
                                                 </div>
                                                 
                                                 {/* Business Info */}
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center justify-between mb-1">
-                                                        <div className="flex items-center space-x-2">
-                                                            <p className={`font-semibold text-sm leading-tight truncate ${isClient ? 'text-blue-900' : 'text-gray-800'}`} title={comp.name || 'Unknown'}>
-                                                                {comp.name || 'Unknown'}
-                                                            </p>
-                                                            {isClient && (
-                                                                <div className="flex-shrink-0 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                                                                    <span className="text-xs text-white font-bold">★</span>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        
-                                                        {/* Position Badge */}
-                                                        <div className="flex-shrink-0">
-                                                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-bold ${
-                                                                index === 0 ? 'bg-yellow-100 text-yellow-800' :
-                                                                index === 1 ? 'bg-gray-100 text-gray-700' :
-                                                                index === 2 ? 'bg-orange-100 text-orange-700' :
-                                                                'bg-blue-100 text-blue-700'
-                                                            }`}>
-                                                                {getPositionText(index)}
-                                                            </span>
-                                                        </div>
+                                                    <div className="flex items-center space-x-2">
+                                                        <p className={`font-semibold text-sm leading-tight truncate ${isClient ? 'text-blue-900' : 'text-gray-800'}`} title={comp.name || 'Unknown'}>
+                                                            {comp.name || 'Unknown'}
+                                                        </p>
+                                                        {isClient && (
+                                                            <div className="flex-shrink-0 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                                                                <span className="text-xs text-white font-bold">★</span>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -4439,25 +4442,28 @@ const GeogridMaps = () => {
                                         const isClient = comp.isClient;
                                         const rank = typeof comp.rank === 'number' ? comp.rank : 0;
                                         
-                                        // Improved color gradient for geogrid scores (lower is better)
+                                        // Improved color scheme for geogrid scores (lower is better)
                                         const getScoreColors = (score) => {
                                             if (score <= 3) {
                                                 return {
-                                                    ring: 'ring-green-500',
-                                                    bg: 'bg-gradient-to-br from-green-500 to-green-600',
-                                                    shadow: 'shadow-green-500/30'
+                                                    border: 'border-green-500',
+                                                    bg: 'bg-green-50',
+                                                    text: 'text-green-700',
+                                                    accent: 'bg-green-500'
                                                 };
                                             } else if (score <= 7) {
                                                 return {
-                                                    ring: 'ring-yellow-500',
-                                                    bg: 'bg-gradient-to-br from-yellow-500 to-yellow-600',
-                                                    shadow: 'shadow-yellow-500/30'
+                                                    border: 'border-yellow-500',
+                                                    bg: 'bg-yellow-50',
+                                                    text: 'text-yellow-700',
+                                                    accent: 'bg-yellow-500'
                                                 };
                                             } else {
                                                 return {
-                                                    ring: 'ring-red-500',
-                                                    bg: 'bg-gradient-to-br from-red-500 to-red-600',
-                                                    shadow: 'shadow-red-500/30'
+                                                    border: 'border-red-500',
+                                                    bg: 'bg-red-50',
+                                                    text: 'text-red-700',
+                                                    accent: 'bg-red-500'
                                                 };
                                             }
                                         };
@@ -4472,44 +4478,44 @@ const GeogridMaps = () => {
                                         
                                         return (
                                             <div key={index} className={`group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg ${isClient ? 'bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 hover:border-blue-300' : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md'}`}>
+                                                {/* Position Badge - Top Left */}
+                                                <div className="absolute top-2 left-2 z-10">
+                                                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-bold shadow-sm ${
+                                                        index === 0 ? 'bg-yellow-500 text-white' :
+                                                        index === 1 ? 'bg-gray-500 text-white' :
+                                                        index === 2 ? 'bg-orange-500 text-white' :
+                                                        'bg-blue-500 text-white'
+                                                    }`}>
+                                                        {getPositionText(index)}
+                                                    </span>
+                                                </div>
+                                                
                                                 {/* Subtle background pattern */}
                                                 <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent pointer-events-none"></div>
                                                 
-                                                <div className="relative p-3 flex items-center space-x-3">
-                                                    {/* Modern Score Badge */}
+                                                <div className="relative p-3 pt-7 flex items-center space-x-3">
+                                                    {/* Modern Score Badge - Compact hexagonal style */}
                                                     <div className="relative">
-                                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-sm shadow-lg ${scoreColors.bg} ${scoreColors.shadow} ring-2 ${scoreColors.ring} group-hover:scale-105 transition-all duration-200`}>
-                                                            {rank > 0 ? rank.toFixed(1) : '-'}
+                                                        <div className={`w-12 h-12 rounded-xl ${scoreColors.bg} ${scoreColors.border} border-2 flex items-center justify-center font-bold ${scoreColors.text} text-sm shadow-lg group-hover:scale-105 transition-all duration-200 relative overflow-hidden`}>
+                                                            {/* Accent corner */}
+                                                            <div className={`absolute top-0 right-0 w-3 h-3 ${scoreColors.accent} transform rotate-45 translate-x-1.5 -translate-y-1.5`}></div>
+                                                            <span className="relative z-10">{rank > 0 ? rank.toFixed(1) : '-'}</span>
                                                         </div>
-                                                        {/* Subtle pulse effect */}
-                                                        <div className={`absolute inset-0 rounded-full ${scoreColors.bg} opacity-20 group-hover:animate-ping`}></div>
+                                                        {/* Subtle glow effect */}
+                                                        <div className={`absolute inset-0 rounded-xl ${scoreColors.bg} opacity-30 group-hover:opacity-50 transition-opacity duration-200 blur-sm`}></div>
                                                     </div>
                                                     
                                                     {/* Business Info */}
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center justify-between mb-1">
-                                                            <div className="flex items-center space-x-2">
-                                                                <p className={`font-semibold text-xs leading-tight truncate ${isClient ? 'text-blue-900' : 'text-gray-800'}`} title={comp.name || 'Unknown'}>
-                                                                    {comp.name || 'Unknown'}
-                                                                </p>
-                                                                {isClient && (
-                                                                    <div className="flex-shrink-0 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
-                                                                        <span className="text-xs text-white font-bold">★</span>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            
-                                                            {/* Position Badge */}
-                                                            <div className="flex-shrink-0">
-                                                                <span className={`inline-block px-2 py-1 rounded-full text-xs font-bold ${
-                                                                    index === 0 ? 'bg-yellow-100 text-yellow-800' :
-                                                                    index === 1 ? 'bg-gray-100 text-gray-700' :
-                                                                    index === 2 ? 'bg-orange-100 text-orange-700' :
-                                                                    'bg-blue-100 text-blue-700'
-                                                                }`}>
-                                                                    {getPositionText(index)}
-                                                                </span>
-                                                            </div>
+                                                        <div className="flex items-center space-x-2">
+                                                            <p className={`font-semibold text-xs leading-tight truncate ${isClient ? 'text-blue-900' : 'text-gray-800'}`} title={comp.name || 'Unknown'}>
+                                                                {comp.name || 'Unknown'}
+                                                            </p>
+                                                            {isClient && (
+                                                                <div className="flex-shrink-0 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
+                                                                    <span className="text-xs text-white font-bold">★</span>
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
