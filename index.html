@@ -822,20 +822,35 @@ const Dashboard = ({ setActiveTab }) => {
                                     const rank = typeof comp.rank === 'number' ? comp.rank : 0;
                                     
                                     // Improved color gradient for geogrid scores (lower is better)
-                                    const getScoreGradient = (score) => {
+                                    const getScoreColors = (score) => {
                                         if (score <= 3) {
-                                            // Green gradient for excellent scores (1-3)
-                                            return 'bg-gradient-to-br from-green-500 to-green-600';
+                                            return {
+                                                ring: 'ring-green-500',
+                                                bg: 'bg-gradient-to-br from-green-500 to-green-600',
+                                                shadow: 'shadow-green-500/30'
+                                            };
                                         } else if (score <= 7) {
-                                            // Yellow gradient for medium scores (4-7)
-                                            return 'bg-gradient-to-br from-yellow-500 to-yellow-600';
+                                            return {
+                                                ring: 'ring-yellow-500',
+                                                bg: 'bg-gradient-to-br from-yellow-500 to-yellow-600',
+                                                shadow: 'shadow-yellow-500/30'
+                                            };
                                         } else {
-                                            // Red gradient for poor scores (8+)
-                                            return 'bg-gradient-to-br from-red-500 to-red-600';
+                                            return {
+                                                ring: 'ring-red-500',
+                                                bg: 'bg-gradient-to-br from-red-500 to-red-600',
+                                                shadow: 'shadow-red-500/30'
+                                            };
                                         }
                                     };
                                     
-                                    const scoreGradient = getScoreGradient(rank);
+                                    const scoreColors = getScoreColors(rank);
+                                    
+                                    // Position indicators
+                                    const getPositionText = (index) => {
+                                        const positions = ['1st', '2nd', '3rd', '4th', '5th'];
+                                        return positions[index] || `${index + 1}th`;
+                                    };
                                     
                                     return (
                                         <div key={index} className={`group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg ${isClient ? 'bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 hover:border-blue-300' : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md'}`}>
@@ -843,45 +858,40 @@ const Dashboard = ({ setActiveTab }) => {
                                             <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent pointer-events-none"></div>
                                             
                                             <div className="relative p-4 flex items-center space-x-4">
-                                                {/* Score Badge with improved gradient */}
+                                                {/* Modern Score Badge */}
                                                 <div className="relative">
-                                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-white text-base shadow-lg ${scoreGradient} group-hover:scale-105 transition-transform duration-200`}>
+                                                    <div className={`w-14 h-14 rounded-full flex items-center justify-center font-bold text-white text-base shadow-lg ${scoreColors.bg} ${scoreColors.shadow} ring-2 ${scoreColors.ring} group-hover:scale-105 transition-all duration-200`}>
                                                         {rank > 0 ? rank.toFixed(1) : '-'}
                                                     </div>
-                                                    {/* Best score indicator (lowest number) */}
-                                                    {index === 0 && rank > 0 && (
-                                                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 rounded-full flex items-center justify-center">
-                                                            <span className="text-xs font-bold text-yellow-900">★</span>
-                                                        </div>
-                                                    )}
+                                                    {/* Subtle pulse effect */}
+                                                    <div className={`absolute inset-0 rounded-full ${scoreColors.bg} opacity-20 group-hover:animate-ping`}></div>
                                                 </div>
                                                 
                                                 {/* Business Info */}
                                                 <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center space-x-2 mb-1">
-                                                        <p className={`font-semibold text-sm leading-tight truncate ${isClient ? 'text-blue-900' : 'text-gray-800'}`} title={comp.name || 'Unknown'}>
-                                                            {comp.name || 'Unknown'}
-                                                        </p>
-                                                        {isClient && (
-                                                            <div className="flex-shrink-0 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
-                                                                <span className="text-xs text-white font-bold">★</span>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                    {comp.domain && (
-                                                        <p className="text-xs text-gray-500 truncate" title={comp.domain}>{comp.domain}</p>
-                                                    )}
-                                                    
-                                                    {/* Simple performance label */}
-                                                    <div className="mt-2">
-                                                        <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                                                            rank <= 3 ? 'bg-green-100 text-green-700' :
-                                                            rank <= 7 ? 'bg-yellow-100 text-yellow-700' :
-                                                            'bg-red-100 text-red-700'
-                                                        }`}>
-                                                            {rank <= 3 ? 'Excellent' :
-                                                             rank <= 7 ? 'Good' : 'Needs Work'}
-                                                        </span>
+                                                    <div className="flex items-center justify-between mb-1">
+                                                        <div className="flex items-center space-x-2">
+                                                            <p className={`font-semibold text-sm leading-tight truncate ${isClient ? 'text-blue-900' : 'text-gray-800'}`} title={comp.name || 'Unknown'}>
+                                                                {comp.name || 'Unknown'}
+                                                            </p>
+                                                            {isClient && (
+                                                                <div className="flex-shrink-0 w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center">
+                                                                    <span className="text-xs text-white font-bold">★</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                        
+                                                        {/* Position Badge */}
+                                                        <div className="flex-shrink-0">
+                                                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-bold ${
+                                                                index === 0 ? 'bg-yellow-100 text-yellow-800' :
+                                                                index === 1 ? 'bg-gray-100 text-gray-700' :
+                                                                index === 2 ? 'bg-orange-100 text-orange-700' :
+                                                                'bg-blue-100 text-blue-700'
+                                                            }`}>
+                                                                {getPositionText(index)}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -4430,20 +4440,35 @@ const GeogridMaps = () => {
                                         const rank = typeof comp.rank === 'number' ? comp.rank : 0;
                                         
                                         // Improved color gradient for geogrid scores (lower is better)
-                                        const getScoreGradient = (score) => {
+                                        const getScoreColors = (score) => {
                                             if (score <= 3) {
-                                                // Green gradient for excellent scores (1-3)
-                                                return 'bg-gradient-to-br from-green-500 to-green-600';
+                                                return {
+                                                    ring: 'ring-green-500',
+                                                    bg: 'bg-gradient-to-br from-green-500 to-green-600',
+                                                    shadow: 'shadow-green-500/30'
+                                                };
                                             } else if (score <= 7) {
-                                                // Yellow gradient for medium scores (4-7)
-                                                return 'bg-gradient-to-br from-yellow-500 to-yellow-600';
+                                                return {
+                                                    ring: 'ring-yellow-500',
+                                                    bg: 'bg-gradient-to-br from-yellow-500 to-yellow-600',
+                                                    shadow: 'shadow-yellow-500/30'
+                                                };
                                             } else {
-                                                // Red gradient for poor scores (8+)
-                                                return 'bg-gradient-to-br from-red-500 to-red-600';
+                                                return {
+                                                    ring: 'ring-red-500',
+                                                    bg: 'bg-gradient-to-br from-red-500 to-red-600',
+                                                    shadow: 'shadow-red-500/30'
+                                                };
                                             }
                                         };
                                         
-                                        const scoreGradient = getScoreGradient(rank);
+                                        const scoreColors = getScoreColors(rank);
+                                        
+                                        // Position indicators
+                                        const getPositionText = (index) => {
+                                            const positions = ['1st', '2nd', '3rd', '4th', '5th'];
+                                            return positions[index] || `${index + 1}th`;
+                                        };
                                         
                                         return (
                                             <div key={index} className={`group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg ${isClient ? 'bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 hover:border-blue-300' : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md'}`}>
@@ -4451,45 +4476,40 @@ const GeogridMaps = () => {
                                                 <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent pointer-events-none"></div>
                                                 
                                                 <div className="relative p-3 flex items-center space-x-3">
-                                                    {/* Score Badge with improved gradient */}
+                                                    {/* Modern Score Badge */}
                                                     <div className="relative">
-                                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-white text-sm shadow-lg ${scoreGradient} group-hover:scale-105 transition-transform duration-200`}>
+                                                        <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-sm shadow-lg ${scoreColors.bg} ${scoreColors.shadow} ring-2 ${scoreColors.ring} group-hover:scale-105 transition-all duration-200`}>
                                                             {rank > 0 ? rank.toFixed(1) : '-'}
                                                         </div>
-                                                        {/* Best score indicator (lowest number) */}
-                                                        {index === 0 && rank > 0 && (
-                                                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center">
-                                                                <span className="text-xs font-bold text-yellow-900">★</span>
-                                                            </div>
-                                                        )}
+                                                        {/* Subtle pulse effect */}
+                                                        <div className={`absolute inset-0 rounded-full ${scoreColors.bg} opacity-20 group-hover:animate-ping`}></div>
                                                     </div>
                                                     
                                                     {/* Business Info */}
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center space-x-2 mb-1">
-                                                            <p className={`font-semibold text-xs leading-tight truncate ${isClient ? 'text-blue-900' : 'text-gray-800'}`} title={comp.name || 'Unknown'}>
-                                                                {comp.name || 'Unknown'}
-                                                            </p>
-                                                            {isClient && (
-                                                                <div className="flex-shrink-0 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
-                                                                    <span className="text-xs text-white font-bold">★</span>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        {comp.domain && (
-                                                            <p className="text-xs text-gray-500 truncate mb-1" title={comp.domain}>{comp.domain}</p>
-                                                        )}
-                                                        
-                                                        {/* Simple performance label */}
-                                                        <div className="mt-1">
-                                                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                                                                rank <= 3 ? 'bg-green-100 text-green-700' :
-                                                                rank <= 7 ? 'bg-yellow-100 text-yellow-700' :
-                                                                'bg-red-100 text-red-700'
-                                                            }`}>
-                                                                {rank <= 3 ? 'Excellent' :
-                                                                 rank <= 7 ? 'Good' : 'Needs Work'}
-                                                            </span>
+                                                        <div className="flex items-center justify-between mb-1">
+                                                            <div className="flex items-center space-x-2">
+                                                                <p className={`font-semibold text-xs leading-tight truncate ${isClient ? 'text-blue-900' : 'text-gray-800'}`} title={comp.name || 'Unknown'}>
+                                                                    {comp.name || 'Unknown'}
+                                                                </p>
+                                                                {isClient && (
+                                                                    <div className="flex-shrink-0 w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
+                                                                        <span className="text-xs text-white font-bold">★</span>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            
+                                                            {/* Position Badge */}
+                                                            <div className="flex-shrink-0">
+                                                                <span className={`inline-block px-2 py-1 rounded-full text-xs font-bold ${
+                                                                    index === 0 ? 'bg-yellow-100 text-yellow-800' :
+                                                                    index === 1 ? 'bg-gray-100 text-gray-700' :
+                                                                    index === 2 ? 'bg-orange-100 text-orange-700' :
+                                                                    'bg-blue-100 text-blue-700'
+                                                                }`}>
+                                                                    {getPositionText(index)}
+                                                                </span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
