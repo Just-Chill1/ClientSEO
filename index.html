@@ -169,23 +169,55 @@ const {useState, useEffect, useRef, useMemo} = React;
 
 // --- Helper function to fetch data with CORS workaround and caching ---
 const fetchWithCorsWorkaround = (url, callback) => {
-    const script = document.createElement('script');
-    const callbackName = 'callback_' + Math.random().toString(36).substr(2, 9);
+    // Check cache first (5 minute cache)
+    const cacheKey = `seo_data_${url}`;
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < 5 * 60 * 1000) { // 5 minutes
+            console.log('📦 Using cached data');
+            callback(null, data);
+            return;
+        }
+    }
     
-    window[callbackName] = function(data) {
+    // Try regular fetch first
+    fetch(url, {
+        method: 'GET',
+        mode: 'cors'
+    })
+    .then(response => response.json())
+    .then(data => {
+        // Cache the response
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+            data,
+            timestamp: Date.now()
+        }));
         callback(null, data);
-        document.head.removeChild(script);
-        delete window[callbackName];
-    };
-    
-    script.onerror = function() {
-        callback(new Error('Failed to load data'));
-        document.head.removeChild(script);
-        delete window[callbackName];
-    };
-    
-    script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + callbackName;
-    document.head.appendChild(script);
+    })
+    .catch(err => {
+        console.log('Regular fetch failed, trying JSONP approach...');
+        // Fallback to JSONP-style request
+        const script = document.createElement('script');
+        const callbackName = 'jsonpCallback_' + Math.random().toString(36).substr(2, 9);
+        window[callbackName] = (data) => {
+            // Cache the response
+            sessionStorage.setItem(cacheKey, JSON.stringify({
+                data,
+                timestamp: Date.now()
+            }));
+            callback(null, data);
+            document.head.removeChild(script);
+            delete window[callbackName];
+        };
+        script.src = `${url}&callback=${callbackName}`;
+        script.onerror = () => {
+            callback(new Error('Failed to load data'), null);
+            document.head.removeChild(script);
+            delete window[callbackName];
+        };
+        document.head.appendChild(script);
+    });
 };
 
 // --- Map URL Processing for Better Centering ---
@@ -812,7 +844,7 @@ const Dashboard = ({ setActiveTab }) => {
                     {/* Modern Competitor Rankings */}
                     {currentDashboardData.competitors && currentDashboardData.competitors.length > 0 && (
                         <div className="lg:col-span-1 flex flex-col">
-                            <div className="h-16 flex items-end pb-3">
+                            <div className="h-20 flex items-end pb-3">
                                 <div className="flex items-center space-x-2">
                                     <h3 className="text-lg font-semibold text-gray-800">Avg Score</h3>
                                     <div className="w-2 h-2 bg-gradient-to-r from-green-500 to-red-500 rounded-full"></div>
@@ -2949,25 +2981,22 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                 </div>
                 </div>
 
-                <div className="border-b border-gray-200">
-                    <nav className="-mb-px flex space-x-6 overflow-x-auto">
-                        {siteNames.map(name => (
-                            <button
-                                key={name}
-                                onClick={() => {
-                                    setActive(name);
-                                    setSearchTerm('');
-                                }}
-                                className={`whitespace-nowrap py-3 px-1 border-b-2 font-medium text-sm ${
-                                    active === name
-                                    ? 'border-green-500 text-green-600'
-                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                                }`}
-                            >
-                                {name}
-                            </button>
-                        ))}
-                    </nav>
+                <div className="flex space-x-1 mb-4 overflow-x-auto">
+                    {siteNames.map(name => (
+                        <button
+                            key={name}
+                            onClick={() => {
+                                setActive(name);
+                                setSearchTerm('');
+                            }}
+                            className={`px-4 py-2 text-sm font-medium rounded-lg whitespace-nowrap transition-colors duration-200
+                                ${active === name
+                                    ? 'bg-green-100 text-green-800'
+                                    : 'text-gray-600 hover:bg-gray-100'}`}
+                        >
+                            {name}
+                        </button>
+                    ))}
                 </div>
 
                 {/* Website Keywords Summary Bar */}
