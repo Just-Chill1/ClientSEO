@@ -43,6 +43,278 @@
     .loader-container {display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh}
     .loader {border:4px solid #f3f3f3;border-top:4px solid #3498db;border-radius:50%;width:40px;height:40px;animation:spin 1s linear infinite}
     @keyframes spin {0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+
+    /* Day/Night Toggle Switch Styles */
+    .day-night-switch {
+      position: relative;
+      width: 80px;
+      height: 40px;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      cursor: pointer;
+      transition: all 0.7s ease;
+    }
+
+    .day-night-switch.day {
+      background: linear-gradient(to bottom, #87CEEB, #E0F7FA);
+    }
+
+    .day-night-switch.night {
+      background: linear-gradient(to bottom, #0F2027, #203A43, #2C5364);
+    }
+
+    .switch-slider {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 24px;
+      height: 24px;
+      background: white;
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 10;
+    }
+
+    .day-night-switch.night .switch-slider {
+      transform: translateX(40px);
+    }
+
+    .sun {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: #fbbf24;
+      border-radius: 50%;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      transition: all 0.7s ease;
+      opacity: 1;
+    }
+
+    .day-night-switch.night .sun {
+      transform: translateY(60px);
+      opacity: 0;
+    }
+
+    .sun-rays {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+
+    .sun-ray {
+      position: absolute;
+      width: 2px;
+      height: 8px;
+      background: #f59e0b;
+      left: 50%;
+      top: 50%;
+      transform-origin: 0 0;
+      border-radius: 1px;
+    }
+
+    .sun-ray:nth-child(1) { transform: rotate(0deg) translate(-50%, -50%) translate(14px, 0); }
+    .sun-ray:nth-child(2) { transform: rotate(45deg) translate(-50%, -50%) translate(14px, 0); }
+    .sun-ray:nth-child(3) { transform: rotate(90deg) translate(-50%, -50%) translate(14px, 0); }
+    .sun-ray:nth-child(4) { transform: rotate(135deg) translate(-50%, -50%) translate(14px, 0); }
+    .sun-ray:nth-child(5) { transform: rotate(180deg) translate(-50%, -50%) translate(14px, 0); }
+    .sun-ray:nth-child(6) { transform: rotate(225deg) translate(-50%, -50%) translate(14px, 0); }
+    .sun-ray:nth-child(7) { transform: rotate(270deg) translate(-50%, -50%) translate(14px, 0); }
+    .sun-ray:nth-child(8) { transform: rotate(315deg) translate(-50%, -50%) translate(14px, 0); }
+
+    .moon {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      left: 60px;
+      top: 50%;
+      transform: translateY(-50%) translateY(-30px);
+      opacity: 0;
+      transition: all 0.7s ease 0.5s;
+    }
+
+    .day-night-switch.night .moon {
+      transform: translateY(-50%);
+      opacity: 1;
+    }
+
+    .moon-shape {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #f3f4f6;
+      border-radius: 50%;
+    }
+
+    .moon-crater {
+      position: absolute;
+      background: #0F2027;
+      border-radius: 50%;
+      width: 90%;
+      height: 90%;
+      top: -10%;
+      left: -25%;
+    }
+
+    .clouds {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.9;
+      transition: opacity 0.5s ease;
+    }
+
+    .day-night-switch.night .clouds {
+      opacity: 0;
+    }
+
+    .cloud {
+      position: absolute;
+      background: white;
+      border-radius: 50px;
+    }
+
+    .cloud-1 {
+      width: 32px;
+      height: 12px;
+      left: 48px;
+      top: 12px;
+    }
+
+    .cloud-2 {
+      width: 24px;
+      height: 10px;
+      left: 56px;
+      top: 24px;
+      opacity: 0.8;
+    }
+
+    .stars {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: 0 0 4px 2px rgba(255, 255, 255, 0.4);
+      opacity: 0;
+      transform: scale(0);
+      transition: all 0.8s ease;
+    }
+
+    .day-night-switch.night .star {
+      opacity: 0.8;
+      transform: scale(1);
+    }
+
+    .star:nth-child(1) { left: 8px; top: 8px; transition-delay: 0.7s; }
+    .star:nth-child(2) { left: 16px; top: 20px; transition-delay: 0.82s; }
+    .star:nth-child(3) { left: 24px; top: 12px; transition-delay: 0.94s; }
+    .star:nth-child(4) { left: 32px; top: 24px; transition-delay: 1.06s; }
+    .star:nth-child(5) { left: 40px; top: 8px; transition-delay: 1.18s; }
+    .star:nth-child(6) { left: 48px; top: 28px; transition-delay: 1.3s; }
+    .star:nth-child(7) { left: 56px; top: 16px; transition-delay: 1.42s; }
+    .star:nth-child(8) { left: 64px; top: 32px; transition-delay: 1.54s; }
+
+    /* Dark Mode Theme Variables */
+    :root {
+      /* Light mode colors */
+      --bg-primary: #f9fafb;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #f3f4f6;
+      --text-primary: #111827;
+      --text-secondary: #6b7280;
+      --text-tertiary: #9ca3af;
+      --border-primary: #e5e7eb;
+      --border-secondary: #d1d5db;
+      --shadow-light: rgba(0, 0, 0, 0.1);
+      --shadow-medium: rgba(0, 0, 0, 0.15);
+      --shadow-heavy: rgba(0, 0, 0, 0.25);
+      
+      /* Card backgrounds */
+      --card-bg: #ffffff;
+      --card-border: #e5e7eb;
+      --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      
+      /* Header colors */
+      --header-bg: #ffffff;
+      --header-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      
+      /* Button colors */
+      --btn-secondary-bg: #f3f4f6;
+      --btn-secondary-hover: #e5e7eb;
+      --btn-secondary-text: #374151;
+      
+      /* Input colors */
+      --input-bg: #ffffff;
+      --input-border: #d1d5db;
+      --input-focus: #3b82f6;
+      
+      /* Gradient backgrounds */
+      --gradient-blue: linear-gradient(to right, #dbeafe, #e0e7ff);
+      --gradient-slate: linear-gradient(to right, #f8fafc, #e2e8f0);
+      --gradient-green: linear-gradient(to right, #dcfce7, #bbf7d0);
+    }
+
+    [data-theme="dark"] {
+      /* Dark mode colors */
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #cbd5e1;
+      --text-tertiary: #94a3b8;
+      --border-primary: #334155;
+      --border-secondary: #475569;
+      --shadow-light: rgba(0, 0, 0, 0.3);
+      --shadow-medium: rgba(0, 0, 0, 0.4);
+      --shadow-heavy: rgba(0, 0, 0, 0.6);
+      
+      /* Card backgrounds */
+      --card-bg: #1e293b;
+      --card-border: #334155;
+      --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      
+      /* Header colors */
+      --header-bg: #1e293b;
+      --header-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      
+      /* Button colors */
+      --btn-secondary-bg: #334155;
+      --btn-secondary-hover: #475569;
+      --btn-secondary-text: #e2e8f0;
+      
+      /* Input colors */
+      --input-bg: #334155;
+      --input-border: #475569;
+      --input-focus: #60a5fa;
+      
+      /* Gradient backgrounds */
+      --gradient-blue: linear-gradient(to right, #1e3a8a, #3730a3);
+      --gradient-slate: linear-gradient(to right, #334155, #475569);
+      --gradient-green: linear-gradient(to right, #166534, #15803d);
+    }
+
+    /* Apply theme variables to base elements */
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
     
     /* Tooltip specific hover behavior */
     .info-tooltip-trigger:hover + .info-tooltip-content {
@@ -344,7 +616,7 @@ const CalendarIcon = createIcon(
 
 /* --- generic wrappers --- */
 const Card        = ({children,className=''}) => (
-  <div className={`bg-white rounded-xl shadow-md p-6 ${className}`}>{children}</div>);
+  <div className={`rounded-xl p-6 ${className}`} style={{ backgroundColor: 'var(--card-bg)', border: '1px solid var(--card-border)', boxShadow: 'var(--card-shadow)' }}>{children}</div>);
 const PageContent = ({children}) => (
   <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>);
 
@@ -6326,12 +6598,83 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
 };
 
 /* ------------------------------------------------------------------ */
+/* DAY/NIGHT TOGGLE SWITCH COMPONENT                                  */
+/* ------------------------------------------------------------------ */
+const DayNightSwitch = ({ defaultChecked = true, onToggle }) => {
+  const [isDay, setIsDay] = useState(defaultChecked);
+
+  const handleToggle = () => {
+    const newValue = !isDay;
+    setIsDay(newValue);
+    onToggle?.(newValue);
+  };
+
+  return (
+    <div 
+      className={`day-night-switch ${isDay ? 'day' : 'night'}`}
+      onClick={handleToggle}
+      role="button"
+      tabIndex={0}
+      aria-label={`Switch to ${isDay ? 'dark' : 'light'} mode`}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleToggle();
+        }
+      }}
+    >
+      {/* Slider */}
+      <div className="switch-slider"></div>
+      
+      {/* Sun */}
+      <div className="sun">
+        <div className="sun-rays">
+          <div className="sun-ray"></div>
+          <div className="sun-ray"></div>
+          <div className="sun-ray"></div>
+          <div className="sun-ray"></div>
+          <div className="sun-ray"></div>
+          <div className="sun-ray"></div>
+          <div className="sun-ray"></div>
+          <div className="sun-ray"></div>
+        </div>
+      </div>
+      
+      {/* Moon */}
+      <div className="moon">
+        <div className="moon-shape">
+          <div className="moon-crater"></div>
+        </div>
+      </div>
+      
+      {/* Clouds */}
+      <div className="clouds">
+        <div className="cloud cloud-1"></div>
+        <div className="cloud cloud-2"></div>
+      </div>
+      
+      {/* Stars */}
+      <div className="stars">
+        <div className="star"></div>
+        <div className="star"></div>
+        <div className="star"></div>
+        <div className="star"></div>
+        <div className="star"></div>
+        <div className="star"></div>
+        <div className="star"></div>
+        <div className="star"></div>
+      </div>
+    </div>
+  );
+};
+
+/* ------------------------------------------------------------------ */
 /* HEADER                                                             */
 /* ------------------------------------------------------------------ */
-const Header = ({active,setActive}) => {
+const Header = ({active,setActive,theme,onThemeToggle}) => {
   const tabs=['Dashboard','Website Stats','Keywords','Backlinks','Geogrid Maps','Tools'];
   return (
-    <header className="bg-white shadow-sm sticky top-0 z-20">
+    <header className="sticky top-0 z-20" style={{ backgroundColor: 'var(--header-bg)', boxShadow: 'var(--header-shadow)' }}>
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
@@ -6348,17 +6691,25 @@ const Header = ({active,setActive}) => {
               MedSpa SEO
             </h1>
           </div>
-          <div className="hidden md:block">
-            <div className="ml-10 flex space-x-4">
-              {tabs.map(t=>(
-                <button key={t}
-                        onClick={()=>setActive(t)}
-                        className={`px-3 py-2 rounded-md text-sm font-medium
-                          ${active===t?'bg-blue-600 text-white':'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
-                  {t}
-                </button>
-              ))}
+          <div className="flex items-center space-x-6">
+            <div className="hidden md:block">
+              <div className="ml-10 flex space-x-4">
+                {tabs.map(t=>(
+                  <button key={t}
+                          onClick={()=>setActive(t)}
+                          className={`px-3 py-2 rounded-md text-sm font-medium
+                            ${active===t?'bg-blue-600 text-white':'text-gray-500 hover:bg-gray-100 hover:text-gray-900'}`}>
+                    {t}
+                  </button>
+                ))}
+              </div>
             </div>
+            
+            {/* Day/Night Toggle Switch */}
+            <DayNightSwitch 
+              defaultChecked={theme === 'light'}
+              onToggle={onThemeToggle}
+            />
           </div>
         </div>
       </nav>
@@ -6378,10 +6729,17 @@ const App = () => {
     return validTabs.includes(tabFromUrl) ? tabFromUrl : 'Dashboard';
   };
 
+  // Initialize theme from localStorage, fallback to 'light'
+  const getInitialTheme = () => {
+    const saved = localStorage.getItem('medSpaTheme');
+    return saved === 'dark' ? 'dark' : 'light';
+  };
+
   const [tab, setTab]   = useState(getInitialTab());
   const [data, setData] = useState(null);
   const [err,  setErr]  = useState(null);
   const [load, setLoad] = useState(true);
+  const [theme, setTheme] = useState(getInitialTheme());
 
   // Update URL when tab changes
   useEffect(() => {
@@ -6394,6 +6752,21 @@ const App = () => {
     const newUrl = `${location.pathname}?${urlParams.toString()}`;
     window.history.replaceState({}, '', newUrl);
   }, [tab]);
+
+  // Handle theme changes and persist to localStorage
+  const handleThemeToggle = (isDay) => {
+    const newTheme = isDay ? 'light' : 'dark';
+    setTheme(newTheme);
+    localStorage.setItem('medSpaTheme', newTheme);
+    
+    // Apply theme to document root
+    document.documentElement.setAttribute('data-theme', newTheme);
+  };
+
+  // Apply theme on mount and when theme changes
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
 
   useEffect(() => {
     const id = new URLSearchParams(location.search).get('workbookId');
@@ -6463,8 +6836,8 @@ const App = () => {
 
   /* ----- render ----- */
             return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      <Header active={tab} setActive={setTab} />
+    <div className="min-h-screen font-sans" style={{ backgroundColor: 'var(--bg-primary)' }}>
+      <Header active={tab} setActive={setTab} theme={theme} onThemeToggle={handleThemeToggle} />
       {body}
     </div>
   );
