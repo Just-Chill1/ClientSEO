@@ -835,7 +835,7 @@ const Dashboard = ({ setActiveTab }) => {
         }
 
         return (
-            <Card className="col-span-12 lg:col-span-8">
+            <Card className="col-span-12 lg:col-span-8 group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.005] hover:border-blue-200/60">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* Modern Competitor Rankings */}
                     {currentDashboardData.competitors && currentDashboardData.competitors.length > 0 && (
@@ -1050,7 +1050,7 @@ const Dashboard = ({ setActiveTab }) => {
         }
 
         return (
-            <Card className="col-span-12 lg:col-span-4 h-full">
+            <Card className="col-span-12 lg:col-span-4 h-full group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.005] hover:border-blue-200/60">
                  <div className="flex items-center space-x-2 mb-4">
                     <h2 className="text-xl font-bold text-gray-800">Census Data</h2>
                     <InfoTooltip text="Provides demographic and economic information for your target service area." />
@@ -1140,7 +1140,7 @@ const Dashboard = ({ setActiveTab }) => {
         }
 
         return (
-            <Card className="col-span-12 overflow-x-auto">
+            <Card className="col-span-12 overflow-x-auto group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.005] hover:border-blue-200/60">
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center space-x-2">
                         <h2 className="text-xl font-bold text-gray-800">Overview</h2>
@@ -1779,7 +1779,7 @@ const Dashboard = ({ setActiveTab }) => {
         
         return (
             <div className="col-span-12 md:col-span-6">
-                <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+                <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.005] hover:border-blue-200/60">
                     {/* Header Section */}
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-5 border-b border-gray-100">
                         <div className="flex justify-between items-start">
@@ -2757,7 +2757,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                 </div>
             </div>
 
-            <Card className="mb-6">
+            <Card className="mb-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.005] hover:border-blue-200/60">
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center space-x-2">
                         <h2 className="text-xl font-bold text-gray-800">Keywords Summary</h2>
@@ -2958,7 +2958,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                 </div>
             </Card>
 
-            <Card>
+            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.005] hover:border-blue-200/60">
                                 <div className="flex items-center space-x-2 mb-4">
                     <h2 className="text-xl font-bold text-gray-800">Keywords</h2>
                     <InfoTooltip text="Analyze keyword rankings for your site and competitors. Use the tabs to switch between different sites." />
@@ -3672,7 +3672,7 @@ const Backlinks = () => {
                 </div>
             </div>
 
-            <Card className="mb-6">
+            <Card className="mb-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.005] hover:border-blue-200/60">
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center space-x-2">
                         <h2 className="text-xl font-bold text-gray-800">Backlinks Summary</h2>
@@ -3879,7 +3879,7 @@ const Backlinks = () => {
                 </div>
             </Card>
 
-            <Card>
+            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.005] hover:border-blue-200/60">
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center space-x-2">
                         <h2 className="text-xl font-bold text-gray-800">Backlinks</h2>
@@ -4394,7 +4394,7 @@ const GeogridMaps = () => {
         };
 
         return (
-            <Card>
+            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.005] hover:border-blue-200/60">
                 <div className="flex justify-between items-start mb-4">
                     <div>
                         <h2 className="text-xl font-bold text-gray-800">{keyword}</h2>
