@@ -335,6 +335,14 @@
      [data-theme="dark"] .border-gray-200 { border-color: var(--border-secondary) !important; }
      [data-theme="dark"] .border-gray-300 { border-color: var(--border-secondary) !important; }
 
+     /* Ensure all summary stat containers have visible borders in dark mode */
+     [data-theme="dark"] .space-y-3 > div,
+     [data-theme="dark"] .space-y-6 > div {
+       border: 1px solid var(--border-primary) !important;
+       border-radius: 0.75rem;
+       background-color: var(--card-bg) !important;
+     }
+
      /* Dark mode input styles */
      [data-theme="dark"] input[type="text"],
      [data-theme="dark"] input[type="search"] {
@@ -462,6 +470,68 @@
 
      [data-theme="dark"] .border-green-200 {
        border-color: rgba(34, 197, 94, 0.3) !important;
+     }
+
+     /* Dark mode link and hover styles */
+     [data-theme="dark"] a {
+       color: #60a5fa !important;
+     }
+
+     [data-theme="dark"] a:hover {
+       color: #93c5fd !important;
+       text-decoration: underline;
+     }
+
+     /* Dark mode table row hover - subtle background change */
+     [data-theme="dark"] tbody tr:hover {
+       background-color: rgba(59, 130, 246, 0.05) !important;
+     }
+
+     [data-theme="dark"] tbody tr:hover td {
+       color: var(--text-primary) !important;
+     }
+
+     /* Dark mode button hover improvements */
+     [data-theme="dark"] button:hover {
+       background-color: var(--btn-secondary-hover) !important;
+       color: var(--text-primary) !important;
+     }
+
+     /* Specific styling for tab buttons in dark mode */
+     [data-theme="dark"] .space-x-1 button {
+       background-color: var(--bg-tertiary) !important;
+       color: var(--text-secondary) !important;
+       border: 1px solid var(--border-primary) !important;
+     }
+
+     [data-theme="dark"] .space-x-1 button:hover {
+       background-color: var(--btn-secondary-hover) !important;
+       color: var(--text-primary) !important;
+     }
+
+     /* Dark mode SummaryStat component styling */
+     [data-theme="dark"] .bg-slate-50 {
+       background-color: var(--bg-tertiary) !important;
+       border: 1px solid var(--border-primary) !important;
+     }
+
+     [data-theme="dark"] .hover\\:bg-white:hover {
+       background-color: var(--btn-secondary-hover) !important;
+     }
+
+     /* Ensure all summary containers have proper dark mode styling */
+     [data-theme="dark"] .space-y-3 > div,
+     [data-theme="dark"] .space-y-6 > div {
+       background-color: var(--bg-tertiary) !important;
+       border: 1px solid var(--border-primary) !important;
+       color: var(--text-primary) !important;
+     }
+
+     /* Dark mode for metric cards in summary sections */
+     [data-theme="dark"] .p-6.bg-slate-100 {
+       background-color: var(--bg-tertiary) !important;
+       border: 1px solid var(--border-primary) !important;
+       color: var(--text-primary) !important;
      }
      
      /* Tooltip specific hover behavior */
