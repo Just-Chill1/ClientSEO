@@ -220,39 +220,35 @@ const fetchWithCorsWorkaround = (url, callback) => {
     });
 };
 
-// --- Map URL Processing for Better Centering ---
-const processMapUrlForCentering = (mapUrl) => {
-    if (!mapUrl) return mapUrl;
-    
-    try {
-        // For Google Maps embed URLs, we can add parameters to improve centering
-        if (mapUrl.includes('google.com/maps/embed')) {
-            // Add zoom and center parameters if not already present
-            const url = new URL(mapUrl);
-            
-            // If no zoom is specified, add a moderate zoom level
-            if (!url.searchParams.has('zoom') && !mapUrl.includes('&z=')) {
-                // Add zoom parameter - 13 is good for local area view
-                mapUrl += mapUrl.includes('?') ? '&zoom=13' : '?zoom=13';
+    // --- Map URL Processing for Better Centering ---
+    const processMapUrlForCentering = (mapUrl) => {
+        if (!mapUrl) return mapUrl;
+        
+        try {
+            // For Google Maps embed URLs, we can add parameters to improve centering
+            if (mapUrl.includes('google.com/maps/embed')) {
+                let processedUrl = mapUrl;
+                
+                // Add zoom parameter if not present - 12 is good for local area with multiple pins
+                if (!processedUrl.includes('z=') && !processedUrl.includes('zoom=')) {
+                    processedUrl += processedUrl.includes('?') ? '&z=12' : '?z=12';
+                }
+                
+                // Add output parameter to ensure proper embedding
+                if (!processedUrl.includes('output=embed')) {
+                    processedUrl += processedUrl.includes('?') ? '&output=embed' : '?output=embed';
+                }
+                
+                return processedUrl;
             }
             
-            // Add center parameter to focus on the map content
-            // This helps ensure the map centers on the pins rather than defaulting to top-left
-            if (!url.searchParams.has('center') && !mapUrl.includes('&center=')) {
-                // Add center parameter to improve initial view
-                mapUrl += mapUrl.includes('?') ? '&center=auto' : '?center=auto';
-            }
-            
+            // For other map services, return as-is
+            return mapUrl;
+        } catch (error) {
+            console.warn('Error processing map URL:', error);
             return mapUrl;
         }
-        
-        // For other map services, return as-is
-        return mapUrl;
-    } catch (error) {
-        console.warn('Error processing map URL:', error);
-        return mapUrl;
-    }
-};
+    };
 
 /* ------------------------------------------------------------------ */
 /* helpers  – icon factory  +  shared icons                           */
@@ -844,9 +840,9 @@ const Dashboard = ({ setActiveTab }) => {
                     {/* Modern Competitor Rankings */}
                     {currentDashboardData.competitors && currentDashboardData.competitors.length > 0 && (
                         <div className="lg:col-span-1 flex flex-col">
-                            <div className="h-20 flex items-end pb-3">
+                            <div className="mb-4">
                                 <div className="flex items-center space-x-2">
-                                    <h3 className="text-lg font-semibold text-gray-800">Avg Score</h3>
+                                    <h3 className="text-xl font-bold text-gray-800">Avg Score</h3>
                                     <div className="w-2 h-2 bg-gradient-to-r from-green-500 to-red-500 rounded-full"></div>
                                 </div>
                             </div>
