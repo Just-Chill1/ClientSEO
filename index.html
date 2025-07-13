@@ -840,14 +840,13 @@ const Dashboard = ({ setActiveTab }) => {
                     {/* Modern Competitor Rankings */}
                     {currentDashboardData.competitors && currentDashboardData.competitors.length > 0 && (
                         <div className="lg:col-span-1 flex flex-col">
-                            <div className="flex justify-between items-center mb-4">
+                            <div className="mb-3 pt-12">
                                 <div className="flex items-center space-x-2">
-                                    <h3 className="text-xl font-bold text-gray-800">Avg Score</h3>
+                                    <h3 className="text-lg font-semibold text-gray-800">Avg Score</h3>
                                     <div className="w-2 h-2 bg-gradient-to-r from-green-500 to-red-500 rounded-full"></div>
                                 </div>
                             </div>
-                            <div className="mt-16"></div>
-                            <div className="space-y-3">
+                            <div className="space-y-1.5 max-h-[520px] overflow-hidden">
                                 {currentDashboardData.competitors.map((comp, index) => {
                                     const isClient = comp.isClient;
                                     const rank = typeof comp.rank === 'number' ? comp.rank : 0;
@@ -903,7 +902,7 @@ const Dashboard = ({ setActiveTab }) => {
                                             {/* Subtle background pattern */}
                                             <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent pointer-events-none"></div>
                                             
-                                            <div className="relative p-4 pt-8 flex items-center space-x-4">
+                                            <div className="relative p-3 pt-6 flex items-center space-x-3">
                                                 {/* Modern Score Badge - Hexagonal style */}
                                                 <div className="relative">
                                                     <div className={`w-16 h-16 rounded-2xl ${scoreColors.bg} ${scoreColors.border} border-2 flex items-center justify-center font-bold ${scoreColors.text} text-lg shadow-lg group-hover:scale-105 transition-all duration-200 relative overflow-hidden`}>
