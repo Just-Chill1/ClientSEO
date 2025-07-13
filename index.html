@@ -169,55 +169,57 @@ const {useState, useEffect, useRef, useMemo} = React;
 
 // --- Helper function to fetch data with CORS workaround and caching ---
 const fetchWithCorsWorkaround = (url, callback) => {
-    // Check cache first (5 minute cache)
-    const cacheKey = `seo_data_${url}`;
-    const cached = sessionStorage.getItem(cacheKey);
-    if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < 5 * 60 * 1000) { // 5 minutes
-            console.log('📦 Using cached data');
-            callback(null, data);
-            return;
-        }
-    }
+    const script = document.createElement('script');
+    const callbackName = 'callback_' + Math.random().toString(36).substr(2, 9);
     
-    // Try regular fetch first
-    fetch(url, {
-        method: 'GET',
-        mode: 'cors'
-    })
-    .then(response => response.json())
-    .then(data => {
-        // Cache the response
-        sessionStorage.setItem(cacheKey, JSON.stringify({
-            data,
-            timestamp: Date.now()
-        }));
+    window[callbackName] = function(data) {
         callback(null, data);
-    })
-    .catch(err => {
-        console.log('Regular fetch failed, trying JSONP approach...');
-        // Fallback to JSONP-style request
-        const script = document.createElement('script');
-        const callbackName = 'jsonpCallback_' + Math.random().toString(36).substr(2, 9);
-        window[callbackName] = (data) => {
-            // Cache the response
-            sessionStorage.setItem(cacheKey, JSON.stringify({
-                data,
-                timestamp: Date.now()
-            }));
-            callback(null, data);
-            document.head.removeChild(script);
-            delete window[callbackName];
-        };
-        script.src = `${url}&callback=${callbackName}`;
-        script.onerror = () => {
-            callback(new Error('Failed to load data'), null);
-            document.head.removeChild(script);
-            delete window[callbackName];
-        };
-        document.head.appendChild(script);
-    });
+        document.head.removeChild(script);
+        delete window[callbackName];
+    };
+    
+    script.onerror = function() {
+        callback(new Error('Failed to load data'));
+        document.head.removeChild(script);
+        delete window[callbackName];
+    };
+    
+    script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + callbackName;
+    document.head.appendChild(script);
+};
+
+// --- Map URL Processing for Better Centering ---
+const processMapUrlForCentering = (mapUrl) => {
+    if (!mapUrl) return mapUrl;
+    
+    try {
+        // For Google Maps embed URLs, we can add parameters to improve centering
+        if (mapUrl.includes('google.com/maps/embed')) {
+            // Add zoom and center parameters if not already present
+            const url = new URL(mapUrl);
+            
+            // If no zoom is specified, add a moderate zoom level
+            if (!url.searchParams.has('zoom') && !mapUrl.includes('&z=')) {
+                // Add zoom parameter - 13 is good for local area view
+                mapUrl += mapUrl.includes('?') ? '&zoom=13' : '?zoom=13';
+            }
+            
+            // Add center parameter to focus on the map content
+            // This helps ensure the map centers on the pins rather than defaulting to top-left
+            if (!url.searchParams.has('center') && !mapUrl.includes('&center=')) {
+                // Add center parameter to improve initial view
+                mapUrl += mapUrl.includes('?') ? '&center=auto' : '?center=auto';
+            }
+            
+            return mapUrl;
+        }
+        
+        // For other map services, return as-is
+        return mapUrl;
+    } catch (error) {
+        console.warn('Error processing map URL:', error);
+        return mapUrl;
+    }
 };
 
 /* ------------------------------------------------------------------ */
@@ -972,7 +974,7 @@ const Dashboard = ({ setActiveTab }) => {
                         {currentDashboardData.mapLink ? (
                             <div className="relative w-full h-[600px] overflow-hidden map-container">
                                 <iframe 
-                                    src={currentDashboardData.mapLink}
+                                    src={processMapUrlForCentering(currentDashboardData.mapLink)}
                                     className="w-full h-full rounded-lg border border-gray-200 map-iframe"
                                     style={{ background: '#f9fafb' }}
                                     loading="lazy"
@@ -4532,7 +4534,7 @@ const GeogridMaps = () => {
                         {currentData.mapLink ? (
                             <div className="relative w-full h-[550px] overflow-hidden -mx-2 map-container">
                                 <iframe 
-                                    src={currentData.mapLink}
+                                    src={processMapUrlForCentering(currentData.mapLink)}
                                     className="w-full h-full rounded-lg map-iframe"
                                     style={{ background: '#f9fafb' }}
                                     loading="lazy"
