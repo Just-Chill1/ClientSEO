@@ -422,7 +422,7 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
     };
 
     return (
-        <Card className="mt-8">
+        <Card className="mt-8 group hover:shadow-xl transition-all duration-300 transform hover:scale-[1.01] hover:-translate-y-1">
             <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center space-x-2">
                     <h2 className="text-xl font-bold text-gray-800">AI Report</h2>
@@ -5507,6 +5507,9 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
         const circumference = 2 * Math.PI * 85;
         const strokeDasharray = circumference;
         
+        // Get score colors for this specific score
+        const scoreColors = getScoreColor(score);
+        
         // Cap visual progress to ensure there's always a small gap (max 96.5% visual)
         const visualScore = Math.min(score, 96.5);
         const targetOffset = circumference - (visualScore / 100) * circumference;
@@ -5776,7 +5779,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
         const yAxisConfig = getSmartYAxisConfig(data, dataKey);
 
         return (
-            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200">
+            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200 group transform hover:scale-[1.02] hover:-translate-y-1">
                 <div className="flex justify-between items-start mb-4">
                     <div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
@@ -6099,7 +6102,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             </div>
                             
                             {/* Detailed Hover Tooltip with improved hover behavior */}
-                            <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[600px] bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50 pointer-events-none group-hover:pointer-events-auto">
+                            <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[600px] bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-[60] pointer-events-none group-hover:pointer-events-auto">
                                 <div className="px-4 py-3 bg-gray-800 rounded-t-xl font-semibold border-b border-gray-700">
                                     Technical SEO Health Check Results
                                 </div>
@@ -6254,7 +6257,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             </div>
 
                         {/* Modern Technical SEO Table */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300 transform hover:scale-[1.005] hover:-translate-y-1">
                 <div className="bg-gradient-to-r from-slate-50 to-blue-50 px-8 py-6 border-b border-gray-200">
                     <h2 className="text-2xl font-bold text-gray-900">Technical SEO Checklist</h2>
                     <p className="text-gray-600 mt-1">Essential technical elements across all websites</p>
