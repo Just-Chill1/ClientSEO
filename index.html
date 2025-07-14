@@ -308,7 +308,7 @@
       --input-focus: #60a5fa;
       
       /* Gradient backgrounds */
-      --gradient-blue: linear-gradient(to right, #1e3a8a, #312e81);
+      --gradient-blue: linear-gradient(to right, #1e40af, #3730a3);
       --gradient-slate: linear-gradient(to right, #334155, #475569);
       --gradient-green: linear-gradient(to right, #166534, #15803d);
       
@@ -549,6 +549,11 @@
        color: #60a5fa !important;
      }
 
+     /* Fix geogrid client white text in dark mode - specifically for star icons */
+     [data-theme="dark"] .text-white.font-bold {
+       color: #60a5fa !important;
+     }
+
      /* AI Report and client highlights fix for dark mode */
      [data-theme="dark"] .bg-blue-50 {
        background-color: rgba(59, 130, 246, 0.1) !important;
@@ -634,9 +639,16 @@
       pointer-events: none;
     }
     
-    /* Enable pointer events only when clicked/active */
+    /* Enable pointer events when clicked or after first click */
+    .map-container.active .map-iframe,
     .map-container:active .map-iframe {
       pointer-events: auto;
+    }
+    
+    /* Prevent hover effects from interfering with map interaction */
+    .map-container:hover {
+      transform: none !important;
+      scale: none !important;
     }
     
     /* Add a subtle overlay to indicate click-to-interact */
@@ -776,6 +788,17 @@ const fetchWithCorsWorkaround = (url, callback) => {
             console.warn('Error processing map URL:', error);
             return mapUrl;
         }
+    };
+
+    // Handle map interaction
+    const handleMapClick = (event) => {
+        const mapContainer = event.currentTarget;
+        mapContainer.classList.add('active');
+        
+        // Remove active class after 30 seconds of inactivity
+        setTimeout(() => {
+            mapContainer.classList.remove('active');
+        }, 30000);
     };
 
 /* ------------------------------------------------------------------ */
@@ -993,7 +1016,7 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
                     }} 
                 />
                 {!isExpanded && (
-                    <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent dark:from-slate-700 dark:to-transparent"></div>
+                    <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent"></div>
                 )}
             </div>
         </Card>
@@ -1528,7 +1551,7 @@ const Dashboard = ({ setActiveTab }) => {
                             )}
                         </div>
                         {currentDashboardData.mapLink ? (
-                            <div className="relative w-full h-[600px] overflow-hidden map-container">
+                            <div className="relative w-full h-[600px] overflow-hidden map-container" onClick={handleMapClick}>
                                 <iframe 
                                     src={processMapUrlForCentering(currentDashboardData.mapLink)}
                                     className="w-full h-full rounded-lg border border-gray-200 map-iframe"
@@ -5085,7 +5108,7 @@ const GeogridMaps = () => {
                     {/* Right Column: Map */}
                     <div className="md:col-span-3">
                         {currentData.mapLink ? (
-                            <div className="relative w-full h-[550px] overflow-hidden mx-0 map-container">
+                            <div className="relative w-full h-[550px] overflow-hidden mx-0 map-container" onClick={handleMapClick}>
                                 <iframe 
                                     src={processMapUrlForCentering(currentData.mapLink)}
                                     className="w-full h-full rounded-lg map-iframe"
@@ -6630,7 +6653,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             </div>
                             
                             {/* Detailed Hover Tooltip with improved hover behavior */}
-                            <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[600px] bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-[100] pointer-events-none group-hover:pointer-events-auto">
+                                                                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[600px] bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-[9999] pointer-events-none group-hover:pointer-events-auto">
                                 <div className="px-4 py-3 bg-gray-800 rounded-t-xl font-semibold border-b border-gray-700">
                                     Technical SEO Health Check Results
                                 </div>
@@ -6786,9 +6809,12 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
 
                         {/* Modern Technical SEO Table */}
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60 hover:scale-[1.001]">
+                <div className="flex items-center space-x-2 mb-4">
+                    <h2 className="text-xl font-bold text-gray-800">Technical SEO Checklist</h2>
+                    <InfoTooltip text="Essential technical elements across all websites for optimal search engine performance." />
+                </div>
                 <div className="bg-gradient-to-r from-slate-50 to-blue-50 px-8 py-6 border-b border-gray-200">
-                    <h2 className="text-2xl font-bold text-gray-900">Technical SEO Checklist</h2>
-                    <p className="text-gray-600 mt-1">Essential technical elements across all websites</p>
+                    <p className="text-gray-600">Essential technical elements across all websites</p>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full">
