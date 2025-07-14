@@ -792,15 +792,17 @@ const InfoTooltip = ({ text }) => (
 /* ------------------------------------------------------------------ */
 // Minimal Sun/Moon Toggle Button for Dark/Light Mode
 const ThemeToggleButton = ({ isLight, onToggle }) => {
+  // Colors for icon: match tab text (light: #6b7280, dark: #cbd5e1)
+  const iconColor = isLight ? '#6b7280' : '#cbd5e1';
   // Gradient for hover (matches logo): from #3b82f6 to #ec4899
-  const gradient = 'linear-gradient(90deg, #3b82f6 0%, #ec4899 100%)';
+  const gradientId = 'theme-toggle-gradient';
   return (
     <button
       onClick={() => onToggle(!isLight)}
       aria-label={`Switch to ${isLight ? 'dark' : 'light'} mode`}
       className={`transition-all duration-200 w-8 h-8 flex items-center justify-center rounded-full border focus:outline-none focus:ring-2 focus:ring-blue-400
         ${isLight ? 'bg-white border-gray-200' : 'bg-gray-800 border-gray-600'}
-        relative overflow-hidden`}
+        relative overflow-hidden group`}
       style={{ outline: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}
       tabIndex={0}
       onKeyDown={e => {
@@ -809,36 +811,37 @@ const ThemeToggleButton = ({ isLight, onToggle }) => {
           onToggle(!isLight);
         }
       }}
-      onMouseEnter={e => {
-        e.currentTarget.style.background = gradient;
-        e.currentTarget.style.borderColor = 'transparent';
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.background = isLight ? '#fff' : '#1e293b';
-        e.currentTarget.style.borderColor = isLight ? '#e5e7eb' : '#4b5563';
-      }}
     >
-      {isLight ? (
-        // Sun icon
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-colors duration-200">
-          <circle cx="12" cy="12" r="5" fill="#fde68a" />
-          <g stroke="#fbbf24">
-            <line x1="12" y1="1" x2="12" y2="3" />
-            <line x1="12" y1="21" x2="12" y2="23" />
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-            <line x1="1" y1="12" x2="3" y2="12" />
-            <line x1="21" y1="12" x2="23" y2="12" />
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-colors duration-200">
+        <defs>
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#3b82f6"/>
+            <stop offset="100%" stopColor="#ec4899"/>
+          </linearGradient>
+        </defs>
+        {isLight ? (
+          <g>
+            <circle cx="12" cy="12" r="5" fill="none" stroke={iconColor} className="icon-main" />
+            <g stroke={iconColor} className="icon-main">
+              <line x1="12" y1="1" x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+              <line x1="1" y1="12" x2="3" y2="12" />
+              <line x1="21" y1="12" x2="23" y2="12" />
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </g>
           </g>
-        </svg>
-      ) : (
-        // Moon icon
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-colors duration-200">
-          <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" fill="#fbbf24" stroke="#fbbf24" />
-        </svg>
-      )}
+        ) : (
+          <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" fill="none" stroke={iconColor} className="icon-main" />
+        )}
+      </svg>
+      <style>{`
+        .group:hover .icon-main {
+          stroke: url(#${gradientId});
+        }
+      `}</style>
     </button>
   );
 };
@@ -1675,7 +1678,7 @@ const Dashboard = ({ setActiveTab }) => {
                     </thead>
                     <tbody>
                         {overviewData.map(c => (
-                            <tr key={c.id} className={`border-b border-gray-100 ${c.isClient ? 'bg-blue-50' : ''}`}>
+                            <tr key={c.id} className={`border-b border-gray-100 ${c.isClient ? 'bg-blue-50 dark:bg-slate-700' : ''}`}>
                                 <td className="py-3 px-3">
                                     <div>
                                         <div className="flex items-baseline gap-2">
@@ -6764,7 +6767,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                          </thead>
                         <tbody className="divide-y divide-gray-100 bg-white">
                             {technicalSeoData.map((site, index) => (
-                                <tr key={site.name || site.id || index} className={`border-b border-gray-100 ${site.isClient ? 'bg-blue-50' : ''}`}>
+                                <tr key={site.name || site.id || index} className={`border-b border-gray-100 ${site.isClient ? 'bg-blue-50 dark:bg-slate-700' : ''}`}>
                                     <td className="py-3 px-3">
                                         <div>
                                             <div className={`font-semibold text-base ${site.isClient ? 'text-blue-900' : 'text-gray-900'}`}>
