@@ -587,8 +587,13 @@
        color: #60a5fa !important;
      }
 
-     /* Fix geogrid client star icons and text in dark mode */
-     [data-theme="dark"] .text-white.font-bold {
+     /* Fix geogrid client star icons and text in dark mode - more specific targeting */
+     [data-theme="dark"] .text-white.font-bold:not(.rounded-full) {
+       color: #ffffff !important;
+     }
+
+     /* Ensure position badges stay white in dark mode */
+     [data-theme="dark"] .rounded-full.text-white {
        color: #ffffff !important;
      }
 
@@ -597,6 +602,19 @@
      /* Remove white highlight around competitive analysis section */
      [data-theme="dark"] .bg-gradient-to-r.from-blue-50.to-indigo-50 {
        background: linear-gradient(to right, rgba(59, 130, 246, 0.1), rgba(99, 102, 241, 0.1)) !important;
+     }
+
+     /* Fix white borders in Website Stats and other sections */
+     [data-theme="dark"] .border-gray-200 {
+       border-color: var(--border-primary) !important;
+     }
+
+     [data-theme="dark"] .border-gray-300 {
+       border-color: var(--border-secondary) !important;
+     }
+
+     [data-theme="dark"] .hover\\:border-gray-300:hover {
+       border-color: var(--border-secondary) !important;
      }
 
      /* Tooltip specific hover behavior */
@@ -2352,7 +2370,7 @@ const Dashboard = ({ setActiveTab }) => {
         
         return (
             <div className="col-span-12 md:col-span-6">
-                <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.003] hover:border-blue-200/60">
+                <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
                     {/* Header Section */}
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-5 border-b border-gray-100">
                         <div className="flex justify-between items-start">
@@ -3330,7 +3348,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                 </div>
             </div>
 
-            <Card className="mb-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.003] hover:border-blue-200/60">
+            <Card className="mb-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center space-x-2">
                         <h2 className="text-xl font-bold text-gray-800">Keywords Summary</h2>
@@ -3531,7 +3549,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                 </div>
             </Card>
 
-            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.003] hover:border-blue-200/60">
+            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
                                 <div className="flex items-center space-x-2 mb-4">
                     <h2 className="text-xl font-bold text-gray-800">Keywords</h2>
                     <InfoTooltip text="Analyze keyword rankings for your site and competitors. Use the tabs to switch between different sites." />
@@ -4245,7 +4263,7 @@ const Backlinks = () => {
                 </div>
             </div>
 
-            <Card className="mb-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.003] hover:border-blue-200/60">
+            <Card className="mb-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center space-x-2">
                         <h2 className="text-xl font-bold text-gray-800">Backlinks Summary</h2>
@@ -4452,7 +4470,7 @@ const Backlinks = () => {
                 </div>
             </Card>
 
-            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.003] hover:border-blue-200/60">
+            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center space-x-2">
                         <h2 className="text-xl font-bold text-gray-800">Backlinks</h2>
@@ -4967,7 +4985,7 @@ const GeogridMaps = () => {
         };
 
         return (
-            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.003] hover:border-blue-200/60">
+            <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
                 <div className="flex justify-between items-start mb-4">
                     <div>
                         <h2 className="text-xl font-bold text-gray-800">{keyword}</h2>
@@ -5940,7 +5958,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             status === 'error' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600';
         
         return (
-            <div ref={cardRef} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group relative hover:-translate-y-0.5 hover:scale-[1.003]">
+            <div ref={cardRef} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group relative hover:-translate-y-0.5">
                 <div className="flex items-start justify-between mb-4">
                     <div className={`p-3 rounded-xl ${iconClasses}`}>
                         {icon}
@@ -6352,7 +6370,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
         const yAxisConfig = getSmartYAxisConfig(data, dataKey);
 
         return (
-            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group hover:-translate-y-0.5 hover:scale-[1.003]">
+            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group hover:-translate-y-0.5">
                 <div className="flex justify-between items-start mb-4">
                     <div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
@@ -6537,7 +6555,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                 <div className="xl:col-span-8 space-y-4">
                     {/* Top Row - 2 Large Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 relative hover:-translate-y-0.5 hover:scale-[1.003]">
+                        <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 relative hover:-translate-y-0.5">
                             <div className="flex items-start justify-between mb-4">
                                 <div className={`p-3 rounded-xl ${speedStatus === 'excellent' ? 'bg-green-100 text-green-600' : speedStatus === 'good' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
                                     <TrendingUp className="w-6 h-6" />
@@ -6614,7 +6632,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                 </div>
                             </div>
                         </div>
-                                                <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group relative hover:-translate-y-0.5 hover:scale-[1.003]">
+                                                <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group relative hover:-translate-y-0.5">
                             <div className="flex items-start justify-between mb-4">
                                 <div className={`p-3 rounded-xl ${checksPercentage >= 90 ? 'bg-green-100 text-green-600' : checksPercentage >= 80 ? 'bg-green-100 text-green-600' : checksPercentage >= 60 ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'}`}>
                                     <CheckCircle className="w-6 h-6" />
@@ -6729,7 +6747,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
 
                     {/* Bottom Row - 3 Compact Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5 hover:scale-[1.003]">
+                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5">
                             <div className="flex items-center justify-between">
                                 <div className={`p-2 rounded-lg ${hasBrokenLinks ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
                                     <Link2 className="w-5 h-5" />
@@ -6743,7 +6761,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             <p className="text-xs text-gray-500">{hasBrokenLinks ? 'Fix required' : 'No broken links'}</p>
                         </div>
                         
-                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5 hover:scale-[1.003]">
+                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5">
                             <div className="flex items-center justify-between">
                                 <div className={`p-2 rounded-lg ${healthData.ssl ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
                                     <ShieldCheck className="w-5 h-5" />
@@ -6757,7 +6775,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             <p className="text-xs text-gray-500">{healthData.ssl ? 'HTTPS enabled' : 'HTTPS required'}</p>
                         </div>
                         
-                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5 hover:scale-[1.003]">
+                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5">
                             <div className="flex items-center justify-between">
                                 <div className={`p-2 rounded-lg ${
                                     healthData.hasSchema 
