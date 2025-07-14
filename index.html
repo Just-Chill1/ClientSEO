@@ -577,6 +577,21 @@
        background: linear-gradient(to top, var(--card-bg), transparent) !important;
      }
 
+     /* Fix ordinal numbers (1st, 2nd, 3rd) to be white in dark mode */
+     [data-theme="dark"] .text-blue-600 {
+       color: #ffffff !important;
+     }
+
+     /* Remove all hover scale and translate effects that cause text resizing */
+     .group:hover {
+       transform: none !important;
+     }
+
+     /* Remove white highlight around competitive analysis section */
+     [data-theme="dark"] .bg-gradient-to-r.from-blue-50.to-indigo-50 {
+       background: linear-gradient(to right, rgba(59, 130, 246, 0.1), rgba(99, 102, 241, 0.1)) !important;
+     }
+
      /* Tooltip specific hover behavior */
     .info-tooltip-trigger:hover + .info-tooltip-content {
       opacity: 1;
@@ -6809,16 +6824,12 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
 
                         {/* Modern Technical SEO Table */}
             <div className="mb-8">
+                <div className="flex items-center space-x-2 mb-4">
+                    <h2 className="text-xl font-bold text-gray-800">Technical SEO Checklist</h2>
+                    <InfoTooltip text="Essential technical elements across all websites for optimal search engine performance." />
+                </div>
+                <p className="text-gray-600 mb-4">Essential technical elements across all websites</p>
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300 hover:border-blue-200/60">
-                    <div className="px-8 py-6 border-b border-gray-200">
-                        <div className="flex items-center space-x-2">
-                            <h2 className="text-xl font-bold text-gray-800">Technical SEO Checklist</h2>
-                            <InfoTooltip text="Essential technical elements across all websites for optimal search engine performance." />
-                        </div>
-                    </div>
-                    <div className="bg-gradient-to-r from-slate-50 to-blue-50 px-8 py-6 border-b border-gray-200">
-                        <p className="text-gray-600">Essential technical elements across all websites</p>
-                    </div>
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
