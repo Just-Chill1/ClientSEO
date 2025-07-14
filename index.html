@@ -810,7 +810,7 @@ const ThemeToggleButton = ({ isLight, onToggle }) => {
         }
       }}
     >
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={`url(#${gradientId})`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-colors duration-200">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={isLight ? `url(#${gradientId})` : iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-colors duration-200">
         <defs>
           <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#3b82f6"/>
@@ -1662,7 +1662,7 @@ const Dashboard = ({ setActiveTab }) => {
                 </div>
                 <table className="w-full text-left text-sm whitespace-nowrap">
                     <thead>
-                        <tr className="border-b-2 border-gray-200">
+                        <tr className="border-b-2 border-t border-gray-200">
                             <th className="py-2 px-3">Clinic</th>
                             <th className="py-2 px-3 text-center">Site Speed</th>
                             <th className="py-2 px-3 text-center">Keywords #1</th>
@@ -3555,7 +3555,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                 <div className="mt-4 overflow-x-auto">
                     <table className="w-full text-left text-sm whitespace-nowrap">
                         <thead>
-                            <tr className="border-b-2 border-gray-200 bg-gray-50">
+                            <tr className="border-b-2 border-t border-gray-200 bg-gray-50">
                                 <th className="py-2 px-3">Keyword</th>
                                 <th className="py-2 px-3 text-center">Position</th>
                                 <th className="py-2 px-3 text-center">Previous</th>
@@ -4458,7 +4458,7 @@ const Backlinks = () => {
                 <div className="mt-4 overflow-x-auto">
                     <table className="w-full text-left text-sm whitespace-nowrap">
                         <thead>
-                            <tr className="border-b-2 border-gray-200 bg-gray-50">
+                            <tr className="border-b-2 border-t border-gray-200 bg-gray-50">
                                 <th className="py-2 px-3">Backlink URL</th>
                                 <th className="py-2 px-3 text-center">Status</th>
                                 <th className="py-2 px-3 text-center">Spam Score</th>
@@ -6752,7 +6752,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
-                            <tr className="border-b-2 border-gray-200">
+                            <tr className="border-b-2 border-t border-gray-200">
                                 <th className="py-2 px-3 text-left">Clinic Name</th>
                                 <th className="py-2 px-3 text-center">SSL Certificate</th>
                                 <th className="py-2 px-3 text-center">Schema Markup</th>
