@@ -792,12 +792,16 @@ const InfoTooltip = ({ text }) => (
 /* ------------------------------------------------------------------ */
 // Minimal Sun/Moon Toggle Button for Dark/Light Mode
 const ThemeToggleButton = ({ isLight, onToggle }) => {
+  // Gradient for hover (matches logo): from #3b82f6 to #ec4899
+  const gradient = 'linear-gradient(90deg, #3b82f6 0%, #ec4899 100%)';
   return (
     <button
       onClick={() => onToggle(!isLight)}
       aria-label={`Switch to ${isLight ? 'dark' : 'light'} mode`}
-      className={`transition-all duration-200 w-10 h-10 flex items-center justify-center rounded-full border border-gray-200 shadow-sm bg-white dark:bg-gray-800 hover:scale-110 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-400`}
-      style={{ outline: 'none' }}
+      className={`transition-all duration-200 w-8 h-8 flex items-center justify-center rounded-full border focus:outline-none focus:ring-2 focus:ring-blue-400
+        ${isLight ? 'bg-white border-gray-200' : 'bg-gray-800 border-gray-600'}
+        relative overflow-hidden`}
+      style={{ outline: 'none', boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}
       tabIndex={0}
       onKeyDown={e => {
         if (e.key === 'Enter' || e.key === ' ') {
@@ -805,10 +809,18 @@ const ThemeToggleButton = ({ isLight, onToggle }) => {
           onToggle(!isLight);
         }
       }}
+      onMouseEnter={e => {
+        e.currentTarget.style.background = gradient;
+        e.currentTarget.style.borderColor = 'transparent';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.background = isLight ? '#fff' : '#1e293b';
+        e.currentTarget.style.borderColor = isLight ? '#e5e7eb' : '#4b5563';
+      }}
     >
       {isLight ? (
         // Sun icon
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-colors duration-200">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-colors duration-200">
           <circle cx="12" cy="12" r="5" fill="#fde68a" />
           <g stroke="#fbbf24">
             <line x1="12" y1="1" x2="12" y2="3" />
@@ -823,7 +835,7 @@ const ThemeToggleButton = ({ isLight, onToggle }) => {
         </svg>
       ) : (
         // Moon icon
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-colors duration-200">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-colors duration-200">
           <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" fill="#fbbf24" stroke="#fbbf24" />
         </svg>
       )}
@@ -6237,7 +6249,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
         };
 
         // Assign colors to each entry with truncated names
-        const dataWithColors = businessesWithColors.map((entry, index) => {
+        const dataWithColors = businessesWithColors.map((entry, index) => { 
             const truncatedName = truncateName(entry.name);
             return { 
                 ...entry, 
