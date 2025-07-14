@@ -308,13 +308,13 @@
       --input-focus: #60a5fa;
       
       /* Gradient backgrounds */
-      --gradient-blue: linear-gradient(to right, #1e3a8a, #3730a3);
+      --gradient-blue: linear-gradient(to right, #1e3a8a, #312e81);
       --gradient-slate: linear-gradient(to right, #334155, #475569);
       --gradient-green: linear-gradient(to right, #166534, #15803d);
       
-      /* Keywords bar colors - better for dark mode */
-      --keywords-bar-bg: linear-gradient(to right, #064e3b, #065f46);
-      --keywords-bar-border: #065f46;
+      /* Keywords bar colors - more subtle for dark mode */
+      --keywords-bar-bg: linear-gradient(to right, #0f3f3c, #134e4a);
+      --keywords-bar-border: #0f766e;
     }
 
          /* Apply theme variables to base elements */
@@ -565,6 +565,11 @@
      /* Remove white highlight effect in dark mode */
      [data-theme="dark"] .bg-gradient-to-b.from-transparent.to-white {
        background: transparent !important;
+     }
+
+     /* AI report gradient fix for dark mode */
+     [data-theme="dark"] .bg-gradient-to-t.from-white.to-transparent {
+       background: linear-gradient(to top, var(--card-bg), transparent) !important;
      }
 
      /* Tooltip specific hover behavior */
@@ -988,7 +993,7 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
                     }} 
                 />
                 {!isExpanded && (
-                    <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent"></div>
+                    <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent dark:from-slate-700 dark:to-transparent"></div>
                 )}
             </div>
         </Card>
@@ -6787,20 +6792,20 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full">
-                        <thead className="bg-gradient-to-r from-gray-50 to-slate-100">
-                            <tr>
-                                <th className="px-8 py-5 text-left text-sm font-semibold text-gray-900">Clinic Name</th>
-                                <th className="px-6 py-5 text-center text-sm font-semibold text-gray-900">SSL Certificate</th>
-                                <th className="px-6 py-5 text-center text-sm font-semibold text-gray-900">Schema Markup</th>
-                                <th className="px-6 py-5 text-center text-sm font-semibold text-gray-900">H1 Tag</th>
-                                <th className="px-6 py-5 text-center text-sm font-semibold text-gray-900">Title Tag</th>
-                                <th className="px-6 py-5 text-center text-sm font-semibold text-gray-900">Meta Description</th>
+                        <thead>
+                            <tr className="border-b-2 border-gray-200">
+                                <th className="py-2 px-3 text-left">Clinic Name</th>
+                                <th className="py-2 px-3 text-center">SSL Certificate</th>
+                                <th className="py-2 px-3 text-center">Schema Markup</th>
+                                <th className="py-2 px-3 text-center">H1 Tag</th>
+                                <th className="py-2 px-3 text-center">Title Tag</th>
+                                <th className="py-2 px-3 text-center">Meta Description</th>
                              </tr>
                          </thead>
                         <tbody className="divide-y divide-gray-100 bg-white">
                             {technicalSeoData.map((site, index) => (
-                                <tr key={site.name || site.id || index} className={`hover:bg-gray-50 transition-all duration-200 ${site.isClient ? 'bg-blue-50/50 hover:bg-blue-100/50' : ''}`}>
-                                    <td className="px-8 py-6">
+                                <tr key={site.name || site.id || index} className={`border-b border-gray-100 ${site.isClient ? 'bg-blue-50' : ''}`}>
+                                    <td className="py-3 px-3">
                                         <div>
                                             <div className={`font-semibold text-base ${site.isClient ? 'text-blue-900' : 'text-gray-900'}`}>
                                                 {site.clinicName || site.name}
@@ -6815,27 +6820,27 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                             )}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-6 text-center">
+                                    <td className="py-3 px-3 text-center">
                                         {site.hasSSL ? (
                                             <CheckCircle className="w-6 h-6 text-green-500 mx-auto hover:text-green-600 transition-colors cursor-pointer" />
                                         ) : (
                                             <XCircle className="w-6 h-6 text-red-500 mx-auto hover:text-red-600 transition-colors cursor-pointer" />
                                         )}
                                     </td>
-                                    <td className="px-6 py-6 text-center">
+                                    <td className="py-3 px-3 text-center">
                                         {site.hasSchema ? (
                                             <CheckCircle className="w-6 h-6 text-green-500 mx-auto hover:text-green-600 transition-colors cursor-pointer" />
                                         ) : (
                                             <XCircle className="w-6 h-6 text-red-500 mx-auto hover:text-red-600 transition-colors cursor-pointer" />
                                         )}
                                     </td>
-                                    <td className="px-6 py-6 text-center">
+                                    <td className="py-3 px-3 text-center">
                                         <BooleanCheck value={site.h1} tooltipContent={site.h1} />
                                     </td>
-                                    <td className="px-6 py-6 text-center">
+                                    <td className="py-3 px-3 text-center">
                                         <BooleanCheck value={site.title} tooltipContent={site.title} />
                                     </td>
-                                    <td className="px-6 py-6 text-center">
+                                    <td className="py-3 px-3 text-center">
                                         <BooleanCheck value={site.description} tooltipContent={site.description} />
                                     </td>
                                  </tr>
