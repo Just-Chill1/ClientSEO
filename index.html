@@ -1674,7 +1674,7 @@ const Dashboard = ({ setActiveTab }) => {
                     </thead>
                     <tbody>
                         {overviewData.map(c => (
-                            <tr key={c.id} className={`border-b border-gray-100 ${c.isClient ? 'bg-blue-50 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200' : ''}`}>
+                            <tr key={c.id} className={`border-b border-gray-100`}>
                                 <td className="py-3 px-3">
                                     <div>
                                         <div className="flex items-baseline gap-2">
@@ -6763,10 +6763,10 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                          </thead>
                         <tbody className="divide-y divide-gray-100 bg-white">
                             {technicalSeoData.map((site, index) => (
-                                <tr key={site.name || site.id || index} className={`border-b border-gray-100 ${site.isClient ? 'bg-blue-50 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200' : ''}`}>
+                                <tr key={site.name || site.id || index} className={`border-b border-gray-100`}>
                                     <td className="py-3 px-3">
                                         <div>
-                                            <div className={`font-semibold text-base ${site.isClient ? 'text-blue-900' : 'text-gray-900'}`}>
+                                            <div className={`font-semibold text-base text-gray-900`}>
                                                 {site.clinicName || site.name}
                                             </div>
                                             {site.website && (
