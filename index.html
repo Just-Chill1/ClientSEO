@@ -248,7 +248,7 @@
       /* Card backgrounds */
       --card-bg: #ffffff;
       --card-border: #e5e7eb;
-      --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
       
       /* Header colors */
       --header-bg: #ffffff;
@@ -291,7 +291,7 @@
       /* Card backgrounds */
       --card-bg: #1e293b;
       --card-border: #334155;
-      --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.15);
       
       /* Header colors */
       --header-bg: #1e293b;
@@ -582,9 +582,14 @@
        color: #ffffff !important;
      }
 
-     /* Fix geogrid client highlighting - better targeting */
+     /* Fix geogrid client highlighting - better targeting with better color */
      [data-theme="dark"] .bg-blue-50 .text-blue-900 {
-       color: #60a5fa !important;
+       color: #fbbf24 !important;
+     }
+
+     /* Fix geogrid client background to be more subtle in dark mode */
+     [data-theme="dark"] .bg-blue-50 {
+       background-color: rgba(251, 191, 36, 0.1) !important;
      }
 
      /* Fix geogrid client star icons and text in dark mode - more specific targeting */
@@ -596,6 +601,26 @@
      [data-theme="dark"] .rounded-full.text-white {
        color: #ffffff !important;
      }
+
+     /* Fix hover text effect - prevent text shifting */
+     .group:hover * {
+       backface-visibility: hidden;
+       -webkit-backface-visibility: hidden;
+       -moz-backface-visibility: hidden;
+       transform: translateZ(0);
+       -webkit-transform: translateZ(0);
+       -moz-transform: translateZ(0);
+     }
+
+     /* Fix Ranking Distribution and Keyword Dynamics columns background in dark mode */
+     [data-theme="dark"] .lg\\:grid-cols-3 > div:nth-child(2),
+     [data-theme="dark"] .lg\\:grid-cols-3 > div:nth-child(3) {
+       background-color: var(--bg-primary) !important;
+       padding: 1.5rem;
+       border-radius: 0.75rem;
+     }
+
+
 
 
 
@@ -3588,7 +3613,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
 
                 {/* Website Keywords Summary Bar */}
                 {active && (
-                    <div className="mb-3 py-1.5 px-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                    <div className="mb-3 py-1.5 px-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
                         <div className="flex items-center justify-start space-x-10">
                             {(() => {
                                 const siteData = table[active] || [];
@@ -6532,7 +6557,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-8">
                 {/* Health Score Gauge - Left Column */}
                 <div className="xl:col-span-4">
-                    <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 h-full flex flex-col justify-center hover:-translate-y-0.5 transition-all duration-300 hover:shadow-xl hover:border-blue-200/60 hover:scale-[1.003]">
+                    <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 h-full flex flex-col justify-center hover:-translate-y-0.5 transition-all duration-300 hover:shadow-xl hover:border-blue-200/60">
                         <ModernGauge score={healthData.pageScore} />
                         <div className="flex justify-center space-x-8 mt-6">
                             <ModernIssueCounter
