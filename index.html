@@ -582,10 +582,17 @@
        color: #ffffff !important;
      }
 
-     /* Remove all hover scale and translate effects that cause text resizing */
-     .group:hover {
-       transform: none !important;
+     /* Fix geogrid client highlighting - better targeting */
+     [data-theme="dark"] .bg-blue-50 .text-blue-900 {
+       color: #60a5fa !important;
      }
+
+     /* Fix geogrid client star icons and text in dark mode */
+     [data-theme="dark"] .text-white.font-bold {
+       color: #ffffff !important;
+     }
+
+
 
      /* Remove white highlight around competitive analysis section */
      [data-theme="dark"] .bg-gradient-to-r.from-blue-50.to-indigo-50 {
@@ -988,7 +995,7 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
     };
 
     return (
-                        <Card className="mt-8 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.003] hover:border-blue-200/60">
+                        <Card className="mt-8 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
             <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center space-x-2">
                     <h2 className="text-xl font-bold text-gray-800">AI Report</h2>
@@ -1401,7 +1408,7 @@ const Dashboard = ({ setActiveTab }) => {
         }
 
         return (
-                            <Card className="col-span-12 lg:col-span-8 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.003] hover:border-blue-200/60">
+                            <Card className="col-span-12 lg:col-span-8 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* Modern Competitor Rankings */}
                     {currentDashboardData.competitors && currentDashboardData.competitors.length > 0 && (
@@ -1616,7 +1623,7 @@ const Dashboard = ({ setActiveTab }) => {
         }
 
         return (
-                            <Card className="col-span-12 lg:col-span-4 h-full group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.003] hover:border-blue-200/60">
+                            <Card className="col-span-12 lg:col-span-4 h-full group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
                  <div className="flex items-center space-x-2 mb-4">
                     <h2 className="text-xl font-bold text-gray-800">Census Data</h2>
                     <InfoTooltip text="Provides demographic and economic information for your target service area." />
@@ -1706,7 +1713,7 @@ const Dashboard = ({ setActiveTab }) => {
         }
 
         return (
-                            <Card className="col-span-12 overflow-x-auto group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.003] hover:border-blue-200/60">
+                            <Card className="col-span-12 overflow-x-auto group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center space-x-2">
                         <h2 className="text-xl font-bold text-gray-800">Overview</h2>
@@ -6824,12 +6831,14 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
 
                         {/* Modern Technical SEO Table */}
             <div className="mb-8">
-                <div className="flex items-center space-x-2 mb-4">
-                    <h2 className="text-xl font-bold text-gray-800">Technical SEO Checklist</h2>
-                    <InfoTooltip text="Essential technical elements across all websites for optimal search engine performance." />
-                </div>
-                <p className="text-gray-600 mb-4">Essential technical elements across all websites</p>
                 <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300 hover:border-blue-200/60">
+                    <div className="px-8 py-6 border-b border-gray-200">
+                        <div className="flex items-center space-x-2 mb-2">
+                            <h2 className="text-xl font-bold text-gray-800">Technical SEO Checklist</h2>
+                            <InfoTooltip text="Essential technical elements across all websites for optimal search engine performance." />
+                        </div>
+                        <p className="text-gray-600">Essential technical elements across all websites</p>
+                    </div>
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
