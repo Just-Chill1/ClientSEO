@@ -268,6 +268,10 @@
       --gradient-blue: linear-gradient(to right, #dbeafe, #e0e7ff);
       --gradient-slate: linear-gradient(to right, #f8fafc, #e2e8f0);
       --gradient-green: linear-gradient(to right, #dcfce7, #bbf7d0);
+      
+      /* Keywords bar colors */
+      --keywords-bar-bg: linear-gradient(to right, #dcfce7, #bbf7d0);
+      --keywords-bar-border: #bbf7d0;
     }
 
     [data-theme="dark"] {
@@ -307,6 +311,10 @@
       --gradient-blue: linear-gradient(to right, #1e3a8a, #3730a3);
       --gradient-slate: linear-gradient(to right, #334155, #475569);
       --gradient-green: linear-gradient(to right, #166534, #15803d);
+      
+      /* Keywords bar colors - better for dark mode */
+      --keywords-bar-bg: linear-gradient(to right, #064e3b, #065f46);
+      --keywords-bar-border: #065f46;
     }
 
          /* Apply theme variables to base elements */
@@ -464,8 +472,8 @@
 
      /* Ensure metric containers have proper backgrounds */
      [data-theme="dark"] .bg-gradient-to-r.from-green-50.to-emerald-50 {
-       background: var(--gradient-green) !important;
-       border-color: rgba(34, 197, 94, 0.3) !important;
+       background: var(--keywords-bar-bg) !important;
+       border-color: var(--keywords-bar-border) !important;
      }
 
      [data-theme="dark"] .border-green-200 {
@@ -533,7 +541,32 @@
        border: 1px solid var(--border-primary) !important;
        color: var(--text-primary) !important;
      }
-     
+
+
+
+     /* Geogrid client color fix for dark mode */
+     [data-theme="dark"] .text-blue-900 {
+       color: #60a5fa !important;
+     }
+
+     /* AI Report and client highlights fix for dark mode */
+     [data-theme="dark"] .bg-blue-50 {
+       background-color: rgba(59, 130, 246, 0.1) !important;
+     }
+
+     [data-theme="dark"] .bg-blue-50\/50 {
+       background-color: rgba(59, 130, 246, 0.05) !important;
+     }
+
+     [data-theme="dark"] .hover\\:bg-blue-100\/50:hover {
+       background-color: rgba(59, 130, 246, 0.1) !important;
+     }
+
+     /* Remove white highlight effect in dark mode */
+     [data-theme="dark"] .bg-gradient-to-b.from-transparent.to-white {
+       background: transparent !important;
+     }
+
      /* Tooltip specific hover behavior */
     .info-tooltip-trigger:hover + .info-tooltip-content {
       opacity: 1;
@@ -5047,7 +5080,7 @@ const GeogridMaps = () => {
                     {/* Right Column: Map */}
                     <div className="md:col-span-3">
                         {currentData.mapLink ? (
-                            <div className="relative w-full h-[550px] overflow-hidden -mx-2 map-container">
+                            <div className="relative w-full h-[550px] overflow-hidden mx-0 map-container">
                                 <iframe 
                                     src={processMapUrlForCentering(currentData.mapLink)}
                                     className="w-full h-full rounded-lg map-iframe"
