@@ -912,7 +912,7 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
                     <InfoTooltip text="AI-generated analysis of your website's technical health, performance metrics, and competitive positioning." />
                     <button 
                         onClick={() => setIsExpanded(!isExpanded)} 
-                        className="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center transition-colors dark:text-blue-400 dark:hover:text-blue-300"
+                        className="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center transition-colors dark:text-[#97C7FD] dark:hover:text-blue-300"
                     >
                         {isExpanded ? 'Show Less' : 'Show More'}
                         {isExpanded ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
@@ -2291,7 +2291,7 @@ const Dashboard = ({ setActiveTab }) => {
                             <div key={service.name} className="group">
                                 {/* Service Row */}
                                 <div 
-                                    className="px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors duration-200"
+                                    className="px-6 py-4 hover:bg-gray-50 dark:hover:bg-[#1F2E45] cursor-pointer transition-colors duration-200"
                                     onClick={() => setExpandedService(expandedService === service.name ? null : service.name)}
                                 >
                                     <div className="flex items-center justify-between">
@@ -2417,7 +2417,7 @@ const Dashboard = ({ setActiveTab }) => {
                         <div className="px-6 py-4 bg-gray-50 border-t border-gray-100">
                             <button 
                                 onClick={() => setShowAll(!showAll)}
-                                className="w-full flex items-center justify-center space-x-2 py-2 px-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors duration-200 text-sm font-medium text-gray-700"
+                                className="w-full flex items-center justify-center space-x-2 py-2 px-4 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors duration-200 text-sm font-medium text-gray-700 dark:text-[#97C7FD] dark:hover:text-blue-300"
                             >
                                 <span>
                                     {showAll ? 'Show Less' : `Show ${serviceData.length - 5} More Services`}
