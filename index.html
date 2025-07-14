@@ -792,7 +792,6 @@ const InfoTooltip = ({ text }) => (
 /* ------------------------------------------------------------------ */
 // Minimal Sun/Moon Toggle Button for Dark/Light Mode
 const ThemeToggleButton = ({ isLight, onToggle }) => {
-  // Colors for icon: match tab text (light: #6b7280, dark: #cbd5e1)
   const iconColor = isLight ? '#6b7280' : '#cbd5e1';
   const gradientId = 'theme-toggle-gradient';
   return (
@@ -819,9 +818,8 @@ const ThemeToggleButton = ({ isLight, onToggle }) => {
           </linearGradient>
         </defs>
         {isLight ? (
-          <g className="icon-main">
-            <circle cx="12" cy="12" r="5" fill="none" stroke={iconColor} />
-            {/* Each ray is a separate line, all with class icon-main-ray for hover gradient */}
+          <g>
+            <circle cx="12" cy="12" r="5" fill="none" className="icon-main-ray" stroke={iconColor} />
             <line className="icon-main-ray" x1="12" y1="1" x2="12" y2="3" stroke={iconColor} />
             <line className="icon-main-ray" x1="12" y1="21" x2="12" y2="23" stroke={iconColor} />
             <line className="icon-main-ray" x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke={iconColor} />
@@ -832,11 +830,11 @@ const ThemeToggleButton = ({ isLight, onToggle }) => {
             <line className="icon-main-ray" x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke={iconColor} />
           </g>
         ) : (
-          <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" fill="none" stroke={iconColor} className="icon-main" />
+          <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" fill="none" className="icon-main-ray" stroke={iconColor} />
         )}
       </svg>
       <style>{`
-        .group:hover .icon-main, .group:hover .icon-main *, .group:hover .icon-main-ray {
+        .group:hover .icon-main-ray {
           stroke: url(#${gradientId});
         }
       `}</style>
@@ -1676,7 +1674,7 @@ const Dashboard = ({ setActiveTab }) => {
                     </thead>
                     <tbody>
                         {overviewData.map(c => (
-                            <tr key={c.id} className={`border-b border-gray-100 ${c.isClient ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200' : ''}`}>
+                            <tr key={c.id} className={`border-b border-gray-100 ${c.isClient ? 'bg-slate-50 text-blue-700 dark:bg-slate-700/60 dark:text-blue-200' : ''}`}>
                                 <td className="py-3 px-3">
                                     <div>
                                         <div className="flex items-baseline gap-2">
@@ -6765,7 +6763,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                          </thead>
                         <tbody className="divide-y divide-gray-100 bg-white">
                             {technicalSeoData.map((site, index) => (
-                                <tr key={site.name || site.id || index} className={`border-b border-gray-100 ${site.isClient ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200' : ''}`}>
+                                <tr key={site.name || site.id || index} className={`border-b border-gray-100 ${site.isClient ? 'bg-slate-50 text-blue-700 dark:bg-slate-700/60 dark:text-blue-200' : ''}`}>
                                     <td className="py-3 px-3">
                                         <div>
                                             <div className={`font-semibold text-base ${site.isClient ? 'text-blue-900' : 'text-gray-900'}`}>
