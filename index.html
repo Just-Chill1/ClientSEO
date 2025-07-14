@@ -6808,14 +6808,15 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             </div>
 
                         {/* Modern Technical SEO Table */}
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60 hover:scale-[1.001]">
+            <div className="mb-8">
                 <div className="flex items-center space-x-2 mb-4">
                     <h2 className="text-xl font-bold text-gray-800">Technical SEO Checklist</h2>
                     <InfoTooltip text="Essential technical elements across all websites for optimal search engine performance." />
                 </div>
-                <div className="bg-gradient-to-r from-slate-50 to-blue-50 px-8 py-6 border-b border-gray-200">
-                    <p className="text-gray-600">Essential technical elements across all websites</p>
-                </div>
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
+                    <div className="bg-gradient-to-r from-slate-50 to-blue-50 px-8 py-6 border-b border-gray-200">
+                        <p className="text-gray-600">Essential technical elements across all websites</p>
+                    </div>
                 <div className="overflow-x-auto">
                     <table className="w-full">
                         <thead>
@@ -6874,6 +6875,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                          </tbody>
                      </table>
                  </div>
+                </div>
             </div>
         </PageContent>
     );
