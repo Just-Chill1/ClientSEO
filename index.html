@@ -810,7 +810,7 @@ const ThemeToggleButton = ({ isLight, onToggle }) => {
         }
       }}
     >
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-colors duration-200">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={`url(#${gradientId})`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-colors duration-200">
         <defs>
           <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#3b82f6"/>
@@ -819,23 +819,23 @@ const ThemeToggleButton = ({ isLight, onToggle }) => {
         </defs>
         {isLight ? (
           <g>
-            <circle cx="12" cy="12" r="5" fill="none" className="icon-main-ray" stroke={iconColor} />
-            <line className="icon-main-ray" x1="12" y1="1" x2="12" y2="3" stroke={iconColor} />
-            <line className="icon-main-ray" x1="12" y1="21" x2="12" y2="23" stroke={iconColor} />
-            <line className="icon-main-ray" x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke={iconColor} />
-            <line className="icon-main-ray" x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke={iconColor} />
-            <line className="icon-main-ray" x1="1" y1="12" x2="3" y2="12" stroke={iconColor} />
-            <line className="icon-main-ray" x1="21" y1="12" x2="23" y2="12" stroke={iconColor} />
-            <line className="icon-main-ray" x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke={iconColor} />
-            <line className="icon-main-ray" x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke={iconColor} />
+            <circle cx="12" cy="12" r="5" fill="none" className="icon-main-ray" />
+            <line className="icon-main-ray" x1="12" y1="1" x2="12" y2="3" />
+            <line className="icon-main-ray" x1="12" y1="21" x2="12" y2="23" />
+            <line className="icon-main-ray" x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line className="icon-main-ray" x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line className="icon-main-ray" x1="1" y1="12" x2="3" y2="12" />
+            <line className="icon-main-ray" x1="21" y1="12" x2="23" y2="12" />
+            <line className="icon-main-ray" x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line className="icon-main-ray" x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
           </g>
         ) : (
-          <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" fill="none" className="icon-main-ray" stroke={iconColor} />
+          <path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" fill="none" className="icon-main-ray" />
         )}
       </svg>
       <style>{`
-        .group:hover .icon-main-ray {
-          stroke: url(#${gradientId});
+        .group:hover .icon-main-ray, .group:hover svg {
+          stroke: ${iconColor} !important;
         }
       `}</style>
     </button>
