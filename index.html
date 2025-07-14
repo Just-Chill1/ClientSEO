@@ -486,7 +486,7 @@
       color: white;
       padding: 4px 8px;
       border-radius: 4px;
-      font-size: 12px;
+      fontSize: 12px;
       z-index: 10;
       opacity: 0;
       transition: opacity 0.3s ease;
@@ -6284,15 +6284,15 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                 </linearGradient>
                             ))}
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" className="dark:!stroke-transparent" />
                         <XAxis 
                             dataKey="name" 
-                            tick={{ fontSize: 12, fill: '#64748b' }}
+                            tick={{ fontSize: 12, fill: '#64748b', className: 'dark:!fill-[#e0e7ef]' }}
                             height={40}
                             interval={0}
                         />
                         <YAxis 
-                            tick={{ fontSize: 12, fill: '#64748b' }}
+                            tick={{ fontSize: 12, fill: '#64748b', className: 'dark:!fill-[#e0e7ef]' }}
                             domain={yAxisConfig.domain}
                             ticks={yAxisConfig.ticks}
                             tickFormatter={yAxisConfig.tickFormatter}
@@ -6325,6 +6325,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                     fontSize: 12, 
                                     fontWeight: 'bold' 
                                 }}
+                                className="dark:!fill-[#fff]"
                                 formatter={formatLabel}
                             />
                         </Bar>
@@ -6697,7 +6698,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
 
             {/* Performance Comparison Section */}
             <div className="mb-8">
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 dark:border-transparent">
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">Competitive Analysis</h2>
                     <p className="text-gray-600 mb-6">Compare your website performance against key competitors</p>
                     
