@@ -5166,7 +5166,7 @@ const GeogridMaps = () => {
                                           </div>,
                                           'Top 5 Count'
                                       ]}
-                                      cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
+                                      cursor={{ fill: 'rgba(59, 130, 246, 0.05)' }}
                                   />
                                   <Bar dataKey='top5Total' name="Top 5 Rankings" radius={[6, 6, 0, 0]} barSize={40}>
                                       {competitors.map((entry, index) => {
@@ -5182,7 +5182,7 @@ const GeogridMaps = () => {
                                       <LabelList 
                                           dataKey="top5Total" 
                                           position="top" 
-                                          style={{ fontSize: 12, fontWeight: 400, fill: '#64748b' }}
+                                          style={{ fontSize: 12, fontWeight: 500, fill: '#64748b' }}
                                           formatter={formatLabel}
                                       />
                                   </Bar>
@@ -6315,7 +6315,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             itemStyle={{ color: '#fff' }}
                             labelStyle={{ color: '#fff', fontWeight: 'bold' }}
                             formatter={formatTooltip}
-                            cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
+                            cursor={{ fill: 'rgba(59, 130, 246, 0.05)' }}
                         />
                         <Bar dataKey={dataKey} radius={[6, 6, 0, 0]} barSize={40}>
                             {dataWithColors.map((entry, index) => (
@@ -6327,7 +6327,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             <LabelList 
                                 dataKey={dataKey} 
                                 position="top" 
-                                style={{ fontSize: 12, fontWeight: 400, fill: isDarkMode ? '#94A3B8' : '#64748b' }}
+                                style={{ fontSize: 12, fontWeight: 500, fill: isDarkMode ? '#94A3B8' : '#64748b' }}
                                 formatter={formatLabel}
                             />
                         </Bar>
