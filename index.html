@@ -5486,8 +5486,8 @@ const HealthCheckItem = ({ icon, color, title, items }) => (
 
 const BooleanCheck = ({ value, tooltipContent }) => {
     const check = value ? 
-        <CheckCircle className="w-6 h-6 text-green-500 mx-auto hover:text-green-600 transition-colors cursor-pointer" /> : 
-        <XCircle className="w-6 h-6 text-red-500 mx-auto hover:text-red-600 transition-colors cursor-pointer" />;
+        <CheckCircle className="w-6 h-6 text-green-500 mx-auto cursor-pointer" /> : 
+        <XCircle className="w-6 h-6 text-red-500 mx-auto cursor-pointer" />;
     const ContentTooltip = ({ content, children }) => (
          <div className="relative group/content flex justify-center">
             {children}
@@ -6863,7 +6863,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                     <table className="w-full">
                         <thead>
                             <tr className="border-b-2 border-t border-gray-200">
-                                <th className="py-2 px-3 text-left">Clinic Name</th>
+                                <th className="py-2 px-8 text-left">Clinic Name</th>
                                 <th className="py-2 px-3 text-center">SSL Certificate</th>
                                 <th className="py-2 px-3 text-center">Schema Markup</th>
                                 <th className="py-2 px-3 text-center">H1 Tag</th>
@@ -6874,7 +6874,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                         <tbody className="divide-y divide-gray-100 bg-white">
                             {technicalSeoData.map((site, index) => (
                                 <tr key={site.name || site.id || index} className={`border-b border-gray-100`}>
-                                    <td className="py-3 px-3">
+                                    <td className="py-3 px-8">
                                         <div>
                                             <div className={`font-semibold text-base text-gray-900`}>
                                                 {site.clinicName || site.name}
@@ -6891,16 +6891,16 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                     </td>
                                     <td className="py-3 px-3 text-center">
                                         {site.hasSSL ? (
-                                            <CheckCircle className="w-6 h-6 text-green-500 mx-auto hover:text-green-600 transition-colors cursor-pointer" />
+                                            <CheckCircle className="w-6 h-6 text-green-500 mx-auto cursor-pointer" />
                                         ) : (
-                                            <XCircle className="w-6 h-6 text-red-500 mx-auto hover:text-red-600 transition-colors cursor-pointer" />
+                                            <XCircle className="w-6 h-6 text-red-500 mx-auto cursor-pointer" />
                                         )}
                                     </td>
                                     <td className="py-3 px-3 text-center">
                                         {site.hasSchema ? (
-                                            <CheckCircle className="w-6 h-6 text-green-500 mx-auto hover:text-green-600 transition-colors cursor-pointer" />
+                                            <CheckCircle className="w-6 h-6 text-green-500 mx-auto cursor-pointer" />
                                         ) : (
-                                            <XCircle className="w-6 h-6 text-red-500 mx-auto hover:text-red-600 transition-colors cursor-pointer" />
+                                            <XCircle className="w-6 h-6 text-red-500 mx-auto cursor-pointer" />
                                         )}
                                     </td>
                                     <td className="py-3 px-3 text-center">
