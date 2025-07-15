@@ -461,16 +461,46 @@
     /* Map scroll zoom prevention */
     .map-container {
       position: relative;
+      /* Isolate map from parent hover effects */
+      isolation: isolate;
+      /* Ensure map container maintains its position */
+      transform: translateZ(0);
+      will-change: auto;
     }
     
     /* Disable pointer events by default to prevent scroll zoom */
     .map-iframe {
       pointer-events: none;
+      transition: none;
     }
     
     /* Enable pointer events only when clicked/active */
+    .map-container.active .map-iframe,
     .map-container:active .map-iframe {
       pointer-events: auto;
+    }
+    
+    /* Prevent hover effects from interfering with map interaction */
+    .map-container:hover {
+      transform: translateZ(0) !important;
+      scale: none !important;
+    }
+    
+    /* Ensure parent card hover effects don't affect map container */
+    .group:hover .map-container {
+      transform: translateZ(0) !important;
+      translate: none !important;
+    }
+    
+    /* Prevent card hover transforms from affecting map interaction */
+    [class*="hover:-translate-y"]:hover .map-container {
+      transform: translateZ(0) !important;
+    }
+    
+    /* Ensure map container click area remains stable */
+    .map-container {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
     }
     
     /* Add a subtle overlay to indicate click-to-interact */
@@ -487,6 +517,7 @@
       z-index: 10;
       opacity: 0;
       transition: opacity 0.3s ease;
+      pointer-events: none;
     }
     
     .map-container:hover::before {
@@ -757,11 +788,17 @@
     /* Map scroll zoom prevention */
     .map-container {
       position: relative;
+      /* Isolate map from parent hover effects */
+      isolation: isolate;
+      /* Ensure map container maintains its position */
+      transform: translateZ(0);
+      will-change: auto;
     }
     
     /* Disable pointer events by default to prevent scroll zoom */
     .map-iframe {
       pointer-events: none;
+      transition: none;
     }
     
     /* Enable pointer events when clicked or after first click */
@@ -772,8 +809,19 @@
     
     /* Prevent hover effects from interfering with map interaction */
     .map-container:hover {
-      transform: none !important;
+      transform: translateZ(0) !important;
       scale: none !important;
+    }
+    
+    /* Ensure parent card hover effects don't affect map container */
+    .group:hover .map-container {
+      transform: translateZ(0) !important;
+      translate: none !important;
+    }
+    
+    /* Prevent card hover transforms from affecting map interaction */
+    [class*="hover:-translate-y"]:hover .map-container {
+      transform: translateZ(0) !important;
     }
     
     /* Add a subtle overlay to indicate click-to-interact */
@@ -790,6 +838,7 @@
       z-index: 10;
       opacity: 0;
       transition: opacity 0.3s ease;
+      pointer-events: none;
     }
     
     .map-container:hover::before {
@@ -925,27 +974,80 @@ const fetchWithCorsWorkaround = (url, callback) => {
 
     // Handle map interaction
     const handleMapClick = (event) => {
+        // Prevent event bubbling to avoid interference
+        event.stopPropagation();
+        
         const mapContainer = event.currentTarget;
-        mapContainer.classList.add('active');
         const iframe = mapContainer.querySelector('iframe');
-        if (iframe) {
-          iframe.style.pointerEvents = 'auto';
+        
+        // Ensure we have the iframe element
+        if (!iframe) {
+            console.warn('Map iframe not found');
+            return;
         }
+        
+        // Add active class immediately
+        mapContainer.classList.add('active');
+        
+        // Enable pointer events with a small delay to ensure CSS is applied
+        setTimeout(() => {
+            iframe.style.pointerEvents = 'auto';
+            iframe.style.transition = 'none';
+        }, 10);
 
         // Disable interaction when clicking outside the map
         const handleOutsideClick = (e) => {
-          if (!mapContainer.contains(e.target)) {
-            mapContainer.classList.remove('active');
-            if (iframe) {
-              iframe.style.pointerEvents = 'none';
+            // Check if click is outside the map container
+            if (!mapContainer.contains(e.target)) {
+                mapContainer.classList.remove('active');
+                if (iframe) {
+                    iframe.style.pointerEvents = 'none';
+                }
+                document.removeEventListener('click', handleOutsideClick);
             }
-            document.removeEventListener('click', handleOutsideClick);
-          }
         };
 
-        // Attach one-time listener
-        document.addEventListener('click', handleOutsideClick);
+        // Remove any existing outside click listeners to prevent duplicates
+        document.removeEventListener('click', handleOutsideClick);
+        
+        // Attach new listener with a small delay to avoid immediate triggering
+        setTimeout(() => {
+            document.addEventListener('click', handleOutsideClick);
+        }, 100);
     };
+
+    // Enhanced map interaction for better reliability
+    const enhanceMapInteraction = () => {
+        // Find all map containers and add additional event listeners
+        const mapContainers = document.querySelectorAll('.map-container');
+        
+        mapContainers.forEach(container => {
+            // Add mousedown event for more reliable activation
+            container.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                const iframe = container.querySelector('iframe');
+                if (iframe) {
+                    container.classList.add('active');
+                    iframe.style.pointerEvents = 'auto';
+                }
+            });
+            
+            // Add touch events for mobile devices
+            container.addEventListener('touchstart', (e) => {
+                e.stopPropagation();
+                const iframe = container.querySelector('iframe');
+                if (iframe) {
+                    container.classList.add('active');
+                    iframe.style.pointerEvents = 'auto';
+                }
+            });
+        });
+    };
+
+    // Initialize enhanced map interaction when DOM is ready
+    document.addEventListener('DOMContentLoaded', enhanceMapInteraction);
+    // Also run it after a short delay to catch dynamically loaded maps
+    setTimeout(enhanceMapInteraction, 1000);
 
 /* ------------------------------------------------------------------ */
 /* helpers  – icon factory  +  shared icons                           */
