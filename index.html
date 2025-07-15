@@ -676,11 +676,12 @@
       border-color: var(--border-primary) !important;
     }
 
-    /* More subtle geogrid card hover effects in dark mode */
-    [data-theme="dark"] .geogrid-card:hover {
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
-      border-color: var(--border-secondary) !important;
-    }
+         /* More subtle geogrid card hover effects in dark mode */
+     [data-theme="dark"] .geogrid-card:hover {
+       box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06) !important;
+       border-color: rgba(148, 163, 184, 0.3) !important;
+       transform: none !important;
+     }
 
     /* Fix tooltip visibility in AI report sections without affecting text overflow */
     .ai-report-section .info-tooltip-content {
@@ -1610,7 +1611,7 @@ const Dashboard = ({ setActiveTab }) => {
                                                         index >= 8 && index <= 11 ? 'border-blue-500 text-blue-600' :
                                                         'border-red-500 text-red-600'
                                                     }`}>
-                                                        <span className="text-sm font-bold text-gray-800 dark:text-white">
+                                                        <span className="text-sm font-bold !text-gray-800 dark:!text-white">
                                                             {rank > 0 ? rank.toFixed(1) : '-'}
                                                         </span>
                                                     </div>
@@ -5239,7 +5240,7 @@ const GeogridMaps = () => {
                                                             index >= 8 && index <= 11 ? 'border-blue-500' :
                                                             'border-red-500'
                                                         }`}>
-                                                            <span className="text-xs font-bold text-gray-800 dark:text-white">
+                                                            <span className="text-xs font-bold !text-gray-800 dark:!text-white">
                                                                 {rank > 0 ? rank.toFixed(1) : '-'}
                                                             </span>
                                                         </div>
