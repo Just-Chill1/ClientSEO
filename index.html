@@ -6573,7 +6573,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                         </div>
                                                 <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group relative hover:-translate-y-0.5 will-change-transform group-hover:z-50">
                             <div className="flex items-start justify-between mb-4">
-                                <div className={`p-3 rounded-xl ${checksPercentage >= 90 ? 'bg-green-100 text-green-600' : checksPercentage >= 80 ? 'bg-green-100 text-green-600' : checksPercentage >= 60 ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'}`}>
+                                <div className={`p-3 rounded-xl ${checksPercentage >= 90 ? 'bg-green-100 text-green-600 group-hover:text-green-600' : checksPercentage >= 80 ? 'bg-green-100 text-green-600 group-hover:text-green-600' : checksPercentage >= 60 ? 'bg-yellow-100 text-yellow-600 group-hover:text-yellow-600' : 'bg-red-100 text-red-600 group-hover:text-red-600'}`}>
                                     <CheckCircle className="w-6 h-6" />
                                 </div>
                             </div>
@@ -6632,7 +6632,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             </div>
                             
                             {/* Detailed Hover Tooltip – centred unless it would overflow right edge */}
-                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 md:left-auto md:right-0 md:translate-x-0 w-[600px] max-w-[95vw] bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-[11000] pointer-events-none group-hover:pointer-events-auto">
+                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 md:left-auto md:right-0 md:translate-x-0 w-[600px] max-w-[95vw] bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-[99999] pointer-events-none group-hover:pointer-events-auto">
                                 <div className="px-4 py-3 bg-gray-800 rounded-t-xl font-semibold border-b border-gray-700">
                                     Technical SEO Health Check Results
                                 </div>
