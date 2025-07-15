@@ -611,6 +611,12 @@
     .text-red-500 {
       color: #ef4444 !important;
     }
+
+    /* Hide grey boxes in backlinks Link Types and Link Dynamics in dark mode */
+    [data-theme="dark"] .bg-slate-50 {
+      background-color: transparent !important;
+      border: 1px solid var(--border-primary) !important;
+    }
   </style>
   
   <!-- Non-critical CSS loaded after page load -->
