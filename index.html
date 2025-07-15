@@ -638,11 +638,27 @@
       stroke: #ef4444 !important;
     }
 
-    /* Remove grey background from Link Types and Link Dynamics headers in dark mode */
-    [data-theme="dark"] .grid.grid-cols-1.lg\\:grid-cols-3 > div:nth-child(2) .flex.items-center.space-x-2.px-2.mb-2,
-    [data-theme="dark"] .grid.grid-cols-1.lg\\:grid-cols-3 > div:nth-child(3) .flex.items-center.space-x-2.px-2.mb-2 {
-      background-color: transparent !important;
-      border: none !important;
+    /* Dark mode styling for redesigned summary cards */
+    [data-theme="dark"] .bg-white.rounded-xl.shadow-sm.border.border-gray-200 {
+      background-color: var(--bg-secondary) !important;
+      border-color: var(--border-primary) !important;
+    }
+    
+    [data-theme="dark"] .bg-gray-50.rounded-lg {
+      background-color: var(--bg-tertiary) !important;
+    }
+    
+    [data-theme="dark"] .bg-blue-50,
+    [data-theme="dark"] .bg-green-50,
+    [data-theme="dark"] .bg-red-50,
+    [data-theme="dark"] .bg-yellow-50,
+    [data-theme="dark"] .bg-emerald-50 {
+      background-color: rgba(59, 130, 246, 0.1) !important;
+    }
+    
+    [data-theme="dark"] .text-gray-700,
+    [data-theme="dark"] .text-gray-800 {
+      color: var(--text-primary) !important;
     }
 
     /* Ensure border styling works well in dark mode */
@@ -3616,97 +3632,132 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                     </div>
 
                     {/* Column 2: Ranking Distribution */}
-                    <div className="space-y-3">
-                        <div className="flex items-center space-x-2 px-2 mb-2">
-                            <h3 className="text-lg font-semibold text-gray-700">Ranking Distribution</h3>
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-300">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-800">Ranking Distribution</h3>
                             <InfoTooltip text="Shows how many keywords rank in different position ranges. Higher positions (1-3) drive more traffic and are more valuable for SEO." />
                         </div>
-                        {(() => {
-                            // Comprehensive debug logging for ranking distribution
-                            console.log('Full Keywords Summary Object:', currentSummaryData);
-                            console.log('All Summary Keys:', Object.keys(currentSummaryData || {}));
-                            console.log('Ranking Distribution Debug:', {
-                                // Try different possible field names
-                                pos1: currentSummaryData.pos1,
-                                'Position 1': currentSummaryData['Position 1'],
-                                pos2_3: currentSummaryData.pos2_3,
-                                'Position 2-3': currentSummaryData['Position 2-3'],
-                                'Positions 2-3': currentSummaryData['Positions 2-3'],
-                                pos4_10: currentSummaryData.pos4_10,
-                                'Position 4-10': currentSummaryData['Position 4-10'],
-                                'Positions 4-10': currentSummaryData['Positions 4-10'],
-                                pos11_20: currentSummaryData.pos11_20,
-                                'Position 11-20': currentSummaryData['Position 11-20'],
-                                'Positions 11-20': currentSummaryData['Positions 11-20']
-                            });
-                            return null;
-                        })()}
-                        {(() => {
-                            // Helper function to get ranking value from different possible field names
-                            const getRankingValue = (position) => {
-                                const possibleFields = {
-                                    pos1: [currentSummaryData.pos1, currentSummaryData['Position 1'], currentSummaryData['Positions 1']],
-                                    pos2_3: [currentSummaryData.pos2_3, currentSummaryData['Position 2-3'], currentSummaryData['Positions 2-3']],
-                                    pos4_10: [currentSummaryData.pos4_10, currentSummaryData['Position 4-10'], currentSummaryData['Positions 4-10']],
-                                    pos11_20: [currentSummaryData.pos11_20, currentSummaryData['Position 11-20'], currentSummaryData['Positions 11-20']]
+                        <div className="space-y-3">
+                            {(() => {
+                                // Comprehensive debug logging for ranking distribution
+                                console.log('Full Keywords Summary Object:', currentSummaryData);
+                                console.log('All Summary Keys:', Object.keys(currentSummaryData || {}));
+                                console.log('Ranking Distribution Debug:', {
+                                    // Try different possible field names
+                                    pos1: currentSummaryData.pos1,
+                                    'Position 1': currentSummaryData['Position 1'],
+                                    pos2_3: currentSummaryData.pos2_3,
+                                    'Position 2-3': currentSummaryData['Position 2-3'],
+                                    'Positions 2-3': currentSummaryData['Positions 2-3'],
+                                    pos4_10: currentSummaryData.pos4_10,
+                                    'Position 4-10': currentSummaryData['Position 4-10'],
+                                    'Positions 4-10': currentSummaryData['Positions 4-10'],
+                                    pos11_20: currentSummaryData.pos11_20,
+                                    'Position 11-20': currentSummaryData['Position 11-20'],
+                                    'Positions 11-20': currentSummaryData['Positions 11-20']
+                                });
+                                return null;
+                            })()}
+                            {(() => {
+                                // Helper function to get ranking value from different possible field names
+                                const getRankingValue = (position) => {
+                                    const possibleFields = {
+                                        pos1: [currentSummaryData.pos1, currentSummaryData['Position 1'], currentSummaryData['Positions 1']],
+                                        pos2_3: [currentSummaryData.pos2_3, currentSummaryData['Position 2-3'], currentSummaryData['Positions 2-3']],
+                                        pos4_10: [currentSummaryData.pos4_10, currentSummaryData['Position 4-10'], currentSummaryData['Positions 4-10']],
+                                        pos11_20: [currentSummaryData.pos11_20, currentSummaryData['Position 11-20'], currentSummaryData['Positions 11-20']]
+                                    };
+                                    
+                                    const values = possibleFields[position] || [];
+                                    for (let value of values) {
+                                        if (value !== undefined && value !== null && value !== '') {
+                                            return parseInt(String(value).replace(/[^\d]/g, '')) || 0;
+                                        }
+                                    }
+                                    return 0;
                                 };
                                 
-                                const values = possibleFields[position] || [];
-                                for (let value of values) {
-                                    if (value !== undefined && value !== null && value !== '') {
-                                        return parseInt(String(value).replace(/[^\d]/g, '')) || 0;
-                                    }
-                                }
-                                return 0;
-                            };
-                            
-                            const pos1Value = getRankingValue('pos1');
-                            const pos2_3Value = getRankingValue('pos2_3');
-                            const pos4_10Value = getRankingValue('pos4_10');
-                            const pos11_20Value = getRankingValue('pos11_20');
-                            
-                            return (
-                                <>
-                                    <SummaryStat label="Position 1" value={pos1Value} color={pos1Value > 0 ? 'text-emerald-600' : 'text-gray-500'} />
-                                    <SummaryStat label="Positions 2-3" value={pos2_3Value} color={pos2_3Value > 0 ? 'text-emerald-500' : 'text-gray-500'} />
-                                    <SummaryStat label="Positions 4-10" value={pos4_10Value} color={pos4_10Value > 0 ? 'text-blue-500' : 'text-gray-500'} />
-                                    <SummaryStat label="Positions 11-20" value={pos11_20Value} color={pos11_20Value > 0 ? 'text-yellow-500' : 'text-gray-500'} />
-                                </>
-                            );
-                        })()}
+                                const pos1Value = getRankingValue('pos1');
+                                const pos2_3Value = getRankingValue('pos2_3');
+                                const pos4_10Value = getRankingValue('pos4_10');
+                                const pos11_20Value = getRankingValue('pos11_20');
+                                
+                                const positions = [
+                                    { label: "Position 1", value: pos1Value, color: pos1Value > 0 ? 'text-emerald-600' : 'text-gray-500', bgColor: pos1Value > 0 ? 'bg-emerald-50' : 'bg-gray-50', icon: "🥇" },
+                                    { label: "Positions 2-3", value: pos2_3Value, color: pos2_3Value > 0 ? 'text-emerald-500' : 'text-gray-500', bgColor: pos2_3Value > 0 ? 'bg-emerald-50' : 'bg-gray-50', icon: "🥈" },
+                                    { label: "Positions 4-10", value: pos4_10Value, color: pos4_10Value > 0 ? 'text-blue-500' : 'text-gray-500', bgColor: pos4_10Value > 0 ? 'bg-blue-50' : 'bg-gray-50', icon: "🥉" },
+                                    { label: "Positions 11-20", value: pos11_20Value, color: pos11_20Value > 0 ? 'text-yellow-500' : 'text-gray-500', bgColor: pos11_20Value > 0 ? 'bg-yellow-50' : 'bg-gray-50', icon: "📊" }
+                                ];
+                                
+                                return positions.map((position, index) => (
+                                    <div key={index} className={`flex items-center justify-between p-3 rounded-lg ${position.bgColor} transition-all hover:shadow-sm`}>
+                                        <div className="flex items-center space-x-3">
+                                            <span className="text-lg">{position.icon}</span>
+                                            <span className="text-sm font-medium text-gray-700">{position.label}</span>
+                                        </div>
+                                        <span className={`text-lg font-bold ${position.color}`}>{position.value}</span>
+                                    </div>
+                                ));
+                            })()}
+                        </div>
                     </div>
 
                     {/* Column 3: Keyword Dynamics */}
-                    <div className="space-y-3">
-                        <div className="flex items-center space-x-2 px-2 mb-2">
-                            <h3 className="text-lg font-semibold text-gray-700">Keyword Dynamics</h3>
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-300">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-800">Keyword Dynamics</h3>
                             <InfoTooltip text="Tracks keyword movement over time. Shows which keywords are improving, declining, newly ranking, or have been lost since the last update." />
                         </div>
-                        <SummaryStat
-                            label="Improved"
-                            value={parseInt(currentSummaryData.isUp) || 0}
-                            color={(parseInt(currentSummaryData.isUp) || 0) > 0 ? 'text-green-600' : 'text-gray-500'}
-                            icon={<ArrowUp className="w-5 h-5" />}
-                            valuePrefix="+"
-                        />
-                        <SummaryStat
-                            label="New"
-                            value={parseInt(currentSummaryData.isNew) || 0}
-                            color={(parseInt(currentSummaryData.isNew) || 0) > 0 ? 'text-blue-600' : 'text-gray-500'}
-                            icon={<Star className="w-5 h-5 text-blue-500" fill="currentColor"/>}
-                        />
-                        <SummaryStat
-                            label="Declined"
-                            value={parseInt(currentSummaryData.isDown) || 0}
-                            color={(parseInt(currentSummaryData.isDown) || 0) > 0 ? 'text-red-600' : 'text-gray-500'}
-                            icon={<ArrowDown className="w-5 h-5" />}
-                        />
-                        <SummaryStat
-                            label="Lost"
-                            value={parseInt(currentSummaryData.isLost) || 0}
-                            color={(parseInt(currentSummaryData.isLost) || 0) > 0 ? 'text-red-600' : 'text-gray-500'}
-                            icon={<XCircle className="w-5 h-5" />}
-                        />
+                        <div className="space-y-3">
+                            {(() => {
+                                const dynamics = [
+                                    { 
+                                        label: "Improved", 
+                                        value: parseInt(currentSummaryData.isUp) || 0, 
+                                        color: (parseInt(currentSummaryData.isUp) || 0) > 0 ? 'text-green-600' : 'text-gray-500',
+                                        bgColor: (parseInt(currentSummaryData.isUp) || 0) > 0 ? 'bg-green-50' : 'bg-gray-50',
+                                        icon: <ArrowUp className="w-5 h-5" />,
+                                        valuePrefix: "+"
+                                    },
+                                    { 
+                                        label: "New", 
+                                        value: parseInt(currentSummaryData.isNew) || 0, 
+                                        color: (parseInt(currentSummaryData.isNew) || 0) > 0 ? 'text-blue-600' : 'text-gray-500',
+                                        bgColor: (parseInt(currentSummaryData.isNew) || 0) > 0 ? 'bg-blue-50' : 'bg-gray-50',
+                                        icon: <Star className="w-5 h-5 text-blue-500" fill="currentColor"/>,
+                                        valuePrefix: ""
+                                    },
+                                    { 
+                                        label: "Declined", 
+                                        value: parseInt(currentSummaryData.isDown) || 0, 
+                                        color: (parseInt(currentSummaryData.isDown) || 0) > 0 ? 'text-red-600' : 'text-gray-500',
+                                        bgColor: (parseInt(currentSummaryData.isDown) || 0) > 0 ? 'bg-red-50' : 'bg-gray-50',
+                                        icon: <ArrowDown className="w-5 h-5" />,
+                                        valuePrefix: ""
+                                    },
+                                    { 
+                                        label: "Lost", 
+                                        value: parseInt(currentSummaryData.isLost) || 0, 
+                                        color: (parseInt(currentSummaryData.isLost) || 0) > 0 ? 'text-red-600' : 'text-gray-500',
+                                        bgColor: (parseInt(currentSummaryData.isLost) || 0) > 0 ? 'bg-red-50' : 'bg-gray-50',
+                                        icon: <XCircle className="w-5 h-5" />,
+                                        valuePrefix: ""
+                                    }
+                                ];
+                                
+                                return dynamics.map((dynamic, index) => (
+                                    <div key={index} className={`flex items-center justify-between p-3 rounded-lg ${dynamic.bgColor} transition-all hover:shadow-sm`}>
+                                        <div className="flex items-center space-x-3">
+                                            <div className={`${dynamic.color}`}>{dynamic.icon}</div>
+                                            <span className="text-sm font-medium text-gray-700">{dynamic.label}</span>
+                                        </div>
+                                        <span className={`text-lg font-bold ${dynamic.color}`}>
+                                            {dynamic.value > 0 ? dynamic.valuePrefix : ''}{dynamic.value}
+                                        </span>
+                                    </div>
+                                ));
+                            })()}
+                        </div>
                     </div>
                 </div>
             </Card>
@@ -4533,12 +4584,14 @@ const Backlinks = () => {
                     </div>
 
                     {/* Column 2: Link Types Distribution */}
-                    <div className="space-y-3">
-                        <div className="flex items-center space-x-2 px-2 mb-2">
-                            <h3 className="text-lg font-semibold text-gray-700">Link Types</h3>
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-300">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-800">Link Types</h3>
                             <InfoTooltip text="Dofollow links pass SEO authority and help improve search rankings. Nofollow links don't pass authority but can still drive traffic and provide value." />
                         </div>
-                        <div className="rounded-lg p-4">
+                        
+                        {/* Modern Chart Container */}
+                        <div className="bg-gray-50 rounded-lg p-4 mb-4">
                             <ResponsiveContainer width="100%" height={180}>
                                 <BarChart data={followData} layout="vertical" margin={{ top: 20, right: 30, left: 60, bottom: 20 }}>
                                     <defs>
@@ -4587,47 +4640,83 @@ const Backlinks = () => {
                                     </Bar>
                                 </BarChart>
                             </ResponsiveContainer>
-                            <div className="flex justify-center space-x-6 text-sm mt-4">
-                                <div className="flex items-center">
-                                    <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
-                                    <span className="font-medium">{(currentSummaryData.totalDofollow || 0).toLocaleString()} Dofollow</span>
+                        </div>
+                        
+                        {/* Modern Link Type Summary */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-blue-50 transition-all hover:shadow-sm">
+                                <div className="flex items-center space-x-3">
+                                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                                    <span className="text-sm font-medium text-gray-700">Dofollow</span>
                                 </div>
-                                <div className="flex items-center">
-                                    <div className="w-3 h-3 rounded-full bg-gray-400 mr-2"></div>
-                                    <span className="font-medium">{(currentSummaryData.totalNofollow || 0).toLocaleString()} Nofollow</span>
+                                <span className="text-lg font-bold text-blue-600">{(currentSummaryData.totalDofollow || 0).toLocaleString()}</span>
+                            </div>
+                            <div className="flex items-center justify-between p-3 rounded-lg bg-gray-50 transition-all hover:shadow-sm">
+                                <div className="flex items-center space-x-3">
+                                    <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+                                    <span className="text-sm font-medium text-gray-700">Nofollow</span>
                                 </div>
+                                <span className="text-lg font-bold text-gray-600">{(currentSummaryData.totalNofollow || 0).toLocaleString()}</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Column 3: Link Dynamics */}
-                    <div className="space-y-3">
-                        <div className="flex items-center space-x-2 px-2 mb-2">
-                            <h3 className="text-lg font-semibold text-gray-700">Link Dynamics</h3>
+                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-300">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-gray-800">Link Dynamics</h3>
                             <InfoTooltip text="New Links: Recently acquired backlinks. Lost Links: Previously detected links that are no longer active. Spam Score: Average percentage indicating potential low-quality or spammy linking domains." />
                         </div>
-                        <SummaryStat
-                            label="New Links"
-                            value={currentSummaryData.newLinks || 0}
-                            color="text-green-600"
-                            icon={<PlusCircle className="w-5 h-5" />}
-                            valuePrefix="+"
-                            subtitle="Gained this period"
-                        />
-                        <SummaryStat
-                            label="Lost Links"
-                            value={currentSummaryData.lostLinks || 0}
-                            color="text-red-600"
-                            icon={<MinusCircle className="w-5 h-5" />}
-                            subtitle="Lost this period"
-                        />
-                        <SummaryStat
-                            label="Spam Score"
-                            value={`${(Number(currentSummaryData.avgSpamScore) || 0).toFixed(1)}%`}
-                            color={(Number(currentSummaryData.avgSpamScore) || 0) <= 30 ? 'text-green-600' : (Number(currentSummaryData.avgSpamScore) || 0) <= 60 ? 'text-yellow-600' : 'text-red-600'}
-                            icon={<ShieldCheck className="w-5 h-5" />}
-                            subtitle={`${(Number(currentSummaryData.spamScoreChange) || 0) <= 0 ? '↓' : '↑'} ${Math.abs(Number(currentSummaryData.spamScoreChange) || 0).toFixed(1)}% vs prev month`}
-                        />
+                        <div className="space-y-3">
+                            {(() => {
+                                const dynamics = [
+                                    { 
+                                        label: "New Links", 
+                                        value: currentSummaryData.newLinks || 0, 
+                                        color: 'text-green-600',
+                                        bgColor: 'bg-green-50',
+                                        icon: <PlusCircle className="w-5 h-5" />,
+                                        valuePrefix: "+",
+                                        subtitle: "Gained this period"
+                                    },
+                                    { 
+                                        label: "Lost Links", 
+                                        value: currentSummaryData.lostLinks || 0, 
+                                        color: 'text-red-600',
+                                        bgColor: 'bg-red-50',
+                                        icon: <MinusCircle className="w-5 h-5" />,
+                                        valuePrefix: "",
+                                        subtitle: "Lost this period"
+                                    },
+                                    { 
+                                        label: "Spam Score", 
+                                        value: `${(Number(currentSummaryData.avgSpamScore) || 0).toFixed(1)}%`, 
+                                        color: (Number(currentSummaryData.avgSpamScore) || 0) <= 30 ? 'text-green-600' : (Number(currentSummaryData.avgSpamScore) || 0) <= 60 ? 'text-yellow-600' : 'text-red-600',
+                                        bgColor: (Number(currentSummaryData.avgSpamScore) || 0) <= 30 ? 'bg-green-50' : (Number(currentSummaryData.avgSpamScore) || 0) <= 60 ? 'bg-yellow-50' : 'bg-red-50',
+                                        icon: <ShieldCheck className="w-5 h-5" />,
+                                        valuePrefix: "",
+                                        subtitle: `${(Number(currentSummaryData.spamScoreChange) || 0) <= 0 ? '↓' : '↑'} ${Math.abs(Number(currentSummaryData.spamScoreChange) || 0).toFixed(1)}% vs prev month`
+                                    }
+                                ];
+                                
+                                return dynamics.map((dynamic, index) => (
+                                    <div key={index} className={`${dynamic.bgColor} rounded-lg p-4 transition-all hover:shadow-sm`}>
+                                        <div className="flex items-center justify-between mb-2">
+                                            <div className="flex items-center space-x-3">
+                                                <div className={`${dynamic.color}`}>{dynamic.icon}</div>
+                                                <span className="text-sm font-medium text-gray-700">{dynamic.label}</span>
+                                            </div>
+                                            <span className={`text-lg font-bold ${dynamic.color}`}>
+                                                {dynamic.value > 0 ? dynamic.valuePrefix : ''}{dynamic.value}
+                                            </span>
+                                        </div>
+                                        {dynamic.subtitle && (
+                                            <p className="text-xs text-gray-500 ml-8">{dynamic.subtitle}</p>
+                                        )}
+                                    </div>
+                                ));
+                            })()}
+                        </div>
                     </div>
                 </div>
             </Card>
