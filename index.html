@@ -656,6 +656,19 @@
       border: none !important;
     }
 
+    /* Specifically target SummaryStat components in backlinks sections */
+    [data-theme="dark"] .space-y-3 .bg-slate-50,
+    [data-theme="dark"] .space-y-6 .bg-slate-50 {
+      background-color: transparent !important;
+      border: none !important;
+    }
+
+    /* Override hover states for SummaryStat in dark mode */
+    [data-theme="dark"] .space-y-3 .hover\\:bg-white:hover,
+    [data-theme="dark"] .space-y-6 .hover\\:bg-white:hover {
+      background-color: rgba(59, 130, 246, 0.05) !important;
+    }
+
     /* Hide white gridlines in Recharts charts (e.g., Link Types) */
     [data-theme="dark"] .recharts-cartesian-grid line {
       stroke: transparent !important;
