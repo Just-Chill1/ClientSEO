@@ -483,7 +483,7 @@
       color: white;
       padding: 4px 8px;
       border-radius: 4px;
-      fontSize: 12px;
+      font-size: 12px;
       z-index: 10;
       opacity: 0;
       transition: opacity 0.3s ease;
@@ -585,6 +585,24 @@
     /* Force all other cards to lower z-index when technical checks is hovered */
     .technical-checks-card:hover ~ * {
       z-index: 1 !important;
+    }
+
+    /* Prevent table row hover from affecting icon colors */
+    tbody tr:hover .text-green-500 {
+      color: #22c55e !important;
+    }
+    
+    tbody tr:hover .text-red-500 {
+      color: #ef4444 !important;
+    }
+    
+    /* Ensure icons maintain their colors on any hover state */
+    .text-green-500 {
+      color: #22c55e !important;
+    }
+    
+    .text-red-500 {
+      color: #ef4444 !important;
     }
   </style>
   
