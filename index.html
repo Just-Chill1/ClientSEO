@@ -810,9 +810,9 @@ const ThemeToggleButton = ({ isLight, onToggle }) => {
         }
       }}
     >
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={isLight ? `url(#${gradientId})` : iconColor} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-colors duration-200">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={`url(#${gradientId})`} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-colors duration-200">
         <defs>
-          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%" gradientUnits="userSpaceOnUse">
             <stop offset="0%" stopColor="#3b82f6"/>
             <stop offset="100%" stopColor="#ec4899"/>
           </linearGradient>
