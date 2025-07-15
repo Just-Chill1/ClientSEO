@@ -1489,8 +1489,8 @@ const Dashboard = ({ setActiveTab }) => {
                                     
                                     return (
                                         <div key={index} className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md">
-                                            {/* Position Badge - Top Right */}
-                                            <div className="absolute top-2 right-2 z-10">
+                                            {/* Position Badge - Top Left */}
+                                            <div className="absolute top-2 left-2 z-10">
                                                 <span className={`inline-block px-2 py-1 rounded-full text-xs font-bold shadow-sm ${
                                                     index === 0 ? 'bg-yellow-500 text-white' :
                                                     index === 1 ? 'bg-gray-500 text-white' :
@@ -1519,10 +1519,19 @@ const Dashboard = ({ setActiveTab }) => {
                                                     </div>
                                                 </div>
                                                 
-                                                {/* Score Display - Right aligned */}
+                                                {/* Score Display with Colored Circle */}
                                                 <div className="flex-shrink-0 text-right">
-                                                    <div className="text-lg font-bold text-gray-900">
-                                                        {rank > 0 ? rank.toFixed(1) : '-'}
+                                                    <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${
+                                                        index === 0 ? 'border-green-600 text-green-600' :
+                                                        index === 1 ? 'border-green-500 text-green-500' :
+                                                        index === 2 ? 'border-green-400 text-green-400' :
+                                                        index >= 3 && index <= 7 ? 'border-yellow-500 text-yellow-600' :
+                                                        index >= 8 && index <= 11 ? 'border-blue-500 text-blue-600' :
+                                                        'border-red-500 text-red-600'
+                                                    }`}>
+                                                        <span className="text-sm font-bold">
+                                                            {rank > 0 ? rank.toFixed(1) : '-'}
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -5109,8 +5118,8 @@ const GeogridMaps = () => {
                                         
                                         return (
                                             <div key={index} className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md">
-                                                {/* Position Badge - Top Right */}
-                                                <div className="absolute top-2 right-2 z-10">
+                                                {/* Position Badge - Top Left */}
+                                                <div className="absolute top-2 left-2 z-10">
                                                     <span className={`inline-block px-2 py-1 rounded-full text-xs font-bold shadow-sm ${
                                                         index === 0 ? 'bg-yellow-500 text-white' :
                                                         index === 1 ? 'bg-gray-500 text-white' :
@@ -5139,10 +5148,19 @@ const GeogridMaps = () => {
                                                         </div>
                                                     </div>
                                                     
-                                                    {/* Score Display - Right aligned */}
+                                                    {/* Score Display with Colored Circle */}
                                                     <div className="flex-shrink-0 text-right">
-                                                        <div className="text-sm font-bold text-gray-900">
-                                                            {rank > 0 ? rank.toFixed(1) : '-'}
+                                                        <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${
+                                                            index === 0 ? 'border-green-600 text-green-600' :
+                                                            index === 1 ? 'border-green-500 text-green-500' :
+                                                            index === 2 ? 'border-green-400 text-green-400' :
+                                                            index >= 3 && index <= 7 ? 'border-yellow-500 text-yellow-600' :
+                                                            index >= 8 && index <= 11 ? 'border-blue-500 text-blue-600' :
+                                                            'border-red-500 text-red-600'
+                                                        }`}>
+                                                            <span className="text-xs font-bold">
+                                                                {rank > 0 ? rank.toFixed(1) : '-'}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </div>
