@@ -71,7 +71,7 @@ function doGet(e) {
       throw new Error(`Sheet "${sheetName}" not found. Available sheets: ${SpreadsheetApp.getActiveSpreadsheet().getSheets().map(s => s.getName()).join(', ')}`);
     }
 
-    const data = aggregateServiceData(sheet, locationColumnIndex, locationFilterValue);
+    const data = aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, sheetName);
 
     // Support for JSONP
     if (e.parameter.callback) {
@@ -109,7 +109,7 @@ function parseDateHeader(header) {
     return null;
 }
 
-function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue) {
+function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, sheetName) {
   if (!sheet) return { topServices: [], newServices: [] };
   const allData = sheet.getDataRange().getValues();
   const headers = allData.shift(); // Get and remove header row
