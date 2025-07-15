@@ -4774,6 +4774,7 @@ const GeogridMaps = () => {
     const GeogridMapCard = ({ keyword, monthlyData }) => {
         const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
         const CHART_COLORS = ['#3b82f6', '#16a34a', '#f97316', '#a855f7', '#ec4899'];
+        const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
         
         // Initialize to show the newest month (index 0 since data is sorted newest first)
         // But we want to display it as "X of Y" where X starts at the total count
@@ -5116,8 +5117,11 @@ const GeogridMaps = () => {
                                           <stop offset="100%" stopColor="#7c3aed40" />
                                       </linearGradient>
                                   </defs>
-                                  {/* Conditionally render CartesianGrid based on dark mode */}
-                                  {!isDarkMode && <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />}
+                                  {!isDarkMode ? (
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                  ) : (
+                                    <CartesianGrid stroke="transparent" />
+                                  )}
                                   <XAxis 
                                       dataKey="name" 
                                       tick={{ fontSize: 12, fill: '#64748b', className: 'dark:!fill-[#94A3B8]' }}
@@ -5182,7 +5186,7 @@ const GeogridMaps = () => {
                                       <LabelList 
                                           dataKey="top5Total" 
                                           position="top" 
-                                          style={{ fontSize: 12, fontWeight: 600, fill: '#64748b' }}
+                                          style={{ fontSize: 12, fontWeight: 500, fill: '#64748b' }}
                                           formatter={formatLabel}
                                       />
                                   </Bar>
@@ -6327,7 +6331,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             <LabelList 
                                 dataKey={dataKey} 
                                 position="top" 
-                                style={{ fontSize: 12, fontWeight: 600, fill: isDarkMode ? '#94A3B8' : '#64748b' }}
+                                style={{ fontSize: 12, fontWeight: 500, fill: isDarkMode ? '#94A3B8' : '#64748b' }}
                                 formatter={formatLabel}
                             />
                         </Bar>
