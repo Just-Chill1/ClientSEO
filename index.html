@@ -514,6 +514,33 @@
         font-weight: 400 !important;
     }
 
+    /* Ensure InfoTooltip is always on top of all other elements */
+    .group\/tooltip {
+        z-index: 999998 !important;
+        position: relative !important;
+    }
+    
+    .group\/tooltip:hover {
+        z-index: 999999 !important;
+    }
+    
+    /* Force tooltip content to be on top and break out of stacking contexts */
+    .group\/tooltip > div:last-child {
+        z-index: 999999 !important;
+        position: absolute !important;
+    }
+    
+    /* Ensure cards don't interfere with tooltip stacking */
+    .group:hover {
+        z-index: auto !important;
+    }
+    
+    /* Override specific hover z-index for cards when tooltip is active */
+    .group\/tooltip:hover ~ * .group:hover,
+    .group\/tooltip:hover ~ .group:hover {
+        z-index: 1 !important;
+    }
+
     /* Dark mode status icon backgrounds */
     [data-theme="dark"] .bg-green-100 { 
        background-color: rgba(34, 197, 94, 0.1) !important; 
@@ -908,7 +935,7 @@ const PageContent = ({children}) => (
 const InfoTooltip = ({ text }) => (
     <div className="relative flex items-center group/tooltip">
         <Info className="w-4 h-4 text-gray-400" />
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-300 z-30 pointer-events-none">
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 p-3 bg-gray-800 text-white text-xs rounded-lg shadow-2xl opacity-0 group-hover/tooltip:opacity-100 transition-opacity duration-300 pointer-events-none" style={{ zIndex: 999999 }}>
             {text}
             <svg className="absolute text-gray-800 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255"><polygon className="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
         </div>
