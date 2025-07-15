@@ -1583,7 +1583,7 @@ const Dashboard = ({ setActiveTab }) => {
                                     <h2 className="text-xl font-bold text-gray-800">Avg Score</h2>
                                 </div>
                             </div>
-                            <div className="space-y-1.5 max-h-[580px] overflow-visible">
+                            <div className="space-y-2.5 max-h-[580px] overflow-visible">
                                 {currentDashboardData.competitors.map((comp, index) => {
                                     const isClient = comp.isClient;
                                     const rank = typeof comp.rank === 'number' ? comp.rank : 0;
@@ -1624,8 +1624,8 @@ const Dashboard = ({ setActiveTab }) => {
                                     
                                     return (
                                         <div key={index} className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md geogrid-card">
-                                            {/* Position Badge - Top Left */}
-                                            <div className="absolute top-1.5 left-1.5 z-10">
+                                            {/* Position Badge - Top Right, Half In/Half Out */}
+                                            <div className="absolute -top-1 -right-1 z-10">
                                                 <span className={`inline-block px-1.5 py-0.5 rounded-full text-[11px] font-bold shadow-sm ${
                                                     index === 0 ? 'bg-yellow-500 text-white' :
                                                     index === 1 ? 'bg-gray-500 text-white' :
@@ -5254,7 +5254,7 @@ const GeogridMaps = () => {
                                 <div className="flex items-center space-x-2 mb-3">
                                     <h3 className="text-lg font-semibold text-gray-800">Avg Score</h3>
                                 </div>
-                                <div className="space-y-3">
+                                <div className="space-y-2.5">
                                     {competitors.map((comp, index) => {
                                         const isClient = comp.isClient;
                                         const rank = typeof comp.rank === 'number' ? comp.rank : 0;
@@ -5294,9 +5294,9 @@ const GeogridMaps = () => {
                                         };
                                         
                                         return (
-                                                                                    <div key={index} className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md geogrid-card">
-                                            {/* Position Badge - Top Left */}
-                                            <div className="absolute top-1.5 left-1.5 z-10">
+                                            <div key={index} className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md geogrid-card">
+                                            {/* Position Badge - Top Right, Half In/Half Out */}
+                                            <div className="absolute -top-1 -right-1 z-10">
                                                 <span className={`inline-block px-1.5 py-0.5 rounded-full text-[11px] font-bold shadow-sm ${
                                                     index === 0 ? 'bg-yellow-500 text-white' :
                                                     index === 1 ? 'bg-gray-500 text-white' :
@@ -5310,7 +5310,7 @@ const GeogridMaps = () => {
                                             {/* Subtle background pattern */}
                                             <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent pointer-events-none"></div>
                                             
-                                            <div className="relative p-2.5 pt-6 flex items-center justify-between">
+                                            <div className="relative p-2 pt-4 flex items-center justify-between">
                                                     {/* Business Info */}
                                                     <div className="flex-1 min-w-0 pr-3">
                                                         <div className="flex items-center space-x-2">
@@ -5327,7 +5327,7 @@ const GeogridMaps = () => {
                                                     
                                                     {/* Score Display with Colored Circle */}
                                                     <div className="flex-shrink-0 text-right">
-                                                        <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${
+                                                        <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${
                                                             index === 0 ? 'border-green-600' :
                                                             index === 1 ? 'border-green-500' :
                                                             index === 2 ? 'border-green-400' :
