@@ -622,21 +622,29 @@
     }
 
     /* Prevent table row hover from affecting icon colors */
-    tbody tr:hover .text-green-500 {
+    tbody tr:hover .text-green-500,
+    tbody tr:hover .text-green-500 * {
       color: #22c55e !important;
+      stroke: #22c55e !important;
     }
     
-    tbody tr:hover .text-red-500 {
+    tbody tr:hover .text-red-500,
+    tbody tr:hover .text-red-500 * {
       color: #ef4444 !important;
+      stroke: #ef4444 !important;
     }
     
     /* Ensure icons maintain their colors on any hover state */
-    .text-green-500 {
+    .text-green-500,
+    .text-green-500 * {
       color: #22c55e !important;
+      stroke: #22c55e !important;
     }
     
-    .text-red-500 {
+    .text-red-500,
+    .text-red-500 * {
       color: #ef4444 !important;
+      stroke: #ef4444 !important;
     }
 
     /* Hide grey boxes in backlinks Link Types and Link Dynamics in dark mode */
@@ -1096,7 +1104,7 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
                 </div>
             </div>
             <h3 className="text-md font-semibold text-gray-600 mb-3">{title}</h3>
-            <div className={`prose prose-sm max-w-none text-gray-600 overflow-hidden relative transition-all duration-300 ${isExpanded ? 'max-h-full' : 'max-h-24'}`}>
+            <div className={`prose prose-sm max-w-none text-gray-600 overflow-visible relative transition-all duration-300 ${isExpanded ? 'max-h-full' : 'max-h-24'}`}>
                 <div 
                     dangerouslySetInnerHTML={{ 
                         __html: formattedText
