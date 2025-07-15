@@ -1439,7 +1439,6 @@ const Dashboard = ({ setActiveTab }) => {
                             <div className="flex justify-between items-center mb-4 min-h-[60px]">
                                 <div className="flex items-center space-x-2">
                                     <h2 className="text-xl font-bold text-gray-800">Avg Score</h2>
-                                    <div className="w-2 h-2 bg-gradient-to-r from-green-500 to-red-500 rounded-full"></div>
                                 </div>
                             </div>
                             <div className="space-y-1.5 max-h-[580px] overflow-visible">
@@ -1482,9 +1481,9 @@ const Dashboard = ({ setActiveTab }) => {
                                     };
                                     
                                     return (
-                                        <div key={index} className={`group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg ${isClient ? 'bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 hover:border-blue-300' : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md'}`}>
-                                            {/* Position Badge - Top Left */}
-                                            <div className="absolute top-2 left-2 z-10">
+                                        <div key={index} className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md">
+                                            {/* Position Badge - Top Right */}
+                                            <div className="absolute top-2 right-2 z-10">
                                                 <span className={`inline-block px-2 py-1 rounded-full text-xs font-bold shadow-sm ${
                                                     index === 0 ? 'bg-yellow-500 text-white' :
                                                     index === 1 ? 'bg-gray-500 text-white' :
@@ -1498,22 +1497,11 @@ const Dashboard = ({ setActiveTab }) => {
                                             {/* Subtle background pattern */}
                                             <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent pointer-events-none"></div>
                                             
-                                            <div className="relative p-3 pt-6 flex items-center space-x-3">
-                                                {/* Modern Score Badge - Hexagonal style */}
-                                                <div className="relative">
-                                                    <div className={`w-16 h-16 rounded-2xl ${scoreColors.bg} ${scoreColors.border} border-2 flex items-center justify-center font-bold ${scoreColors.text} text-lg shadow-lg group-hover:scale-105 transition-all duration-200 relative overflow-hidden`}>
-                                                        {/* Accent corner */}
-                                                        <div className={`absolute top-0 right-0 w-4 h-4 ${scoreColors.accent} transform rotate-45 translate-x-2 -translate-y-2`}></div>
-                                                        <span className="relative z-10">{rank > 0 ? rank.toFixed(1) : '-'}</span>
-                                                    </div>
-                                                    {/* Subtle glow effect */}
-                                                    <div className={`absolute inset-0 rounded-2xl ${scoreColors.bg} opacity-30 group-hover:opacity-50 transition-opacity duration-200 blur-sm`}></div>
-                                                </div>
-                                                
+                                            <div className="relative p-3 pt-6 flex items-center justify-between">
                                                 {/* Business Info */}
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center space-x-2">
-                                                        <p className={`font-semibold text-sm leading-tight truncate ${isClient ? 'text-blue-900' : 'text-gray-800'}`} title={comp.name || 'Unknown'}>
+                                                        <p className="font-semibold text-sm leading-tight truncate text-gray-800" title={comp.name || 'Unknown'}>
                                                             {comp.name || 'Unknown'}
                                                         </p>
                                                         {isClient && (
@@ -1521,6 +1509,13 @@ const Dashboard = ({ setActiveTab }) => {
                                                                 <span className="text-xs text-white font-bold">★</span>
                                                             </div>
                                                         )}
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* Score Display - Right aligned */}
+                                                <div className="flex-shrink-0 text-right">
+                                                    <div className="text-lg font-bold text-gray-900">
+                                                        {rank > 0 ? rank.toFixed(1) : '-'}
                                                     </div>
                                                 </div>
                                             </div>
@@ -5065,7 +5060,6 @@ const GeogridMaps = () => {
                             <div>
                                 <div className="flex items-center space-x-2 mb-3">
                                     <h3 className="text-lg font-semibold text-gray-800">Avg Score</h3>
-                                    <div className="w-2 h-2 bg-gradient-to-r from-green-500 to-red-500 rounded-full"></div>
                                 </div>
                                 <div className="space-y-3">
                                     {competitors.map((comp, index) => {
@@ -5107,9 +5101,9 @@ const GeogridMaps = () => {
                                         };
                                         
                                         return (
-                                            <div key={index} className={`group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg ${isClient ? 'bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 hover:border-blue-300' : 'bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md'}`}>
-                                                {/* Position Badge - Top Left */}
-                                                <div className="absolute top-2 left-2 z-10">
+                                            <div key={index} className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md">
+                                                {/* Position Badge - Top Right */}
+                                                <div className="absolute top-2 right-2 z-10">
                                                     <span className={`inline-block px-2 py-1 rounded-full text-xs font-bold shadow-sm ${
                                                         index === 0 ? 'bg-yellow-500 text-white' :
                                                         index === 1 ? 'bg-gray-500 text-white' :
@@ -5123,22 +5117,11 @@ const GeogridMaps = () => {
                                                 {/* Subtle background pattern */}
                                                 <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent pointer-events-none"></div>
                                                 
-                                                <div className="relative p-3 pt-7 flex items-center space-x-3">
-                                                    {/* Modern Score Badge - Compact hexagonal style */}
-                                                    <div className="relative">
-                                                        <div className={`w-12 h-12 rounded-xl ${scoreColors.bg} ${scoreColors.border} border-2 flex items-center justify-center font-bold ${scoreColors.text} text-sm shadow-lg group-hover:scale-105 transition-all duration-200 relative overflow-hidden`}>
-                                                            {/* Accent corner */}
-                                                            <div className={`absolute top-0 right-0 w-3 h-3 ${scoreColors.accent} transform rotate-45 translate-x-1.5 -translate-y-1.5`}></div>
-                                                            <span className="relative z-10">{rank > 0 ? rank.toFixed(1) : '-'}</span>
-                                                        </div>
-                                                        {/* Subtle glow effect */}
-                                                        <div className={`absolute inset-0 rounded-xl ${scoreColors.bg} opacity-30 group-hover:opacity-50 transition-opacity duration-200 blur-sm`}></div>
-                                                    </div>
-                                                    
+                                                <div className="relative p-3 pt-7 flex items-center justify-between">
                                                     {/* Business Info */}
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center space-x-2">
-                                                            <p className={`font-semibold text-xs leading-tight truncate ${isClient ? 'text-blue-900' : 'text-gray-800'}`} title={comp.name || 'Unknown'}>
+                                                            <p className="font-semibold text-xs leading-tight truncate text-gray-800" title={comp.name || 'Unknown'}>
                                                                 {comp.name || 'Unknown'}
                                                             </p>
                                                             {isClient && (
@@ -5146,6 +5129,13 @@ const GeogridMaps = () => {
                                                                     <span className="text-xs text-white font-bold">★</span>
                                                                 </div>
                                                             )}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    {/* Score Display - Right aligned */}
+                                                    <div className="flex-shrink-0 text-right">
+                                                        <div className="text-sm font-bold text-gray-900">
+                                                            {rank > 0 ? rank.toFixed(1) : '-'}
                                                         </div>
                                                     </div>
                                                 </div>
