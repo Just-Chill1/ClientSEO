@@ -4873,6 +4873,12 @@ const GeogridMaps = () => {
             );
         };
 
+        // Define formatLabel here so it's in scope for GeogridMapCard
+        const formatLabel = (value) => {
+            if (value >= 1000) return `${(value / 1000).toFixed(1)}k`;
+            return value.toString();
+        };
+
         return (
             <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
                 <div className="flex justify-between items-start mb-4">
