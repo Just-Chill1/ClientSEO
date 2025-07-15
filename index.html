@@ -5844,7 +5844,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             status === 'error' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600';
         
         return (
-            <div ref={cardRef} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group relative hover:-translate-y-0.5">
+            <div ref={cardRef} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group relative hover:-translate-y-0.5 will-change-transform">
                 <div className="flex items-start justify-between mb-4">
                     <div className={`p-3 rounded-xl ${iconClasses}`}>
                         {icon}
@@ -6257,7 +6257,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
         const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
 
         return (
-            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group hover:-translate-y-0.5">
+            <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group hover:-translate-y-0.5 will-change-transform">
                 <div className="flex justify-between items-start mb-4">
                     <div>
                         <h3 className="text-lg font-semibold text-gray-900 mb-2">{title}</h3>
@@ -6420,7 +6420,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-8">
                 {/* Health Score Gauge - Left Column */}
                 <div className="xl:col-span-4">
-                    <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 h-full flex flex-col justify-center hover:-translate-y-0.5 transition-all duration-300 hover:shadow-xl hover:border-blue-200/60">
+                    <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 h-full flex flex-col justify-center hover:-translate-y-0.5 transition-all duration-300 hover:shadow-xl hover:border-blue-200/60 will-change-transform">
                         <ModernGauge score={healthData.pageScore} />
                         <div className="flex justify-center space-x-8 mt-6">
                             <ModernIssueCounter
@@ -6443,7 +6443,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                 <div className="xl:col-span-8 space-y-4">
                     {/* Top Row - 2 Large Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 relative hover:-translate-y-0.5">
+                        <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 relative hover:-translate-y-0.5 will-change-transform">
                             <div className="flex items-start justify-between mb-4">
                                 <div className={`p-3 rounded-xl ${speedStatus === 'excellent' ? 'bg-green-100 text-green-600' : speedStatus === 'good' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
                                     <TrendingUp className="w-6 h-6" />
@@ -6520,7 +6520,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                 </div>
                             </div>
                         </div>
-                                                <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group relative hover:-translate-y-0.5">
+                                                <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group relative hover:-translate-y-0.5 will-change-transform">
                             <div className="flex items-start justify-between mb-4">
                                 <div className={`p-3 rounded-xl ${checksPercentage >= 90 ? 'bg-green-100 text-green-600' : checksPercentage >= 80 ? 'bg-green-100 text-green-600' : checksPercentage >= 60 ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'}`}>
                                     <CheckCircle className="w-6 h-6" />
@@ -6635,7 +6635,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
 
                     {/* Bottom Row - 3 Compact Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5">
+                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5 will-change-transform">
                             <div className="flex items-center justify-between">
                                 <div className={`p-2 rounded-lg ${hasBrokenLinks ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
                                     <Link2 className="w-5 h-5" />
@@ -6649,7 +6649,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             <p className="text-xs text-gray-500">{hasBrokenLinks ? 'Fix required' : 'No broken links'}</p>
                         </div>
                         
-                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5">
+                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5 will-change-transform">
                             <div className="flex items-center justify-between">
                                 <div className={`p-2 rounded-lg ${healthData.ssl ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
                                     <ShieldCheck className="w-5 h-5" />
@@ -6663,7 +6663,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             <p className="text-xs text-gray-500">{healthData.ssl ? 'HTTPS enabled' : 'HTTPS required'}</p>
                         </div>
                         
-                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5">
+                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5 will-change-transform">
                             <div className="flex items-center justify-between">
                                 <div className={`p-2 rounded-lg ${
                                     healthData.hasSchema 
