@@ -561,6 +561,31 @@
     [data-theme="dark"] .service-row-hover:hover {
       background-color: #1F2E45 !important;
     }
+    
+    /* Advanced tooltip stacking fix */
+    .technical-checks-card {
+      position: relative;
+    }
+    
+    .technical-checks-card:hover {
+      z-index: 999999 !important;
+      position: relative !important;
+    }
+    
+    .technical-checks-tooltip {
+      position: fixed !important;
+      z-index: 999999 !important;
+      pointer-events: none !important;
+    }
+    
+    .technical-checks-tooltip.show {
+      pointer-events: auto !important;
+    }
+    
+    /* Force all other cards to lower z-index when technical checks is hovered */
+    .technical-checks-card:hover ~ * {
+      z-index: 1 !important;
+    }
   </style>
   
   <!-- Non-critical CSS loaded after page load -->
@@ -6607,7 +6632,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                                 <div className="technical-checks-card bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group relative hover:-translate-y-0.5 will-change-transform group-hover:z-50">
                             <div className="flex items-start justify-between mb-4">
                                 <div className={`p-3 rounded-xl ${checksPercentage >= 90 ? 'bg-green-100 text-green-600 group-hover:text-green-600' : checksPercentage >= 80 ? 'bg-green-100 text-green-600 group-hover:text-green-600' : checksPercentage >= 60 ? 'bg-yellow-100 text-yellow-600 group-hover:text-yellow-600' : 'bg-red-100 text-red-600 group-hover:text-red-600'}`}>
-                                    <CheckCircle className="w-6 h-6" />
+                                    <CheckCircle className={`w-6 h-6 ${checksPercentage >= 90 ? 'text-green-600 group-hover:text-green-600' : checksPercentage >= 80 ? 'text-green-600 group-hover:text-green-600' : checksPercentage >= 60 ? 'text-yellow-600 group-hover:text-yellow-600' : 'text-red-600 group-hover:text-red-600'}`} />
                                 </div>
                             </div>
                             <div className="flex items-center space-x-2 mb-2">
@@ -6665,7 +6690,13 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             </div>
                             
                             {/* Detailed Hover Tooltip – centred unless it would overflow right edge */}
-                            <div className="technical-checks-tooltip absolute top-full mt-2 left-1/2 -translate-x-1/2 md:left-auto md:right-0 md:translate-x-0 w-[600px] max-w-[95vw] bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto group-hover:show">
+                            <div className="technical-checks-tooltip opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto group-hover:show w-[600px] max-w-[95vw] bg-gray-900 text-white text-sm rounded-xl shadow-2xl" style={{
+                                position: 'fixed',
+                                top: '50%',
+                                left: '50%',
+                                transform: 'translate(-50%, -50%)',
+                                zIndex: 999999
+                            }}>
                                 <div className="px-4 py-3 bg-gray-800 rounded-t-xl font-semibold border-b border-gray-700">
                                     Technical SEO Health Check Results
                                 </div>
@@ -6712,7 +6743,6 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                         })()}
                                     </div>
                                 </div>
-                                <div className="absolute left-1/2 -translate-x-1/2 bottom-full w-0 h-0 border-l-[8px] border-r-[8px] border-b-[8px] border-l-transparent border-r-transparent border-b-gray-900"></div>
                             </div>
                         </div>
                     </div>
