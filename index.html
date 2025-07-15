@@ -724,6 +724,15 @@
      [data-theme="dark"] .geogrid-card .bg-gradient-to-br {
        display: none !important;
      }
+
+     /* Competitor table header styling */
+     .competitor-table-header {
+       background: linear-gradient(to right, #f9fafb, #f3f4f6);
+     }
+     
+     [data-theme="dark"] .competitor-table-header {
+       background: linear-gradient(to right, #374151, #4b5563) !important;
+     }
   </style>
   
   <!-- Non-critical CSS loaded after page load -->
@@ -1940,20 +1949,20 @@ const Dashboard = ({ setActiveTab }) => {
 
                 <table className="w-full text-left text-sm whitespace-nowrap">
                     <thead>
-                        <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
-                            <th className="py-4 px-6 font-semibold text-gray-800">Clinic</th>
-                            <th className="py-4 px-4 text-center font-semibold text-gray-800">Site Speed</th>
-                            <th className="py-4 px-4 text-center font-semibold text-gray-800">Keywords #1</th>
-                            <th className="py-4 px-4 text-center font-semibold text-gray-800">Backlinks</th>
-                            <th className="py-4 px-4 font-semibold text-gray-800">Opening Hours</th>
-                            <th className="py-4 px-4 text-center font-semibold text-gray-800">Google Ads</th>
-                            <th className="py-4 px-4 text-center font-semibold text-gray-800">Facebook Ads</th>
+                        <tr className="competitor-table-header border-b border-gray-200">
+                            <th className="py-4 px-4 font-semibold text-gray-800 w-1/4">Clinic</th>
+                            <th className="py-4 px-3 text-center font-semibold text-gray-800 w-1/12">Site Speed</th>
+                            <th className="py-4 px-3 text-center font-semibold text-gray-800 w-1/12">Keywords #1</th>
+                            <th className="py-4 px-3 text-center font-semibold text-gray-800 w-1/12">Backlinks</th>
+                            <th className="py-4 px-3 font-semibold text-gray-800 w-1/4">Opening Hours</th>
+                            <th className="py-4 px-3 text-center font-semibold text-gray-800 w-1/12">Google Ads</th>
+                            <th className="py-4 px-3 text-center font-semibold text-gray-800 w-1/12">Facebook Ads</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 bg-white">
                         {overviewData.map(c => (
                             <tr key={c.id} className="service-row-hover transition-colors duration-200">
-                                <td className="py-4 px-6">
+                                <td className="py-4 px-4">
                                     <div>
                                         <div className="flex items-baseline gap-2">
                                             <span className="font-semibold text-gray-800">{c.clinicName}</span>
@@ -1972,7 +1981,7 @@ const Dashboard = ({ setActiveTab }) => {
                                         )}
                                     </div>
                                 </td>
-                                <td className="py-4 px-4 text-center font-medium">
+                                <td className="py-4 px-3 text-center font-medium">
                                     {(() => {
                                         const speed = c.speed;
                                         if (speed && speed !== 'N/A') {
@@ -1988,9 +1997,9 @@ const Dashboard = ({ setActiveTab }) => {
                                         return speed || 'N/A';
                                     })()}
                                 </td>
-                                <td className="py-4 px-4 text-center font-medium">{c.kwPos1}</td>
-                                <td className="py-4 px-4 text-center font-medium">{c.backlinks.toLocaleString()}</td>
-                                <td className="py-4 px-4 text-gray-600">
+                                <td className="py-4 px-3 text-center font-medium">{c.kwPos1}</td>
+                                <td className="py-4 px-3 text-center font-medium">{c.backlinks.toLocaleString()}</td>
+                                <td className="py-4 px-3 text-gray-600">
                                     {(() => {
                                         if (!c.hours || c.hours === 'N/A') return 'N/A';
                                         
@@ -2055,8 +2064,8 @@ const Dashboard = ({ setActiveTab }) => {
                                         );
                                     })()}
                                 </td>
-                                <td className="py-4 px-4 text-center"><AdIndicator status={c.gAds} link={c.gAdsLink} /></td>
-                                <td className="py-4 px-4 text-center"><AdIndicator status={c.fbAds} link={c.fbAdsLink} /></td>
+                                <td className="py-4 px-3 text-center"><AdIndicator status={c.gAds} link={c.gAdsLink} /></td>
+                                <td className="py-4 px-3 text-center"><AdIndicator status={c.fbAds} link={c.fbAdsLink} /></td>
                             </tr>
                         ))}
                     </tbody>
