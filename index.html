@@ -657,6 +657,24 @@
     [data-theme="dark"] .border-gray-200 {
       border-color: var(--border-primary) !important;
     }
+
+    /* Dark mode fixes for Backlinks tab */
+    [data-theme="dark"] .bg-slate-50,
+    [data-theme="dark"] .bg-gray-50 {
+      background-color: transparent !important;
+      border: none !important;
+    }
+
+    /* Hide white gridlines in Recharts charts (e.g., Link Types) */
+    [data-theme="dark"] .recharts-cartesian-grid line {
+      stroke: transparent !important;
+    }
+
+    /* Fix excessively light divide borders in dark mode tables */
+    [data-theme="dark"] .divide-gray-100 > :not([hidden]) ~ :not([hidden]),
+    [data-theme="dark"] .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
+      border-color: var(--border-primary) !important;
+    }
   </style>
   
   <!-- Non-critical CSS loaded after page load -->
