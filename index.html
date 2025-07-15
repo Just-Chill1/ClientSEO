@@ -1576,7 +1576,7 @@ const Dashboard = ({ setActiveTab }) => {
                                         <div key={index} className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md geogrid-card">
                                             {/* Position Badge - Top Left */}
                                             <div className="absolute top-2 left-2 z-10">
-                                                <span className={`inline-block px-2 py-1 rounded-full text-xs font-bold shadow-sm ${
+                                                <span className={`inline-block px-1.5 py-0.5 rounded-full text-[11px] font-bold shadow-sm ${
                                                     index === 0 ? 'bg-yellow-500 text-white' :
                                                     index === 1 ? 'bg-gray-500 text-white' :
                                                     index === 2 ? 'bg-orange-500 text-white' :
@@ -1589,9 +1589,9 @@ const Dashboard = ({ setActiveTab }) => {
                                             {/* Subtle background pattern */}
                                             <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent pointer-events-none"></div>
                                             
-                                            <div className="relative p-3 pt-6 flex items-center justify-between">
+                                            <div className="relative p-3 pt-7 flex items-center justify-between">
                                                 {/* Business Info */}
-                                                <div className="flex-1 min-w-0">
+                                                <div className="flex-1 min-w-0 pr-3">
                                                     <div className="flex items-center space-x-2">
                                                         <p className="font-semibold text-sm leading-tight truncate text-gray-800" title={comp.name || 'Unknown'}>
                                                             {comp.name || 'Unknown'}
@@ -1607,12 +1607,12 @@ const Dashboard = ({ setActiveTab }) => {
                                                 {/* Score Display with Colored Circle */}
                                                 <div className="flex-shrink-0 text-right">
                                                     <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${
-                                                        index === 0 ? 'border-green-600 text-green-600' :
-                                                        index === 1 ? 'border-green-500 text-green-500' :
-                                                        index === 2 ? 'border-green-400 text-green-400' :
-                                                        index >= 3 && index <= 7 ? 'border-yellow-500 text-yellow-600' :
-                                                        index >= 8 && index <= 11 ? 'border-blue-500 text-blue-600' :
-                                                        'border-red-500 text-red-600'
+                                                        index === 0 ? 'border-green-600' :
+                                                        index === 1 ? 'border-green-500' :
+                                                        index === 2 ? 'border-green-400' :
+                                                        index >= 3 && index <= 7 ? 'border-yellow-500' :
+                                                        index >= 8 && index <= 11 ? 'border-blue-500' :
+                                                        'border-red-500'
                                                     }`}>
                                                         <span className="text-sm font-bold !text-gray-800 dark:!text-white">
                                                             {rank > 0 ? rank.toFixed(1) : '-'}
@@ -5205,7 +5205,7 @@ const GeogridMaps = () => {
                                             <div key={index} className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md geogrid-card">
                                                 {/* Position Badge - Top Left */}
                                                 <div className="absolute top-2 left-2 z-10">
-                                                    <span className={`inline-block px-2 py-1 rounded-full text-xs font-bold shadow-sm ${
+                                                    <span className={`inline-block px-1.5 py-0.5 rounded-full text-[11px] font-bold shadow-sm ${
                                                         index === 0 ? 'bg-yellow-500 text-white' :
                                                         index === 1 ? 'bg-gray-500 text-white' :
                                                         index === 2 ? 'bg-orange-500 text-white' :
@@ -5218,7 +5218,7 @@ const GeogridMaps = () => {
                                                 {/* Subtle background pattern */}
                                                 <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent pointer-events-none"></div>
                                                 
-                                                <div className="relative p-3 pt-7 flex items-center justify-between">
+                                                <div className="relative p-3 pt-8 flex items-center justify-between">
                                                     {/* Business Info */}
                                                     <div className="flex-1 min-w-0 pr-3">
                                                         <div className="flex items-center space-x-2">
@@ -5235,7 +5235,7 @@ const GeogridMaps = () => {
                                                     
                                                     {/* Score Display with Colored Circle */}
                                                     <div className="flex-shrink-0 text-right">
-                                                        <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center ${
+                                                        <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center ${
                                                             index === 0 ? 'border-green-600' :
                                                             index === 1 ? 'border-green-500' :
                                                             index === 2 ? 'border-green-400' :
@@ -5243,7 +5243,7 @@ const GeogridMaps = () => {
                                                             index >= 8 && index <= 11 ? 'border-blue-500' :
                                                             'border-red-500'
                                                         }`}>
-                                                            <span className="text-xs font-bold !text-gray-800 dark:!text-white">
+                                                            <span className="text-sm font-bold !text-gray-800 dark:!text-white">
                                                                 {rank > 0 ? rank.toFixed(1) : '-'}
                                                             </span>
                                                         </div>
