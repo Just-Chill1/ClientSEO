@@ -644,6 +644,11 @@
       background-color: transparent !important;
       border: 1px solid var(--border-primary) !important;
     }
+    
+    /* Ensure border styling works well in dark mode */
+    [data-theme="dark"] .border-gray-200 {
+      border-color: var(--border-primary) !important;
+    }
   </style>
   
   <!-- Non-critical CSS loaded after page load -->
@@ -3479,7 +3484,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Column 1: Core & Financial Metrics */}
                     <div className="space-y-6 flex flex-col">
-                        <div className="p-6 bg-slate-100 rounded-xl text-center flex-grow flex flex-col justify-center">
+                        <div className="p-6 rounded-xl text-center flex-grow flex flex-col justify-center border border-gray-200">
                             <p className="text-base text-gray-500">Total Keywords Tracked</p>
                             <p className="text-5xl font-bold text-blue-600">{(parseInt(currentSummaryData.totalKeywords) || 0).toLocaleString()}</p>
                             <p className="text-sm text-gray-500 mt-2">
@@ -3637,7 +3642,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
 
                 {/* Website Keywords Summary Bar */}
                 {active && (
-                    <div className="mb-3 py-1.5 px-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                    <div className="mb-3 py-1.5 px-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
                         <div className="flex items-center justify-start space-x-10">
                             {(() => {
                                 const siteData = table[active] || [];
@@ -4394,7 +4399,7 @@ const Backlinks = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Column 1: Core Metrics */}
                     <div className="space-y-6 flex flex-col">
-                        <div className="p-6 bg-slate-100 rounded-xl text-center flex-grow flex flex-col justify-center">
+                        <div className="p-6 rounded-xl text-center flex-grow flex flex-col justify-center border border-gray-200">
                             <p className="text-base text-gray-500">Total Active Backlinks</p>
                             <p className="text-5xl font-bold text-blue-600">{(currentSummaryData.totalBacklinks || 0).toLocaleString()}</p>
                             <p className="text-sm text-gray-500 mt-2">
@@ -4425,7 +4430,7 @@ const Backlinks = () => {
                             <h3 className="text-lg font-semibold text-gray-700">Link Types</h3>
                             <InfoTooltip text="Dofollow links pass SEO authority and help improve search rankings. Nofollow links don't pass authority but can still drive traffic and provide value." />
                         </div>
-                        <div className="bg-slate-50 rounded-lg p-4">
+                        <div className="rounded-lg p-4">
                             <ResponsiveContainer width="100%" height={180}>
                                 <BarChart data={followData} layout="vertical" margin={{ top: 20, right: 30, left: 60, bottom: 20 }}>
                                     <defs>
