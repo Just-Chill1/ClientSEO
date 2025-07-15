@@ -531,6 +531,26 @@
       background-color: var(--card-bg);
       border-color: var(--border-primary);
     }
+
+    /* Force technical checks tooltip to appear above everything */
+    .technical-checks-card {
+      isolation: isolate;
+    }
+    
+    .technical-checks-tooltip {
+      position: absolute !important;
+      z-index: 999999 !important;
+      pointer-events: none !important;
+    }
+    
+    .technical-checks-tooltip.show {
+      pointer-events: auto !important;
+    }
+    
+    /* Ensure the tooltip appears above all other elements */
+    .technical-checks-card:hover .technical-checks-tooltip {
+      z-index: 999999 !important;
+    }
   </style>
   
   <!-- Non-critical CSS loaded after page load -->
@@ -6571,7 +6591,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                 </div>
                             </div>
                         </div>
-                                                <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group relative hover:-translate-y-0.5 will-change-transform group-hover:z-50">
+                                                <div className="technical-checks-card bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group relative hover:-translate-y-0.5 will-change-transform group-hover:z-50">
                             <div className="flex items-start justify-between mb-4">
                                 <div className={`p-3 rounded-xl ${checksPercentage >= 90 ? 'bg-green-100 text-green-600 group-hover:text-green-600' : checksPercentage >= 80 ? 'bg-green-100 text-green-600 group-hover:text-green-600' : checksPercentage >= 60 ? 'bg-yellow-100 text-yellow-600 group-hover:text-yellow-600' : 'bg-red-100 text-red-600 group-hover:text-red-600'}`}>
                                     <CheckCircle className="w-6 h-6" />
@@ -6632,7 +6652,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             </div>
                             
                             {/* Detailed Hover Tooltip – centred unless it would overflow right edge */}
-                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 md:left-auto md:right-0 md:translate-x-0 w-[600px] max-w-[95vw] bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-[99999] pointer-events-none group-hover:pointer-events-auto">
+                            <div className="technical-checks-tooltip absolute top-full mt-2 left-1/2 -translate-x-1/2 md:left-auto md:right-0 md:translate-x-0 w-[600px] max-w-[95vw] bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto group-hover:show">
                                 <div className="px-4 py-3 bg-gray-800 rounded-t-xl font-semibold border-b border-gray-700">
                                     Technical SEO Health Check Results
                                 </div>
@@ -6685,8 +6705,8 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                     </div>
 
                     {/* Bottom Row - 3 Compact Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 z-0">
-                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5 will-change-transform relative z-10">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5 will-change-transform">
                             <div className="flex items-center justify-between">
                                 <div className={`p-2 rounded-lg ${hasBrokenLinks ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
                                     <Link2 className="w-5 h-5" />
@@ -6700,7 +6720,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             <p className="text-xs text-gray-500">{hasBrokenLinks ? 'Fix required' : 'No broken links'}</p>
                         </div>
                         
-                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5 will-change-transform relative z-10">
+                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5 will-change-transform">
                             <div className="flex items-center justify-between">
                                 <div className={`p-2 rounded-lg ${healthData.ssl ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
                                     <ShieldCheck className="w-5 h-5" />
@@ -6714,7 +6734,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             <p className="text-xs text-gray-500">{healthData.ssl ? 'HTTPS enabled' : 'HTTPS required'}</p>
                         </div>
                         
-                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5 will-change-transform relative z-10">
+                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5 will-change-transform">
                             <div className="flex items-center justify-between">
                                 <div className={`p-2 rounded-lg ${
                                     healthData.hasSchema 
