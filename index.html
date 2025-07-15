@@ -2390,7 +2390,7 @@ const Dashboard = ({ setActiveTab }) => {
                                     onClick={() => setExpandedService(expandedService === service.name ? null : service.name)}
                                 >
                                     <div className="flex items-center justify-between">
-                                        <div className="flex items-center space-x-4 flex-1">
+                                        <div className="flex items-center space-x-4" style={{ width: 'calc(100% - 280px)' }}>
                                             {/* Rank Badge */}
                                             <div className="flex-shrink-0">
                                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
@@ -2407,7 +2407,7 @@ const Dashboard = ({ setActiveTab }) => {
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center space-x-2">
                                                     <h3 
-                                                        className="font-semibold text-gray-900 truncate max-w-xs" 
+                                                        className="font-semibold text-gray-900 truncate sm:max-w-[200px] md:max-w-[250px] lg:max-w-[300px]" 
                                                         title={service.name === 'NAD' ? 'NAD+' : service.name}
                                                     >
                                                         {service.name === 'NAD' ? 'NAD+' : service.name}
@@ -2429,8 +2429,8 @@ const Dashboard = ({ setActiveTab }) => {
                                             </div>
                                         </div>
 
-                                        {/* Metrics */}
-                                        <div className="flex items-center space-x-8 text-sm">
+                                        {/* Metrics - Fixed width container */}
+                                        <div className="flex items-center space-x-6 text-sm" style={{ width: '280px', justifyContent: 'flex-end' }}>
                                             <div className="text-center min-w-0">
                                                 <div className="font-semibold text-gray-900 whitespace-nowrap">{service.avgCompetition}</div>
                                                 <div className="text-gray-500 text-xs">Competition</div>
@@ -2440,7 +2440,7 @@ const Dashboard = ({ setActiveTab }) => {
                                                 <div className="text-gray-500 text-xs">Avg CPC</div>
                                             </div>
                                             <div className="text-center min-w-0">
-                                                <div className="font-bold text-lg text-blue-600 whitespace-nowrap">{service.volumePercentage}%</div>
+                                                <div className="font-semibold text-gray-900 whitespace-nowrap">{service.volumePercentage}%</div>
                                                 <div className="text-gray-500 text-xs">Volume</div>
                                             </div>
                                         </div>
