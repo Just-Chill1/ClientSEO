@@ -681,6 +681,17 @@
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
       border-color: var(--border-secondary) !important;
     }
+
+    /* Fix tooltip visibility in AI report sections without affecting text overflow */
+    .ai-report-section .info-tooltip-content {
+      z-index: 999999 !important;
+      position: fixed !important;
+    }
+    
+    .ai-report-section .info-tooltip-trigger {
+      position: relative !important;
+      z-index: 999998 !important;
+    }
   </style>
   
   <!-- Non-critical CSS loaded after page load -->
@@ -1095,7 +1106,7 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
     };
 
     return (
-                        <Card className="mt-8 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
+                        <Card className="mt-8 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60 ai-report-section">
             <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center space-x-2">
                     <h2 className="text-xl font-bold text-gray-800">AI Report</h2>
@@ -1128,7 +1139,7 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
                 </div>
             </div>
             <h3 className="text-md font-semibold text-gray-600 mb-3">{title}</h3>
-            <div className={`prose prose-sm max-w-none text-gray-600 overflow-visible relative transition-all duration-300 ${isExpanded ? 'max-h-full' : 'max-h-24'}`}>
+            <div className={`prose prose-sm max-w-none text-gray-600 overflow-hidden relative transition-all duration-300 ${isExpanded ? 'max-h-full' : 'max-h-24'}`}>
                 <div 
                     dangerouslySetInnerHTML={{ 
                         __html: formattedText
