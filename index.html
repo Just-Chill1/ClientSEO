@@ -501,6 +501,32 @@
     .recharts-label-list text {
         font-weight: 600 !important;
     }
+
+    /* Dark mode status icon backgrounds */
+    [data-theme="dark"] .bg-green-100 { 
+       background-color: rgba(34, 197, 94, 0.1) !important; 
+       color: #22c55e !important;
+    }
+    [data-theme="dark"] .text-green-600 { color: #22c55e !important; }
+
+    [data-theme="dark"] .bg-yellow-100 { 
+       background-color: rgba(234, 179, 8, 0.1) !important; 
+       color: #eab308 !important;
+    }
+    [data-theme="dark"] .text-yellow-600 { color: #eab308 !important; }
+
+    [data-theme="dark"] .bg-red-100 { 
+       background-color: rgba(239, 68, 68, 0.1) !important; 
+       color: #ef4444 !important;
+    }
+    [data-theme="dark"] .text-red-600 { color: #ef4444 !important; }
+
+    /* Dark mode rounded containers */
+    [data-theme="dark"] .rounded-xl,
+    [data-theme="dark"] .rounded-2xl {
+      background-color: var(--card-bg);
+      border-color: var(--border-primary);
+    }
   </style>
   
   <!-- Non-critical CSS loaded after page load -->
@@ -554,6 +580,11 @@
     
     .map-container:active::before {
       opacity: 0;
+    }
+
+    /* Tone down chart label boldness on hover */
+    .recharts-label-list text {
+        font-weight: 600 !important;
     }
   </style>
 
@@ -6536,7 +6567,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                 </div>
                             </div>
                         </div>
-                                                <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group relative hover:-translate-y-0.5 will-change-transform">
+                                                <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group relative hover:-translate-y-0.5 will-change-transform group-hover:z-30">
                             <div className="flex items-start justify-between mb-4">
                                 <div className={`p-3 rounded-xl ${checksPercentage >= 90 ? 'bg-green-100 text-green-600' : checksPercentage >= 80 ? 'bg-green-100 text-green-600' : checksPercentage >= 60 ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'}`}>
                                     <CheckCircle className="w-6 h-6" />
