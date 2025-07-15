@@ -68,8 +68,13 @@ function doGet(e) {
     
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
     if (!sheet) {
-      throw new Error(`Sheet "${sheetName}" not found. Available sheets: ${SpreadsheetApp.getActiveSpreadsheet().getSheets().map(s => s.getName()).join(', ')}`);
+      const availableSheets = SpreadsheetApp.getActiveSpreadsheet().getSheets().map(s => s.getName()).join(', ');
+      console.log(`Available sheets: ${availableSheets}`);
+      throw new Error(`Sheet "${sheetName}" not found. Available sheets: ${availableSheets}`);
     }
+    
+    console.log(`Successfully found sheet: ${sheetName}`);
+    console.log(`Sheet has ${sheet.getLastRow()} rows and ${sheet.getLastColumn()} columns`);
 
     const data = aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, sheetName);
 
@@ -113,6 +118,18 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
   if (!sheet) return { topServices: [], newServices: [] };
   const allData = sheet.getDataRange().getValues();
   const headers = allData.shift(); // Get and remove header row
+  
+  console.log(`Processing sheet: ${sheetName}`);
+  console.log(`Headers: ${headers}`);
+  console.log(`Looking for location in column ${locationColumnIndex}: "${headers[locationColumnIndex]}"`);
+  console.log(`Total data rows: ${allData.length}`);
+  console.log(`Filter value: "${locationFilterValue}"`);
+  
+  // Log a few sample rows to understand the data structure
+  if (allData.length > 0) {
+    console.log(`Sample row 0:`, allData[0]);
+    console.log(`Sample row 0 location value:`, allData[0][locationColumnIndex]);
+  }
 
   // Find the indices of all month columns using the robust date parser
   const monthColumns = headers.reduce((acc, header, index) => {
@@ -134,6 +151,11 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
       const rowLocationStr = rowLocation.toString().trim().toLowerCase();
       const filterValueStr = locationFilterValue.trim().toLowerCase();
       
+      // Enhanced debugging for state filtering
+      if (sheetName === 'State & Province') {
+          console.log(`Comparing: "${rowLocationStr}" vs "${filterValueStr}"`);
+      }
+      
       // First try exact match
       if (rowLocationStr === filterValueStr) return true;
       
@@ -147,6 +169,27 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
           const cleanRow = rowLocationStr.replace(/\b(state|province)\b/g, '').trim();
           const cleanFilter = filterValueStr.replace(/\b(state|province)\b/g, '').trim();
           if (cleanRow === cleanFilter) return true;
+          
+          // Additional check for common state abbreviations
+          const stateAbbreviations = {
+              'alabama': 'al', 'alaska': 'ak', 'arizona': 'az', 'arkansas': 'ar', 'california': 'ca',
+              'colorado': 'co', 'connecticut': 'ct', 'delaware': 'de', 'florida': 'fl', 'georgia': 'ga',
+              'hawaii': 'hi', 'idaho': 'id', 'illinois': 'il', 'indiana': 'in', 'iowa': 'ia',
+              'kansas': 'ks', 'kentucky': 'ky', 'louisiana': 'la', 'maine': 'me', 'maryland': 'md',
+              'massachusetts': 'ma', 'michigan': 'mi', 'minnesota': 'mn', 'mississippi': 'ms',
+              'missouri': 'mo', 'montana': 'mt', 'nebraska': 'ne', 'nevada': 'nv', 'new hampshire': 'nh',
+              'new jersey': 'nj', 'new mexico': 'nm', 'new york': 'ny', 'north carolina': 'nc',
+              'north dakota': 'nd', 'ohio': 'oh', 'oklahoma': 'ok', 'oregon': 'or', 'pennsylvania': 'pa',
+              'rhode island': 'ri', 'south carolina': 'sc', 'south dakota': 'sd', 'tennessee': 'tn',
+              'texas': 'tx', 'utah': 'ut', 'vermont': 'vt', 'virginia': 'va', 'washington': 'wa',
+              'west virginia': 'wv', 'wisconsin': 'wi', 'wyoming': 'wy'
+          };
+          
+          // Check if one is the abbreviation of the other
+          if (stateAbbreviations[rowLocationStr] === filterValueStr || 
+              stateAbbreviations[filterValueStr] === rowLocationStr) {
+              return true;
+          }
       }
       
       return false;
@@ -156,10 +199,17 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
   if (data.length === 0) {
     // Enhanced debugging: Log more sample values and show unique values
     const sampleValues = allData.slice(0, 10).map(row => row[locationColumnIndex]).filter(val => val);
-    const uniqueValues = [...new Set(allData.map(row => row[locationColumnIndex]).filter(val => val))].slice(0, 20);
+    const uniqueValues = [...new Set(allData.map(row => row[locationColumnIndex]).filter(val => val))].slice(0, 50);
     console.log(`No matching data found. Sample values in column ${locationColumnIndex}:`, sampleValues);
-    console.log(`Unique values in column ${locationColumnIndex}:`, uniqueValues);
+    console.log(`All unique values in column ${locationColumnIndex}:`, uniqueValues);
     console.log(`Looking for exact match: "${locationFilterValue.trim().toLowerCase()}"`);
+    console.log(`Sheet name: "${sheetName}", Column index: ${locationColumnIndex}`);
+    console.log(`Total rows in sheet: ${allData.length}`);
+    
+    // Additional debugging for headers
+    console.log(`Headers:`, headers);
+    console.log(`Header at column ${locationColumnIndex}:`, headers[locationColumnIndex]);
+    
     return { topServices: [], newServices: [] };
   }
 
