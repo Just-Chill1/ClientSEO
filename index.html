@@ -552,6 +552,15 @@
     .technical-checks-card:hover .technical-checks-tooltip {
       z-index: 999999 !important;
     }
+    
+    /* Service cards hover styling */
+    .service-row-hover:hover {
+      background-color: #F8FAFC !important;
+    }
+    
+    [data-theme="dark"] .service-row-hover:hover {
+      background-color: #1F2E45 !important;
+    }
   </style>
   
   <!-- Non-critical CSS loaded after page load -->
@@ -2352,7 +2361,7 @@ const Dashboard = ({ setActiveTab }) => {
                             <div key={service.name} className="group">
                                 {/* Service Row */}
                                 <div 
-                                    className="px-6 py-4 hover:bg-[#F8FAFC] dark:hover:bg-[#1F2E45] cursor-pointer transition-colors duration-200"
+                                    className="service-row-hover px-6 py-4 cursor-pointer transition-colors duration-200"
                                     onClick={() => setExpandedService(expandedService === service.name ? null : service.name)}
                                 >
                                     <div className="flex items-center justify-between">
@@ -2360,10 +2369,10 @@ const Dashboard = ({ setActiveTab }) => {
                                             {/* Rank Badge */}
                                             <div className="flex-shrink-0">
                                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                                                    index === 0 ? 'bg-yellow-300 text-yellow-900 dark:bg-yellow-500/20 dark:text-yellow-300' :
-                                                    index === 1 ? 'bg-gray-300 text-gray-900 dark:bg-gray-500/20 dark:text-gray-300' :
-                                                    index === 2 ? 'bg-orange-300 text-orange-900 dark:bg-orange-500/20 dark:text-orange-300' :
-                                                    'bg-blue-300 text-blue-900 dark:bg-blue-500/20 dark:text-blue-300'
+                                                    index === 0 ? 'bg-yellow-400 text-yellow-900 dark:bg-yellow-500/20 dark:text-yellow-300' :
+                                                    index === 1 ? 'bg-gray-400 text-gray-900 dark:bg-gray-500/20 dark:text-gray-300' :
+                                                    index === 2 ? 'bg-orange-400 text-orange-900 dark:bg-orange-500/20 dark:text-orange-300' :
+                                                    'bg-blue-400 text-blue-900 dark:bg-blue-500/20 dark:text-blue-300'
                                                 }`}>
                                                     {index + 1}
                                                 </div>
