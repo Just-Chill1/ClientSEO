@@ -4278,10 +4278,10 @@ const Backlinks = () => {
                                             <stop offset="100%" stopColor="#6b7280" />
                                         </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" className="dark:!stroke-transparent" />
                                     <XAxis 
                                         type="number" 
-                                        tick={{ fontSize: 12, fill: '#64748b' }}
+                                        tick={{ fontSize: 12, fill: '#64748b', className: 'dark:!fill-[#94A3B8]' }}
                                         tickFormatter={(value) => value >= 1000 ? `${(value / 1000).toFixed(1)}k` : value.toString()}
                                         domain={[0, 'dataMax']}
                                         ticks={[0, 15, 30, 45, 60, 75]}
@@ -4290,7 +4290,7 @@ const Backlinks = () => {
                                     <YAxis 
                                         dataKey="name" 
                                         type="category" 
-                                        tick={{ fontSize: 12, fill: '#64748b' }}
+                                        tick={{ fontSize: 12, fill: '#64748b', className: 'dark:!fill-[#94A3B8]' }}
                                         width={50}
                                     />
                                     <Tooltip 
@@ -5116,7 +5116,8 @@ const GeogridMaps = () => {
                                           <stop offset="100%" stopColor="#7c3aed40" />
                                       </linearGradient>
                                   </defs>
-                                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" className="dark:!stroke-transparent" />
+                                  {/* Conditionally render CartesianGrid based on dark mode */}
+                                  {!isDarkMode && <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />}
                                   <XAxis 
                                       dataKey="name" 
                                       tick={{ fontSize: 12, fill: '#64748b', className: 'dark:!fill-[#94A3B8]' }}
