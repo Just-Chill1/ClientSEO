@@ -727,11 +727,13 @@
 
      /* Competitor table header styling */
      .competitor-table-header {
-       background: linear-gradient(to right, #f9fafb, #f3f4f6);
+       background-color: #F9FAFB;
+       border-top: 1px solid #e5e7eb;
      }
      
      [data-theme="dark"] .competitor-table-header {
-       background: linear-gradient(to right, #374151, #4b5563) !important;
+       background-color: #334155 !important;
+       border-top: 1px solid #475569 !important;
      }
   </style>
   
@@ -1894,7 +1896,7 @@ const Dashboard = ({ setActiveTab }) => {
                             </div>
                             <div>
                                 <h2 className="text-xl font-bold text-gray-800">Competitor Overview</h2>
-                                <p className="text-sm text-gray-600 mt-1">Comprehensive analysis of your business vs key competitors</p>
+                                <p className="text-sm text-gray-600 mt-1">Overview analysis of your business vs key competitors</p>
                             </div>
                         </div>
                         <div className="flex items-center space-x-4">
@@ -1937,7 +1939,7 @@ const Dashboard = ({ setActiveTab }) => {
                             <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Site Speed</th>
                             <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Keywords #1</th>
                             <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Backlinks</th>
-                            <th className="py-4 px-4 font-semibold text-gray-800 w-1/4 text-center">Opening Hours</th>
+                            <th className="py-4 px-4 font-semibold text-gray-800 w-1/4">Opening Hours</th>
                             <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Google Ads</th>
                             <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Facebook Ads</th>
                         </tr>
@@ -1984,7 +1986,7 @@ const Dashboard = ({ setActiveTab }) => {
                                 <td className="py-4 px-4 text-center font-medium">{c.backlinks.toLocaleString()}</td>
                                 <td className="py-4 px-4 text-gray-600">
                                     {(() => {
-                                        if (!c.hours || c.hours === 'N/A') return <div className="text-center">N/A</div>;
+                                        if (!c.hours || c.hours === 'N/A') return 'N/A';
                                         
                                         const daysOrder = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
                                         const hoursMap = {};
@@ -2002,7 +2004,7 @@ const Dashboard = ({ setActiveTab }) => {
                                             }
                                         });
 
-                                        if (Object.keys(hoursMap).length === 0) return <div className="text-center">{c.hours}</div>;
+                                        if (Object.keys(hoursMap).length === 0) return c.hours;
                                         
                                         const openDays = [];
                                         const closedDays = [];
@@ -2017,24 +2019,22 @@ const Dashboard = ({ setActiveTab }) => {
                                         });
 
                                         return (
-                                            <div className="text-xs leading-tight">
-                                                <div className="flex items-start justify-between">
-                                                    {/* Left side: Open days in 2 columns */}
-                                                    <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 flex-1">
-                                                        {openDays.map(item => (
-                                                            <div key={item.day} className="font-medium">
-                                                                <span className="text-gray-700">{item.day}:</span>
-                                                                <span className="text-blue-600 ml-1">{item.time}</span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                    {/* Right side: Closed days */}
-                                                    {closedDays.length > 0 && (
-                                                        <div className="text-red-500 font-medium ml-3 flex-shrink-0">
-                                                            {closedDays.join(', ')} Closed
+                                            <div className="text-xs space-y-1 leading-tight">
+                                                {/* Open days */}
+                                                <div className="space-y-0.5">
+                                                    {openDays.map(item => (
+                                                        <div key={item.day} className="font-medium">
+                                                            <span className="text-gray-700">{item.day}: {item.time}</span>
+                                                            <span className="text-blue-600 ml-1">Open</span>
                                                         </div>
-                                                    )}
+                                                    ))}
                                                 </div>
+                                                {/* Closed days */}
+                                                {closedDays.length > 0 && (
+                                                    <div className="text-red-500 font-medium">
+                                                        {closedDays.join(', ')} Closed
+                                                    </div>
+                                                )}
                                             </div>
                                         );
                                     })()}
