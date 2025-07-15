@@ -675,6 +675,12 @@
     [data-theme="dark"] .divide-gray-200 > :not([hidden]) ~ :not([hidden]) {
       border-color: var(--border-primary) !important;
     }
+
+    /* More subtle geogrid card hover effects in dark mode */
+    [data-theme="dark"] .geogrid-card:hover {
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+      border-color: var(--border-secondary) !important;
+    }
   </style>
   
   <!-- Non-critical CSS loaded after page load -->
@@ -1552,7 +1558,7 @@ const Dashboard = ({ setActiveTab }) => {
                                     };
                                     
                                     return (
-                                        <div key={index} className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md">
+                                        <div key={index} className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md geogrid-card">
                                             {/* Position Badge - Top Left */}
                                             <div className="absolute top-2 left-2 z-10">
                                                 <span className={`inline-block px-2 py-1 rounded-full text-xs font-bold shadow-sm ${
@@ -1593,7 +1599,7 @@ const Dashboard = ({ setActiveTab }) => {
                                                         index >= 8 && index <= 11 ? 'border-blue-500 text-blue-600' :
                                                         'border-red-500 text-red-600'
                                                     }`}>
-                                                        <span className="text-sm font-bold">
+                                                        <span className="text-sm font-bold text-gray-800 dark:text-white">
                                                             {rank > 0 ? rank.toFixed(1) : '-'}
                                                         </span>
                                                     </div>
@@ -5181,7 +5187,7 @@ const GeogridMaps = () => {
                                         };
                                         
                                         return (
-                                            <div key={index} className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md">
+                                            <div key={index} className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md geogrid-card">
                                                 {/* Position Badge - Top Left */}
                                                 <div className="absolute top-2 left-2 z-10">
                                                     <span className={`inline-block px-2 py-1 rounded-full text-xs font-bold shadow-sm ${
@@ -5222,7 +5228,7 @@ const GeogridMaps = () => {
                                                             index >= 8 && index <= 11 ? 'border-blue-500' :
                                                             'border-red-500'
                                                         }`}>
-                                                            <span className="text-xs font-bold text-black dark:text-white">
+                                                            <span className="text-xs font-bold text-gray-800 dark:text-white">
                                                                 {rank > 0 ? rank.toFixed(1) : '-'}
                                                             </span>
                                                         </div>
