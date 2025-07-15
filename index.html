@@ -820,7 +820,7 @@ const fetchWithCorsWorkaround = (url, callback) => {
         callback(null, data);
     })
     .catch(err => {
-        console.log('Regular fetch failed, trying JSONP approach...');
+        console.log('Regular fetch failed, trying JSONP-style request...');
         // Fallback to JSONP-style request
         const script = document.createElement('script');
         const callbackName = 'jsonpCallback_' + Math.random().toString(36).substr(2, 9);
@@ -878,11 +878,24 @@ const fetchWithCorsWorkaround = (url, callback) => {
     const handleMapClick = (event) => {
         const mapContainer = event.currentTarget;
         mapContainer.classList.add('active');
-        
-        // Remove active class after 30 seconds of inactivity
-        setTimeout(() => {
+        const iframe = mapContainer.querySelector('iframe');
+        if (iframe) {
+          iframe.style.pointerEvents = 'auto';
+        }
+
+        // Disable interaction when clicking outside the map
+        const handleOutsideClick = (e) => {
+          if (!mapContainer.contains(e.target)) {
             mapContainer.classList.remove('active');
-        }, 30000);
+            if (iframe) {
+              iframe.style.pointerEvents = 'none';
+            }
+            document.removeEventListener('click', handleOutsideClick);
+          }
+        };
+
+        // Attach one-time listener
+        document.addEventListener('click', handleOutsideClick);
     };
 
 /* ------------------------------------------------------------------ */
@@ -1832,7 +1845,7 @@ const Dashboard = ({ setActiveTab }) => {
         }
 
         return (
-                            <Card className="col-span-12 overflow-x-auto group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
+            <Card className="col-span-12 overflow-x-auto group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
                 <div className="flex justify-between items-center mb-4">
                     <div className="flex items-center space-x-2">
                         <h2 className="text-xl font-bold text-gray-800">Overview</h2>
@@ -1869,7 +1882,7 @@ const Dashboard = ({ setActiveTab }) => {
                         </button>
                     </div>
                 </div>
-                                <table className="w-full text-left text-sm whitespace-nowrap">
+                <table className="w-full text-left text-sm whitespace-nowrap">
                     <thead>
                         <tr className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
                             <th className="py-4 px-6 font-semibold text-gray-800">
