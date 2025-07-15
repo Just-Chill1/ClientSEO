@@ -6015,19 +6015,21 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
 
         const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
 
-        // Re-trigger the fill animation on hover (without the mis-aligned reset)
         const handleHover = () => {
             if (isAnimationCooldown) return;
             setIsAnimationCooldown(true);
 
-            // Slightly rewind then animate to target to produce a subtle replay effect
-            setIsDisableTransition(false);
-            setCurrentOffset(targetOffset + circumference * 0.05); // rewind ~5 % of circle
+            // Reset instantly (no transition)
+            setIsDisableTransition(true);
+            setCurrentOffset(circumference);
 
+            // Let the DOM apply, then animate to target with transition
             requestAnimationFrame(() => {
+                setIsDisableTransition(false);
                 setCurrentOffset(targetOffset);
             });
 
+            // Cool-down before allowing another replay
             setTimeout(() => setIsAnimationCooldown(false), 1200);
         };
 
@@ -6581,8 +6583,8 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                 </div>
                             </div>
                             
-                            {/* Detailed Hover Tooltip – clamps to viewport & higher z-index */}
-                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 max-w-[95vw] w-[600px] bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-[10050] pointer-events-none group-hover:pointer-events-auto">
+                            {/* Detailed Hover Tooltip – centred unless it would overflow right edge */}
+                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 md:left-auto md:right-0 md:translate-x-0 w-[600px] max-w-[95vw] bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-[11000] pointer-events-none group-hover:pointer-events-auto">
                                 <div className="px-4 py-3 bg-gray-800 rounded-t-xl font-semibold border-b border-gray-700">
                                     Technical SEO Health Check Results
                                 </div>
