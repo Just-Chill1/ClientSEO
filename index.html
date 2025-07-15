@@ -1883,44 +1883,8 @@ const Dashboard = ({ setActiveTab }) => {
 
         return (
             <Card className="col-span-12 overflow-x-auto group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
-                <div className="flex justify-between items-center mb-4">
-                    <div className="flex items-center space-x-2">
-                        <h2 className="text-xl font-bold text-gray-800">Overview</h2>
-                         <InfoTooltip text="A high-level comparison of your clinic against key competitors on important metrics like online reviews, site performance, and advertising." />
-                    </div>
-                    <div className="flex items-center space-x-4">
-                        {/* Inline Progress Indicator */}
-                        {isRefreshing && (
-                            <div className="flex items-center space-x-3 bg-white rounded-xl shadow-md px-4 py-2 border border-gray-100">
-                                <div className="flex items-center space-x-2">
-                                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                                    <span className="text-sm font-medium text-gray-700">{refreshMessage}</span>
-                                </div>
-                                <div className="w-16 bg-gray-200 rounded-full h-2">
-                                    <div 
-                                        className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
-                                        style={{ width: `${refreshProgress}%` }}
-                                    ></div>
-                                </div>
-                                <span className="text-xs font-medium text-blue-600 min-w-[2rem]">{refreshProgress}%</span>
-                            </div>
-                        )}
-                        
-                        <button 
-                            onClick={onRefresh}
-                            disabled={isRefreshing}
-                            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg text-sm ${
-                                isRefreshing 
-                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                                    : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
-                            }`}
-                        >
-                            {isRefreshing ? 'Updating...' : 'Update Analytics'}
-                        </button>
-                    </div>
-                </div>
                 {/* Header Section */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-5 border-b border-gray-100">
+                <div className="competitor-table-header px-6 py-5 border-b border-gray-100">
                     <div className="flex justify-between items-start">
                         <div className="flex items-center space-x-3">
                             <div className="p-2 bg-blue-100 rounded-lg">
@@ -1933,17 +1897,36 @@ const Dashboard = ({ setActiveTab }) => {
                                 <p className="text-sm text-gray-600 mt-1">Comprehensive analysis of your business vs key competitors</p>
                             </div>
                         </div>
-                        <button 
-                            onClick={onRefresh}
-                            disabled={isRefreshing}
-                            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg text-sm ${
-                                isRefreshing 
-                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                                    : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
-                            }`}
-                        >
-                            {isRefreshing ? 'Updating...' : 'Update Analytics'}
-                        </button>
+                        <div className="flex items-center space-x-4">
+                            {/* Inline Progress Indicator */}
+                            {isRefreshing && (
+                                <div className="flex items-center space-x-3 bg-white rounded-xl shadow-md px-4 py-2 border border-gray-100">
+                                    <div className="flex items-center space-x-2">
+                                        <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                        <span className="text-sm font-medium text-gray-700">{refreshMessage}</span>
+                                    </div>
+                                    <div className="w-16 bg-gray-200 rounded-full h-2">
+                                        <div 
+                                            className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
+                                            style={{ width: `${refreshProgress}%` }}
+                                        ></div>
+                                    </div>
+                                    <span className="text-xs font-medium text-blue-600 min-w-[2rem]">{refreshProgress}%</span>
+                                </div>
+                            )}
+                            
+                            <button 
+                                onClick={onRefresh}
+                                disabled={isRefreshing}
+                                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg text-sm ${
+                                    isRefreshing 
+                                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                                        : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
+                                }`}
+                            >
+                                {isRefreshing ? 'Updating...' : 'Update Analytics'}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -1951,12 +1934,12 @@ const Dashboard = ({ setActiveTab }) => {
                     <thead>
                         <tr className="competitor-table-header border-b border-gray-200">
                             <th className="py-4 px-4 font-semibold text-gray-800 w-1/4">Clinic</th>
-                            <th className="py-4 px-3 text-center font-semibold text-gray-800 w-1/12">Site Speed</th>
-                            <th className="py-4 px-3 text-center font-semibold text-gray-800 w-1/12">Keywords #1</th>
-                            <th className="py-4 px-3 text-center font-semibold text-gray-800 w-1/12">Backlinks</th>
-                            <th className="py-4 px-3 font-semibold text-gray-800 w-1/4">Opening Hours</th>
-                            <th className="py-4 px-3 text-center font-semibold text-gray-800 w-1/12">Google Ads</th>
-                            <th className="py-4 px-3 text-center font-semibold text-gray-800 w-1/12">Facebook Ads</th>
+                            <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Site Speed</th>
+                            <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Keywords #1</th>
+                            <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Backlinks</th>
+                            <th className="py-4 px-4 font-semibold text-gray-800 w-1/4">Opening Hours</th>
+                            <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Google Ads</th>
+                            <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Facebook Ads</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 bg-white">
@@ -1981,7 +1964,7 @@ const Dashboard = ({ setActiveTab }) => {
                                         )}
                                     </div>
                                 </td>
-                                <td className="py-4 px-3 text-center font-medium">
+                                <td className="py-4 px-4 text-center font-medium">
                                     {(() => {
                                         const speed = c.speed;
                                         if (speed && speed !== 'N/A') {
@@ -1997,9 +1980,9 @@ const Dashboard = ({ setActiveTab }) => {
                                         return speed || 'N/A';
                                     })()}
                                 </td>
-                                <td className="py-4 px-3 text-center font-medium">{c.kwPos1}</td>
-                                <td className="py-4 px-3 text-center font-medium">{c.backlinks.toLocaleString()}</td>
-                                <td className="py-4 px-3 text-gray-600">
+                                <td className="py-4 px-4 text-center font-medium">{c.kwPos1}</td>
+                                <td className="py-4 px-4 text-center font-medium">{c.backlinks.toLocaleString()}</td>
+                                <td className="py-4 px-4 text-gray-600">
                                     {(() => {
                                         if (!c.hours || c.hours === 'N/A') return 'N/A';
                                         
@@ -2034,29 +2017,18 @@ const Dashboard = ({ setActiveTab }) => {
                                         });
 
                                         return (
-                                            <div className="text-xs space-y-1">
-                                                {/* First 4 days */}
-                                                <div className="space-y-0.5">
-                                                    {openDays.slice(0, 4).map(item => (
-                                                        <div key={item.day} className="font-semibold">
-                                                            <span>{item.day}: {item.time}</span>
-                                                            <span className="text-blue-600 ml-1">Open</span>
+                                            <div className="text-xs leading-tight">
+                                                {/* Compact display: 2 columns */}
+                                                <div className="grid grid-cols-2 gap-x-2 gap-y-0.5">
+                                                    {openDays.map(item => (
+                                                        <div key={item.day} className="font-medium">
+                                                            <span className="text-gray-700">{item.day}:</span>
+                                                            <span className="text-blue-600 ml-1">{item.time}</span>
                                                         </div>
                                                     ))}
                                                 </div>
-                                                {/* Last 3 days */}
-                                                {openDays.length > 4 && (
-                                                    <div className="space-y-0.5">
-                                                        {openDays.slice(4).map(item => (
-                                                            <div key={item.day} className="font-semibold">
-                                                                <span>{item.day}: {item.time}</span>
-                                                                <span className="text-blue-600 ml-1">Open</span>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                )}
                                                 {closedDays.length > 0 && (
-                                                    <div className="text-red-500 font-semibold mt-1">
+                                                    <div className="text-red-500 font-medium mt-1">
                                                         {closedDays.join(', ')} Closed
                                                     </div>
                                                 )}
@@ -2064,8 +2036,8 @@ const Dashboard = ({ setActiveTab }) => {
                                         );
                                     })()}
                                 </td>
-                                <td className="py-4 px-3 text-center"><AdIndicator status={c.gAds} link={c.gAdsLink} /></td>
-                                <td className="py-4 px-3 text-center"><AdIndicator status={c.fbAds} link={c.fbAdsLink} /></td>
+                                <td className="py-4 px-4 text-center"><AdIndicator status={c.gAds} link={c.gAdsLink} /></td>
+                                <td className="py-4 px-4 text-center"><AdIndicator status={c.fbAds} link={c.fbAdsLink} /></td>
                             </tr>
                         ))}
                     </tbody>
