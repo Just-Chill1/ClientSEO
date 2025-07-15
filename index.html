@@ -1891,25 +1891,38 @@ const Dashboard = ({ setActiveTab }) => {
                         </button>
                     </div>
                 </div>
+                {/* Header Section */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-5 border-b border-gray-100">
+                    <div className="flex justify-between items-start">
+                        <div className="flex items-center space-x-3">
+                            <div className="p-2 bg-blue-100 rounded-lg">
+                                <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-800">Competitor Overview</h2>
+                                <p className="text-sm text-gray-600 mt-1">Comprehensive analysis of your business vs key competitors</p>
+                            </div>
+                        </div>
+                        <button 
+                            onClick={onRefresh}
+                            disabled={isRefreshing}
+                            className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-md hover:shadow-lg text-sm ${
+                                isRefreshing 
+                                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                                    : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
+                            }`}
+                        >
+                            {isRefreshing ? 'Updating...' : 'Update Analytics'}
+                        </button>
+                    </div>
+                </div>
+
                 <table className="w-full text-left text-sm whitespace-nowrap">
                     <thead>
-                        <tr className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-                            <th className="py-4 px-6 font-semibold text-gray-800">
-                                <div className="flex items-center justify-between">
-                                    <span>Clinic</span>
-                                    <button 
-                                        onClick={onRefresh}
-                                        disabled={isRefreshing}
-                                        className={`px-3 py-1.5 rounded-md font-medium transition-all duration-200 text-xs ${
-                                            isRefreshing 
-                                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                                                : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-sm hover:shadow-md'
-                                        }`}
-                                    >
-                                        {isRefreshing ? 'Updating...' : 'Update Analytics'}
-                                    </button>
-                                </div>
-                            </th>
+                        <tr className="bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+                            <th className="py-4 px-6 font-semibold text-gray-800">Clinic</th>
                             <th className="py-4 px-4 text-center font-semibold text-gray-800">Site Speed</th>
                             <th className="py-4 px-4 text-center font-semibold text-gray-800">Keywords #1</th>
                             <th className="py-4 px-4 text-center font-semibold text-gray-800">Backlinks</th>
@@ -1994,14 +2007,28 @@ const Dashboard = ({ setActiveTab }) => {
 
                                         return (
                                             <div className="text-xs space-y-1">
-                                                {openDays.map(item => (
-                                                    <div key={item.day} className="font-semibold">
-                                                        <span>{item.day}: {item.time}</span>
-                                                        <span className="text-blue-600 ml-1">Open</span>
+                                                {/* First 4 days */}
+                                                <div className="space-y-0.5">
+                                                    {openDays.slice(0, 4).map(item => (
+                                                        <div key={item.day} className="font-semibold">
+                                                            <span>{item.day}: {item.time}</span>
+                                                            <span className="text-blue-600 ml-1">Open</span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                {/* Last 3 days */}
+                                                {openDays.length > 4 && (
+                                                    <div className="space-y-0.5">
+                                                        {openDays.slice(4).map(item => (
+                                                            <div key={item.day} className="font-semibold">
+                                                                <span>{item.day}: {item.time}</span>
+                                                                <span className="text-blue-600 ml-1">Open</span>
+                                                            </div>
+                                                        ))}
                                                     </div>
-                                                ))}
+                                                )}
                                                 {closedDays.length > 0 && (
-                                                    <div className="text-red-500 font-semibold">
+                                                    <div className="text-red-500 font-semibold mt-1">
                                                         {closedDays.join(', ')} Closed
                                                     </div>
                                                 )}
