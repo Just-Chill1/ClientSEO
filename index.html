@@ -587,15 +587,6 @@
       z-index: 999999 !important;
     }
     
-    /* Service cards hover styling */
-    .service-row-hover:hover {
-      background-color: #F8FAFC !important;
-    }
-    
-    [data-theme="dark"] .service-row-hover:hover {
-      background-color: #1F2E45 !important;
-    }
-    
     /* Advanced tooltip stacking fix */
     .technical-checks-card {
       position: relative;
@@ -689,10 +680,22 @@
       position: fixed !important;
     }
     
-    .ai-report-section .info-tooltip-trigger {
-      position: relative !important;
-      z-index: 999998 !important;
-    }
+         .ai-report-section .info-tooltip-trigger {
+       position: relative !important;
+       z-index: 999998 !important;
+     }
+
+     /* Ensure service card tooltips appear above AI report sections */
+     .service-card .info-tooltip-content,
+     .service-card .info-tooltip-trigger .info-tooltip-content {
+       z-index: 1000000 !important;
+       position: fixed !important;
+     }
+     
+     .service-card .info-tooltip-trigger {
+       position: relative !important;
+       z-index: 999999 !important;
+     }
   </style>
   
   <!-- Non-critical CSS loaded after page load -->
@@ -2467,7 +2470,7 @@ const Dashboard = ({ setActiveTab }) => {
         const displayedServices = showAll ? serviceData : serviceData.slice(0, 5);
         
         return (
-            <div className="col-span-12 md:col-span-6">
+            <div className="col-span-12 md:col-span-6 service-card">
                 <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
                     {/* Header Section */}
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-5 border-b border-gray-100">
