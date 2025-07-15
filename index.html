@@ -714,6 +714,16 @@
      [data-theme="dark"] .avg-score-text {
        color: #ffffff !important;
      }
+
+     /* Dark mode styling for geogrid cards */
+     [data-theme="dark"] .geogrid-card {
+       background-color: transparent !important;
+       border: 1px solid var(--border-primary) !important;
+     }
+     
+     [data-theme="dark"] .geogrid-card .bg-gradient-to-br {
+       display: none !important;
+     }
   </style>
   
   <!-- Non-critical CSS loaded after page load -->
@@ -1606,7 +1616,7 @@ const Dashboard = ({ setActiveTab }) => {
                                     return (
                                         <div key={index} className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md geogrid-card">
                                             {/* Position Badge - Top Left */}
-                                            <div className="absolute top-2 left-2 z-10">
+                                            <div className="absolute top-1.5 left-1.5 z-10">
                                                 <span className={`inline-block px-1.5 py-0.5 rounded-full text-[11px] font-bold shadow-sm ${
                                                     index === 0 ? 'bg-yellow-500 text-white' :
                                                     index === 1 ? 'bg-gray-500 text-white' :
@@ -1620,7 +1630,7 @@ const Dashboard = ({ setActiveTab }) => {
                                             {/* Subtle background pattern */}
                                             <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent pointer-events-none"></div>
                                             
-                                            <div className="relative p-3 pt-7 flex items-center justify-between">
+                                            <div className="relative p-2.5 pt-5.5 flex items-center justify-between">
                                                 {/* Business Info */}
                                                 <div className="flex-1 min-w-0 pr-3">
                                                     <div className="flex items-center space-x-2">
@@ -5275,23 +5285,23 @@ const GeogridMaps = () => {
                                         };
                                         
                                         return (
-                                            <div key={index} className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md geogrid-card">
-                                                {/* Position Badge - Top Left */}
-                                                <div className="absolute top-2 left-2 z-10">
-                                                    <span className={`inline-block px-1.5 py-0.5 rounded-full text-[11px] font-bold shadow-sm ${
-                                                        index === 0 ? 'bg-yellow-500 text-white' :
-                                                        index === 1 ? 'bg-gray-500 text-white' :
-                                                        index === 2 ? 'bg-orange-500 text-white' :
-                                                        'bg-blue-500 text-white'
-                                                    }`}>
-                                                        {getPositionText(index)}
-                                                    </span>
-                                                </div>
-                                                
-                                                {/* Subtle background pattern */}
-                                                <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent pointer-events-none"></div>
-                                                
-                                                <div className="relative p-3 pt-8 flex items-center justify-between">
+                                                                                    <div key={index} className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md geogrid-card">
+                                            {/* Position Badge - Top Left */}
+                                            <div className="absolute top-1.5 left-1.5 z-10">
+                                                <span className={`inline-block px-1.5 py-0.5 rounded-full text-[11px] font-bold shadow-sm ${
+                                                    index === 0 ? 'bg-yellow-500 text-white' :
+                                                    index === 1 ? 'bg-gray-500 text-white' :
+                                                    index === 2 ? 'bg-orange-500 text-white' :
+                                                    'bg-blue-500 text-white'
+                                                }`}>
+                                                    {getPositionText(index)}
+                                                </span>
+                                            </div>
+                                            
+                                            {/* Subtle background pattern */}
+                                            <div className="absolute inset-0 bg-gradient-to-br from-white/50 to-transparent pointer-events-none"></div>
+                                            
+                                            <div className="relative p-2.5 pt-6 flex items-center justify-between">
                                                     {/* Business Info */}
                                                     <div className="flex-1 min-w-0 pr-3">
                                                         <div className="flex items-center space-x-2">
