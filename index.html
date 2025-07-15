@@ -6371,7 +6371,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             <LabelList 
                                 dataKey={dataKey} 
                                 position="top" 
-                                style={{ fontSize: 12, fill: isDarkMode ? '#94A3B8' : '#64748b' }}
+                                style={{ fontSize: 12, fill: isDarkMode ? '#94A3B8' : '#64748b', fontWeight: 600 }}
                                 formatter={formatLabel}
                             />
                         </Bar>
@@ -6685,7 +6685,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                     </div>
 
                     {/* Bottom Row - 3 Compact Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 z-0">
                         <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5 will-change-transform relative z-10">
                             <div className="flex items-center justify-between">
                                 <div className={`p-2 rounded-lg ${hasBrokenLinks ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
@@ -6796,7 +6796,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                         </div>
                         <p className="text-gray-600">Essential technical elements across all websites</p>
                     </div>
-                <div className="overflow-x-auto">
+                <div>
                     <table className="w-full">
                         <thead>
                             <tr className="border-b-2 border-t border-gray-200">
