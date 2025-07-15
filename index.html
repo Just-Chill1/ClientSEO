@@ -638,35 +638,16 @@
       stroke: #ef4444 !important;
     }
 
-    /* Hide grey boxes in backlinks Link Types and Link Dynamics in dark mode */
-    [data-theme="dark"] .bg-slate-50 {
+    /* Remove grey background from Link Types and Link Dynamics headers in dark mode */
+    [data-theme="dark"] .grid.grid-cols-1.lg\\:grid-cols-3 > div:nth-child(2) .flex.items-center.space-x-2.px-2.mb-2,
+    [data-theme="dark"] .grid.grid-cols-1.lg\\:grid-cols-3 > div:nth-child(3) .flex.items-center.space-x-2.px-2.mb-2 {
       background-color: transparent !important;
-      border: 1px solid var(--border-primary) !important;
+      border: none !important;
     }
-    
+
     /* Ensure border styling works well in dark mode */
     [data-theme="dark"] .border-gray-200 {
       border-color: var(--border-primary) !important;
-    }
-
-    /* Dark mode fixes for Backlinks tab */
-    [data-theme="dark"] .bg-slate-50,
-    [data-theme="dark"] .bg-gray-50 {
-      background-color: transparent !important;
-      border: none !important;
-    }
-
-    /* Specifically target SummaryStat components in backlinks sections */
-    [data-theme="dark"] .space-y-3 .bg-slate-50,
-    [data-theme="dark"] .space-y-6 .bg-slate-50 {
-      background-color: transparent !important;
-      border: none !important;
-    }
-
-    /* Override hover states for SummaryStat in dark mode */
-    [data-theme="dark"] .space-y-3 .hover\\:bg-white:hover,
-    [data-theme="dark"] .space-y-6 .hover\\:bg-white:hover {
-      background-color: rgba(59, 130, 246, 0.05) !important;
     }
 
     /* Hide white gridlines in Recharts charts (e.g., Link Types) */
