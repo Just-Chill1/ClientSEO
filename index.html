@@ -500,6 +500,8 @@
     /* Tone down chart label boldness on hover */
     .recharts-label-list text {
         font-weight: 600 !important;
+        -webkit-font-smoothing: subpixel-antialiased;
+        transform: translateZ(0);
     }
 
     /* Dark mode status icon backgrounds */
@@ -1840,7 +1842,7 @@ const Dashboard = ({ setActiveTab }) => {
                  { id: 'Iowa', name: 'Iowa', flag: '🇺🇸', category: '🇺🇸 States' },
                  { id: 'Kansas', name: 'Kansas', flag: '🇺🇸', category: '🇺🇸 States' },
                  { id: 'Kentucky', name: 'Kentucky', flag: '🇺🇸', category: '🇺🇸 States' },
-                 { id: 'Louisiana', name: 'Louisiana', flag: '🇺🇸', category: '🇺🇸 States' },
+                 { id: 'Louisiana', name: 'Louisiana', flag: 'Louisiana', flag: '🇺🇸', category: '🇺🇸 States' },
                  { id: 'Maine', name: 'Maine', flag: '🇺🇸', category: '🇺🇸 States' },
                  { id: 'Maryland', name: 'Maryland', flag: '🇺🇸', category: '🇺🇸 States' },
                  { id: 'Massachusetts', name: 'Massachusetts', flag: '🇺🇸', category: '🇺🇸 States' },
@@ -6567,7 +6569,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                 </div>
                             </div>
                         </div>
-                                                <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group relative hover:-translate-y-0.5 will-change-transform group-hover:z-30">
+                                                <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group relative hover:-translate-y-0.5 will-change-transform group-hover:z-50">
                             <div className="flex items-start justify-between mb-4">
                                 <div className={`p-3 rounded-xl ${checksPercentage >= 90 ? 'bg-green-100 text-green-600' : checksPercentage >= 80 ? 'bg-green-100 text-green-600' : checksPercentage >= 60 ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'}`}>
                                     <CheckCircle className="w-6 h-6" />
@@ -6682,7 +6684,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
 
                     {/* Bottom Row - 3 Compact Cards */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5 will-change-transform">
+                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5 will-change-transform relative z-10">
                             <div className="flex items-center justify-between">
                                 <div className={`p-2 rounded-lg ${hasBrokenLinks ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
                                     <Link2 className="w-5 h-5" />
@@ -6696,7 +6698,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             <p className="text-xs text-gray-500">{hasBrokenLinks ? 'Fix required' : 'No broken links'}</p>
                         </div>
                         
-                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5 will-change-transform">
+                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5 will-change-transform relative z-10">
                             <div className="flex items-center justify-between">
                                 <div className={`p-2 rounded-lg ${healthData.ssl ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
                                     <ShieldCheck className="w-5 h-5" />
@@ -6710,7 +6712,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             <p className="text-xs text-gray-500">{healthData.ssl ? 'HTTPS enabled' : 'HTTPS required'}</p>
                         </div>
                         
-                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5 will-change-transform">
+                        <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5 will-change-transform relative z-10">
                             <div className="flex items-center justify-between">
                                 <div className={`p-2 rounded-lg ${
                                     healthData.hasSchema 
