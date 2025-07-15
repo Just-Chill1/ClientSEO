@@ -6013,25 +6013,22 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             }
         }, [targetOffset, hasInitialized, score, lastScore]);
 
+        const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+
+        // Re-trigger the fill animation on hover (without the mis-aligned reset)
         const handleHover = () => {
-            if (!isAnimationCooldown) {
-                setIsAnimationCooldown(true);
-                
-                // Step 1: Disable transitions and reset to empty
-                setIsDisableTransition(true);
-                setCurrentOffset(circumference);
-                
-                // Step 2: Small delay, then enable transitions and animate to target
-                setTimeout(() => {
-                    setIsDisableTransition(false);
-                    setCurrentOffset(targetOffset);
-                }, 100);
-                
-                // Step 3: Reset cooldown after animation completes
-                setTimeout(() => {
-                    setIsAnimationCooldown(false);
-                }, 1500);
-            }
+            if (isAnimationCooldown) return;
+            setIsAnimationCooldown(true);
+
+            // Slightly rewind then animate to target to produce a subtle replay effect
+            setIsDisableTransition(false);
+            setCurrentOffset(targetOffset + circumference * 0.05); // rewind ~5 % of circle
+
+            requestAnimationFrame(() => {
+                setCurrentOffset(targetOffset);
+            });
+
+            setTimeout(() => setIsAnimationCooldown(false), 1200);
         };
 
         return (
@@ -6054,7 +6051,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             cy={size / 2}
                             r="85"
                             fill="transparent"
-                            stroke="#f3f4f6"
+                            stroke={isDarkMode ? '#1E293B' : '#f3f4f6'}
                             strokeWidth="12"
                         />
                         {/* Progress circle */}
@@ -6584,8 +6581,8 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                 </div>
                             </div>
                             
-                            {/* Detailed Hover Tooltip with improved hover behavior */}
-                                                                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[600px] bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-[9999] pointer-events-none group-hover:pointer-events-auto">
+                            {/* Detailed Hover Tooltip – clamps to viewport & higher z-index */}
+                            <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 max-w-[95vw] w-[600px] bg-gray-900 text-white text-sm rounded-xl shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-[10050] pointer-events-none group-hover:pointer-events-auto">
                                 <div className="px-4 py-3 bg-gray-800 rounded-t-xl font-semibold border-b border-gray-700">
                                     Technical SEO Health Check Results
                                 </div>
