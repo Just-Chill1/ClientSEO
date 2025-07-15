@@ -497,11 +497,13 @@
       opacity: 0;
     }
 
-    /* Tone down chart label boldness on hover */
+    /* Tone down chart label boldness on hover and fix rendering */
     .recharts-label-list text {
         font-weight: 600 !important;
-        -webkit-font-smoothing: subpixel-antialiased;
-        transform: translateZ(0);
+        -webkit-font-smoothing: antialiased !important;
+        -moz-osx-font-smoothing: grayscale !important;
+        text-rendering: geometricPrecision !important;
+        transform: none !important;
     }
 
     /* Dark mode status icon backgrounds */
@@ -5224,7 +5226,7 @@ const GeogridMaps = () => {
                                       <LabelList 
                                           dataKey="top5Total" 
                                           position="top" 
-                                          style={{ fontSize: 12, fontWeight: 500, fill: '#64748b' }}
+                                          style={{ fontSize: 12, fontWeight: 600, fill: '#64748b' }}
                                           formatter={formatLabel}
                                       />
                                   </Bar>
