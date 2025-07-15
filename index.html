@@ -1623,9 +1623,9 @@ const Dashboard = ({ setActiveTab }) => {
                                     };
                                     
                                     return (
-                                        <div key={index} className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md geogrid-card">
-                                            {/* Position Badge - Top Right, Half In/Half Out */}
-                                            <div className="absolute -top-1 -right-1 z-10">
+                                        <div key={index} className="group relative overflow-visible rounded-xl transition-all duration-300 hover:shadow-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md geogrid-card">
+                                            {/* Position Badge - Top Left, Half In/Half Out */}
+                                            <div className="absolute -top-1 -left-1 z-10">
                                                 <span className={`inline-block px-1.5 py-0.5 rounded-full text-[11px] font-bold shadow-sm ${
                                                     index === 0 ? 'bg-yellow-500 text-white' :
                                                     index === 1 ? 'bg-gray-500 text-white' :
@@ -5269,9 +5269,9 @@ const GeogridMaps = () => {
                                         };
                                         
                                         return (
-                                            <div key={index} className="group relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md geogrid-card">
-                                            {/* Position Badge - Top Right, Half In/Half Out */}
-                                            <div className="absolute -top-1 -right-1 z-10">
+                                            <div key={index} className="group relative overflow-visible rounded-xl transition-all duration-300 hover:shadow-lg bg-white border border-gray-200 hover:border-gray-300 hover:shadow-md geogrid-card">
+                                            {/* Position Badge - Top Left, Half In/Half Out */}
+                                            <div className="absolute -top-1 -left-1 z-10">
                                                 <span className={`inline-block px-1.5 py-0.5 rounded-full text-[11px] font-bold shadow-sm ${
                                                     index === 0 ? 'bg-yellow-500 text-white' :
                                                     index === 1 ? 'bg-gray-500 text-white' :
