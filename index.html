@@ -5113,10 +5113,10 @@ const GeogridMaps = () => {
                                           <stop offset="100%" stopColor="#7c3aed40" />
                                       </linearGradient>
                                   </defs>
-                                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" className="dark:!stroke-transparent" />
                                   <XAxis 
                                       dataKey="name" 
-                                      tick={{ fontSize: 12, fill: '#64748b' }}
+                                      tick={{ fontSize: 12, fill: '#64748b', className: 'dark:!fill-[#94A3B8]' }}
                                       height={40}
                                       interval={0}
                                       tickFormatter={(value) => {
@@ -5129,7 +5129,7 @@ const GeogridMaps = () => {
                                       }}
                                   />
                                   <YAxis 
-                                      tick={{ fontSize: 12, fill: '#64748b' }}
+                                      tick={{ fontSize: 12, fill: '#64748b', className: 'dark:!fill-[#94A3B8]' }}
                                       domain={[0, dataMax => {
                                           const maxValue = Math.max(...competitors.map(c => c.top5Total || 0));
                                           const increment = 5;
@@ -5178,11 +5178,8 @@ const GeogridMaps = () => {
                                       <LabelList 
                                           dataKey="top5Total" 
                                           position="top" 
-                                          style={{ 
-                                              fill: '#374151', 
-                                              fontSize: 12, 
-                                              fontWeight: 'bold' 
-                                          }}
+                                          style={{ fontSize: 12, fontWeight: 400, fill: '#64748b' }}
+                                          formatter={formatLabel}
                                       />
                                   </Bar>
                              </BarChart>
@@ -6261,6 +6258,8 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
 
         const yAxisConfig = getSmartYAxisConfig(data, dataKey);
 
+        const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+
         return (
             <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group hover:-translate-y-0.5">
                 <div className="flex justify-between items-start mb-4">
@@ -6284,15 +6283,20 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                 </linearGradient>
                             ))}
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" className="dark:!stroke-transparent" />
+                        {(!isDarkMode) && (
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                        )}
+                        {isDarkMode && (
+                          <CartesianGrid stroke="transparent" />
+                        )}
                         <XAxis 
                             dataKey="name" 
-                            tick={{ fontSize: 12, fill: '#64748b', className: 'dark:!fill-[#e0e7ef]' }}
+                            tick={{ fontSize: 12, fill: '#64748b', className: 'dark:!fill-[#94A3B8]' }}
                             height={40}
                             interval={0}
                         />
                         <YAxis 
-                            tick={{ fontSize: 12, fill: '#64748b', className: 'dark:!fill-[#e0e7ef]' }}
+                            tick={{ fontSize: 12, fill: '#64748b', className: 'dark:!fill-[#94A3B8]' }}
                             domain={yAxisConfig.domain}
                             ticks={yAxisConfig.ticks}
                             tickFormatter={yAxisConfig.tickFormatter}
@@ -6320,12 +6324,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             <LabelList 
                                 dataKey={dataKey} 
                                 position="top" 
-                                style={{ 
-                                    fill: '#374151', 
-                                    fontSize: 12, 
-                                    fontWeight: 'bold' 
-                                }}
-                                className="dark:!fill-[#fff]"
+                                style={{ fontSize: 12, fontWeight: 400, fill: isDarkMode ? '#94A3B8' : '#64748b' }}
                                 formatter={formatLabel}
                             />
                         </Bar>
