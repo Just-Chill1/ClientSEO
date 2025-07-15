@@ -705,6 +705,15 @@
      [data-theme="dark"] .service-row-hover:hover {
        background-color: #1F2E45 !important;
      }
+
+     /* Force avg score text color in light and dark modes */
+     .avg-score-text {
+       color: #1f2937 !important;
+     }
+     
+     [data-theme="dark"] .avg-score-text {
+       color: #ffffff !important;
+     }
   </style>
   
   <!-- Non-critical CSS loaded after page load -->
@@ -1636,7 +1645,7 @@ const Dashboard = ({ setActiveTab }) => {
                                                         index >= 8 && index <= 11 ? 'border-blue-500' :
                                                         'border-red-500'
                                                     }`}>
-                                                        <span className="text-sm font-bold !text-gray-800 dark:!text-white">
+                                                        <span className="text-sm font-bold avg-score-text">
                                                             {rank > 0 ? rank.toFixed(1) : '-'}
                                                         </span>
                                                     </div>
@@ -5307,7 +5316,7 @@ const GeogridMaps = () => {
                                                             index >= 8 && index <= 11 ? 'border-blue-500' :
                                                             'border-red-500'
                                                         }`}>
-                                                            <span className="text-sm font-bold !text-gray-800 dark:!text-white">
+                                                            <span className="text-xs font-bold avg-score-text">
                                                                 {rank > 0 ? rank.toFixed(1) : '-'}
                                                             </span>
                                                         </div>
