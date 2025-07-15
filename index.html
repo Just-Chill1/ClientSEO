@@ -5893,7 +5893,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             status === 'error' ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600';
         
         return (
-            <div ref={cardRef} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group relative hover:-translate-y-0.5 will-change-transform">
+            <div ref={cardRef} className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group relative hover:-translate-y-0.5 will-change-transform group-hover:z-50">
                 <div className="flex items-start justify-between mb-4">
                     <div className={`p-3 rounded-xl ${iconClasses}`}>
                         {icon}
