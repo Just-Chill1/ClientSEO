@@ -497,14 +497,21 @@
       opacity: 0;
     }
 
-    /* Tone down chart label boldness on hover and fix rendering */
+    /* Completely remove bold effects from chart labels */
     .recharts-label-list text {
-        font-weight: 500 !important;
+        font-weight: 400 !important;
         -webkit-font-smoothing: antialiased !important;
         -moz-osx-font-smoothing: grayscale !important;
         text-rendering: optimizeLegibility !important;
         transform: none !important;
         font-feature-settings: 'liga' 1, 'kern' 1 !important;
+    }
+
+    /* Ensure no hover effects make chart labels bold */
+    .recharts-wrapper:hover .recharts-label-list text,
+    .recharts-wrapper .recharts-label-list text:hover,
+    .group:hover .recharts-label-list text {
+        font-weight: 400 !important;
     }
 
     /* Dark mode status icon backgrounds */
