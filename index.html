@@ -598,7 +598,7 @@
     }
     
     .technical-checks-tooltip {
-      position: fixed !important;
+      position: absolute !important;
       z-index: 999999 !important;
       pointer-events: none !important;
     }
@@ -2040,7 +2040,7 @@ const Dashboard = ({ setActiveTab }) => {
                  { id: 'Hawaii', name: 'Hawaii', flag: '🇺🇸', category: '🇺🇸 States' },
                  { id: 'Idaho', name: 'Idaho', flag: '🇺🇸', category: '🇺🇸 States' },
                  { id: 'Illinois', name: 'Illinois', flag: '🇺🇸', category: '🇺🇸 States' },
-                 { id: 'Indiana', name: 'Indiana', flag: '🇺🇸', category: '🇺🇸 States' },
+                 { id: 'Indiana', name: 'Indiana', flag: 'Indiana', flag: '🇺🇸', category: '🇺🇸 States' },
                  { id: 'Iowa', name: 'Iowa', flag: '🇺🇸', category: '🇺🇸 States' },
                  { id: 'Kansas', name: 'Kansas', flag: '🇺🇸', category: '🇺🇸 States' },
                  { id: 'Kentucky', name: 'Kentucky', flag: '🇺🇸', category: '🇺🇸 States' },
@@ -6837,14 +6837,13 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             
                             {/* Detailed Hover Tooltip – centred unless it would overflow right edge */}
                             <div className="technical-checks-tooltip opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto group-hover:show w-[600px] max-w-[95vw] bg-gray-900 text-white text-sm rounded-xl shadow-2xl" style={{
-                                position: 'fixed',
-                                top: '50%',
+                                position: 'absolute',
+                                top: '100%',
                                 left: '50%',
-                                transform: 'translate(-50%, -40%)',
+                                transform: 'translate(-50%, 16px)',
                                 zIndex: 999999,
                                 maxHeight: '80vh',
-                                marginTop: '20px',
-                                marginBottom: '20px'
+                                margin: '0'
                             }}>
                                 <div className="px-4 py-3 bg-gray-800 rounded-t-xl font-semibold border-b border-gray-700">
                                     Technical SEO Health Check Results
