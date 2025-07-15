@@ -1884,7 +1884,7 @@ const Dashboard = ({ setActiveTab }) => {
         return (
             <Card className="col-span-12 overflow-x-auto group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
                 {/* Header Section */}
-                <div className="competitor-table-header px-6 py-5 border-b border-gray-100">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-5 border-b border-gray-100">
                     <div className="flex justify-between items-start">
                         <div className="flex items-center space-x-3">
                             <div className="p-2 bg-blue-100 rounded-lg">
@@ -1937,7 +1937,7 @@ const Dashboard = ({ setActiveTab }) => {
                             <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Site Speed</th>
                             <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Keywords #1</th>
                             <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Backlinks</th>
-                            <th className="py-4 px-4 font-semibold text-gray-800 w-1/4">Opening Hours</th>
+                            <th className="py-4 px-4 font-semibold text-gray-800 w-1/4 text-center">Opening Hours</th>
                             <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Google Ads</th>
                             <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Facebook Ads</th>
                         </tr>
@@ -1984,7 +1984,7 @@ const Dashboard = ({ setActiveTab }) => {
                                 <td className="py-4 px-4 text-center font-medium">{c.backlinks.toLocaleString()}</td>
                                 <td className="py-4 px-4 text-gray-600">
                                     {(() => {
-                                        if (!c.hours || c.hours === 'N/A') return 'N/A';
+                                        if (!c.hours || c.hours === 'N/A') return <div className="text-center">N/A</div>;
                                         
                                         const daysOrder = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
                                         const hoursMap = {};
@@ -2002,7 +2002,7 @@ const Dashboard = ({ setActiveTab }) => {
                                             }
                                         });
 
-                                        if (Object.keys(hoursMap).length === 0) return c.hours;
+                                        if (Object.keys(hoursMap).length === 0) return <div className="text-center">{c.hours}</div>;
                                         
                                         const openDays = [];
                                         const closedDays = [];
@@ -2018,20 +2018,23 @@ const Dashboard = ({ setActiveTab }) => {
 
                                         return (
                                             <div className="text-xs leading-tight">
-                                                {/* Compact display: 2 columns */}
-                                                <div className="grid grid-cols-2 gap-x-2 gap-y-0.5">
-                                                    {openDays.map(item => (
-                                                        <div key={item.day} className="font-medium">
-                                                            <span className="text-gray-700">{item.day}:</span>
-                                                            <span className="text-blue-600 ml-1">{item.time}</span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                                {closedDays.length > 0 && (
-                                                    <div className="text-red-500 font-medium mt-1">
-                                                        {closedDays.join(', ')} Closed
+                                                <div className="flex items-start justify-between">
+                                                    {/* Left side: Open days in 2 columns */}
+                                                    <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 flex-1">
+                                                        {openDays.map(item => (
+                                                            <div key={item.day} className="font-medium">
+                                                                <span className="text-gray-700">{item.day}:</span>
+                                                                <span className="text-blue-600 ml-1">{item.time}</span>
+                                                            </div>
+                                                        ))}
                                                     </div>
-                                                )}
+                                                    {/* Right side: Closed days */}
+                                                    {closedDays.length > 0 && (
+                                                        <div className="text-red-500 font-medium ml-3 flex-shrink-0">
+                                                            {closedDays.join(', ')} Closed
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         );
                                     })()}
