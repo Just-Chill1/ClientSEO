@@ -6812,8 +6812,11 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                 position: 'fixed',
                                 top: '50%',
                                 left: '50%',
-                                transform: 'translate(-50%, -50%)',
-                                zIndex: 999999
+                                transform: 'translate(-50%, -40%)',
+                                zIndex: 999999,
+                                maxHeight: '80vh',
+                                marginTop: '20px',
+                                marginBottom: '20px'
                             }}>
                                 <div className="px-4 py-3 bg-gray-800 rounded-t-xl font-semibold border-b border-gray-700">
                                     Technical SEO Health Check Results
