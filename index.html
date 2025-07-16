@@ -807,6 +807,19 @@
     .recharts-active-dot {
       display: none !important;
     }
+
+    /* Allow bubbles to overflow chart boundaries */
+    .bubble-chart-container {
+      overflow: visible !important;
+    }
+    
+    .bubble-chart-container .recharts-wrapper {
+      overflow: visible !important;
+    }
+    
+    .bubble-chart-container .recharts-surface {
+      overflow: visible !important;
+    }
      [data-theme="dark"] .bg-blue-100 {
        background-color: rgba(59, 130, 246, 0.1) !important;
      }
@@ -1440,16 +1453,16 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
         
         // Bubble size based on Appearance (share of voice/frequency)
         // Appearance: 1 = 100%, 0 = 0%, but minimum 40% size
-        const maxSize = 60; // Maximum bubble size (100%) - 4x previous size
-        const minSize = maxSize * 0.4; // Minimum bubble size (40% of max) = 24px
+        const maxSize = 96; // Maximum bubble size (100%) - 60% increase from 60px
+        const minSize = maxSize * 0.4; // Minimum bubble size (40% of max) = 38.4px
         const appearanceValue = Math.max(0, Math.min(1, platformData.appearance || 0)); // Clamp to 0-1
         const sizeRange = maxSize - minSize;
         const bubbleRadius = minSize + (appearanceValue * sizeRange);
         
         // Opacity based on Confidence (data quality indicator)
         const confidence = Math.max(0, Math.min(1, platformData.confidence || 0)); // Clamp to 0-1
-        const minOpacity = 0.3; // Minimum opacity for low confidence (30%)
-        const maxOpacity = 0.7; // Maximum opacity for high confidence (70%)
+        const minOpacity = 0.25; // Minimum opacity for low confidence (25%)
+        const maxOpacity = 0.5; // Maximum opacity for high confidence (50%)
         const bubbleOpacity = minOpacity + (confidence * (maxOpacity - minOpacity));
         
         const result = {
@@ -1526,7 +1539,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
     };
     
     return (
-        <Card className="col-span-12 md:col-span-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60 bg-gradient-to-br from-white to-gray-50/30 min-h-[945px]">
+        <Card className="col-span-12 md:col-span-8 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60 bg-gradient-to-br from-white to-gray-50/30 min-h-[945px]">
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center space-x-2">
@@ -1571,9 +1584,10 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                         <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-sm text-gray-600 font-normal">
                             Visibility (%)
                         </div>
-                        <div className="ml-4 mr-8 h-full pb-8">
-                            <ResponsiveContainer width="100%" height="100%">
-                                <ScatterChart margin={{ top: 30, right: 40, bottom: 30, left: 25 }}>
+                        <div className="ml-4 mr-8 h-full pb-8 pt-8">
+                            <div className="bubble-chart-container h-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <ScatterChart margin={{ top: 60, right: 60, bottom: 40, left: 40 }}>
                                     <CartesianGrid strokeDasharray="2 2" stroke="#e5e7eb" strokeOpacity={0.5} />
                                     <XAxis 
                                         type="number" 
@@ -1641,6 +1655,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                         </ResponsiveContainer>
                     </div>
                 </div>
+            </div>
             </div>
             
             {/* Bottom Legend */}
@@ -1720,7 +1735,7 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                        "No AI sentiment data available";
         console.log('AISentimentBarChart - Early return:', message);
         return (
-            <Card className="col-span-12 md:col-span-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
+            <Card className="col-span-12 md:col-span-4 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
                 <div className="flex items-center justify-center h-80">
                     <p className="text-gray-500">{message}</p>
                 </div>
@@ -1805,7 +1820,7 @@ const AISentimentBarChart = ({ data, loading, error }) => {
     };
     
     return (
-        <Card className="col-span-12 md:col-span-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
+        <Card className="col-span-12 md:col-span-4 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
             {/* Header */}
             <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center space-x-2">
