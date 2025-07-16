@@ -1341,10 +1341,305 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
     );
 };
 
+// --- AI Sentiment Components ---
+const AISentimentBubbleChart = ({ data, loading, error }) => {
+    const [selectedPlatform, setSelectedPlatform] = useState('chatGpt');
+    
+    if (loading) {
+        return (
+            <Card className="col-span-12 md:col-span-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
+                <div className="flex items-center justify-center h-64">
+                    <p className="text-gray-500">Loading AI sentiment data...</p>
+                </div>
+            </Card>
+        );
+    }
+    
+    if (error || !data || data.length === 0) {
+        return (
+            <Card className="col-span-12 md:col-span-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
+                <div className="flex items-center justify-center h-64">
+                    <p className="text-gray-500">No AI sentiment data available</p>
+                </div>
+            </Card>
+        );
+    }
+    
+    // Transform data for the scatter plot
+    const chartData = data.map(item => {
+        const platformData = item[selectedPlatform];
+        const sentScore = platformData.strength * (platformData.sentiment >= 0 ? 1 : -1) * 100;
+        const bubbleSize = Math.sqrt(platformData.appearance || 0) * 12;
+        const finalSize = Math.max(6, Math.min(40, bubbleSize)); // Cap between 6-40px
+        
+        return {
+            clinicName: item.clinicName,
+            visibility: platformData.visibility * 100, // Convert to percentage
+            signedSentiment: sentScore,
+            appearance: platformData.appearance || 0,
+            bubbleSize: finalSize,
+            isClient: item.isClient,
+            summary: platformData.summary || '',
+            confidence: platformData.confidence || 0,
+            // Handle missing data
+            hasData: platformData.visibility > 0 || platformData.strength > 0
+        };
+    });
+    
+    const platformColors = {
+        chatGpt: '#3b82f6', // blue-500
+        gemini: '#f472b6'   // pink-400
+    };
+    
+    const clientColor = '#60a5fa'; // blue-400 (medium light blue for client)
+    
+    const CustomTooltip = ({ active, payload }) => {
+        if (active && payload && payload.length) {
+            const data = payload[0].payload;
+            const platformName = selectedPlatform === 'chatGpt' ? 'ChatGPT' : 'Gemini';
+            const sentimentText = data.signedSentiment >= 0 ? 'Positive' : 'Negative';
+            const summary = data.summary.length > 120 ? data.summary.substring(0, 120) + '...' : data.summary;
+            
+            return (
+                <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg max-w-xs">
+                    <p className="font-semibold text-gray-800">{data.clinicName}</p>
+                    <div className="flex items-center space-x-2 mt-1">
+                        <span className="text-sm font-medium" style={{ color: platformColors[selectedPlatform] }}>
+                            {platformName}
+                        </span>
+                        <span className="text-sm">
+                            {data.hasData ? `${data.signedSentiment >= 0 ? '+' : ''}${Math.round(data.signedSentiment)} ${sentimentText}` : 'Not found'}
+                        </span>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">Visibility: {Math.round(data.visibility)}%</p>
+                    {data.hasData && summary && (
+                        <p className="text-xs text-gray-500 mt-2">{summary}</p>
+                    )}
+                </div>
+            );
+        }
+        return null;
+    };
+    
+    return (
+        <Card className="col-span-12 md:col-span-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center space-x-2">
+                    <h2 className="text-xl font-bold text-gray-800">Market Share vs Sentiment</h2>
+                    <InfoTooltip text="Bubble chart showing the relationship between AI platform visibility and sentiment strength. Bubble size represents appearance frequency." />
+                </div>
+                
+                {/* Platform Toggle */}
+                <div className="flex bg-gray-100 rounded-lg p-1">
+                    <button
+                        onClick={() => setSelectedPlatform('chatGpt')}
+                        className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                            selectedPlatform === 'chatGpt' 
+                                ? 'bg-blue-500 text-white' 
+                                : 'text-gray-600 hover:text-gray-800'
+                        }`}
+                    >
+                        ChatGPT
+                    </button>
+                    <button
+                        onClick={() => setSelectedPlatform('gemini')}
+                        className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                            selectedPlatform === 'gemini' 
+                                ? 'bg-pink-400 text-white' 
+                                : 'text-gray-600 hover:text-gray-800'
+                        }`}
+                    >
+                        Gemini
+                    </button>
+                </div>
+            </div>
+            
+            {/* Chart */}
+            <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                    <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis 
+                            type="number" 
+                            dataKey="visibility" 
+                            name="Visibility" 
+                            domain={[0, 100]}
+                            tickFormatter={(value) => `${value}%`}
+                            ticks={[0, 25, 50, 75, 100]}
+                        />
+                        <YAxis 
+                            type="number" 
+                            dataKey="signedSentiment" 
+                            name="Signed Sentiment" 
+                            domain={[-100, 100]}
+                            ticks={[-100, -75, -50, -25, 0, 25, 50, 75, 100]}
+                        />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Scatter 
+                            data={chartData} 
+                            fill={platformColors[selectedPlatform]}
+                        >
+                            {chartData.map((entry, index) => (
+                                <Cell 
+                                    key={`cell-${index}`} 
+                                    fill={entry.isClient ? clientColor : platformColors[selectedPlatform]}
+                                    fillOpacity={entry.hasData ? 1 : 0.4}
+                                    stroke={entry.isClient ? '#1e40af' : 'none'}
+                                    strokeWidth={entry.isClient ? 2 : 0}
+                                />
+                            ))}
+                        </Scatter>
+                    </ScatterChart>
+                </ResponsiveContainer>
+            </div>
+        </Card>
+    );
+};
 
+const AISentimentBarChart = ({ data, loading, error }) => {
+    const [sortBy, setSortBy] = useState('chatGpt');
+    
+    if (loading) {
+        return (
+            <Card className="col-span-12 md:col-span-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
+                <div className="flex items-center justify-center h-64">
+                    <p className="text-gray-500">Loading AI sentiment data...</p>
+                </div>
+            </Card>
+        );
+    }
+    
+    if (error || !data || data.length === 0) {
+        return (
+            <Card className="col-span-12 md:col-span-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
+                <div className="flex items-center justify-center h-64">
+                    <p className="text-gray-500">No AI sentiment data available</p>
+                </div>
+            </Card>
+        );
+    }
+    
+    // Transform and sort data
+    const chartData = data.map(item => {
+        const chatGptScore = item.chatGpt.strength * (item.chatGpt.sentiment >= 0 ? 1 : -1) * 100;
+        const geminiScore = item.gemini.strength * (item.gemini.sentiment >= 0 ? 1 : -1) * 100;
+        
+        return {
+            clinicName: item.clinicName,
+            chatGptScore: item.chatGpt.visibility > 0 || item.chatGpt.strength > 0 ? chatGptScore : 0,
+            geminiScore: item.gemini.visibility > 0 || item.gemini.strength > 0 ? geminiScore : 0,
+            avgScore: (chatGptScore + geminiScore) / 2,
+            isClient: item.isClient,
+            chatGptSummary: item.chatGpt.summary || '',
+            geminiSummary: item.gemini.summary || '',
+            chatGptHasData: item.chatGpt.visibility > 0 || item.chatGpt.strength > 0,
+            geminiHasData: item.gemini.visibility > 0 || item.gemini.strength > 0
+        };
+    });
+    
+    // Sort data
+    const sortedData = [...chartData].sort((a, b) => {
+        // Client always first
+        if (a.isClient && !b.isClient) return -1;
+        if (!a.isClient && b.isClient) return 1;
+        
+        // Then sort by selected metric
+        if (sortBy === 'chatGpt') return b.chatGptScore - a.chatGptScore;
+        if (sortBy === 'gemini') return b.geminiScore - a.geminiScore;
+        return b.avgScore - a.avgScore;
+    });
+    
+    const CustomTooltip = ({ active, payload, label }) => {
+        if (active && payload && payload.length) {
+            const data = sortedData.find(item => item.clinicName === label);
+            if (!data) return null;
+            
+            return (
+                <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg max-w-xs">
+                    <p className="font-semibold text-gray-800">{data.clinicName}</p>
+                    <div className="space-y-1 mt-2">
+                        <div className="flex items-center space-x-2">
+                            <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                            <span className="text-sm">
+                                ChatGPT: {data.chatGptHasData ? `${data.chatGptScore >= 0 ? '+' : ''}${Math.round(data.chatGptScore)}` : 'Not found'}
+                            </span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <div className="w-3 h-3 bg-pink-400 rounded"></div>
+                            <span className="text-sm">
+                                Gemini: {data.geminiHasData ? `${data.geminiScore >= 0 ? '+' : ''}${Math.round(data.geminiScore)}` : 'Not found'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+        return null;
+    };
+    
+    return (
+        <Card className="col-span-12 md:col-span-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+                <div className="flex items-center space-x-2">
+                    <h2 className="text-xl font-bold text-gray-800">Competitive Perception by Platform</h2>
+                    <InfoTooltip text="Horizontal bar chart comparing sentiment scores across AI platforms. Shows signed sentiment (strength × sentiment direction) for each brand." />
+                </div>
+                
+                {/* Sort Dropdown */}
+                <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                    <option value="chatGpt">Sort by ChatGPT</option>
+                    <option value="gemini">Sort by Gemini</option>
+                    <option value="avg">Sort by Average</option>
+                </select>
+            </div>
+            
+            {/* Chart */}
+            <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                        data={sortedData}
+                        layout="horizontal"
+                        margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
+                    >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis 
+                            type="number" 
+                            domain={[-100, 100]}
+                            ticks={[-100, -50, 0, 50, 100]}
+                            tickFormatter={(value) => `${value}`}
+                        />
+                        <YAxis 
+                            type="category" 
+                            dataKey="clinicName" 
+                            width={75}
+                            tick={{ fontSize: 12 }}
+                        />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Bar 
+                            dataKey="chatGptScore" 
+                            fill="#3b82f6" 
+                            name="ChatGPT"
+                        />
+                        <Bar 
+                            dataKey="geminiScore" 
+                            fill="#f472b6" 
+                            name="Gemini"
+                        />
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+        </Card>
+    );
+};
 
 const Dashboard = ({ setActiveTab }) => {
-    const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, PieChart, Pie, Legend } = window.Recharts;
+    const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, PieChart, Pie, Legend, ScatterChart, Scatter } = window.Recharts;
     
     // --- Additional Icon Components for this page ---
     const ExternalLink = createIcon(
@@ -3132,6 +3427,18 @@ const Dashboard = ({ setActiveTab }) => {
                        <AIReportSection reportText={dashboardData.aiReport} title="SWOT Analysis" />
                     </div>
                 )}
+
+                {/* AI Sentiment Cards */}
+                <AISentimentBubbleChart 
+                    data={dashboardData?.aiSentimentData} 
+                    loading={loading} 
+                    error={error} 
+                />
+                <AISentimentBarChart 
+                    data={dashboardData?.aiSentimentData} 
+                    loading={loading} 
+                    error={error} 
+                />
 
                 <ServiceList title="Services by Search Volume" dataSet="topServices" tooltipText="Lists the most popular, established MedSpa services based on monthly search volume in the selected geographic area." />
                 <ServiceList title="New Services by Search Volume" dataSet="newServices" tooltipText="Highlights emerging or newer services with growing search interest, indicating potential new market opportunities." />
