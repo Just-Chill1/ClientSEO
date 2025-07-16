@@ -1373,6 +1373,7 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
 
 // --- AI Sentiment Components ---
 const AISentimentBubbleChart = ({ data, loading, error }) => {
+    const { ResponsiveContainer, ScatterChart, CartesianGrid, XAxis, YAxis, Tooltip, Cell, Scatter } = window.Recharts;
     const [selectedPlatform, setSelectedPlatform] = useState('chatGpt');
     
     if (loading) {
@@ -1528,6 +1529,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
 };
 
 const AISentimentBarChart = ({ data, loading, error }) => {
+    const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } = window.Recharts;
     const [sortBy, setSortBy] = useState('chatGpt');
     
     if (loading) {
