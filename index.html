@@ -1397,11 +1397,21 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
     }
     
     // Transform data for the scatter plot
+    let competitorIndex = 0;
     const chartData = data.map(item => {
         const platformData = item[selectedPlatform];
         const sentScore = platformData.strength * (platformData.sentiment >= 0 ? 1 : -1) * 100;
         // Better bubble sizing calculation - use appearance as the z value
-        const bubbleSize = Math.max(50, Math.min(800, (platformData.appearance || 1) * 100)); // Scale for better visibility
+        const bubbleSize = Math.max(100, Math.min(1000, (platformData.appearance || 1) * 200)); // Larger scale for better visibility
+        
+        // Assign colors: client gets blue, competitors get different colors
+        let fillColor;
+        if (item.isClient) {
+            fillColor = clientColor;
+        } else {
+            fillColor = competitorColors[competitorIndex % competitorColors.length];
+            competitorIndex++;
+        }
         
         return {
             clinicName: item.clinicName,
@@ -1409,6 +1419,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
             signedSentiment: sentScore,
             appearance: platformData.appearance || 0,
             z: bubbleSize, // This is the key for bubble sizing in Recharts
+            fill: fillColor, // Custom fill color for each bubble
             isClient: item.isClient,
             summary: platformData.summary || '',
             confidence: platformData.confidence || 0,
@@ -1422,7 +1433,14 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
         gemini: '#f472b6'   // pink-400
     };
     
-    const clientColor = '#60a5fa'; // blue-400 (medium light blue for client)
+    // Define colors for client and competitors (consistent across platforms)
+    const clientColor = '#1e40af'; // blue-700 (darker blue for client)
+    const competitorColors = [
+        '#10b981', // emerald-500
+        '#f59e0b', // amber-500
+        '#ef4444', // red-500
+        '#8b5cf6', // violet-500
+    ];
     
     const CustomTooltip = ({ active, payload }) => {
         if (active && payload && payload.length) {
@@ -1471,9 +1489,9 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
     return (
         <Card className="col-span-12 md:col-span-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
             {/* Header */}
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center space-x-2">
-                    <h2 className="text-xl font-bold text-gray-800">Market Share vs Sentiment</h2>
+                    <h2 className="text-xl font-bold text-gray-800">Visibility vs Sentiment</h2>
                     <InfoTooltip text="Bubble chart showing the relationship between AI platform visibility and sentiment strength. Bubble size represents appearance frequency." />
                 </div>
                 
@@ -1502,43 +1520,62 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                 </div>
             </div>
             
+            {/* Legend */}
+            <div className="flex flex-wrap items-center gap-4 mb-4">
+                {data.map((item, index) => (
+                    <div key={item.clinicName} className="flex items-center space-x-2">
+                        <div 
+                            className="w-3 h-3 rounded-full"
+                            style={{ 
+                                backgroundColor: item.isClient ? clientColor : competitorColors[(index - (data.findIndex(d => d.isClient) >= 0 ? 1 : 0)) % competitorColors.length]
+                            }}
+                        ></div>
+                        <span className="text-sm text-gray-600">
+                            {item.isClient ? `${item.clinicName} (You)` : item.clinicName}
+                        </span>
+                    </div>
+                ))}
+            </div>
+            
             {/* Chart */}
-            <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                    <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                        <XAxis 
-                            type="number" 
-                            dataKey="visibility" 
-                            name="Visibility" 
-                            domain={[0, 100]}
-                            tickFormatter={(value) => `${value}%`}
-                            ticks={[0, 25, 50, 75, 100]}
-                        />
-                        <YAxis 
-                            type="number" 
-                            dataKey="signedSentiment" 
-                            name="Signed Sentiment" 
-                            domain={[-100, 100]}
-                            ticks={[-100, -75, -50, -25, 0, 25, 50, 75, 100]}
-                        />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Scatter 
-                            data={chartData} 
-                            fill={platformColors[selectedPlatform]}
-                        >
-                            {chartData.map((entry, index) => (
-                                <Cell 
-                                    key={`cell-${index}`} 
-                                    fill={entry.isClient ? clientColor : platformColors[selectedPlatform]}
-                                    fillOpacity={entry.hasData ? 0.8 : 0.3}
-                                    stroke={entry.isClient ? '#1e40af' : platformColors[selectedPlatform]}
-                                    strokeWidth={entry.isClient ? 3 : 1}
-                                />
-                            ))}
-                        </Scatter>
-                    </ScatterChart>
-                </ResponsiveContainer>
+            <div className="h-96 relative">
+                {/* Sideways Y-axis label */}
+                <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -rotate-90 text-sm text-gray-600 font-medium">
+                    Sentiment Score
+                </div>
+                <div className="ml-6">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <ScatterChart margin={{ top: 20, right: 20, bottom: 40, left: 40 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                            <XAxis 
+                                type="number" 
+                                dataKey="visibility" 
+                                name="Visibility" 
+                                domain={[-25, 100]}
+                                tickFormatter={(value) => `${value}%`}
+                                ticks={[-25, 0, 25, 50, 75, 100]}
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fontSize: 11, fill: '#6b7280' }}
+                            />
+                            <YAxis 
+                                type="number" 
+                                dataKey="signedSentiment" 
+                                name="Signed Sentiment" 
+                                domain={[60, 100]}
+                                ticks={[60, 70, 80, 90, 100]}
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fontSize: 11, fill: '#6b7280' }}
+                            />
+                            <Tooltip content={<CustomTooltip />} />
+                            <Scatter 
+                                data={chartData} 
+                                fill="#8884d8"
+                            />
+                        </ScatterChart>
+                    </ResponsiveContainer>
+                </div>
             </div>
         </Card>
     );
