@@ -1768,15 +1768,23 @@ const AISentimentBarChart = ({ data, loading, error }) => {
     
     console.log('AISentimentBarChart - Final chartData:', chartData);
     
-    // Sort data
-    const sortedData = [...chartData].sort((a, b) => {
+    // Sort data and filter based on view
+    let displayData = [...chartData];
+    
+    // Filter data based on view selection
+    if (sortBy === 'chatGpt') {
+        displayData = displayData.filter(item => item.chatGptHasData);
+    } else if (sortBy === 'gemini') {
+        displayData = displayData.filter(item => item.geminiHasData);
+    }
+    
+    // Sort data - client always first, then by average score
+    const sortedData = displayData.sort((a, b) => {
         // Client always first
         if (a.isClient && !b.isClient) return -1;
         if (!a.isClient && b.isClient) return 1;
         
-        // Then sort by selected metric
-        if (sortBy === 'chatGpt') return b.chatGptScore - a.chatGptScore;
-        if (sortBy === 'gemini') return b.geminiScore - a.geminiScore;
+        // Then sort by average score
         return b.avgScore - a.avgScore;
     });
     
@@ -1820,7 +1828,7 @@ const AISentimentBarChart = ({ data, loading, error }) => {
     };
     
     return (
-        <Card className="col-span-12 md:col-span-5 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
+        <Card className="col-span-12 md:col-span-5 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60 bg-gradient-to-br from-white to-gray-50/30 min-h-[512px]">
             {/* Header */}
             <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center space-x-2">
@@ -1828,15 +1836,15 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                     <InfoTooltip text="Horizontal bar chart comparing sentiment scores across AI platforms. Shows signed sentiment (strength × sentiment direction) for each brand." />
                 </div>
                 
-                {/* Sort Dropdown */}
+                {/* View Dropdown */}
                 <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
                     className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                    <option value="avg">Average</option>
-                    <option value="chatGpt">ChatGPT</option>
-                    <option value="gemini">Gemini</option>
+                    <option value="all">All Platforms</option>
+                    <option value="chatGpt">ChatGPT Only</option>
+                    <option value="gemini">Gemini Only</option>
                 </select>
             </div>
             
@@ -1847,75 +1855,85 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                     <span className="text-sm text-gray-600">ChatGPT</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 bg-pink-400 rounded"></div>
+                    <div className="w-3 h-3 bg-pink-500 rounded"></div>
                     <span className="text-sm text-gray-600">Gemini</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 border-2 border-blue-800 bg-blue-600 rounded"></div>
-                    <span className="text-sm text-gray-600">Your Business</span>
                 </div>
             </div>
             
             {/* Chart */}
-            <div className="h-80 flex justify-center">
-                <div className="w-full max-w-4xl">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart
-                            data={sortedData}
-                            layout="horizontal"
-                            margin={{ top: 10, right: 40, left: 100, bottom: 10 }}
-                            barCategoryGap="20%"
-                        >
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                            <XAxis 
-                                type="number" 
-                                domain={[-100, 100]}
-                                ticks={[-100, -50, 0, 50, 100]}
-                                tickFormatter={(value) => `${value}`}
-                                axisLine={false}
-                                tickLine={false}
-                                tick={{ fontSize: 11, fill: '#6b7280' }}
-                            />
-                            <YAxis 
-                                type="category" 
-                                dataKey="clinicName" 
-                                width={95}
-                                tick={{ fontSize: 11, fill: '#374151' }}
-                                axisLine={false}
-                                tickLine={false}
-                                tickFormatter={(value) => value.length > 12 ? value.substring(0, 12) + '...' : value}
-                            />
-                            <Tooltip content={<CustomTooltip />} />
-                            <Bar 
-                                dataKey="chatGptScore" 
-                                fill="#3b82f6" 
-                                name="ChatGPT"
-                                radius={[0, 2, 2, 0]}
-                            >
-                                {sortedData.map((entry, index) => (
-                                    <Cell 
-                                        key={`chatgpt-${index}`} 
-                                        fill={entry.isClient ? '#1e40af' : '#3b82f6'}
-                                        fillOpacity={entry.chatGptHasData ? 0.9 : 0.3}
+            <div className="h-[320px] relative">
+                <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-full max-w-4xl h-full relative">
+                        {/* X-axis label */}
+                        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-sm text-gray-600 font-normal">
+                            Sentiment Score (%)
+                        </div>
+                        <div className="ml-2 mr-4 h-full pb-8">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <BarChart
+                                    data={sortedData}
+                                    layout="horizontal"
+                                    margin={{ top: 20, right: 40, left: 120, bottom: 40 }}
+                                    barCategoryGap="15%"
+                                >
+                                    <CartesianGrid strokeDasharray="2 2" stroke="#e5e7eb" strokeOpacity={0.5} />
+                                    <XAxis 
+                                        type="number" 
+                                        domain={[-100, 100]}
+                                        ticks={[-100, -50, 0, 50, 100]}
+                                        tickFormatter={(value) => `${value}%`}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fontSize: 12, fill: '#6b7280', fontWeight: 'normal' }}
                                     />
-                                ))}
-                            </Bar>
-                            <Bar 
-                                dataKey="geminiScore" 
-                                fill="#f472b6" 
-                                name="Gemini"
-                                radius={[0, 2, 2, 0]}
-                            >
-                                {sortedData.map((entry, index) => (
-                                    <Cell 
-                                        key={`gemini-${index}`} 
-                                        fill={entry.isClient ? '#db2777' : '#f472b6'}
-                                        fillOpacity={entry.geminiHasData ? 0.9 : 0.3}
+                                    <YAxis 
+                                        type="category" 
+                                        dataKey="clinicName" 
+                                        width={110}
+                                        tick={{ fontSize: 12, fill: '#374151', fontWeight: 'medium' }}
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tickFormatter={(value) => value.length > 15 ? value.substring(0, 15) + '...' : value}
                                     />
-                                ))}
-                            </Bar>
-                        </BarChart>
-                    </ResponsiveContainer>
+                                    <Tooltip content={<CustomTooltip />} />
+                                    {/* Show ChatGPT bars when view is 'all' or 'chatGpt' */}
+                                    {(sortBy === 'all' || sortBy === 'chatGpt') && (
+                                        <Bar 
+                                            dataKey="chatGptScore" 
+                                            fill="#3b82f6" 
+                                            name="ChatGPT"
+                                            radius={[0, 2, 2, 0]}
+                                        >
+                                            {sortedData.map((entry, index) => (
+                                                <Cell 
+                                                    key={`chatgpt-${index}`} 
+                                                    fill={entry.isClient ? '#1d4ed8' : '#3b82f6'}
+                                                    fillOpacity={entry.chatGptHasData ? 0.9 : 0.2}
+                                                />
+                                            ))}
+                                        </Bar>
+                                    )}
+                                    {/* Show Gemini bars when view is 'all' or 'gemini' */}
+                                    {(sortBy === 'all' || sortBy === 'gemini') && (
+                                        <Bar 
+                                            dataKey="geminiScore" 
+                                            fill="#ec4899" 
+                                            name="Gemini"
+                                            radius={[0, 2, 2, 0]}
+                                        >
+                                            {sortedData.map((entry, index) => (
+                                                <Cell 
+                                                    key={`gemini-${index}`} 
+                                                    fill={entry.isClient ? '#db2777' : '#ec4899'}
+                                                    fillOpacity={entry.geminiHasData ? 0.9 : 0.2}
+                                                />
+                                            ))}
+                                        </Bar>
+                                    )}
+                                </BarChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
                 </div>
             </div>
         </Card>
