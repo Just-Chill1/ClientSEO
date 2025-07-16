@@ -1440,16 +1440,16 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
         
         // Bubble size based on Appearance (share of voice/frequency)
         // Appearance: 1 = 100%, 0 = 0%, but minimum 40% size
-        const minSize = 6; // Minimum bubble size (40% of max)
-        const maxSize = 15; // Maximum bubble size (100%)
+        const maxSize = 60; // Maximum bubble size (100%) - 4x previous size
+        const minSize = maxSize * 0.4; // Minimum bubble size (40% of max) = 24px
         const appearanceValue = Math.max(0, Math.min(1, platformData.appearance || 0)); // Clamp to 0-1
         const sizeRange = maxSize - minSize;
         const bubbleRadius = minSize + (appearanceValue * sizeRange);
         
         // Opacity based on Confidence (data quality indicator)
         const confidence = Math.max(0, Math.min(1, platformData.confidence || 0)); // Clamp to 0-1
-        const minOpacity = 0.4; // Minimum opacity for low confidence
-        const maxOpacity = 0.9; // Maximum opacity for high confidence
+        const minOpacity = 0.3; // Minimum opacity for low confidence (30%)
+        const maxOpacity = 0.7; // Maximum opacity for high confidence (70%)
         const bubbleOpacity = minOpacity + (confidence * (maxOpacity - minOpacity));
         
         const result = {
@@ -1526,7 +1526,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
     };
     
     return (
-        <Card className="col-span-12 md:col-span-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60 bg-gradient-to-br from-white to-gray-50/30 min-h-[700px]">
+        <Card className="col-span-12 md:col-span-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60 bg-gradient-to-br from-white to-gray-50/30 min-h-[945px]">
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center space-x-2">
@@ -1560,11 +1560,11 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
             </div>
             
             {/* Chart */}
-            <div className="h-[520px] relative">
+            <div className="h-[650px] relative">
                 <div className="w-full h-full flex items-center justify-center">
                     <div className="w-full max-w-4xl h-full relative">
                         {/* Y-axis label */}
-                        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 -rotate-90 text-sm text-gray-600 font-normal">
+                        <div className="absolute -left-6 top-1/2 transform -translate-y-1/2 -rotate-90 text-sm text-gray-600 font-normal">
                             Sentiment Score (%)
                         </div>
                         {/* X-axis label */}
