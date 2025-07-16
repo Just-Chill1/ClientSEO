@@ -820,6 +820,12 @@
     .bubble-chart-container .recharts-surface {
       overflow: visible !important;
     }
+    
+    /* Dark mode chart colors */
+    [data-theme="dark"] .bubble-chart-container {
+      --grid-color: #4b5563;
+      --text-color: #9ca3af;
+    }
      [data-theme="dark"] .bg-blue-100 {
        background-color: rgba(59, 130, 246, 0.1) !important;
      }
@@ -1498,37 +1504,37 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
             const summary = data.summary.length > 500 ? data.summary.substring(0, 500) + '...' : data.summary;
             
             return (
-                <div className="bg-white p-5 border border-gray-200 rounded-xl shadow-xl max-w-sm backdrop-blur-sm">
+                <div className="bg-white dark:bg-gray-800 p-5 border border-gray-200 dark:border-gray-600 rounded-xl shadow-xl max-w-sm backdrop-blur-sm">
                     <div className="flex items-center justify-between mb-3">
-                        <p className="font-bold text-gray-800">{data.clinicName}</p>
+                        <p className="font-bold text-gray-800 dark:text-gray-100">{data.clinicName}</p>
                         {data.isClient && (
                             <span className="text-xs bg-gradient-to-r from-blue-500 to-blue-600 text-white px-3 py-1 rounded-full font-medium">Your Business</span>
                         )}
                     </div>
                     <div className="space-y-3">
-                        <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700 rounded-lg">
                             <span className="text-sm font-medium" style={{ color: platformColors[selectedPlatform] }}>
                                 {platformName} Sentiment
                             </span>
-                            <span className="text-sm font-bold">
+                            <span className="text-sm font-bold dark:text-gray-100">
                                 {data.hasData ? `${data.signedSentiment >= 0 ? '+' : ''}${Math.round(data.signedSentiment)}% ${sentimentText}` : 'Not found'}
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">Visibility</span>
-                            <span className="text-sm font-semibold text-gray-800">{Math.round(data.visibility)}%</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-300">Visibility</span>
+                            <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{Math.round(data.visibility)}%</span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">Appearance</span>
-                            <span className="text-sm font-semibold text-gray-800">{Math.round(data.appearance * 100)}%</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-300">Appearance</span>
+                            <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{Math.round(data.appearance * 100)}%</span>
                         </div>
                         <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">Confidence</span>
-                            <span className="text-sm font-semibold text-gray-800">{Math.round(data.confidence * 100)}%</span>
+                            <span className="text-sm text-gray-600 dark:text-gray-300">Confidence</span>
+                            <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{Math.round(data.confidence * 100)}%</span>
                         </div>
                         {data.hasData && summary && (
-                            <div className="mt-4 pt-3 border-t border-gray-200">
-                                <p className="text-xs text-gray-600 leading-relaxed">{summary}</p>
+                            <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
+                                <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">{summary}</p>
                             </div>
                         )}
                     </div>
@@ -1539,22 +1545,22 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
     };
     
     return (
-        <Card className="col-span-12 md:col-span-7 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60 bg-gradient-to-br from-white to-gray-50/30 min-h-[853px]">
+        <Card className="col-span-12 md:col-span-7 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60 dark:hover:border-blue-400/60 bg-gradient-to-br from-white to-gray-50/30 dark:from-gray-800 dark:to-gray-900/30 min-h-[853px]">
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center space-x-2">
-                    <h2 className="text-xl font-bold text-gray-800">AI Visibility vs Sentiment</h2>
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">AI Visibility vs Sentiment</h2>
                     <InfoTooltip text="Bubble chart showing the relationship between AI platform visibility and sentiment strength. Bubble size represents appearance frequency." />
                 </div>
                 
                 {/* Platform Toggle */}
-                <div className="flex bg-gray-100 rounded-lg p-1 shadow-sm">
+                <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 shadow-sm">
                     <button
                         onClick={() => setSelectedPlatform('chatGpt')}
                         className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                             selectedPlatform === 'chatGpt' 
                                 ? 'bg-blue-500 text-white shadow-sm' 
-                                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                                : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600'
                         }`}
                     >
                         ChatGPT
@@ -1563,8 +1569,8 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                         onClick={() => setSelectedPlatform('gemini')}
                         className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                             selectedPlatform === 'gemini' 
-                                ? 'bg-pink-400 text-white shadow-sm' 
-                                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                                ? 'bg-pink-500 text-white shadow-sm' 
+                                : 'text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600'
                         }`}
                     >
                         Gemini
@@ -1577,18 +1583,18 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                 <div className="w-full h-full flex items-center justify-center">
                     <div className="w-full max-w-4xl h-full relative">
                         {/* Y-axis label */}
-                        <div className="absolute -left-4 top-1/2 transform -translate-y-1/2 -rotate-90 text-sm text-gray-600 font-normal">
+                        <div className="absolute -left-8 top-1/2 transform -translate-y-1/2 -rotate-90 text-sm text-gray-600 dark:text-gray-300 font-normal">
                             Sentiment Score (%)
                         </div>
                         {/* X-axis label */}
-                        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-sm text-gray-600 font-normal">
+                        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-sm text-gray-600 dark:text-gray-300 font-normal">
                             Visibility (%)
                         </div>
                         <div className="ml-2 mr-8 h-full pb-8 pt-8">
-                            <div className="bubble-chart-container h-full">
+                            <div className="bubble-chart-container h-full" style={{ '--grid-color': '#e5e7eb', '--text-color': '#6b7280' }}>
                                 <ResponsiveContainer width="100%" height="100%">
                                     <ScatterChart margin={{ top: 60, right: 60, bottom: 40, left: 20 }}>
-                                    <CartesianGrid strokeDasharray="2 2" stroke="#e5e7eb" strokeOpacity={0.5} />
+                                    <CartesianGrid strokeDasharray="2 2" stroke="var(--grid-color, #e5e7eb)" strokeOpacity={0.5} />
                                     <XAxis 
                                         type="number" 
                                         dataKey="visibility" 
@@ -1598,7 +1604,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                                         ticks={[-25, 0, 25, 50, 75, 100]}
                                         axisLine={false}
                                         tickLine={false}
-                                        tick={{ fontSize: 12, fill: '#6b7280', fontWeight: 'normal' }}
+                                        tick={{ fontSize: 12, fill: 'var(--text-color, #6b7280)', fontWeight: 'normal' }}
                                     />
                                     <YAxis 
                                         type="number" 
@@ -1609,7 +1615,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                                         tickFormatter={(value) => `${value}`}
                                         axisLine={false}
                                         tickLine={false}
-                                        tick={{ fontSize: 12, fill: '#6b7280', fontWeight: 'normal' }}
+                                        tick={{ fontSize: 12, fill: 'var(--text-color, #6b7280)', fontWeight: 'normal' }}
                                     />
                                 <Tooltip content={<CustomTooltip />} />
                                 <Scatter 
@@ -1678,7 +1684,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                                                 backgroundColor: item.isClient ? clientColor : competitorColors[(index - (data.findIndex(d => d.isClient) >= 0 ? 1 : 0)) % competitorColors.length]
                                             }}
                                         ></div>
-                                        <span className="text-xs text-gray-600 font-medium truncate" title={item.clinicName}>
+                                        <span className="text-xs text-gray-600 dark:text-gray-300 font-medium truncate" title={item.clinicName}>
                                             {truncateName(item.clinicName, 14)}
                                             {item.isClient && ' ⭐'}
                                         </span>
@@ -1704,7 +1710,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                                                     backgroundColor: item.isClient ? clientColor : competitorColors[(actualIndex - (data.findIndex(d => d.isClient) >= 0 ? 1 : 0)) % competitorColors.length]
                                                 }}
                                             ></div>
-                                            <span className="text-xs text-gray-600 font-medium truncate" title={item.clinicName}>
+                                            <span className="text-xs text-gray-600 dark:text-gray-300 font-medium truncate" title={item.clinicName}>
                                                 {truncateName(item.clinicName, 14)}
                                                 {item.isClient && ' ⭐'}
                                             </span>
