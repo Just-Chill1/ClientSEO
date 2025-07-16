@@ -38,6 +38,42 @@ const NEW_SERVICES = [
 ];
 
 
+// Test function to debug state filtering - run this directly in Apps Script
+function testStateFiltering() {
+  try {
+    console.log('=== Testing State Filtering ===');
+    
+    // Test with Florida
+    const testLocation = 'Florida';
+    const sheetName = 'State & Province';
+    const locationColumnIndex = 3; // State column
+    
+    console.log(`Testing with location: ${testLocation}`);
+    console.log(`Using sheet: ${sheetName}`);
+    console.log(`Using column index: ${locationColumnIndex}`);
+    
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+    if (!sheet) {
+      const availableSheets = SpreadsheetApp.getActiveSpreadsheet().getSheets().map(s => s.getName()).join(', ');
+      console.log(`Available sheets: ${availableSheets}`);
+      throw new Error(`Sheet "${sheetName}" not found`);
+    }
+    
+    console.log(`Successfully found sheet: ${sheetName}`);
+    console.log(`Sheet has ${sheet.getLastRow()} rows and ${sheet.getLastColumn()} columns`);
+    
+    const data = aggregateServiceData(sheet, locationColumnIndex, testLocation, sheetName);
+    console.log('Result:', data);
+    
+    return data;
+    
+  } catch (error) {
+    console.error('Test error:', error.message);
+    console.error('Stack:', error.stack);
+    return { error: error.message };
+  }
+}
+
 function doGet(e) {
   try {
     const location = e.parameter.location || 'USA'; // Default to USA if no location is specified
