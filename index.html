@@ -158,8 +158,8 @@
      [data-theme="dark"] .border-gray-300 { border-color: var(--border-secondary) !important; }
 
      /* Ensure all summary stat containers have visible borders in dark mode */
-     [data-theme="dark"] .space-y-3 > div,
-     [data-theme="dark"] .space-y-6 > div {
+     [data-theme="dark"] .space-y-3 > div:not(.metric-card),
+     [data-theme="dark"] .space-y-6 > div:not(.metric-card) {
        border: 1px solid var(--border-primary) !important;
        border-radius: 0.75rem;
        background-color: var(--card-bg) !important;
@@ -342,8 +342,8 @@
      }
 
      /* Ensure all summary containers have proper dark mode styling */
-     [data-theme="dark"] .space-y-3 > div,
-     [data-theme="dark"] .space-y-6 > div {
+     [data-theme="dark"] .space-y-3 > div:not(.metric-card),
+     [data-theme="dark"] .space-y-6 > div:not(.metric-card) {
        background-color: var(--bg-tertiary) !important;
        border: 1px solid var(--border-primary) !important;
        color: var(--text-primary) !important;
@@ -4075,7 +4075,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                             </div>
                         <div className="space-y-4">
                             {/* Est. Traffic Value Card */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all duration-300 group">
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all duration-300 group metric-card">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center space-x-3">
                                         <div className="p-2 bg-green-100 rounded-lg group-hover:bg-green-200 transition-colors">
@@ -4100,7 +4100,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                             </div>
 
                             {/* Est. Paid Cost Card */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all duration-300 group">
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all duration-300 group metric-card">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center space-x-3">
                                         <div className="p-2 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
@@ -5064,7 +5064,7 @@ const Backlinks = () => {
                         </div>
                         <div className="space-y-4">
                             {/* Referring Domains Card */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all duration-300 group">
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all duration-300 group metric-card">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center space-x-3">
                                         <div className="p-2 bg-purple-100 rounded-lg group-hover:bg-purple-200 transition-colors">
@@ -5083,7 +5083,7 @@ const Backlinks = () => {
                             </div>
 
                             {/* Avg. Referring Rank Card */}
-                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all duration-300 group">
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 hover:shadow-md transition-all duration-300 group metric-card">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center space-x-3">
                                         <div className="p-2 bg-orange-100 rounded-lg group-hover:bg-orange-200 transition-colors">
