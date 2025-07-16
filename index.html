@@ -1398,7 +1398,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
     
     // Transform data for the scatter plot
     let competitorIndex = 0;
-    const chartData = data.map(item => {
+    const chartData = (data || []).map(item => {
         const platformData = item[selectedPlatform];
         const sentScore = platformData.strength * (platformData.sentiment >= 0 ? 1 : -1) * 100;
         // Better bubble sizing calculation - use appearance as the z value
@@ -1521,21 +1521,23 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
             </div>
             
             {/* Legend */}
-            <div className="flex flex-wrap items-center gap-4 mb-4">
-                {data.map((item, index) => (
-                    <div key={item.clinicName} className="flex items-center space-x-2">
-                        <div 
-                            className="w-3 h-3 rounded-full"
-                            style={{ 
-                                backgroundColor: item.isClient ? clientColor : competitorColors[(index - (data.findIndex(d => d.isClient) >= 0 ? 1 : 0)) % competitorColors.length]
-                            }}
-                        ></div>
-                        <span className="text-sm text-gray-600">
-                            {item.isClient ? `${item.clinicName} (You)` : item.clinicName}
-                        </span>
-                    </div>
-                ))}
-            </div>
+            {data && data.length > 0 && (
+                <div className="flex flex-wrap items-center gap-4 mb-4">
+                    {data.map((item, index) => (
+                        <div key={item.clinicName} className="flex items-center space-x-2">
+                            <div 
+                                className="w-3 h-3 rounded-full"
+                                style={{ 
+                                    backgroundColor: item.isClient ? clientColor : competitorColors[(index - (data.findIndex(d => d.isClient) >= 0 ? 1 : 0)) % competitorColors.length]
+                                }}
+                            ></div>
+                            <span className="text-sm text-gray-600">
+                                {item.isClient ? `${item.clinicName} (You)` : item.clinicName}
+                            </span>
+                        </div>
+                    ))}
+                </div>
+            )}
             
             {/* Chart */}
             <div className="h-96 relative">
@@ -1573,7 +1575,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                                 data={chartData} 
                                 fill="#8884d8"
                             >
-                                {chartData.map((entry, index) => (
+                                {chartData && chartData.map((entry, index) => (
                                     <Cell 
                                         key={`cell-${index}`} 
                                         fill={entry.fill}
