@@ -679,6 +679,13 @@
       background-color: var(--bg-tertiary) !important;
     }
     
+    /* Fix dark mode spacing for SummaryStat components */
+    [data-theme="dark"] .bg-slate-50.rounded-lg {
+      background-color: var(--bg-tertiary) !important;
+      border: 1px solid var(--border-primary) !important;
+      margin-bottom: 2px !important;
+    }
+    
     /* Remove grey background from Total Active Backlinks card in dark mode */
     [data-theme="dark"] .space-y-6 .p-6.rounded-xl.text-center {
       background-color: transparent !important;
