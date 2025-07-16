@@ -88,12 +88,15 @@ function getDashboardData(spreadsheet) {
     
     const latestGeogrid = medspaNearMeData.length > 0 ? medspaNearMeData[0] : null;
     console.log('Latest geogrid data:', latestGeogrid);
+    
+    const aiSentimentData = getAiSentimentData(spreadsheet);
 
     return {
         overviewData,
         censusData,
         aiReport,
-        geogridForDashboard: latestGeogrid
+        geogridForDashboard: latestGeogrid,
+        aiSentimentData
     };
 }
 
@@ -268,6 +271,81 @@ function getAiReport(spreadsheet) {
     const sheet = spreadsheet.getSheetByName('GBP Insights');
     if (!sheet || sheet.getLastRow() < 2) return "";
     return sheet.getRange('AJ2').getValue();
+}
+
+function getAiSentimentData(spreadsheet) {
+    const sheet = spreadsheet.getSheetByName('Ai Sentiment');
+    if (!sheet || sheet.getLastRow() < 2) {
+        console.log('No Ai Sentiment sheet found or no data');
+        return [];
+    }
+    
+    const values = sheet.getRange('A2:V' + sheet.getLastRow()).getValues();
+    console.log('AI Sentiment data rows:', values.length);
+    
+    return values.map((row, index) => {
+        const accountType = row[0];  // Column A - Account Type
+        const clinicName = row[1];   // Column B - Clinic Name
+        
+        // Skip empty rows
+        if (!clinicName) return null;
+        
+        // Parse sentiment values and calculate signed sentiment
+        const chatGptSentiment = parseFloat(row[11]) || 0;      // Column L - ChatGPT Sentiment
+        const chatGptStrength = parseFloat(row[12]) || 0;       // Column M - ChatGPT Strength
+        const chatGptConfidence = parseFloat(row[13]) || 0;     // Column N - ChatGPT Confidence
+        const chatGptVisibility = parseFloat(row[14]) || 0;     // Column O - ChatGPT Visibility
+        const chatGptAppearance = parseFloat(row[15]) || 0;     // Column P - ChatGPT Appearance
+        
+        const geminiSentiment = parseFloat(row[17]) || 0;       // Column R - Gemini Sentiment
+        const geminiStrength = parseFloat(row[18]) || 0;        // Column S - Gemini Strength
+        const geminiConfidence = parseFloat(row[19]) || 0;      // Column T - Gemini Confidence
+        const geminiVisibility = parseFloat(row[20]) || 0;      // Column U - Gemini Visibility
+        const geminiAppearance = parseFloat(row[21]) || 0;      // Column V - Gemini Appearance
+        
+        // Calculate signed sentiment (strength × sentimentSign)
+        const chatGptSentimentSign = chatGptSentiment >= 0 ? 1 : -1;
+        const geminiSentimentSign = geminiSentiment >= 0 ? 1 : -1;
+        
+        const chatGptSignedSentiment = chatGptStrength * chatGptSentimentSign;
+        const geminiSignedSentiment = geminiStrength * geminiSentimentSign;
+        
+        return {
+            accountType: accountType,
+            clinicName: clinicName,
+            address: row[2] || '',           // Column C - Address
+            borough: row[3] || '',           // Column D - Borough
+            city: row[4] || '',              // Column E - City
+            state: row[5] || '',             // Column F - State
+            zip: row[6] || '',               // Column G - Zip
+            country: row[7] || '',           // Column H - Country
+            website: row[8] || '',           // Column I - Website
+            gbpPlaceId: row[9] || '',        // Column J - GBP Place ID
+            isClient: accountType === 'Client',
+            
+            // ChatGPT data
+            chatGpt: {
+                summary: row[10] || '',                    // Column K - ChatGPT Summary
+                sentiment: chatGptSentiment,               // Column L - ChatGPT Sentiment
+                strength: chatGptStrength,                 // Column M - ChatGPT Strength
+                confidence: chatGptConfidence,             // Column N - ChatGPT Confidence
+                visibility: chatGptVisibility,             // Column O - ChatGPT Visibility
+                appearance: chatGptAppearance,             // Column P - ChatGPT Appearance
+                signedSentiment: chatGptSignedSentiment    // Calculated: strength × sentimentSign
+            },
+            
+            // Gemini data
+            gemini: {
+                summary: row[16] || '',                    // Column Q - Gemini Summary
+                sentiment: geminiSentiment,                // Column R - Gemini Sentiment
+                strength: geminiStrength,                  // Column S - Gemini Strength
+                confidence: geminiConfidence,              // Column T - Gemini Confidence
+                visibility: geminiVisibility,              // Column U - Gemini Visibility
+                appearance: geminiAppearance,              // Column V - Gemini Appearance
+                signedSentiment: geminiSignedSentiment     // Calculated: strength × sentimentSign
+            }
+        };
+    }).filter(row => row); // Remove null entries
 }
 
 function getWebhookUrls(spreadsheet) {
