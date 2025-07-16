@@ -1418,7 +1418,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
             visibility: platformData.visibility * 100, // Convert to percentage
             signedSentiment: sentScore,
             appearance: platformData.appearance || 0,
-            z: bubbleSize, // This is the key for bubble sizing in Recharts
+            r: Math.max(3, Math.min(20, (platformData.appearance || 1) * 5)), // Bubble radius for Recharts
             fill: fillColor, // Custom fill color for each bubble
             isClient: item.isClient,
             summary: platformData.summary || '',
@@ -1572,7 +1572,19 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                             <Scatter 
                                 data={chartData} 
                                 fill="#8884d8"
-                            />
+                            >
+                                {chartData.map((entry, index) => (
+                                    <Cell 
+                                        key={`cell-${index}`} 
+                                        fill={entry.fill}
+                                        fillOpacity={entry.hasData ? 0.8 : 0.3}
+                                        stroke={entry.isClient ? '#1e40af' : entry.fill}
+                                        strokeWidth={entry.isClient ? 2 : 1}
+                                        strokeOpacity={0.8}
+                                        r={entry.r}
+                                    />
+                                ))}
+                            </Scatter>
                         </ScatterChart>
                     </ResponsiveContainer>
                 </div>
