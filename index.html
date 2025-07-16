@@ -1376,21 +1376,15 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
     const { ResponsiveContainer, ScatterChart, CartesianGrid, XAxis, YAxis, Tooltip, Cell, Scatter } = window.Recharts;
     const [selectedPlatform, setSelectedPlatform] = useState('chatGpt');
     
-    if (loading) {
+    // Early return for any invalid data state
+    if (loading || error || !data || !Array.isArray(data) || data.length === 0) {
+        const message = loading ? "Loading AI sentiment data..." : 
+                       error ? "Error loading AI sentiment data" : 
+                       "No AI sentiment data available";
         return (
             <Card className="col-span-12 md:col-span-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
-                <div className="flex items-center justify-center h-64">
-                    <p className="text-gray-500">Loading AI sentiment data...</p>
-                </div>
-            </Card>
-        );
-    }
-    
-    if (error || !data || data.length === 0) {
-        return (
-            <Card className="col-span-12 md:col-span-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
-                <div className="flex items-center justify-center h-64">
-                    <p className="text-gray-500">No AI sentiment data available</p>
+                <div className="flex items-center justify-center h-96">
+                    <p className="text-gray-500">{message}</p>
                 </div>
             </Card>
         );
@@ -1599,28 +1593,22 @@ const AISentimentBarChart = ({ data, loading, error }) => {
     const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } = window.Recharts;
     const [sortBy, setSortBy] = useState('chatGpt');
     
-    if (loading) {
+    // Early return for any invalid data state
+    if (loading || error || !data || !Array.isArray(data) || data.length === 0) {
+        const message = loading ? "Loading AI sentiment data..." : 
+                       error ? "Error loading AI sentiment data" : 
+                       "No AI sentiment data available";
         return (
             <Card className="col-span-12 md:col-span-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
-                <div className="flex items-center justify-center h-64">
-                    <p className="text-gray-500">Loading AI sentiment data...</p>
-                </div>
-            </Card>
-        );
-    }
-    
-    if (error || !data || data.length === 0) {
-        return (
-            <Card className="col-span-12 md:col-span-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
-                <div className="flex items-center justify-center h-64">
-                    <p className="text-gray-500">No AI sentiment data available</p>
+                <div className="flex items-center justify-center h-80">
+                    <p className="text-gray-500">{message}</p>
                 </div>
             </Card>
         );
     }
     
     // Transform and sort data
-    const chartData = data.map(item => {
+    const chartData = (data || []).map(item => {
         const chatGptScore = item.chatGpt.strength * (item.chatGpt.sentiment >= 0 ? 1 : -1) * 100;
         const geminiScore = item.gemini.strength * (item.gemini.sentiment >= 0 ? 1 : -1) * 100;
         
