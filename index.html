@@ -1405,6 +1405,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
     }
     
     // Transform data for the scatter plot
+    console.log('Raw AI sentiment data:', data);
     let competitorIndex = 0;
     const chartData = (data || []).map(item => {
         const platformData = item[selectedPlatform];
@@ -1421,7 +1422,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
             competitorIndex++;
         }
         
-        return {
+        const result = {
             clinicName: item.clinicName,
             visibility: platformData.visibility * 100, // Convert to percentage
             signedSentiment: sentScore,
@@ -1434,6 +1435,11 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
             // Handle missing data
             hasData: platformData.visibility > 0 || platformData.strength > 0
         };
+        
+        // Debug logging
+        console.log('Bubble chart data point:', result);
+        
+        return result;
     });
     
 
@@ -1560,8 +1566,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                                 type="number" 
                                 dataKey="signedSentiment" 
                                 name="Signed Sentiment" 
-                                domain={[60, 100]}
-                                ticks={[60, 70, 80, 90, 100]}
+                                domain={['dataMin - 10', 'dataMax + 10']}
                                 axisLine={false}
                                 tickLine={false}
                                 tick={{ fontSize: 11, fill: '#6b7280' }}
@@ -1570,19 +1575,24 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                             <Scatter 
                                 data={chartData} 
                                 fill="#8884d8"
-                            >
-                                {chartData && chartData.map((entry, index) => (
-                                    <Cell 
-                                        key={`cell-${index}`} 
-                                        fill={entry.fill}
-                                        fillOpacity={entry.hasData ? 0.8 : 0.3}
-                                        stroke={entry.isClient ? '#1e40af' : entry.fill}
-                                        strokeWidth={entry.isClient ? 2 : 1}
-                                        strokeOpacity={0.8}
-                                        r={entry.r}
-                                    />
-                                ))}
-                            </Scatter>
+                                shape={(props) => {
+                                    const { cx, cy, payload } = props;
+                                    if (!payload) return null;
+                                    
+                                    return (
+                                        <circle
+                                            cx={cx}
+                                            cy={cy}
+                                            r={payload.r || 5}
+                                            fill={payload.fill || '#8884d8'}
+                                            fillOpacity={payload.hasData ? 0.8 : 0.3}
+                                            stroke={payload.isClient ? '#1e40af' : payload.fill || '#8884d8'}
+                                            strokeWidth={payload.isClient ? 2 : 1}
+                                            strokeOpacity={0.8}
+                                        />
+                                    );
+                                }}
+                            />
                         </ScatterChart>
                     </ResponsiveContainer>
                 </div>
@@ -1614,7 +1624,7 @@ const AISentimentBarChart = ({ data, loading, error }) => {
         const chatGptScore = item.chatGpt.strength * (item.chatGpt.sentiment >= 0 ? 1 : -1) * 100;
         const geminiScore = item.gemini.strength * (item.gemini.sentiment >= 0 ? 1 : -1) * 100;
         
-        return {
+        const result = {
             clinicName: item.clinicName,
             chatGptScore: item.chatGpt.visibility > 0 || item.chatGpt.strength > 0 ? chatGptScore : 0,
             geminiScore: item.gemini.visibility > 0 || item.gemini.strength > 0 ? geminiScore : 0,
@@ -1625,6 +1635,11 @@ const AISentimentBarChart = ({ data, loading, error }) => {
             chatGptHasData: item.chatGpt.visibility > 0 || item.chatGpt.strength > 0,
             geminiHasData: item.gemini.visibility > 0 || item.gemini.strength > 0
         };
+        
+        // Debug logging
+        console.log('Bar chart data point:', result);
+        
+        return result;
     });
     
     // Sort data
