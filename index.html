@@ -1376,6 +1376,20 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
     const { ResponsiveContainer, ScatterChart, CartesianGrid, XAxis, YAxis, Tooltip, Cell, Scatter } = window.Recharts;
     const [selectedPlatform, setSelectedPlatform] = useState('chatGpt');
     
+    // Define colors before early return so they're always available
+    const platformColors = {
+        chatGpt: '#3b82f6', // blue-500
+        gemini: '#f472b6'   // pink-400
+    };
+    
+    const clientColor = '#1e40af'; // blue-700 (darker blue for client)
+    const competitorColors = [
+        '#10b981', // emerald-500
+        '#f59e0b', // amber-500
+        '#ef4444', // red-500
+        '#8b5cf6', // violet-500
+    ];
+    
     // Early return for any invalid data state
     if (loading || error || !data || !Array.isArray(data) || data.length === 0) {
         const message = loading ? "Loading AI sentiment data..." : 
@@ -1422,19 +1436,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
         };
     });
     
-    const platformColors = {
-        chatGpt: '#3b82f6', // blue-500
-        gemini: '#f472b6'   // pink-400
-    };
-    
-    // Define colors for client and competitors (consistent across platforms)
-    const clientColor = '#1e40af'; // blue-700 (darker blue for client)
-    const competitorColors = [
-        '#10b981', // emerald-500
-        '#f59e0b', // amber-500
-        '#ef4444', // red-500
-        '#8b5cf6', // violet-500
-    ];
+
     
     const CustomTooltip = ({ active, payload }) => {
         if (active && payload && payload.length) {
