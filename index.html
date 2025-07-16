@@ -1404,10 +1404,10 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
         gemini: '#f472b6'   // pink-400
     };
     
-    const clientColor = '#1e40af'; // blue-700 (darker blue for client)
+    const clientColor = '#3b82f6'; // blue-500 (lighter blue for client)
     const competitorColors = [
         '#10b981', // emerald-500
-        '#f59e0b', // amber-500
+        '#ec4899', // pink-500 (Ahrefs style pink instead of yellow)
         '#ef4444', // red-500
         '#8b5cf6', // violet-500
     ];
@@ -1495,7 +1495,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
             const data = payload[0].payload;
             const platformName = selectedPlatform === 'chatGpt' ? 'ChatGPT' : 'Gemini';
             const sentimentText = data.signedSentiment >= 0 ? 'Positive' : 'Negative';
-            const summary = data.summary.length > 120 ? data.summary.substring(0, 120) + '...' : data.summary;
+            const summary = data.summary.length > 500 ? data.summary.substring(0, 500) + '...' : data.summary;
             
             return (
                 <div className="bg-white p-5 border border-gray-200 rounded-xl shadow-xl max-w-sm backdrop-blur-sm">
@@ -1539,7 +1539,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
     };
     
     return (
-        <Card className="col-span-12 md:col-span-8 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60 bg-gradient-to-br from-white to-gray-50/30 min-h-[945px]">
+        <Card className="col-span-12 md:col-span-8 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60 bg-gradient-to-br from-white to-gray-50/30 min-h-[898px]">
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center space-x-2">
@@ -1573,7 +1573,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
             </div>
             
             {/* Chart */}
-            <div className="h-[650px] relative">
+            <div className="h-[618px] relative">
                 <div className="w-full h-full flex items-center justify-center">
                     <div className="w-full max-w-4xl h-full relative">
                         {/* Y-axis label */}
@@ -1594,7 +1594,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                                         dataKey="visibility" 
                                         name="Visibility" 
                                         domain={[-25, 100]}
-                                        tickFormatter={(value) => `${value}%`}
+                                        tickFormatter={(value) => value === -25 ? '' : `${value}%`}
                                         ticks={[-25, 0, 25, 50, 75, 100]}
                                         axisLine={false}
                                         tickLine={false}
@@ -1621,7 +1621,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                                         
                                         const radius = payload.r || 8;
                                         const fillColor = payload.fill || '#8884d8';
-                                        const strokeColor = payload.isClient ? '#1e40af' : fillColor;
+                                        const strokeColor = payload.isClient ? '#1d4ed8' : fillColor;
                                         
                                         return (
                                             <g>
@@ -1660,7 +1660,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
             
             {/* Bottom Legend */}
             {data && data.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-gray-100">
+                <div className="mt-6 pt-6 border-t border-gray-100">
                     <div className="flex flex-col items-center space-y-2">
                         {/* Top row - 3 items */}
                         <div className="flex justify-center space-x-6">
