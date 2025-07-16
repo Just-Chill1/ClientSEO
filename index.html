@@ -1539,7 +1539,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
     };
     
     return (
-        <Card className="col-span-12 md:col-span-8 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60 bg-gradient-to-br from-white to-gray-50/30 min-h-[898px]">
+        <Card className="col-span-12 md:col-span-7 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60 bg-gradient-to-br from-white to-gray-50/30 min-h-[853px]">
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center space-x-2">
@@ -1573,21 +1573,21 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
             </div>
             
             {/* Chart */}
-            <div className="h-[618px] relative">
+            <div className="h-[587px] relative">
                 <div className="w-full h-full flex items-center justify-center">
                     <div className="w-full max-w-4xl h-full relative">
                         {/* Y-axis label */}
-                        <div className="absolute -left-6 top-1/2 transform -translate-y-1/2 -rotate-90 text-sm text-gray-600 font-normal">
+                        <div className="absolute -left-4 top-1/2 transform -translate-y-1/2 -rotate-90 text-sm text-gray-600 font-normal">
                             Sentiment Score (%)
                         </div>
                         {/* X-axis label */}
                         <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-sm text-gray-600 font-normal">
                             Visibility (%)
                         </div>
-                        <div className="ml-4 mr-8 h-full pb-8 pt-8">
+                        <div className="ml-2 mr-8 h-full pb-8 pt-8">
                             <div className="bubble-chart-container h-full">
                                 <ResponsiveContainer width="100%" height="100%">
-                                    <ScatterChart margin={{ top: 60, right: 60, bottom: 40, left: 40 }}>
+                                    <ScatterChart margin={{ top: 60, right: 60, bottom: 40, left: 20 }}>
                                     <CartesianGrid strokeDasharray="2 2" stroke="#e5e7eb" strokeOpacity={0.5} />
                                     <XAxis 
                                         type="number" 
@@ -1735,7 +1735,7 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                        "No AI sentiment data available";
         console.log('AISentimentBarChart - Early return:', message);
         return (
-            <Card className="col-span-12 md:col-span-4 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
+            <Card className="col-span-12 md:col-span-5 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
                 <div className="flex items-center justify-center h-80">
                     <p className="text-gray-500">{message}</p>
                 </div>
@@ -1820,7 +1820,7 @@ const AISentimentBarChart = ({ data, loading, error }) => {
     };
     
     return (
-        <Card className="col-span-12 md:col-span-4 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
+        <Card className="col-span-12 md:col-span-5 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
             {/* Header */}
             <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center space-x-2">
