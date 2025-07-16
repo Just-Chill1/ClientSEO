@@ -129,6 +129,11 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
   if (allData.length > 0) {
     console.log(`Sample row 0:`, allData[0]);
     console.log(`Sample row 0 location value:`, allData[0][locationColumnIndex]);
+    
+    // Log first 5 rows to understand the data pattern
+    for (let i = 0; i < Math.min(5, allData.length); i++) {
+      console.log(`Row ${i}: Service="${allData[i][0]}", Keyword="${allData[i][1]}", City="${allData[i][2]}", State="${allData[i][3]}", Country="${allData[i][4]}"`);
+    }
   }
 
   // Find the indices of all month columns using the robust date parser
@@ -143,6 +148,19 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
   // Sort by date to find the latest two months
   monthColumns.sort((a, b) => b.date - a.date);
 
+  // Before filtering, let's count how many rows match our target location
+  const locationCounts = {};
+  allData.forEach(row => {
+    const loc = row[locationColumnIndex];
+    if (loc) {
+      const locStr = loc.toString().trim().toLowerCase();
+      locationCounts[locStr] = (locationCounts[locStr] || 0) + 1;
+    }
+  });
+  
+  console.log(`Location counts for column ${locationColumnIndex}:`, locationCounts);
+  console.log(`Looking for "${locationFilterValue.toLowerCase()}" - found ${locationCounts[locationFilterValue.toLowerCase()] || 0} matches`);
+  
   // Filter rows for the selected location
   const data = allData.filter(row => {
       const rowLocation = row[locationColumnIndex];
@@ -153,7 +171,10 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
       
       // Enhanced debugging for state filtering
       if (sheetName === 'State & Province') {
-          console.log(`Comparing: "${rowLocationStr}" vs "${filterValueStr}"`);
+          // Only log first 10 comparisons to avoid too much output
+          if (allData.indexOf(row) < 10) {
+              console.log(`Row ${allData.indexOf(row)}: Comparing "${rowLocationStr}" vs "${filterValueStr}"`);
+          }
       }
       
       // First try exact match
