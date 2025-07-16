@@ -821,10 +821,14 @@
       overflow: visible !important;
     }
     
-    /* Dark mode chart colors */
-    [data-theme="dark"] .bubble-chart-container {
-      --grid-color: #4b5563;
-      --text-color: #9ca3af;
+    /* Dark mode chart styling */
+    [data-theme="dark"] .bubble-chart-container .recharts-cartesian-grid-horizontal line,
+    [data-theme="dark"] .bubble-chart-container .recharts-cartesian-grid-vertical line {
+      stroke: #4b5563 !important;
+    }
+    
+    [data-theme="dark"] .bubble-chart-container .recharts-cartesian-axis-tick-value {
+      fill: #9ca3af !important;
     }
      [data-theme="dark"] .bg-blue-100 {
        background-color: rgba(59, 130, 246, 0.1) !important;
@@ -1591,10 +1595,10 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                             Visibility (%)
                         </div>
                         <div className="ml-2 mr-8 h-full pb-8 pt-8">
-                            <div className="bubble-chart-container h-full" style={{ '--grid-color': '#e5e7eb', '--text-color': '#6b7280' }}>
+                            <div className="bubble-chart-container h-full">
                                 <ResponsiveContainer width="100%" height="100%">
                                     <ScatterChart margin={{ top: 60, right: 60, bottom: 40, left: 20 }}>
-                                    <CartesianGrid strokeDasharray="2 2" stroke="var(--grid-color, #e5e7eb)" strokeOpacity={0.5} />
+                                    <CartesianGrid strokeDasharray="2 2" stroke="#e5e7eb" strokeOpacity={0.5} />
                                     <XAxis 
                                         type="number" 
                                         dataKey="visibility" 
@@ -1604,7 +1608,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                                         ticks={[-25, 0, 25, 50, 75, 100]}
                                         axisLine={false}
                                         tickLine={false}
-                                        tick={{ fontSize: 12, fill: 'var(--text-color, #6b7280)', fontWeight: 'normal' }}
+                                        tick={{ fontSize: 12, fill: '#6b7280', fontWeight: 'normal' }}
                                     />
                                     <YAxis 
                                         type="number" 
@@ -1615,7 +1619,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                                         tickFormatter={(value) => `${value}`}
                                         axisLine={false}
                                         tickLine={false}
-                                        tick={{ fontSize: 12, fill: 'var(--text-color, #6b7280)', fontWeight: 'normal' }}
+                                        tick={{ fontSize: 12, fill: '#6b7280', fontWeight: 'normal' }}
                                     />
                                 <Tooltip content={<CustomTooltip />} />
                                 <Scatter 
