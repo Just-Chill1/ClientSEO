@@ -1400,15 +1400,15 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
     const chartData = data.map(item => {
         const platformData = item[selectedPlatform];
         const sentScore = platformData.strength * (platformData.sentiment >= 0 ? 1 : -1) * 100;
-        const bubbleSize = Math.sqrt(platformData.appearance || 0) * 12;
-        const finalSize = Math.max(6, Math.min(40, bubbleSize)); // Cap between 6-40px
+        // Better bubble sizing calculation - use appearance as the z value
+        const bubbleSize = Math.max(50, Math.min(800, (platformData.appearance || 1) * 100)); // Scale for better visibility
         
         return {
             clinicName: item.clinicName,
             visibility: platformData.visibility * 100, // Convert to percentage
             signedSentiment: sentScore,
             appearance: platformData.appearance || 0,
-            bubbleSize: finalSize,
+            z: bubbleSize, // This is the key for bubble sizing in Recharts
             isClient: item.isClient,
             summary: platformData.summary || '',
             confidence: platformData.confidence || 0,
@@ -1432,20 +1432,36 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
             const summary = data.summary.length > 120 ? data.summary.substring(0, 120) + '...' : data.summary;
             
             return (
-                <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg max-w-xs">
-                    <p className="font-semibold text-gray-800">{data.clinicName}</p>
-                    <div className="flex items-center space-x-2 mt-1">
-                        <span className="text-sm font-medium" style={{ color: platformColors[selectedPlatform] }}>
-                            {platformName}
-                        </span>
-                        <span className="text-sm">
-                            {data.hasData ? `${data.signedSentiment >= 0 ? '+' : ''}${Math.round(data.signedSentiment)} ${sentimentText}` : 'Not found'}
-                        </span>
+                <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg max-w-sm">
+                    <div className="flex items-center justify-between mb-2">
+                        <p className="font-semibold text-gray-800">{data.clinicName}</p>
+                        {data.isClient && (
+                            <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">Your Business</span>
+                        )}
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">Visibility: {Math.round(data.visibility)}%</p>
-                    {data.hasData && summary && (
-                        <p className="text-xs text-gray-500 mt-2">{summary}</p>
-                    )}
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium" style={{ color: platformColors[selectedPlatform] }}>
+                                {platformName} Sentiment
+                            </span>
+                            <span className="text-sm font-semibold">
+                                {data.hasData ? `${data.signedSentiment >= 0 ? '+' : ''}${Math.round(data.signedSentiment)} ${sentimentText}` : 'Not found'}
+                            </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600">Visibility</span>
+                            <span className="text-sm font-medium">{Math.round(data.visibility)}%</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600">Appearance</span>
+                            <span className="text-sm font-medium">{data.appearance}x</span>
+                        </div>
+                        {data.hasData && summary && (
+                            <div className="mt-3 pt-2 border-t border-gray-200">
+                                <p className="text-xs text-gray-500 leading-relaxed">{summary}</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             );
         }
@@ -1487,7 +1503,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
             </div>
             
             {/* Chart */}
-            <div className="h-64">
+            <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                     <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -1515,9 +1531,9 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                                 <Cell 
                                     key={`cell-${index}`} 
                                     fill={entry.isClient ? clientColor : platformColors[selectedPlatform]}
-                                    fillOpacity={entry.hasData ? 1 : 0.4}
-                                    stroke={entry.isClient ? '#1e40af' : 'none'}
-                                    strokeWidth={entry.isClient ? 2 : 0}
+                                    fillOpacity={entry.hasData ? 0.8 : 0.3}
+                                    stroke={entry.isClient ? '#1e40af' : platformColors[selectedPlatform]}
+                                    strokeWidth={entry.isClient ? 3 : 1}
                                 />
                             ))}
                         </Scatter>
@@ -1588,21 +1604,32 @@ const AISentimentBarChart = ({ data, loading, error }) => {
             if (!data) return null;
             
             return (
-                <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg max-w-xs">
-                    <p className="font-semibold text-gray-800">{data.clinicName}</p>
-                    <div className="space-y-1 mt-2">
-                        <div className="flex items-center space-x-2">
-                            <div className="w-3 h-3 bg-blue-500 rounded"></div>
-                            <span className="text-sm">
-                                ChatGPT: {data.chatGptHasData ? `${data.chatGptScore >= 0 ? '+' : ''}${Math.round(data.chatGptScore)}` : 'Not found'}
+                <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg max-w-sm">
+                    <p className="font-semibold text-gray-800 mb-2">{data.clinicName}</p>
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                                <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                                <span className="text-sm font-medium">ChatGPT</span>
+                            </div>
+                            <span className="text-sm font-semibold">
+                                {data.chatGptHasData ? `${data.chatGptScore >= 0 ? '+' : ''}${Math.round(data.chatGptScore)}` : 'Not found'}
                             </span>
                         </div>
-                        <div className="flex items-center space-x-2">
-                            <div className="w-3 h-3 bg-pink-400 rounded"></div>
-                            <span className="text-sm">
-                                Gemini: {data.geminiHasData ? `${data.geminiScore >= 0 ? '+' : ''}${Math.round(data.geminiScore)}` : 'Not found'}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                                <div className="w-3 h-3 bg-pink-400 rounded"></div>
+                                <span className="text-sm font-medium">Gemini</span>
+                            </div>
+                            <span className="text-sm font-semibold">
+                                {data.geminiHasData ? `${data.geminiScore >= 0 ? '+' : ''}${Math.round(data.geminiScore)}` : 'Not found'}
                             </span>
                         </div>
+                        {data.isClient && (
+                            <div className="mt-2 pt-2 border-t border-gray-200">
+                                <span className="text-xs text-blue-600 font-medium">Your Business</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             );
@@ -1613,7 +1640,7 @@ const AISentimentBarChart = ({ data, loading, error }) => {
     return (
         <Card className="col-span-12 md:col-span-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
             {/* Header */}
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center space-x-2">
                     <h2 className="text-xl font-bold text-gray-800">Competitive Perception by Platform</h2>
                     <InfoTooltip text="Horizontal bar chart comparing sentiment scores across AI platforms. Shows signed sentiment (strength × sentiment direction) for each brand." />
@@ -1631,13 +1658,30 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                 </select>
             </div>
             
+            {/* Legend */}
+            <div className="flex items-center space-x-6 mb-4">
+                <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                    <span className="text-sm text-gray-600">ChatGPT</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 bg-pink-400 rounded"></div>
+                    <span className="text-sm text-gray-600">Gemini</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 border-2 border-blue-800 bg-blue-600 rounded"></div>
+                    <span className="text-sm text-gray-600">Your Business</span>
+                </div>
+            </div>
+            
             {/* Chart */}
-            <div className="h-64">
+            <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                         data={sortedData}
                         layout="horizontal"
-                        margin={{ top: 5, right: 30, left: 80, bottom: 5 }}
+                        margin={{ top: 10, right: 40, left: 100, bottom: 10 }}
+                        barCategoryGap="20%"
                     >
                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                         <XAxis 
@@ -1645,24 +1689,48 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                             domain={[-100, 100]}
                             ticks={[-100, -50, 0, 50, 100]}
                             tickFormatter={(value) => `${value}`}
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fontSize: 11, fill: '#6b7280' }}
                         />
                         <YAxis 
                             type="category" 
                             dataKey="clinicName" 
-                            width={75}
-                            tick={{ fontSize: 12 }}
+                            width={95}
+                            tick={{ fontSize: 11, fill: '#374151' }}
+                            axisLine={false}
+                            tickLine={false}
+                            tickFormatter={(value) => value.length > 12 ? value.substring(0, 12) + '...' : value}
                         />
                         <Tooltip content={<CustomTooltip />} />
                         <Bar 
                             dataKey="chatGptScore" 
                             fill="#3b82f6" 
                             name="ChatGPT"
-                        />
+                            radius={[0, 2, 2, 0]}
+                        >
+                            {sortedData.map((entry, index) => (
+                                <Cell 
+                                    key={`chatgpt-${index}`} 
+                                    fill={entry.isClient ? '#1e40af' : '#3b82f6'}
+                                    fillOpacity={entry.chatGptHasData ? 0.9 : 0.3}
+                                />
+                            ))}
+                        </Bar>
                         <Bar 
                             dataKey="geminiScore" 
                             fill="#f472b6" 
                             name="Gemini"
-                        />
+                            radius={[0, 2, 2, 0]}
+                        >
+                            {sortedData.map((entry, index) => (
+                                <Cell 
+                                    key={`gemini-${index}`} 
+                                    fill={entry.isClient ? '#db2777' : '#f472b6'}
+                                    fillOpacity={entry.geminiHasData ? 0.9 : 0.3}
+                                />
+                            ))}
+                        </Bar>
                     </BarChart>
                 </ResponsiveContainer>
             </div>
