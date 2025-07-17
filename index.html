@@ -1894,11 +1894,11 @@ const AISentimentBarChart = ({ data, loading, error }) => {
             </div>
             
             {/* Chart */}
-            <div className="h-[460px] relative">
+            <div className="h-[510px] relative">
                 <div className="w-full h-full">
                     <div className="w-full h-full relative">
                         {/* X-axis label */}
-                        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-sm font-normal" style={{ color: 'var(--text-primary)' }}>
+                        <div className="absolute left-[55%] transform -translate-x-1/2 text-sm font-normal" style={{ color: 'var(--text-primary)', bottom: '26px' }}>
                             Sentiment
                         </div>
                         <div className="h-full pb-8">
@@ -1906,9 +1906,9 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                                 <BarChart
                                     data={sortedData}
                                     layout="vertical"
-                                    margin={{ top: 20, right: 10, left: 0, bottom: 60 }}
+                                    margin={{ top: 20, right: 30, left: -15, bottom: 60 }}
                                     barCategoryGap={10}
-                                    barGap={20}
+                                    barGap={12}
                                 >
                                     <CartesianGrid strokeDasharray="2 2" stroke="#e5e7eb" strokeOpacity={0.5} />
                                     <XAxis 
@@ -1934,10 +1934,10 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                                         }}
                                     />
                                     <Tooltip content={<CustomTooltip />} />
-                                    <Bar dataKey="chatGptScore" fill="#3b82f6" name="ChatGPT" radius={[0,4,4,0]} barSize={80}>
+                                    <Bar dataKey="chatGptScore" fill="#3b82f6" name="ChatGPT" radius={[0,4,4,0]} barSize={72}>
                                        {sortedData.map((entry, idx)=>(<Cell key={`cg-${idx}`} fill="#3b82f6" fillOpacity={entry.chatGptHasData?0.9:0.2}/>))}
                                     </Bar>
-                                    <Bar dataKey="geminiScore" fill="#ec4899" name="Gemini" radius={[0,4,4,0]} barSize={80}>
+                                    <Bar dataKey="geminiScore" fill="#ec4899" name="Gemini" radius={[0,4,4,0]} barSize={72}>
                                        {sortedData.map((entry, idx)=>(<Cell key={`gm-${idx}`} fill="#ec4899" fillOpacity={entry.geminiHasData?0.9:0.2}/>))}
                                     </Bar>
                                 </BarChart>
@@ -7044,35 +7044,35 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                 {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
                 
                                  {/* Always show details for certain cards */}
-                 {details && alwaysShowDetails && (
-                     <div className="mt-4 pt-4 border-t border-gray-100">
-                         <div className="grid grid-cols-2 gap-2 text-xs">
-                             {Object.entries(details).slice(0, 10).map(([key, val]) => {
-                                 // Convert technical terms to user-friendly labels
-                                 const friendlyLabels = {
-                                     'Time to Interactive': 'Time to Interactive',
-                                     'DOM Complete': 'Page Structure Ready',
-                                     'Largest Contentful Paint': 'Main Content Loaded',
-                                     'First Input Delay': 'Response Time',
-                                     'Connection Time': 'Server Connection',
-                                     'Time to Secure Connection': 'Security Setup',
-                                     'Request Sent Time': 'Request Processing',
-                                     'Waiting Time (TTFB)': 'Server Response',
-                                     'Download Time': 'Content Download',
-                                     'Full Page Load': 'Complete Load Time'
-                                 };
-                                 const displayLabel = friendlyLabels[key] || key;
-                                 
-                                 return (
-                                     <div key={key} className="flex justify-between">
-                                         <span className="text-gray-500">{displayLabel}:</span>
-                                         <span className="font-medium">{val || 'N/A'}</span>
-                                     </div>
-                                 );
-                             })}
-                         </div>
-                     </div>
-                 )}
+                {details && alwaysShowDetails && (
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                            {Object.entries(details).slice(0, 10).map(([key, val]) => {
+                                // Convert technical terms to user-friendly labels
+                                const friendlyLabels = {
+                                    'Time to Interactive': 'Time to Interactive',
+                                    'DOM Complete': 'Page Structure Ready',
+                                    'Largest Contentful Paint': 'Main Content Loaded',
+                                    'First Input Delay': 'Response Time',
+                                    'Connection Time': 'Server Connection',
+                                    'Time to Secure Connection': 'Security Setup',
+                                    'Request Sent Time': 'Request Processing',
+                                    'Waiting Time (TTFB)': 'Server Response',
+                                    'Download Time': 'Content Download',
+                                    'Full Page Load': 'Complete Load Time'
+                                };
+                                const displayLabel = friendlyLabels[key] || key;
+                                
+                                return (
+                                    <div key={key} className="flex justify-between">
+                                        <span className="text-gray-500">{displayLabel}:</span>
+                                        <span className="font-medium">{val || 'N/A'}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
                 
                 {/* Category breakdown for technical checks */}
                 {categoryBreakdown && (
