@@ -1553,7 +1553,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center space-x-2">
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-gray-100">AI Visibility vs Sentiment</h2>
+                    <h2 className="text-xl font-bold text-black dark:text-gray-100">AI Visibility vs Sentiment</h2>
                     <InfoTooltip text="Bubble chart showing the relationship between AI platform visibility and sentiment strength. Bubble size represents appearance frequency." />
                 </div>
                 
@@ -1564,7 +1564,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                         className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                             selectedPlatform === 'chatGpt' 
                                 ? 'bg-blue-500 text-white shadow-sm' 
-                                : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600'
+                                : 'text-gray-900 dark:text-gray-300 hover:text-black dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600'
                         }`}
                     >
                         ChatGPT
@@ -1574,7 +1574,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                         className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                             selectedPlatform === 'gemini' 
                                 ? 'bg-pink-400 text-white shadow-sm' 
-                                : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600'
+                                : 'text-gray-900 dark:text-gray-300 hover:text-black dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600'
                         }`}
                     >
                         Gemini
@@ -1587,11 +1587,11 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                 <div className="w-full h-full flex items-center justify-center">
                     <div className="w-full max-w-4xl h-full relative">
                         {/* Y-axis label */}
-                        <div className="absolute -left-8 top-1/2 transform -translate-y-1/2 -rotate-90 text-sm text-gray-800 dark:text-gray-300 font-normal">
+                        <div className="absolute -left-8 top-1/2 transform -translate-y-1/2 -rotate-90 text-sm text-black dark:text-gray-300 font-normal">
                             Sentiment Score (%)
                         </div>
                         {/* X-axis label */}
-                        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-sm text-gray-800 dark:text-gray-300 font-normal">
+                        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-sm text-black dark:text-gray-300 font-normal">
                             Visibility (%)
                         </div>
                         <div className="ml-2 mr-8 h-full pb-8 pt-8">
@@ -4572,7 +4572,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
 
                 <div className="flex space-x-1 mb-4 overflow-x-auto">
                     {siteNames.map(name => (
-                        <button
+                    <button
                             key={name}
                             onClick={() => {
                                 setActive(name);
@@ -4584,10 +4584,10 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                                     : 'text-gray-600 hover:bg-gray-100'}`}
                         >
                             {name}
-                        </button>
+                    </button>
                     ))}
-                </div>
-
+            </div>
+            
                 {/* Website Keywords Summary Bar */}
                 {active && (
                     <div className="mb-3 py-1.5 px-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
@@ -4614,11 +4614,11 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                                         <div className="flex-1 text-center border-r border-gray-200 pr-5">
                                             <div className="text-base font-bold text-blue-600">{totalKeywords}</div>
                                             <div className="text-xs text-gray-600">Total Keywords</div>
-                                        </div>
+                        </div>
                                         <div className="flex-1 text-center border-r border-gray-200 pr-5">
                                             <div className="text-base font-bold text-green-600">{newKeywords}</div>
                                             <div className="text-xs text-gray-600">New Keywords</div>
-                                        </div>
+                        </div>
                                         <div className="flex-1 text-center border-r border-gray-200 pr-5">
                                             <div className="text-base font-bold text-orange-600">{avgPosition}</div>
                                             <div className="text-xs text-gray-600">Avg Position</div>
@@ -4659,8 +4659,8 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                                 );
                             })()}
                         </div>
-                    </div>
-                )}
+                                                        </div>
+                                                    )}
 
                 <div className="mt-4 overflow-x-auto">
                     <table className="w-full text-left text-sm whitespace-nowrap">
@@ -4771,7 +4771,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                     )?.length === 0 && (
                         <div className="text-center py-8 text-gray-500">
                             No matching keywords found for "{searchTerm}"
-                        </div>
+                            </div>
                     )}
                 </div>
             </Card>
@@ -5545,8 +5545,8 @@ const Backlinks = () => {
                         <h2 className="text-xl font-bold text-gray-800">Backlinks</h2>
                         <InfoTooltip text="Analyze backlinks for your site and competitors. Use the tabs to switch between different sites." />
                     </div>
-                </div>
-
+                    </div>
+                    
                 <div className="mb-4">
                     <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -5933,13 +5933,13 @@ const GeogridMaps = () => {
                         <h1 className="text-3xl font-bold text-gray-800">Geogrid Search Results</h1>
                         <p className="text-gray-500 mt-1">Track your local search rankings across different keywords</p>
                     </div>
-                    <button
+                        <button
                         disabled
                         className="bg-slate-100 text-slate-400 font-bold py-1 px-3 rounded-lg text-xs cursor-not-allowed"
                     >
                         Refresh
-                    </button>
-                </div>
+                        </button>
+                    </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {targetKeywords.map(keyword => (
                         <Card key={keyword} className="animate-pulse">
@@ -5976,7 +5976,7 @@ const GeogridMaps = () => {
                 <Card>
                     <div className="p-4 text-center text-gray-500">
                         No data available for keyword: {keyword}
-                    </div>
+                            </div>
                 </Card>
             );
         }
@@ -5989,7 +5989,7 @@ const GeogridMaps = () => {
                 <Card>
                     <div className="p-4 text-center text-gray-500">
                         Invalid data format for keyword: {keyword}
-                    </div>
+                            </div>
                 </Card>
             );
         }
@@ -6306,7 +6306,7 @@ const GeogridMaps = () => {
                                   ) : (
                                     <CartesianGrid stroke="transparent" />
                                   )}
-                                  <XAxis 
+                                            <XAxis 
                                       dataKey="name" 
                                       tick={{ fontSize: 12, fill: '#64748b', className: 'dark:!fill-[#94A3B8]' }}
                                       height={40}
@@ -6319,8 +6319,8 @@ const GeogridMaps = () => {
                                           };
                                           return truncateName(value);
                                       }}
-                                  />
-                                  <YAxis 
+                                            />
+                                            <YAxis 
                                       tick={{ fontSize: 12, fill: '#64748b', className: 'dark:!fill-[#94A3B8]' }}
                                       domain={[0, dataMax => {
                                           const maxValue = Math.max(...competitors.map(c => c.top5Total || 0));
@@ -7260,7 +7260,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             strokeDashoffset={currentOffset}
                             strokeLinecap="butt"
                             className={isDisableTransition ? '' : 'transition-all duration-1000 ease-out'}
-                            style={{ 
+                                                                    style={{ 
                                 filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))'
                             }}
                         />
@@ -7532,14 +7532,14 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                     <div 
                                         className="w-3 h-3 rounded shadow-sm flex-shrink-0" 
                                         style={{ backgroundColor: entry.color }}
-                                    ></div>
+                                                                ></div>
                                     <span className="text-xs text-gray-600 font-medium truncate" title={entry.originalName}>
                                         {truncateName(entry.originalName, 14)}
-                                        {entry.isClient && ' ⭐'}
-                                    </span>
+                                                                    {entry.isClient && ' ⭐'}
+                                                                </span>
+                                                            </div>
+                                                ))}
                                 </div>
-                            ))}
-                        </div>
                         {/* Bottom row - 2 items (if they exist) */}
                         {dataWithColors.length > 3 && (
                             <div className="flex justify-center space-x-6">
@@ -7553,9 +7553,9 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                             {truncateName(entry.originalName, 14)}
                                             {entry.isClient && ' ⭐'}
                                         </span>
-                                    </div>
-                                ))}
                             </div>
+                                ))}
+                        </div>
                         )}
                     </div>
                 </div>
