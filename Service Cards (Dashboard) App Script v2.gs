@@ -38,42 +38,6 @@ const NEW_SERVICES = [
 ];
 
 
-// Test function to debug state filtering - run this directly in Apps Script
-function testStateFiltering() {
-  try {
-    console.log('=== Testing State Filtering ===');
-    
-    // Test with Florida
-    const testLocation = 'Florida';
-    const sheetName = 'State & Province';
-    const locationColumnIndex = 3; // State column
-    
-    console.log(`Testing with location: ${testLocation}`);
-    console.log(`Using sheet: ${sheetName}`);
-    console.log(`Using column index: ${locationColumnIndex}`);
-    
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
-    if (!sheet) {
-      const availableSheets = SpreadsheetApp.getActiveSpreadsheet().getSheets().map(s => s.getName()).join(', ');
-      console.log(`Available sheets: ${availableSheets}`);
-      throw new Error(`Sheet "${sheetName}" not found`);
-    }
-    
-    console.log(`Successfully found sheet: ${sheetName}`);
-    console.log(`Sheet has ${sheet.getLastRow()} rows and ${sheet.getLastColumn()} columns`);
-    
-    const data = aggregateServiceData(sheet, locationColumnIndex, testLocation, sheetName);
-    console.log('Result:', data);
-    
-    return data;
-    
-  } catch (error) {
-    console.error('Test error:', error.message);
-    console.error('Stack:', error.stack);
-    return { error: error.message };
-  }
-}
-
 function doGet(e) {
   try {
     const location = e.parameter.location || 'USA'; // Default to USA if no location is specified
@@ -198,7 +162,7 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
   console.log(`Looking for "${locationFilterValue.toLowerCase()}" - found ${locationCounts[locationFilterValue.toLowerCase()] || 0} matches`);
   
   // Filter rows for the selected location
-  const data = allData.filter(row => {
+  let data = allData.filter(row => {
       const rowLocation = row[locationColumnIndex];
       if (!rowLocation) return false;
       
@@ -251,6 +215,29 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
       
       return false;
   });
+
+  /* ------------------------------------------------------------------ */
+  /* 🔄  SECOND-PASS MATCHING – handle tricky edge-cases                 */
+  /* ------------------------------------------------------------------ */
+  if (data.length === 0 && sheetName === 'State & Province') {
+    // Occasionally the state value in the spreadsheet may contain extra whitespace,
+    // punctuation (e.g. "Alabama (USA)"), or different capitalisation. If the first
+    // pass returns nothing, make a more permissive pass that strips all
+    // non-alphabetic characters before comparison.
+
+    const sanitize = s => s.toString().replace(/[^a-z]/gi, '').toLowerCase();
+    const target = sanitize(locationFilterValue);
+
+    data = allData.filter(row => {
+      const loc = row[locationColumnIndex];
+      if (!loc) return false;
+      return sanitize(loc) === target;
+    });
+
+    console.log(`Second-pass state matching found ${data.length} rows for "${locationFilterValue}" after sanitisation.`);
+  }
+
+  /* ------------------------------------------------------------------ */
 
   console.log(`Filtered data: Found ${data.length} rows for location "${locationFilterValue}" in column ${locationColumnIndex}`);
   if (data.length === 0) {
