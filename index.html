@@ -1773,9 +1773,9 @@ const AISentimentBarChart = ({ data, loading, error }) => {
         const chatGptData = item.chatGpt || {};
         const geminiData = item.gemini || {};
         
-        // Compute score as strength × confidence (0-1) → percentage 0-100
-        const chatGptScore = (chatGptData.strength || 0) * (chatGptData.confidence || 0) * 100;
-        const geminiScore  = (geminiData.strength  || 0) * (geminiData.confidence  || 0) * 100;
+        // Compute signed sentiment score like bubble chart: strength × sign × 100
+        const chatGptScore = (chatGptData.strength || 0) * ((chatGptData.sentiment >= 0 ? 1 : -1)) * 100;
+        const geminiScore  = (geminiData.strength  || 0) * ((geminiData.sentiment  >= 0 ? 1 : -1)) * 100;
         
         const result = {
             clinicName: item.clinicName,
@@ -1838,7 +1838,7 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                                 <span className="text-sm font-medium">ChatGPT</span>
                             </div>
                             <span className="text-sm font-semibold">
-                                {data.chatGptHasData ? `${data.chatGptScore >= 0 ? '+' : ''}${Math.round(data.chatGptScore)}` : 'Not found'}
+                                {data.chatGptHasData ? `${Math.round(data.chatGptScore)}%` : 'Not found'}
                             </span>
                         </div>
                         <div className="flex items-center justify-between">
@@ -1847,7 +1847,7 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                                 <span className="text-sm font-medium">Gemini</span>
                             </div>
                             <span className="text-sm font-semibold">
-                                {data.geminiHasData ? `${data.geminiScore >= 0 ? '+' : ''}${Math.round(data.geminiScore)}` : 'Not found'}
+                                {data.geminiHasData ? `${Math.round(data.geminiScore)}%` : 'Not found'}
                             </span>
                         </div>
                         {data.isClient && (
