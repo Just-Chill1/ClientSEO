@@ -861,6 +861,15 @@
      [data-theme="dark"] .text-blue-600 { color: #3b82f6 !important; }
      [data-theme="dark"] .text-purple-600 { color: #9333ea !important; }
      [data-theme="dark"] .text-orange-600 { color: #f97316 !important; }
+
+     /* Fix AI Visibility vs Sentiment button styling - the dark: prefixes don't work with data-theme system */
+     [data-theme="dark"] .text-black { color: var(--text-secondary) !important; }
+     [data-theme="dark"] .hover\\:text-black:hover { color: var(--text-primary) !important; }
+     [data-theme="dark"] .hover\\:bg-gray-50:hover { background-color: var(--btn-secondary-hover) !important; }
+     
+     /* Light mode - ensure black text stays black */
+     :root .text-black { color: #000000 !important; }
+     :root .hover\\:text-black:hover { color: #000000 !important; }
   </style>
   
   <!-- Non-critical CSS loaded after page load -->
