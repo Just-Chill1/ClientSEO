@@ -86,6 +86,9 @@
       /* Keywords bar colors */
       --keywords-bar-bg: linear-gradient(to right, #dcfce7, #bbf7d0);
       --keywords-bar-border: #bbf7d0;
+      
+      /* Chart colors */
+      --chart-text: #000000;
     }
 
     [data-theme="dark"] {
@@ -129,6 +132,9 @@
       /* Keywords bar colors - more subtle for dark mode */
       --keywords-bar-bg: linear-gradient(to right, #0f3f3c, #134e4a);
       --keywords-bar-border: #0f766e;
+      
+      /* Chart colors */
+      --chart-text: #cbd5e1;
     }
 
          /* Apply theme variables to base elements */
@@ -1564,7 +1570,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                         className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                             selectedPlatform === 'chatGpt' 
                                 ? 'bg-blue-500 text-white shadow-sm' 
-                                : 'text-gray-900 dark:text-gray-300 hover:text-black dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600'
+                                : 'text-black dark:text-gray-300 hover:text-black dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600'
                         }`}
                     >
                         ChatGPT
@@ -1574,7 +1580,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                         className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                             selectedPlatform === 'gemini' 
                                 ? 'bg-pink-400 text-white shadow-sm' 
-                                : 'text-gray-900 dark:text-gray-300 hover:text-black dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600'
+                                : 'text-black dark:text-gray-300 hover:text-black dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600'
                         }`}
                     >
                         Gemini
@@ -1608,7 +1614,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                                         ticks={[-25, 0, 25, 50, 75, 100]}
                                         axisLine={false}
                                         tickLine={false}
-                                        tick={{ fontSize: 12, fill: '#6b7280', fontWeight: 'normal' }}
+                                        tick={{ fontSize: 12, fill: 'var(--chart-text)', fontWeight: 'normal' }}
                                     />
                                     <YAxis 
                                         type="number" 
@@ -1619,7 +1625,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                                         tickFormatter={(value) => `${value}`}
                                         axisLine={false}
                                         tickLine={false}
-                                        tick={{ fontSize: 12, fill: '#6b7280', fontWeight: 'normal' }}
+                                        tick={{ fontSize: 12, fill: 'var(--chart-text)', fontWeight: 'normal' }}
                                     />
                                 <Tooltip content={<CustomTooltip />} />
                                 <Scatter 
@@ -1688,7 +1694,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                                                 backgroundColor: item.isClient ? clientColor : competitorColors[(index - (data.findIndex(d => d.isClient) >= 0 ? 1 : 0)) % competitorColors.length]
                                             }}
                                         ></div>
-                                        <span className="text-xs text-gray-800 dark:text-gray-300 font-medium truncate" title={item.clinicName}>
+                                        <span className="text-xs text-black dark:text-gray-300 font-medium truncate" title={item.clinicName}>
                                             {truncateName(item.clinicName, 14)}
                                             {item.isClient && ' ⭐'}
                                         </span>
@@ -1714,7 +1720,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                                                     backgroundColor: item.isClient ? clientColor : competitorColors[(actualIndex - (data.findIndex(d => d.isClient) >= 0 ? 1 : 0)) % competitorColors.length]
                                                 }}
                                             ></div>
-                                            <span className="text-xs text-gray-800 dark:text-gray-300 font-medium truncate" title={item.clinicName}>
+                                            <span className="text-xs text-black dark:text-gray-300 font-medium truncate" title={item.clinicName}>
                                                 {truncateName(item.clinicName, 14)}
                                                 {item.isClient && ' ⭐'}
                                             </span>
