@@ -1899,9 +1899,9 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                                 <BarChart
                                     data={sortedData}
                                     layout="vertical"
-                                    margin={{ top: 20, right: 20, left: 60, bottom: 60 }}
+                                    margin={{ top: 20, right: 20, left: 0, bottom: 60 }}
                                     barCategoryGap={40}
-                                    barGap={4}
+                                    barGap={20}
                                 >
                                     <CartesianGrid strokeDasharray="2 2" stroke="#e5e7eb" strokeOpacity={0.5} />
                                     <XAxis 
@@ -1916,7 +1916,7 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                                     <YAxis 
                                         type="category" 
                                         dataKey="clinicName" 
-                                        width={130}
+                                        width={90}
                                         tickMargin={10}
                                         tick={{ fontSize: 13, fill: (document.documentElement.getAttribute('data-theme')==='dark')? 'var(--text-primary)' : '#4b5563', fontWeight: '500', whiteSpace: 'pre-wrap' }}
                                         axisLine={false}
@@ -1924,10 +1924,10 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                                         tickFormatter={(value) => value.length > 20 ? value.substring(0, 20) + '…' : value}
                                     />
                                     <Tooltip content={<CustomTooltip />} />
-                                    <Bar dataKey="chatGptScore" fill="#3b82f6" name="ChatGPT" radius={[0,4,4,0]} maxBarSize={32}>
+                                    <Bar dataKey="chatGptScore" fill="#3b82f6" name="ChatGPT" radius={[0,4,4,0]} maxBarSize={80}>
                                        {sortedData.map((entry, idx)=>(<Cell key={`cg-${idx}`} fill={entry.isClient?'#1d4ed8':'#3b82f6'} fillOpacity={entry.chatGptHasData?0.9:0.2}/>))}
                                     </Bar>
-                                    <Bar dataKey="geminiScore" fill="#ec4899" name="Gemini" radius={[0,4,4,0]} maxBarSize={32}>
+                                    <Bar dataKey="geminiScore" fill="#ec4899" name="Gemini" radius={[0,4,4,0]} maxBarSize={80}>
                                        {sortedData.map((entry, idx)=>(<Cell key={`gm-${idx}`} fill={entry.isClient?'#db2777':'#ec4899'} fillOpacity={entry.geminiHasData?0.9:0.2}/>))}
                                     </Bar>
                                 </BarChart>
