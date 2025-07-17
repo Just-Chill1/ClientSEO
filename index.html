@@ -1568,29 +1568,29 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div className="flex items-center space-x-2">
-                    <h2 className="text-xl font-bold text-black dark:text-gray-100">AI Visibility vs Sentiment</h2>
+                    <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>AI Visibility vs Sentiment</h2>
                     <InfoTooltip text="Bubble chart showing the relationship between AI platform visibility and sentiment strength. Bubble size represents appearance frequency." />
                 </div>
                 
                 {/* Platform Toggle */}
-                <div className="flex bg-gray-100 dark:bg-gray-700 rounded-lg p-1 shadow-sm">
+                <div className="flex rounded-lg p-1 shadow-sm" style={{ backgroundColor: 'var(--btn-secondary-bg)' }}>
                     <button
                         onClick={() => setSelectedPlatform('chatGpt')}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                            selectedPlatform === 'chatGpt' 
-                                ? 'bg-blue-500 text-white shadow-sm' 
-                                : 'text-black dark:text-gray-300 hover:text-black dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600'
-                        }`}
+                        className="px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                        style={{
+                            backgroundColor: selectedPlatform === 'chatGpt' ? '#3b82f6' : 'transparent',
+                            color: selectedPlatform === 'chatGpt' ? '#ffffff' : 'var(--text-primary)'
+                        }}
                     >
                         ChatGPT
                     </button>
                     <button
                         onClick={() => setSelectedPlatform('gemini')}
-                        className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                            selectedPlatform === 'gemini' 
-                                ? 'bg-pink-400 text-white shadow-sm' 
-                                : 'text-black dark:text-gray-300 hover:text-black dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-600'
-                        }`}
+                        className="px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+                        style={{
+                            backgroundColor: selectedPlatform === 'gemini' ? '#ec4899' : 'transparent',
+                            color: selectedPlatform === 'gemini' ? '#ffffff' : 'var(--text-primary)'
+                        }}
                     >
                         Gemini
                     </button>
@@ -1602,11 +1602,11 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                 <div className="w-full h-full flex items-center justify-center">
                     <div className="w-full max-w-4xl h-full relative">
                         {/* Y-axis label */}
-                        <div className="absolute -left-8 top-1/2 transform -translate-y-1/2 -rotate-90 text-sm text-black dark:text-gray-300 font-normal">
+                        <div className="absolute -left-8 top-1/2 transform -translate-y-1/2 -rotate-90 text-sm font-normal" style={{ color: 'var(--text-primary)' }}>
                             Sentiment Score (%)
                         </div>
                         {/* X-axis label */}
-                        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-sm text-black dark:text-gray-300 font-normal">
+                        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-sm font-normal" style={{ color: 'var(--text-primary)' }}>
                             Visibility (%)
                         </div>
                         <div className="ml-2 mr-8 h-full pb-8 pt-8">
@@ -1703,7 +1703,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                                                 backgroundColor: item.isClient ? clientColor : competitorColors[(index - (data.findIndex(d => d.isClient) >= 0 ? 1 : 0)) % competitorColors.length]
                                             }}
                                         ></div>
-                                        <span className="text-xs text-black dark:text-gray-300 font-medium truncate" title={item.clinicName}>
+                                        <span className="text-xs font-medium truncate" style={{ color: 'var(--text-primary)' }} title={item.clinicName}>
                                             {truncateName(item.clinicName, 14)}
                                             {item.isClient && ' ⭐'}
                                         </span>
@@ -1729,7 +1729,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                                                     backgroundColor: item.isClient ? clientColor : competitorColors[(actualIndex - (data.findIndex(d => d.isClient) >= 0 ? 1 : 0)) % competitorColors.length]
                                                 }}
                                             ></div>
-                                            <span className="text-xs text-black dark:text-gray-300 font-medium truncate" title={item.clinicName}>
+                                            <span className="text-xs font-medium truncate" style={{ color: 'var(--text-primary)' }} title={item.clinicName}>
                                                 {truncateName(item.clinicName, 14)}
                                                 {item.isClient && ' ⭐'}
                                             </span>
