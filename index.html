@@ -422,7 +422,7 @@
        color: #ffffff !important;
      }
 
-     /* Fix hover text effect - prevent text shifting */
+     /* Fix hover effects - prevent text shifting */
      .group:hover * {
        backface-visibility: hidden;
        -webkit-backface-visibility: hidden;
@@ -1823,13 +1823,6 @@ const AISentimentBarChart = ({ data, loading, error }) => {
         return b.avgScore - a.avgScore;
     });
     
-    // Lookup map to identify client rows for star suffix in Y-axis labels
-    const isClientLookup = React.useMemo(() => {
-        const map = {};
-        sortedData.forEach(item => { map[item.clinicName] = item.isClient; });
-        return map;
-    }, [sortedData]);
-    
     const CustomTooltip = ({ active, payload, label }) => {
         if (active && payload && payload.length) {
             const data = sortedData.find(item => item.clinicName === label);
@@ -1898,7 +1891,7 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                 <div className="w-full h-full">
                     <div className="w-full h-full relative">
                         {/* X-axis label */}
-                        <div className="absolute left-[55%] transform -translate-x-1/2 text-sm font-normal" style={{ color: 'var(--text-primary)', bottom: '26px' }}>
+                        <div className="absolute left-[58%] transform -translate-x-1/2 text-sm font-normal" style={{ color: 'var(--text-primary)', bottom: '26px' }}>
                             Sentiment
                         </div>
                         <div className="h-full pb-8">
@@ -1906,9 +1899,9 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                                 <BarChart
                                     data={sortedData}
                                     layout="vertical"
-                                    margin={{ top: 20, right: 30, left: -15, bottom: 60 }}
+                                    margin={{ top: 20, right: 15, left: 0, bottom: 60 }}
                                     barCategoryGap={10}
-                                    barGap={12}
+                                    barGap={6}
                                 >
                                     <CartesianGrid strokeDasharray="2 2" stroke="#e5e7eb" strokeOpacity={0.5} />
                                     <XAxis 
@@ -1928,16 +1921,13 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                                         tick={{ fontSize: 13, fill: (document.documentElement.getAttribute('data-theme')==='dark')? 'var(--text-primary)' : '#4b5563', fontWeight: '500', whiteSpace: 'pre-wrap' }}
                                         axisLine={false}
                                         tickLine={false}
-                                        tickFormatter={(value) => {
-                                            const truncated = value.length > 20 ? value.substring(0, 20) + '…' : value;
-                                            return isClientLookup[value] ? `${truncated} *` : truncated;
-                                        }}
+                                        tickFormatter={(value) => value.length > 20 ? value.substring(0, 20) + '…' : value}
                                     />
                                     <Tooltip content={<CustomTooltip />} />
-                                    <Bar dataKey="chatGptScore" fill="#3b82f6" name="ChatGPT" radius={[0,4,4,0]} barSize={72}>
+                                    <Bar dataKey="chatGptScore" fill="#3b82f6" name="ChatGPT" radius={[0,4,4,0]} barSize={44}>
                                        {sortedData.map((entry, idx)=>(<Cell key={`cg-${idx}`} fill="#3b82f6" fillOpacity={entry.chatGptHasData?0.9:0.2}/>))}
                                     </Bar>
-                                    <Bar dataKey="geminiScore" fill="#ec4899" name="Gemini" radius={[0,4,4,0]} barSize={72}>
+                                    <Bar dataKey="geminiScore" fill="#ec4899" name="Gemini" radius={[0,4,4,0]} barSize={44}>
                                        {sortedData.map((entry, idx)=>(<Cell key={`gm-${idx}`} fill="#ec4899" fillOpacity={entry.geminiHasData?0.9:0.2}/>))}
                                     </Bar>
                                 </BarChart>
