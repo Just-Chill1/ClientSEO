@@ -1746,7 +1746,6 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
 
 const AISentimentBarChart = ({ data, loading, error }) => {
     const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } = window.Recharts;
-    // No platform selector needed; always display both bars
     
     // Debug logging
     console.log('AISentimentBarChart - Loading:', loading, 'Error:', error, 'Data:', data);
@@ -1758,7 +1757,7 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                        "No AI sentiment data available";
         console.log('AISentimentBarChart - Early return:', message);
         return (
-            <Card className="col-span-12 md:col-span-5 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60" style={{ backgroundColor: 'var(--card-bg)', minHeight: '620px' }}>
+            <Card className="col-span-12 md:col-span-5 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60" style={{ backgroundColor: 'var(--card-bg)', minHeight: '740px' }}>
                 <div className="flex items-center justify-center h-80">
                     <p className="text-gray-500">{message}</p>
                 </div>
@@ -1864,7 +1863,7 @@ const AISentimentBarChart = ({ data, loading, error }) => {
     };
     
     return (
-        <Card className="col-span-12 md:col-span-5 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60" style={{ backgroundColor: 'var(--card-bg)', minHeight: '620px' }}>
+        <Card className="col-span-12 md:col-span-5 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60" style={{ backgroundColor: 'var(--card-bg)', minHeight: '740px' }}>
             {/* Header */}
             <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center space-x-2">
@@ -1888,11 +1887,11 @@ const AISentimentBarChart = ({ data, loading, error }) => {
             </div>
             
             {/* Chart */}
-            <div className="h-[380px] relative">
+            <div className="h-[460px] relative">
                 <div className="w-full h-full">
                     <div className="w-full h-full relative">
                         {/* X-axis label */}
-                        <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 text-sm font-normal" style={{ color: 'var(--text-primary)' }}>
+                        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-sm font-normal" style={{ color: 'var(--text-primary)' }}>
                             Sentiment
                         </div>
                         <div className="h-full pb-8">
@@ -1900,8 +1899,9 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                                 <BarChart
                                     data={sortedData}
                                     layout="vertical"
-                                    margin={{ top: 20, right: 20, left: 40, bottom: 60 }}
+                                    margin={{ top: 20, right: 20, left: 30, bottom: 60 }}
                                     barCategoryGap={40}
+                                    barGap={4}
                                 >
                                     <CartesianGrid strokeDasharray="2 2" stroke="#e5e7eb" strokeOpacity={0.5} />
                                     <XAxis 
@@ -1916,46 +1916,19 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                                     <YAxis 
                                         type="category" 
                                         dataKey="clinicName" 
-                                        width={120}
-                                        tick={{ fontSize: 13, fill: 'var(--text-primary)', fontWeight: '500' }}
+                                        width={130}
+                                        tick={{ fontSize: 13, fill: (document.documentElement.getAttribute('data-theme')==='dark')? 'var(--text-primary)' : '#4b5563', fontWeight: '500', whiteSpace: 'pre-wrap' }}
                                         axisLine={false}
                                         tickLine={false}
                                         tickFormatter={(value) => value.length > 20 ? value.substring(0, 20) + '…' : value}
                                     />
                                     <Tooltip content={<CustomTooltip />} />
-                                    {/* ChatGPT bar */}
-                                    <Bar 
-                                        dataKey="chatGptScore" 
-                                        fill="#3b82f6" 
-                                        name="ChatGPT"
-                                        radius={[0, 4, 4, 0]}
-                                        maxBarSize={16}
-                                        >
-                                            {sortedData.map((entry, index) => (
-                                                <Cell 
-                                                    key={`chatgpt-${index}`} 
-                                                    fill={entry.isClient ? '#1d4ed8' : '#3b82f6'}
-                                                    fillOpacity={entry.chatGptHasData ? 0.9 : 0.2}
-                                                />
-                                            ))}
+                                    <Bar dataKey="chatGptScore" fill="#3b82f6" name="ChatGPT" radius={[0,4,4,0]} maxBarSize={16}>
+                                       {sortedData.map((entry, idx)=>(<Cell key={`cg-${idx}`} fill={entry.isClient?'#1d4ed8':'#3b82f6'} fillOpacity={entry.chatGptHasData?0.9:0.2}/>))}
                                     </Bar>
-                                    {/* Gemini bar */}
-                                    <Bar 
-                                        dataKey="geminiScore" 
-                                        fill="#ec4899" 
-                                        name="Gemini"
-                                        radius={[0, 4, 4, 0]}
-                                        maxBarSize={16}
-                                    >
-                                        {sortedData.map((entry, index) => (
-                                            <Cell 
-                                                key={`gemini-${index}`} 
-                                                fill={entry.isClient ? '#db2777' : '#ec4899'}
-                                                fillOpacity={entry.geminiHasData ? 0.9 : 0.2}
-                                            />
-                                        ))}
+                                    <Bar dataKey="geminiScore" fill="#ec4899" name="Gemini" radius={[0,4,4,0]} maxBarSize={16}>
+                                       {sortedData.map((entry, idx)=>(<Cell key={`gm-${idx}`} fill={entry.isClient?'#db2777':'#ec4899'} fillOpacity={entry.geminiHasData?0.9:0.2}/>))}
                                     </Bar>
-                                    {/* End bars */}
                                 </BarChart>
                             </ResponsiveContainer>
                         </div>
