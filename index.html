@@ -1863,7 +1863,7 @@ const AISentimentBarChart = ({ data, loading, error }) => {
     };
     
     return (
-        <Card className="col-span-12 md:col-span-5 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60" style={{ backgroundColor: 'var(--card-bg)', minHeight: '560px' }}>
+        <Card className="col-span-12 md:col-span-5 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60" style={{ backgroundColor: 'var(--card-bg)', minHeight: '650px' }}>
             {/* Header */}
             <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center space-x-2">
@@ -1887,11 +1887,11 @@ const AISentimentBarChart = ({ data, loading, error }) => {
             </div>
             
             {/* Chart */}
-            <div className="h-[420px] relative">
+            <div className="h-[510px] relative">
                 <div className="w-full h-full">
                     <div className="w-full h-full relative">
                         {/* X-axis label */}
-                        <div className="absolute left-[55%] transform -translate-x-1/2 text-sm font-normal" style={{ color: 'var(--text-primary)', bottom: '12px' }}>
+                        <div className="absolute left-[55%] transform -translate-x-1/2 text-sm font-normal" style={{ color: 'var(--text-primary)', bottom: '8px' }}>
                             Sentiment
                         </div>
                         <div className="h-full pb-8">
