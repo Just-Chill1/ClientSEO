@@ -1980,6 +1980,50 @@ const Dashboard = ({ setActiveTab }) => {
         return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Unknown</span>;
     };
 
+    // --- Mini Stat Card Components (Visibility & Sentiment) ---
+    const ArrowUp = createIcon(<polyline points="6 15 12 9 18 15" />);
+    const ArrowDown = createIcon(<polyline points="6 9 12 15 18 9" />);
+
+    const VisibilityStatCard = ({ data }) => {
+        const client = (data || []).find(d => d.isClient) || {};
+        const value = Math.round(client.avgScore || 0);
+        const change = 0;
+        return (
+            <Card className="col-span-6 md:col-span-2 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700" style={{ backgroundColor: 'var(--card-bg)' }}>
+                <div className="flex items-center justify-between p-5">
+                    <div>
+                        <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Visibility&nbsp;Score</p>
+                        <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{value}%</p>
+                    </div>
+                    <div className={`flex items-center ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}> 
+                        {change >= 0 ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />} 
+                        <span className="ml-1 text-sm font-semibold">{Math.abs(change)}%</span>
+                    </div>
+                </div>
+            </Card>
+        );
+    };
+
+    const SentimentStatCard = ({ data }) => {
+        const client = (data || []).find(d => d.isClient) || {};
+        const value = Math.round(((client.chatGptScore || 0) + (client.geminiScore || 0)) / 2);
+        const change = 0;
+        return (
+            <Card className="col-span-6 md:col-span-2 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700" style={{ backgroundColor: 'var(--card-bg)' }}>
+                <div className="flex items-center justify-between p-5">
+                    <div>
+                        <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Sentiment&nbsp;Score</p>
+                        <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{value}%</p>
+                    </div>
+                    <div className={`flex items-center ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}> 
+                        {change >= 0 ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />} 
+                        <span className="ml-1 text-sm font-semibold">{Math.abs(change)}%</span>
+                    </div>
+                </div>
+            </Card>
+        );
+    };
+
     // --- Sub-components for Dashboard ---
     const GeogridSection = React.memo(({ setActiveTab }) => {
         const [geogridData, setGeogridData] = useState(null);
