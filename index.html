@@ -3790,13 +3790,18 @@ const Dashboard = ({ setActiveTab }) => {
                     loading={loading} 
                     error={error} 
                 />
-                <AISentimentBarChart 
-                    data={dashboardData?.aiSentimentData} 
-                    loading={loading} 
-                    error={error} 
-                />
-                <VisibilityStatCard data={dashboardData?.aiSentimentData} />
-                <SentimentStatCard data={dashboardData?.aiSentimentData} />
+                {/* Right column: AI Perception + mini stats */}
+                <div className="col-span-12 md:col-span-5 flex flex-col space-y-4">
+                    <AISentimentBarChart 
+                        data={dashboardData?.aiSentimentData} 
+                        loading={loading} 
+                        error={error} 
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                        <VisibilityStatCard data={dashboardData?.aiSentimentData} />
+                        <SentimentStatCard data={dashboardData?.aiSentimentData} />
+                    </div>
+                </div>
 
                 <ServiceList title="Services by Search Volume" dataSet="topServices" tooltipText="Lists the most popular, established MedSpa services based on monthly search volume in the selected geographic area." />
                 <ServiceList title="New Services by Search Volume" dataSet="newServices" tooltipText="Highlights emerging or newer services with growing search interest, indicating potential new market opportunities." />
