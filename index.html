@@ -7670,7 +7670,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                 {/* Health Score Gauge - Left Column */}
                 <div className="xl:col-span-4">
                     <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 h-full flex flex-col justify-center hover:-translate-y-0.5 transition-all duration-300 hover:shadow-xl hover:border-blue-200/60 will-change-transform">
-                        <ModernGauge score={healthData.pageScore} />
+                        <ModernGauge score={Number(healthData.pageScore) || 0} />
                         <div className="flex justify-center space-x-8 mt-6">
                             <ModernIssueCounter
                                 icon={<AlertTriangle className="w-5 h-5 text-yellow-500" />}
