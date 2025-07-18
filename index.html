@@ -5750,15 +5750,24 @@ const GeogridMaps = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // List of keywords we want to display
-    const targetKeywords = [
-        'medspa',
-        'medspa near me',
-        'beauty spa',
-        'medical spa',
-        'aesthetics spa',
-        'best med spa near me'
+    // Dynamically pick up to 6 relevant keywords based on patterns
+    const keywordPatterns = [
+        /^medspa$/i,
+        /^medspa near me$/i,
+        /facial\s+spa/i,
+        /medspa near/i,
+        /best\s+medspa/i,
+        /luxury.*spa/i
     ];
+
+    const targetKeywords = React.useMemo(() => {
+        if (!geogridData) return [];
+        const allKeywords = Object.keys(geogridData);
+        const matched = allKeywords.filter(kw => keywordPatterns.some(p => p.test(kw)));
+        // Fallback: if less than 6 matched, add the first ones to fill
+        const fallback = allKeywords.filter(kw => !matched.includes(kw));
+        return [...matched, ...fallback].slice(0, 6);
+    }, [geogridData]);
     
     const getRankColor = (rank) => {
         if (rank === null || rank === undefined) return 'bg-gray-400';
