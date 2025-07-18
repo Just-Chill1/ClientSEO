@@ -1986,9 +1986,11 @@ const Dashboard = ({ setActiveTab }) => {
 
     const VisibilityStatCard = ({ data }) => {
         const client = (data || []).find(d => d.isClient) || {};
-        const vis1 = client.chatGpt?.visibility || 0;
-        const vis2 = client.gemini?.visibility || 0;
-        const value = Math.round((vis1 + vis2) / 2);
+        const vis1 = client.chatGpt?.visibility ?? 0;
+        const vis2 = client.gemini?.visibility ?? 0;
+        let avgVis = (vis1 + vis2) / 2;
+        if (avgVis <= 1) avgVis = avgVis * 100; // convert ratio to percentage if needed
+        const value = Math.round(avgVis);
         const change = 0;
         return (
             <Card className="w-full hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700" style={{ backgroundColor: 'var(--card-bg)', minHeight: '160px' }}>
