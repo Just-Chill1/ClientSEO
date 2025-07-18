@@ -1994,7 +1994,7 @@ const Dashboard = ({ setActiveTab }) => {
             <Card className="w-full hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700" style={{ backgroundColor: 'var(--card-bg)', minHeight: '160px' }}>
                 <div className="flex items-center justify-between p-5">
                     <div>
-                        <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Avg&nbsp;AI&nbsp;Visibility</p>
+                        <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Your&nbsp;Avg&nbsp;AI&nbsp;Visibility</p>
                         <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{value}%</p>
                     </div>
                     <div className={`flex items-center ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}> 
@@ -2010,13 +2010,13 @@ const Dashboard = ({ setActiveTab }) => {
         const client = (data || []).find(d => d.isClient) || {};
         const sent1 = client.chatGpt?.signedSentiment ?? client.chatGpt?.sentiment ?? 0;
         const sent2 = client.gemini?.signedSentiment ?? client.gemini?.sentiment ?? 0;
-        const value = Math.round((sent1 + sent2) / 2);
+        const value = Math.round(((sent1 + sent2) / 2) * 100);
         const change = 0;
         return (
             <Card className="w-full hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700" style={{ backgroundColor: 'var(--card-bg)', minHeight: '160px' }}>
                 <div className="flex items-center justify-between p-5">
                     <div>
-                        <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Avg&nbsp;AI&nbsp;Sentiment</p>
+                        <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Your&nbsp;Avg&nbsp;AI&nbsp;Sentiment</p>
                         <p className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>{value}%</p>
                     </div>
                     <div className={`flex items-center ${change >= 0 ? 'text-green-600' : 'text-red-600'}`}> 
