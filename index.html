@@ -1989,7 +1989,7 @@ const Dashboard = ({ setActiveTab }) => {
         const value = Math.round(client.avgScore || 0);
         const change = 0;
         return (
-            <Card className="col-span-12 md:col-span-5 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700" style={{ backgroundColor: 'var(--card-bg)' }}>
+            <Card className="w-full hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700" style={{ backgroundColor: 'var(--card-bg)' }}>
                 <div className="flex items-center justify-between p-5">
                     <div>
                         <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Visibility&nbsp;Score</p>
@@ -2009,7 +2009,7 @@ const Dashboard = ({ setActiveTab }) => {
         const value = Math.round(((client.chatGptScore || 0) + (client.geminiScore || 0)) / 2);
         const change = 0;
         return (
-            <Card className="col-span-12 md:col-span-5 hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700" style={{ backgroundColor: 'var(--card-bg)' }}>
+            <Card className="w-full hover:shadow-lg transition-all duration-300 border border-gray-100 dark:border-gray-700" style={{ backgroundColor: 'var(--card-bg)' }}>
                 <div className="flex items-center justify-between p-5">
                     <div>
                         <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Sentiment&nbsp;Score</p>
@@ -6395,7 +6395,7 @@ const GeogridMaps = () => {
                                       ]}
                                       cursor={{ fill: 'rgba(59, 130, 246, 0.04)' }}
                                   />
-                                  <Bar dataKey='top5Total' name="Top 5 Rankings" radius={[6, 6, 0, 0]} barSize={40}>
+                                  <Bar dataKey='top5Total' name="Top 5 Rankings" radius={[6, 6, 0, 0]} barSize={24} barGap={4} barCategoryGap={14}>
                                       {competitors.map((entry, index) => {
                                           const isClient = entry.isClient === true;
                                           const gradientId = isClient ? 'geogrid-client-gradient' : 'geogrid-competitor-gradient';
