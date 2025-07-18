@@ -1895,13 +1895,13 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                             Sentiment
                         </div>
                         <div className="h-full pb-8">
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="95%" height="100%">
                                 <BarChart
                                     data={sortedData}
                                     layout="vertical"
                                     margin={{ top: 20, right: 0, left: 0, bottom: 60 }}
-                                    barCategoryGap={12}
-                                    barGap={10}
+                                    barCategoryGap={14}
+                                    barGap={4}
                                 >
                                     <CartesianGrid strokeDasharray="2 2" stroke="#e5e7eb" strokeOpacity={0.5} />
                                     <XAxis 
@@ -1932,10 +1932,10 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                                         }}
                                     />
                                     <Tooltip content={<CustomTooltip />} />
-                                    <Bar dataKey="chatGptScore" fill="#3b82f6" name="ChatGPT" radius={[0,4,4,0]} barSize={27}>
+                                    <Bar dataKey="chatGptScore" fill="#3b82f6" name="ChatGPT" radius={[0,4,4,0]} barSize={24}>
                                        {sortedData.map((entry, idx)=>(<Cell key={`cg-${idx}`} fill="#3b82f6" fillOpacity={entry.chatGptHasData?0.9:0.2}/>))}
                                     </Bar>
-                                    <Bar dataKey="geminiScore" fill="#ec4899" name="Gemini" radius={[0,4,4,0]} barSize={27}>
+                                    <Bar dataKey="geminiScore" fill="#ec4899" name="Gemini" radius={[0,4,4,0]} barSize={24}>
                                        {sortedData.map((entry, idx)=>(<Cell key={`gm-${idx}`} fill="#ec4899" fillOpacity={entry.geminiHasData?0.9:0.2}/>))}
                                     </Bar>
                                 </BarChart>
@@ -6342,7 +6342,7 @@ const GeogridMaps = () => {
                                       ]}
                                       cursor={{ fill: 'rgba(59, 130, 246, 0.04)' }}
                                   />
-                                  <Bar dataKey='top5Total' name="Top 5 Rankings" radius={[6, 6, 0, 0]} barSize={27}>
+                                  <Bar dataKey='top5Total' name="Top 5 Rankings" radius={[6, 6, 0, 0]} barSize={40}>
                                       {competitors.map((entry, index) => {
                                           const isClient = entry.isClient === true;
                                           const gradientId = isClient ? 'geogrid-client-gradient' : 'geogrid-competitor-gradient';
@@ -7491,7 +7491,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             formatter={formatTooltip}
                             cursor={{ fill: 'rgba(59, 130, 246, 0.04)' }}
                         />
-                        <Bar dataKey={dataKey} radius={[6, 6, 0, 0]} barSize={27}>
+                        <Bar dataKey={dataKey} radius={[6, 6, 0, 0]} barSize={40}>
                             {dataWithColors.map((entry, index) => (
                                 <Cell 
                                     key={`cell-${index}`} 
