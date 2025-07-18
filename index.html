@@ -1887,11 +1887,11 @@ const AISentimentBarChart = ({ data, loading, error }) => {
             </div>
             
             {/* Chart */}
-            <div className="h-[510px] relative">
+            <div className="h-[560px] relative">
                 <div className="w-full h-full">
                     <div className="w-full h-full relative">
                         {/* X-axis label */}
-                        <div className="absolute left-[55%] transform -translate-x-1/2 text-sm font-normal" style={{ color: 'var(--text-primary)', bottom: '26px' }}>
+                        <div className="absolute left-[55%] transform -translate-x-1/2 text-sm font-normal" style={{ color: 'var(--text-primary)', bottom: '32px' }}>
                             Sentiment
                         </div>
                         <div className="h-full pb-8">
@@ -1899,9 +1899,9 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                                 <BarChart
                                     data={sortedData}
                                     layout="vertical"
-                                    margin={{ top: 20, right: 5, left: 0, bottom: 60 }}
+                                    margin={{ top: 20, right: 0, left: 0, bottom: 60 }}
                                     barCategoryGap={12}
-                                    barGap={8}
+                                    barGap={10}
                                 >
                                     <CartesianGrid strokeDasharray="2 2" stroke="#e5e7eb" strokeOpacity={0.5} />
                                     <XAxis 
@@ -1918,10 +1918,18 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                                         dataKey="clinicName" 
                                         width={90}
                                         tickMargin={10}
-                                        tick={{ fontSize: 13, fill: (document.documentElement.getAttribute('data-theme')==='dark')? 'var(--text-primary)' : '#4b5563', fontWeight: '500', whiteSpace: 'pre-wrap' }}
+                                        tick={{ fontSize: 13, fill: (document.documentElement.getAttribute('data-theme')==='dark')? 'var(--text-primary)' : '#4b5563', fontWeight: '500', whiteSpace: 'pre-line' }}
                                         axisLine={false}
                                         tickLine={false}
-                                        tickFormatter={(value) => value.length > 20 ? value.substring(0, 20) + '…' : value}
+                                        tickFormatter={(value) => {
+                                            if (!value) return '';
+                                            const maxLine = 14;
+                                            if (value.length <= maxLine) return value;
+                                            const first = value.substring(0, maxLine).trim();
+                                            let second = value.substring(maxLine).trim();
+                                            if (second.length > maxLine - 1) second = second.substring(0, maxLine - 1) + '…';
+                                            return `${first}\n${second}`;
+                                        }}
                                     />
                                     <Tooltip content={<CustomTooltip />} />
                                     <Bar dataKey="chatGptScore" fill="#3b82f6" name="ChatGPT" radius={[0,4,4,0]} barSize={27}>
