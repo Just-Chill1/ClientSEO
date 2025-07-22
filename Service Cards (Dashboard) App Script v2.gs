@@ -254,13 +254,34 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
 
   // Before filtering, let's count how many rows match our target location
   const locationCounts = {};
-  allData.forEach(row => {
+  const rawLocationSamples = []; // Collect raw samples for debugging
+  
+  allData.forEach((row, index) => {
     const loc = row[locationColumnIndex];
     if (loc) {
       const locStr = loc.toString().trim().toLowerCase();
       locationCounts[locStr] = (locationCounts[locStr] || 0) + 1;
+      
+      // Collect first 20 raw samples for debugging
+      if (rawLocationSamples.length < 20) {
+        rawLocationSamples.push({
+          rowIndex: index,
+          rawValue: loc,
+          stringValue: loc.toString(),
+          trimmedValue: loc.toString().trim(),
+          lowercaseValue: locStr
+        });
+      }
     }
   });
+  
+  // Enhanced debugging for states
+  if (sheetName === 'State & Province') {
+    console.log(`\n=== RAW STATE DATA SAMPLES ===`);
+    rawLocationSamples.forEach((sample, idx) => {
+      console.log(`Sample ${idx + 1}: Raw="${sample.rawValue}" | String="${sample.stringValue}" | Trimmed="${sample.trimmedValue}" | Lowercase="${sample.lowercaseValue}"`);
+    });
+  }
   
   console.log(`\n=== LOCATION MATCHING ANALYSIS ===`);
   console.log(`Location counts for column ${locationColumnIndex}:`, locationCounts);
@@ -278,6 +299,23 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
   );
   console.log(`Close matches to "${targetLower}":`, closeMatches);
   
+  // For states, show more detailed analysis
+  if (sheetName === 'State & Province') {
+    console.log(`\n=== STATE MATCHING ANALYSIS ===`);
+    console.log(`Target state: "${targetLower}"`);
+    console.log(`Total unique states found: ${uniqueLocations.length}`);
+    console.log(`First 10 unique states:`, uniqueLocations.slice(0, 10));
+    console.log(`States containing "${targetLower}":`, uniqueLocations.filter(s => s.includes(targetLower)));
+    console.log(`States that "${targetLower}" contains:`, uniqueLocations.filter(s => targetLower.includes(s)));
+    
+    // Check for common state abbreviations
+    const stateAbbrevMap = {'arkansas': 'ar', 'delaware': 'de', 'alabama': 'al', 'nebraska': 'ne'};
+    const abbrev = stateAbbrevMap[targetLower];
+    if (abbrev) {
+      console.log(`Looking for abbreviation "${abbrev}":`, uniqueLocations.filter(s => s === abbrev));
+    }
+  }
+  
   console.log(`\n=== STARTING FIRST-PASS FILTERING ===`);
   
   // Filter rows for the selected location
@@ -290,9 +328,10 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
       
       // Enhanced debugging for state filtering
       if (sheetName === 'State & Province') {
-          // Only log first 10 comparisons to avoid too much output
-          if (allData.indexOf(row) < 10) {
-              console.log(`Row ${allData.indexOf(row)}: Comparing "${rowLocationStr}" vs "${filterValueStr}"`);
+          const rowIndex = allData.indexOf(row);
+          // Log first 10 comparisons and any that are close matches
+          if (rowIndex < 10 || rowLocationStr.includes(filterValueStr) || filterValueStr.includes(rowLocationStr)) {
+              console.log(`Row ${rowIndex}: "${rowLocationStr}" vs "${filterValueStr}" | Exact: ${rowLocationStr === filterValueStr} | Contains: ${rowLocationStr.includes(filterValueStr)} | Service: "${row[0]}"`);
           }
       }
       
