@@ -42,6 +42,10 @@ function doGet(e) {
   try {
     const location = e.parameter.location || 'USA'; // Default to USA if no location is specified
     
+    console.log(`=== DEBUGGING doGet function ===`);
+    console.log(`Incoming request - location parameter: "${location}"`);
+    console.log(`Request object:`, JSON.stringify(e.parameter));
+    
     // Determine which sheet to use based on the location parameter
     let sheetName;
     let locationColumnIndex; // 2 for City, 3 for State, 4 for Country
@@ -50,43 +54,118 @@ function doGet(e) {
     if (location === 'USA') {
         sheetName = 'US (Whole)';
         locationColumnIndex = 4; // Country column
+        console.log(`USA route selected`);
     } else if (location === 'Canada') {
         sheetName = 'Canada (Whole)';
         locationColumnIndex = 4; // Country column
+        console.log(`Canada route selected`);
     } else if (location.includes(',')) { // City, State format (e.g., "New York, NY")
         sheetName = 'City (US & CA)';
         locationColumnIndex = 2; // City column
+        console.log(`City route selected for: ${location}`);
     } else { 
         // Single location name - assume it's a State or Province
         // This handles cases like "Alabama", "Alaska", "Ontario", "British Columbia", etc.
         sheetName = 'State & Province';
         locationColumnIndex = 3; // State column
-        console.log(`Processing state/province request for: ${location}`);
+        console.log(`STATE/PROVINCE route selected for: ${location}`);
     }
 
-    console.log(`Request details: location="${location}", sheetName="${sheetName}", columnIndex=${locationColumnIndex}, filterValue="${locationFilterValue}"`);
+    console.log(`ROUTE DECISION: location="${location}", sheetName="${sheetName}", columnIndex=${locationColumnIndex}, filterValue="${locationFilterValue}"`);
+    
+    // Get all available sheets for debugging
+    const allSheets = SpreadsheetApp.getActiveSpreadsheet().getSheets();
+    const availableSheetNames = allSheets.map(s => s.getName());
+    console.log(`All available sheets in workbook:`, availableSheetNames);
     
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
     if (!sheet) {
-      const availableSheets = SpreadsheetApp.getActiveSpreadsheet().getSheets().map(s => s.getName()).join(', ');
-      console.log(`Available sheets: ${availableSheets}`);
-      throw new Error(`Sheet "${sheetName}" not found. Available sheets: ${availableSheets}`);
+      console.error(`CRITICAL ERROR: Sheet "${sheetName}" not found!`);
+      console.error(`Available sheets: ${availableSheetNames.join(', ')}`);
+      throw new Error(`Sheet "${sheetName}" not found. Available sheets: ${availableSheetNames.join(', ')}`);
     }
     
-    console.log(`Successfully found sheet: ${sheetName}`);
-    console.log(`Sheet has ${sheet.getLastRow()} rows and ${sheet.getLastColumn()} columns`);
+    console.log(`✅ Successfully found sheet: ${sheetName}`);
+    console.log(`Sheet dimensions: ${sheet.getLastRow()} rows x ${sheet.getLastColumn()} columns`);
+    
+    // Let's also check the first few rows of the sheet to understand the structure
+    if (sheet.getLastRow() > 0) {
+      const headerRow = sheet.getRange(1, 1, 1, Math.min(sheet.getLastColumn(), 10)).getValues()[0];
+      console.log(`Sheet headers (first 10):`, headerRow);
+      
+      if (sheet.getLastRow() > 1) {
+        const sampleRow = sheet.getRange(2, 1, 1, Math.min(sheet.getLastColumn(), 10)).getValues()[0];
+        console.log(`Sample data row:`, sampleRow);
+      }
+    }
 
     const data = aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, sheetName);
 
+    console.log(`\n=== FINAL RETURN FROM doGet ===`);
+    console.log(`Returning data:`, JSON.stringify(data, null, 2));
+
+    // Add debug information to the response for browser console
+    let targetColumnHeader = 'N/A';
+    if (sheet && sheet.getLastColumn() > locationColumnIndex) {
+      try {
+        targetColumnHeader = sheet.getRange(1, locationColumnIndex + 1).getValue() || 'Empty';
+      } catch (e) {
+        targetColumnHeader = `Error: ${e.message}`;
+      }
+    }
+    
+    const debugInfo = {
+      requestLocation: location,
+      selectedSheet: sheetName,
+      targetColumn: locationColumnIndex,
+      targetColumnHeader: targetColumnHeader,
+      sheetRows: sheet ? sheet.getLastRow() : 0,
+      sheetColumns: sheet ? sheet.getLastColumn() : 0,
+      dataRowsFound: data.topServices.length + data.newServices.length,
+      availableSheets: SpreadsheetApp.getActiveSpreadsheet().getSheets().map(s => s.getName()),
+      hasSheet: !!sheet
+    };
+    
+    // Include debug info in response
+    const responseData = {
+      ...data,
+      _debug: debugInfo
+    };
+
     // Support for JSONP
     if (e.parameter.callback) {
-      return ContentService.createTextOutput(e.parameter.callback + '(' + JSON.stringify(data) + ')').setMimeType(ContentService.MimeType.JAVASCRIPT);
+      return ContentService.createTextOutput(e.parameter.callback + '(' + JSON.stringify(responseData) + ')').setMimeType(ContentService.MimeType.JAVASCRIPT);
     } else {
-      return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
+      return ContentService.createTextOutput(JSON.stringify(responseData)).setMimeType(ContentService.MimeType.JSON);
     }
 
   } catch (error) {
-    const errorResponse = { error: error.message, stack: error.stack };
+    console.error(`\n=== ERROR IN doGet ===`);
+    console.error(`Error message:`, error.message);
+    console.error(`Error stack:`, error.stack);
+    console.error(`Request parameters:`, JSON.stringify(e.parameter));
+    
+    // Include debug info in error response too
+    const errorDebugInfo = {
+      requestLocation: e.parameter.location || 'not provided',
+      availableSheets: 'Error occurred before sheet access',
+      errorType: error.name,
+      errorMessage: error.message
+    };
+    
+    try {
+      errorDebugInfo.availableSheets = SpreadsheetApp.getActiveSpreadsheet().getSheets().map(s => s.getName());
+    } catch (sheetError) {
+      errorDebugInfo.availableSheets = `Sheet access error: ${sheetError.message}`;
+    }
+    
+    const errorResponse = { 
+      error: error.message, 
+      stack: error.stack,
+      _debug: errorDebugInfo,
+      topServices: [],
+      newServices: []
+    };
      if (e.parameter.callback) {
       return ContentService.createTextOutput(e.parameter.callback + '(' + JSON.stringify(errorResponse) + ')').setMimeType(ContentService.MimeType.JAVASCRIPT);
     } else {
@@ -115,25 +194,50 @@ function parseDateHeader(header) {
 }
 
 function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, sheetName) {
-  if (!sheet) return { topServices: [], newServices: [] };
+  console.log(`\n=== AGGREGATE SERVICE DATA FUNCTION ===`);
+  console.log(`Input parameters: sheet=${sheet ? 'exists' : 'null'}, locationColumnIndex=${locationColumnIndex}, locationFilterValue="${locationFilterValue}", sheetName="${sheetName}"`);
+  
+  if (!sheet) {
+    console.error(`ERROR: No sheet provided to aggregateServiceData`);
+    return { topServices: [], newServices: [] };
+  }
+  
   const allData = sheet.getDataRange().getValues();
+  console.log(`Raw data retrieved: ${allData.length} total rows (including header)`);
+  
   const headers = allData.shift(); // Get and remove header row
+  console.log(`After removing header: ${allData.length} data rows remaining`);
   
-  console.log(`Processing sheet: ${sheetName}`);
-  console.log(`Headers: ${headers}`);
-  console.log(`Looking for location in column ${locationColumnIndex}: "${headers[locationColumnIndex]}"`);
-  console.log(`Total data rows: ${allData.length}`);
-  console.log(`Filter value: "${locationFilterValue}"`);
+  console.log(`=== SHEET ANALYSIS ===`);
+  console.log(`Sheet name: ${sheetName}`);
+  console.log(`Headers (${headers.length} columns):`, headers);
+  console.log(`Target column index: ${locationColumnIndex}`);
+  console.log(`Target column header: "${headers[locationColumnIndex]}"`);
+  console.log(`Looking for location: "${locationFilterValue}"`);
   
-  // Log a few sample rows to understand the data structure
+  // Enhanced sample row logging
   if (allData.length > 0) {
-    console.log(`Sample row 0:`, allData[0]);
-    console.log(`Sample row 0 location value:`, allData[0][locationColumnIndex]);
-    
-    // Log first 5 rows to understand the data pattern
-    for (let i = 0; i < Math.min(5, allData.length); i++) {
-      console.log(`Row ${i}: Service="${allData[i][0]}", Keyword="${allData[i][1]}", City="${allData[i][2]}", State="${allData[i][3]}", Country="${allData[i][4]}"`);
+    console.log(`\n=== DATA SAMPLE ANALYSIS ===`);
+    for (let i = 0; i < Math.min(3, allData.length); i++) {
+      const row = allData[i];
+      console.log(`Row ${i}:`);
+      console.log(`  Full row:`, row);
+      console.log(`  Service: "${row[0]}"`);
+      console.log(`  Keyword: "${row[1]}"`);
+      console.log(`  City (col 2): "${row[2]}"`);
+      console.log(`  State (col 3): "${row[3]}"`);  
+      console.log(`  Country (col 4): "${row[4]}"`);
+      console.log(`  Target column value: "${row[locationColumnIndex]}"`);
+      console.log(`---`);
     }
+    
+    // Check if the target column has any data at all
+    const targetColumnValues = allData.map(row => row[locationColumnIndex]).filter(val => val && val.toString().trim());
+    console.log(`Target column has ${targetColumnValues.length} non-empty values out of ${allData.length} total rows`);
+    console.log(`First 10 target column values:`, targetColumnValues.slice(0, 10));
+  } else {
+    console.error(`ERROR: No data rows found in sheet after removing header!`);
+    return { topServices: [], newServices: [] };
   }
 
   // Find the indices of all month columns using the robust date parser
@@ -158,8 +262,23 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
     }
   });
   
+  console.log(`\n=== LOCATION MATCHING ANALYSIS ===`);
   console.log(`Location counts for column ${locationColumnIndex}:`, locationCounts);
   console.log(`Looking for "${locationFilterValue.toLowerCase()}" - found ${locationCounts[locationFilterValue.toLowerCase()] || 0} matches`);
+  
+  // Show all unique location values for comparison
+  const uniqueLocations = [...new Set(Object.keys(locationCounts))].sort();
+  console.log(`All unique locations in data (${uniqueLocations.length} total):`, uniqueLocations);
+  
+  // Try to find close matches to help debug
+  const targetLower = locationFilterValue.toLowerCase();
+  const closeMatches = uniqueLocations.filter(loc => 
+    loc.includes(targetLower) || targetLower.includes(loc) ||
+    loc.startsWith(targetLower) || targetLower.startsWith(loc)
+  );
+  console.log(`Close matches to "${targetLower}":`, closeMatches);
+  
+  console.log(`\n=== STARTING FIRST-PASS FILTERING ===`);
   
   // Filter rows for the selected location
   let data = allData.filter(row => {
@@ -211,6 +330,16 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
               stateAbbreviations[filterValueStr] === rowLocationStr) {
               return true;
           }
+          
+          // Try reverse lookup - if filter is full name, check if row is abbreviation
+          for (const [fullName, abbrev] of Object.entries(stateAbbreviations)) {
+              if (fullName === filterValueStr && abbrev === rowLocationStr) {
+                  return true;
+              }
+              if (fullName === rowLocationStr && abbrev === filterValueStr) {
+                  return true;
+              }
+          }
       }
       
       return false;
@@ -238,8 +367,61 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
   }
 
   /* ------------------------------------------------------------------ */
+  /* 🔄  THIRD-PASS MATCHING – very aggressive matching                  */
+  /* ------------------------------------------------------------------ */
+  if (data.length === 0 && sheetName === 'State & Province') {
+    console.log(`Attempting third-pass matching for "${locationFilterValue}"`);
+    
+    // Collect all unique state values to understand what's actually in the data
+    const uniqueStates = [...new Set(allData.map(row => row[locationColumnIndex]).filter(val => val && val.toString().trim()))];
+    console.log(`Unique states in data (first 50):`, uniqueStates.slice(0, 50));
+    
+    // More aggressive matching - try contains, starts with, ends with
+    const filterLower = locationFilterValue.toLowerCase().trim();
+    
+    data = allData.filter(row => {
+      const loc = row[locationColumnIndex];
+      if (!loc) return false;
+      
+      const locLower = loc.toString().toLowerCase().trim();
+      
+      // Try various matching strategies
+      if (locLower.includes(filterLower) || filterLower.includes(locLower)) return true;
+      if (locLower.startsWith(filterLower) || filterLower.startsWith(locLower)) return true;
+      if (locLower.endsWith(filterLower) || filterLower.endsWith(locLower)) return true;
+      
+      // Try removing common words and punctuation
+      const cleanLoc = locLower.replace(/[^\w\s]/g, '').replace(/\b(state|province|of|the)\b/g, '').trim();
+      const cleanFilter = filterLower.replace(/[^\w\s]/g, '').replace(/\b(state|province|of|the)\b/g, '').trim();
+      
+      if (cleanLoc === cleanFilter) return true;
+      if (cleanLoc.includes(cleanFilter) || cleanFilter.includes(cleanLoc)) return true;
+      
+      return false;
+    });
 
-  console.log(`Filtered data: Found ${data.length} rows for location "${locationFilterValue}" in column ${locationColumnIndex}`);
+    console.log(`Third-pass state matching found ${data.length} rows for "${locationFilterValue}"`);
+    
+    // If still no matches, log some examples of what we're comparing
+    if (data.length === 0 && uniqueStates.length > 0) {
+      console.log(`Still no matches found. Comparing "${filterLower}" against samples:`, uniqueStates.slice(0, 10));
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+
+  console.log(`\n=== FINAL FILTERING RESULTS ===`);
+  console.log(`After all filtering passes: Found ${data.length} matching rows for location "${locationFilterValue}"`);
+  
+  if (data.length > 0) {
+    console.log(`✅ SUCCESS: Found matching data!`);
+    console.log(`Sample of matched rows (first 3):`);
+    for (let i = 0; i < Math.min(3, data.length); i++) {
+      const row = data[i];
+      console.log(`  Row ${i}: Service="${row[0]}", Location="${row[locationColumnIndex]}"`);
+    }
+  }
+  
   if (data.length === 0) {
     // Enhanced debugging: Log more sample values and show unique values
     const sampleValues = allData.slice(0, 10).map(row => row[locationColumnIndex]).filter(val => val);
@@ -253,6 +435,15 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
     // Additional debugging for headers
     console.log(`Headers:`, headers);
     console.log(`Header at column ${locationColumnIndex}:`, headers[locationColumnIndex]);
+    
+    // If this is a state request, also show some sample full rows to understand data structure
+    if (sheetName === 'State & Province' && allData.length > 0) {
+      console.log('Sample rows from State & Province sheet:');
+      for (let i = 0; i < Math.min(3, allData.length); i++) {
+        const row = allData[i];
+        console.log(`Row ${i}: [${row.slice(0, 8).map(cell => `"${cell}"`).join(', ')}...]`);
+      }
+    }
     
     return { topServices: [], newServices: [] };
   }
@@ -283,11 +474,20 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
   const compCol = headers.indexOf('Competition Index');
   const cpcCol = headers.indexOf('CPC');
 
+  // Log column indices for debugging
+  console.log(`Column indices: Service=${serviceCol}, Keyword=${keywordCol}, Competition=${compCol}, CPC=${cpcCol}`);
+  console.log(`Current month: ${currentMonth ? currentMonth.header : 'None'}, Previous month: ${previousMonth ? previousMonth.header : 'None'}`);
+
   // Exit if essential columns are not found
   if (serviceCol === -1 || keywordCol === -1 || !currentMonth) {
     console.error('Essential columns (Service, Keyword) or current month data not found for location: ' + locationFilterValue);
+    console.error(`Headers found: ${headers}`);
     return { topServices: [], newServices: [] };
   }
+
+  // Warn if optional columns are missing but continue processing
+  if (compCol === -1) console.warn('Competition Index column not found - will use 0 for competition values');
+  if (cpcCol === -1) console.warn('CPC column not found - will use 0 for CPC values');
 
   const aggregatedData = {};
 
@@ -324,11 +524,12 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
       trend: keywordTrend
     });
     
-    // Update service-level aggregates
-    const competition = parseFloat(row[compCol] || 0);
-    const cpc = parseFloat(row[cpcCol] || 0);
-    if(!isNaN(competition)) service.totalCompetition += competition;
-    if(!isNaN(cpc)) service.totalCpc += cpc;
+    // Update service-level aggregates - handle missing columns safely
+    const competition = (compCol !== -1 && row[compCol] !== undefined) ? parseFloat(row[compCol]) : 0;
+    const cpc = (cpcCol !== -1 && row[cpcCol] !== undefined) ? parseFloat(row[cpcCol]) : 0;
+    
+    if(!isNaN(competition) && competition > 0) service.totalCompetition += competition;
+    if(!isNaN(cpc) && cpc > 0) service.totalCpc += cpc;
     service.totalCurrentVolume += currentVol;
     service.totalPreviousVolume += prevVol;
     service.keywordCount++;
@@ -364,6 +565,11 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
   const newServices = formattedServices
       .filter(s => NEW_SERVICES.includes(s.name))
       .sort((a, b) => b.totalVolume - a.totalVolume);
+      
+  console.log(`\n=== FUNCTION RETURN ===`);
+  console.log(`Returning ${topServices.length} top services and ${newServices.length} new services`);
+  console.log(`Top services:`, topServices.map(s => `${s.name} (${s.totalVolume})`));
+  console.log(`New services:`, newServices.map(s => `${s.name} (${s.totalVolume})`));
       
   return { topServices, newServices };
 }

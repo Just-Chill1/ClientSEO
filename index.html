@@ -3239,9 +3239,38 @@ const Dashboard = ({ setActiveTab }) => {
                 }
 
                 if (data.error) {
+                    // 🔍 DEBUG: Show debug info even for errors
+                    if (data._debug) {
+                        console.error(`🚨 SERVICE CARDS ERROR DEBUG for "${selectedLocation}":`, data._debug);
+                    }
+                    console.error("Service Cards API Error:", data.error);
                     setError(data.error);
                     setLoading(false);
                     return;
+                }
+
+                // 🔍 DEBUG: Log the debug information from the backend
+                if (data._debug) {
+                    console.log(`🔍 SERVICE CARDS DEBUG for "${selectedLocation}":`, {
+                        requestLocation: data._debug.requestLocation,
+                        selectedSheet: data._debug.selectedSheet,
+                        targetColumn: data._debug.targetColumn,
+                        targetColumnHeader: data._debug.targetColumnHeader,
+                        sheetRows: data._debug.sheetRows,
+                        dataRowsFound: data._debug.dataRowsFound,
+                        availableSheets: data._debug.availableSheets,
+                        topServicesCount: data.topServices?.length || 0,
+                        newServicesCount: data.newServices?.length || 0
+                    });
+                    
+                    // If no data found, show additional debug info
+                    if (data._debug.dataRowsFound === 0) {
+                        console.warn(`❌ NO DATA FOUND for "${selectedLocation}":`);
+                        console.warn(`- Sheet: ${data._debug.selectedSheet}`);
+                        console.warn(`- Target column: ${data._debug.targetColumn} (${data._debug.targetColumnHeader})`);
+                        console.warn(`- Sheet has ${data._debug.sheetRows} total rows`);
+                        console.warn(`- Available sheets:`, data._debug.availableSheets);
+                    }
                 }
 
                 const services = dataSet === 'topServices' ? data.topServices : data.newServices;
