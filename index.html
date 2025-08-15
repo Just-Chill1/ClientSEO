@@ -4522,28 +4522,49 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                                 return null;
                             })()}
                             {(() => {
-                                // Helper function to get ranking value from different possible field names
-                                const getRankingValue = (position) => {
-                                    const possibleFields = {
-                                        pos1: [currentSummaryData.pos1, currentSummaryData['Position 1'], currentSummaryData['Positions 1']],
-                                        pos2_3: [currentSummaryData.pos2_3, currentSummaryData['Position 2-3'], currentSummaryData['Positions 2-3']],
-                                        pos4_10: [currentSummaryData.pos4_10, currentSummaryData['Position 4-10'], currentSummaryData['Positions 4-10']],
-                                        pos11_20: [currentSummaryData.pos11_20, currentSummaryData['Position 11-20'], currentSummaryData['Positions 11-20']]
-                                    };
+                                // Calculate ranking distribution dynamically from keyword table data
+                                // This ensures accurate position bucketing and includes all keywords regardless of intent
+                                const calculateRankingDistribution = () => {
+                                    // Get all keywords from all websites in the table
+                                    const allKeywords = [];
+                                    Object.keys(table || {}).forEach(siteName => {
+                                        const siteData = table[siteName] || [];
+                                        // Include all keywords regardless of intent (paid, commercial, navigational, etc.)
+                                        siteData.forEach(keyword => {
+                                            if (keyword.rank_now && keyword.rank_now > 0) {
+                                                allKeywords.push(keyword);
+                                            }
+                                        });
+                                    });
                                     
-                                    const values = possibleFields[position] || [];
-                                    for (let value of values) {
-                                        if (value !== undefined && value !== null && value !== '') {
-                                            return parseInt(String(value).replace(/[^\d]/g, '')) || 0;
-                                        }
-                                    }
-                                    return 0;
+                                    // Calculate position buckets with correct ranges
+                                    const pos1Count = allKeywords.filter(kw => kw.rank_now === 1).length;
+                                    const pos2_3Count = allKeywords.filter(kw => kw.rank_now >= 2 && kw.rank_now <= 3).length;
+                                    const pos4_10Count = allKeywords.filter(kw => kw.rank_now >= 4 && kw.rank_now <= 10).length;
+                                    const pos11_20Count = allKeywords.filter(kw => kw.rank_now >= 11 && kw.rank_now <= 20).length;
+                                    
+                                    console.log('Dynamic Ranking Distribution Calculation:', {
+                                        totalKeywords: allKeywords.length,
+                                        pos1: pos1Count,
+                                        pos2_3: pos2_3Count,
+                                        pos4_10: pos4_10Count,
+                                        pos11_20: pos11_20Count,
+                                        keywordSample: allKeywords.slice(0, 10).map(k => ({ keyword: k.keyword, rank: k.rank_now, intent: k.intent }))
+                                    });
+                                    
+                                    return {
+                                        pos1: pos1Count,
+                                        pos2_3: pos2_3Count,
+                                        pos4_10: pos4_10Count,
+                                        pos11_20: pos11_20Count
+                                    };
                                 };
                                 
-                                const pos1Value = getRankingValue('pos1');
-                                const pos2_3Value = getRankingValue('pos2_3');
-                                const pos4_10Value = getRankingValue('pos4_10');
-                                const pos11_20Value = getRankingValue('pos11_20');
+                                const distributionData = calculateRankingDistribution();
+                                const pos1Value = distributionData.pos1;
+                                const pos2_3Value = distributionData.pos2_3;
+                                const pos4_10Value = distributionData.pos4_10;
+                                const pos11_20Value = distributionData.pos11_20;
                                 
                                 const positions = [
                                     { label: "Position 1", value: pos1Value, color: pos1Value > 0 ? 'text-emerald-600' : 'text-gray-500', bgColor: pos1Value > 0 ? 'bg-emerald-50' : 'bg-gray-50', icon: "🥇" },
