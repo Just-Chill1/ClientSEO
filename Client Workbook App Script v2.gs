@@ -491,13 +491,72 @@ function getBacklinksSummary(spreadsheet) {
     const sheetName = 'Backlinks Summary';
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet || sheet.getLastRow() < 2) return {};
+    
     const values = sheet.getRange('A2:N2').getValues()[0];
-    return {
-        website: values[2], totalBacklinks: values[3], totalDofollow: values[4],
-        totalNofollow: values[5], newLinks: values[6], lostLinks: values[7],
-        avgSpamScore: values[8], topReferringDomains: values[9], avgRefferRank: values[10],
-        titlesCaptured: values[11], backlinksChange: values[12], spamScoreChange: values[13]
+    
+    // Debug logging to see what values are being read
+    console.log('Backlinks Summary Debug - Raw values:', {
+        website: values[2],
+        totalBacklinks: values[3],
+        totalDofollow: values[4], 
+        totalNofollow: values[5],
+        newLinks: values[6],
+        lostLinks: values[7],
+        avgSpamScore: values[8],
+        rawRow: values,
+        // Check all columns to identify any column misalignment
+        allColumns: {
+            A: values[0], B: values[1], C: values[2], D: values[3], 
+            E: values[4], F: values[5], G: values[6], H: values[7], 
+            I: values[8], J: values[9], K: values[10], L: values[11], 
+            M: values[12], N: values[13]
+        }
+    });
+    
+    // Enhanced parsing with better type conversion and validation
+    const parseIntSafe = (value) => {
+        if (value === null || value === undefined || value === '') return 0;
+        const parsed = parseInt(String(value).replace(/[^\d.-]/g, ''));
+        return isNaN(parsed) ? 0 : parsed;
     };
+    
+    const parseFloatSafe = (value) => {
+        if (value === null || value === undefined || value === '') return 0;
+        // Handle different decimal separators and clean the string
+        let cleanValue = String(value).replace(/[^\d.-]/g, '');
+        const parsed = parseFloat(cleanValue);
+        return isNaN(parsed) ? 0 : parsed;
+    };
+    
+    const parsedData = {
+        website: values[2] || '',
+        totalBacklinks: parseIntSafe(values[3]),
+        totalDofollow: parseIntSafe(values[4]),
+        totalNofollow: parseIntSafe(values[5]),
+        newLinks: parseIntSafe(values[6]),
+        lostLinks: parseIntSafe(values[7]),
+        avgSpamScore: parseFloatSafe(values[8]),
+        topReferringDomains: parseIntSafe(values[9]),
+        avgRefferRank: parseIntSafe(values[10]),
+        titlesCaptured: parseIntSafe(values[11]),
+        backlinksChange: parseIntSafe(values[12]),
+        spamScoreChange: parseFloatSafe(values[13])
+    };
+    
+    // Additional debug logging to see parsed values
+    console.log('Backlinks Summary Debug - Parsed values:', parsedData);
+    
+    // Special debugging for spam score issue
+    if (parsedData.avgSpamScore !== parseFloatSafe(values[8])) {
+        console.log('Spam Score Parsing Issue:', {
+            originalValue: values[8],
+            originalType: typeof values[8],
+            parsedValue: parsedData.avgSpamScore,
+            expectedValue: 1.6 // Based on user's data
+        });
+    }
+    
+    return parsedData;
 }
 
 function getBacklinksSummaryArchive(spreadsheet) {
