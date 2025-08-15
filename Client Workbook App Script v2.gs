@@ -106,12 +106,16 @@ function getWebsiteStats(spreadsheet) {
     const checksData = getChecksData(spreadsheet);
     const clientData = onPageInsights.find(site => site.isClient);
     
+    // NEW: Read crawl summary for score and broken links
+    const crawlSummary = getWebsiteCrawlSummary(spreadsheet);
+    
 
 
     const healthData = {
-        pageScore: clientData ? clientData.pageScore : 0,
+        // Prefer crawl summary average score; fallback to legacy clientData.pageScore
+        pageScore: crawlSummary ? crawlSummary.averageScore : (clientData ? clientData.pageScore : 0),
         siteSpeed: clientData ? clientData.siteSpeed : '0s',
-        brokenLinks: clientData ? clientData.brokenLinks : 0,
+        brokenLinks: crawlSummary ? crawlSummary.brokenLinks : (clientData ? clientData.brokenLinks : 0),
         ssl: clientData ? clientData.ssl : false,
         errors: websiteErrors.errors,
         warnings: websiteErrors.warnings,
@@ -437,13 +441,20 @@ function getOnPageInsights(spreadsheet) {
 }
 
 function getWebsiteErrors(spreadsheet) {
-    const sheetName = 'Website Errors';
+    const sheetName = 'Website Crawl Errors';
     const sheet = spreadsheet.getSheetByName(sheetName);
     if (!sheet || sheet.getLastRow() < 2) return { errors: [], warnings: [] };
+    
+    // Read headers to locate columns by name for robustness
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const typeIdx = headers.findIndex(h => String(h).toLowerCase() === 'issue_type');
+    const msgIdx = headers.findIndex(h => String(h).toLowerCase() === 'message');
+    
     const values = sheet.getDataRange().getValues().slice(1);
     const errors = [], warnings = [];
     values.forEach((row, index) => {
-        const issueType = row[2], message = row[7];
+        const issueType = String(typeIdx >= 0 ? row[typeIdx] : '').toLowerCase();
+        const message = msgIdx >= 0 ? row[msgIdx] : '';
         if (issueType === 'error') errors.push({ id: `err-${index}`, description: message });
         else if (issueType === 'warning') warnings.push({ id: `warn-${index}`, description: message });
     });
@@ -828,6 +839,26 @@ function getKeywordsSummaryArchive(spreadsheet) {
 
     console.log('Processed keywords archive data:', archiveData.length, 'entries');
     return archiveData;
+}
+
+// NEW: Read Website Crawl Summary for overall site metrics
+function getWebsiteCrawlSummary(spreadsheet) {
+    const sheetName = 'Website Crawl Summary';
+    const sheet = spreadsheet.getSheetByName(sheetName);
+    if (!sheet || sheet.getLastRow() < 2) return null;
+    
+    const lastRow = sheet.getLastRow();
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const row = sheet.getRange(lastRow, 1, 1, sheet.getLastColumn()).getValues()[0];
+    
+    const idxOf = (name) => headers.findIndex(h => String(h).trim().toLowerCase() === name.trim().toLowerCase());
+    const averageScoreIdx = idxOf('Average Score');
+    const brokenLinksIdx = idxOf('Broken Links');
+    
+    const averageScore = averageScoreIdx >= 0 ? parseFloat(row[averageScoreIdx]) || 0 : 0;
+    const brokenLinks = brokenLinksIdx >= 0 ? parseInt(row[brokenLinksIdx]) || 0 : 0;
+    
+    return { averageScore, brokenLinks };
 }
 
 // Helper function to format website URL into a display name
