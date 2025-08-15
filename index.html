@@ -4524,36 +4524,23 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                             {(() => {
                                 // Calculate ranking distribution ONLY for CLIENT keywords
                                 const calculateClientRankingDistribution = () => {
-                                    // Find the client website data - improved client identification
+                                    // IMPORTANT: Always use first website (client) for ranking distribution
+                                    // regardless of which tab is currently active
+                                    const siteNames = Object.keys(table || {});
                                     let clientKeywords = [];
                                     let clientSiteName = '';
                                     
-                                    const siteNames = Object.keys(table || {});
-                                    
-                                    // Look for client in multiple ways:
-                                    // 1. First try to find site with most keywords (likely the client)
-                                    // 2. Or use the first site (fallback)
-                                    let bestCandidate = '';
-                                    let maxKeywords = 0;
-                                    
-                                    siteNames.forEach(siteName => {
-                                        const siteData = table[siteName] || [];
-                                        const keywordCount = siteData.filter(kw => kw.rank_now && kw.rank_now > 0).length;
+                                    if (siteNames.length > 0) {
+                                        // Always use the FIRST website as the client for ranking distribution
+                                        // This ensures consistency regardless of active tab
+                                        clientSiteName = siteNames[0];
+                                        const clientSiteData = table[clientSiteName] || [];
                                         
-                                        if (keywordCount > maxKeywords) {
-                                            maxKeywords = keywordCount;
-                                            bestCandidate = siteName;
-                                        }
-                                    });
-                                    
-                                    // Use the site with most keywords as client (or first one if tie)
-                                    clientSiteName = bestCandidate || siteNames[0];
-                                    
-                                    if (clientSiteName && table[clientSiteName]) {
-                                        clientKeywords = table[clientSiteName].filter(keyword => 
+                                        clientKeywords = clientSiteData.filter(keyword => 
                                             keyword.rank_now && keyword.rank_now > 0
                                         );
-                                        console.log(`Using ${clientSiteName} as client website with ${clientKeywords.length} ranked keywords out of ${maxKeywords} total keywords`);
+                                        
+                                        console.log(`Ranking Distribution - Using ${clientSiteName} as CLIENT with ${clientKeywords.length} ranked keywords`);
                                     }
                                     
                                     // Calculate position buckets with correct ranges - CLIENT ONLY
@@ -4562,13 +4549,14 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                                     const pos4_10Count = clientKeywords.filter(kw => kw.rank_now >= 4 && kw.rank_now <= 10).length;
                                     const pos11_20Count = clientKeywords.filter(kw => kw.rank_now >= 11 && kw.rank_now <= 20).length;
                                     
-                                    console.log('CLIENT ONLY Ranking Distribution Calculation:', {
+                                    console.log('CLIENT ONLY Ranking Distribution:', {
+                                        clientSite: clientSiteName,
                                         totalClientKeywords: clientKeywords.length,
                                         pos1: pos1Count,
                                         pos2_3: pos2_3Count,
                                         pos4_10: pos4_10Count,
                                         pos11_20: pos11_20Count,
-                                        keywordSample: clientKeywords.slice(0, 5).map(k => ({ keyword: k.keyword, rank: k.rank_now, intent: k.intent }))
+                                        total: pos1Count + pos2_3Count + pos4_10Count + pos11_20Count
                                     });
                                     
                                     return {
