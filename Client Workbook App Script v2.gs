@@ -844,7 +844,10 @@ function getKeywordsTables(spreadsheet) {
 function getKeywordTableData(sheet) {
   if (sheet.getLastRow() < 2) return [];
   const values = sheet.getDataRange().getValues().slice(1);
-  return values.map(row => ({
+  
+  console.log(`Keyword Table Debug - Sheet has ${values.length} rows of data`);
+  
+  const processedKeywords = values.map(row => ({
     keyword: row[3], rank_now: row[4], rank_prev: row[5], 
     is_new: String(row[6]).toLowerCase() === 'true', 
     is_up: String(row[7]).toLowerCase() === 'true',
@@ -854,6 +857,10 @@ function getKeywordTableData(sheet) {
     etv: row[12], est_paid_cost: row[13], intent: row[14], keyword_difficulty: row[15],
     ranking_title: row[17], check_url: row[19],
   })).filter(row => row.keyword);
+  
+  console.log(`Keyword Table Debug - After filtering, returning ${processedKeywords.length} keywords`);
+  
+  return processedKeywords;
 }
 
 function getBacklinksTables(spreadsheet) {
