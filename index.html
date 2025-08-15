@@ -4522,34 +4522,53 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                                 return null;
                             })()}
                             {(() => {
-                                // Calculate ranking distribution dynamically from keyword table data
-                                // This ensures accurate position bucketing and includes all keywords regardless of intent
-                                const calculateRankingDistribution = () => {
-                                    // Get all keywords from all websites in the table
-                                    const allKeywords = [];
-                                    Object.keys(table || {}).forEach(siteName => {
+                                // Calculate ranking distribution ONLY for CLIENT keywords
+                                const calculateClientRankingDistribution = () => {
+                                    // Find the client website data - improved client identification
+                                    let clientKeywords = [];
+                                    let clientSiteName = '';
+                                    
+                                    const siteNames = Object.keys(table || {});
+                                    
+                                    // Look for client in multiple ways:
+                                    // 1. First try to find site with most keywords (likely the client)
+                                    // 2. Or use the first site (fallback)
+                                    let bestCandidate = '';
+                                    let maxKeywords = 0;
+                                    
+                                    siteNames.forEach(siteName => {
                                         const siteData = table[siteName] || [];
-                                        // Include all keywords regardless of intent (paid, commercial, navigational, etc.)
-                                        siteData.forEach(keyword => {
-                                            if (keyword.rank_now && keyword.rank_now > 0) {
-                                                allKeywords.push(keyword);
-                                            }
-                                        });
+                                        const keywordCount = siteData.filter(kw => kw.rank_now && kw.rank_now > 0).length;
+                                        
+                                        if (keywordCount > maxKeywords) {
+                                            maxKeywords = keywordCount;
+                                            bestCandidate = siteName;
+                                        }
                                     });
                                     
-                                    // Calculate position buckets with correct ranges
-                                    const pos1Count = allKeywords.filter(kw => kw.rank_now === 1).length;
-                                    const pos2_3Count = allKeywords.filter(kw => kw.rank_now >= 2 && kw.rank_now <= 3).length;
-                                    const pos4_10Count = allKeywords.filter(kw => kw.rank_now >= 4 && kw.rank_now <= 10).length;
-                                    const pos11_20Count = allKeywords.filter(kw => kw.rank_now >= 11 && kw.rank_now <= 20).length;
+                                    // Use the site with most keywords as client (or first one if tie)
+                                    clientSiteName = bestCandidate || siteNames[0];
                                     
-                                    console.log('Dynamic Ranking Distribution Calculation:', {
-                                        totalKeywords: allKeywords.length,
+                                    if (clientSiteName && table[clientSiteName]) {
+                                        clientKeywords = table[clientSiteName].filter(keyword => 
+                                            keyword.rank_now && keyword.rank_now > 0
+                                        );
+                                        console.log(`Using ${clientSiteName} as client website with ${clientKeywords.length} ranked keywords out of ${maxKeywords} total keywords`);
+                                    }
+                                    
+                                    // Calculate position buckets with correct ranges - CLIENT ONLY
+                                    const pos1Count = clientKeywords.filter(kw => kw.rank_now === 1).length;
+                                    const pos2_3Count = clientKeywords.filter(kw => kw.rank_now >= 2 && kw.rank_now <= 3).length;
+                                    const pos4_10Count = clientKeywords.filter(kw => kw.rank_now >= 4 && kw.rank_now <= 10).length;
+                                    const pos11_20Count = clientKeywords.filter(kw => kw.rank_now >= 11 && kw.rank_now <= 20).length;
+                                    
+                                    console.log('CLIENT ONLY Ranking Distribution Calculation:', {
+                                        totalClientKeywords: clientKeywords.length,
                                         pos1: pos1Count,
                                         pos2_3: pos2_3Count,
                                         pos4_10: pos4_10Count,
                                         pos11_20: pos11_20Count,
-                                        keywordSample: allKeywords.slice(0, 10).map(k => ({ keyword: k.keyword, rank: k.rank_now, intent: k.intent }))
+                                        keywordSample: clientKeywords.slice(0, 5).map(k => ({ keyword: k.keyword, rank: k.rank_now, intent: k.intent }))
                                     });
                                     
                                     return {
@@ -4560,7 +4579,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                                     };
                                 };
                                 
-                                const distributionData = calculateRankingDistribution();
+                                const distributionData = calculateClientRankingDistribution();
                                 const pos1Value = distributionData.pos1;
                                 const pos2_3Value = distributionData.pos2_3;
                                 const pos4_10Value = distributionData.pos4_10;
@@ -4689,7 +4708,21 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                         <div className="flex items-center justify-start space-x-10">
                             {(() => {
                                 const siteData = table[active] || [];
-                                const totalKeywords = siteData.length;
+                                // Use the summary data for total count instead of loaded table length
+                                // This ensures we show the actual total from the sheet, not just what's loaded for display
+                                const totalKeywords = currentSummaryData && currentSummaryData.totalKeywords 
+                                    ? parseInt(currentSummaryData.totalKeywords) || siteData.length 
+                                    : siteData.length;
+                                
+                                // Debug logging to identify keyword count discrepancies
+                                if (siteData.length !== totalKeywords) {
+                                    console.log('Keywords Count Mismatch:', {
+                                        loadedKeywords: siteData.length,
+                                        summaryTotal: currentSummaryData?.totalKeywords,
+                                        displayingTotal: totalKeywords,
+                                        siteName: active
+                                    });
+                                }
                                 const newKeywords = siteData.filter(kw => kw.is_new).length;
                                 const upKeywords = siteData.filter(kw => kw.is_up).length;
                                 const downKeywords = siteData.filter(kw => kw.is_down).length;
