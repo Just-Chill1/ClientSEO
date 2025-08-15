@@ -7015,7 +7015,8 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
     
     const speedStatus = speedSec < 1.5 ? 'excellent' : speedSec < 3 ? 'good' : 'error';
     
-    const hasBrokenLinks = healthData.brokenLinks === true || String(healthData.brokenLinks).toLowerCase() === 'true';
+    const brokenLinksCount = Number(healthData.brokenLinks) || 0;
+    const hasBrokenLinks = brokenLinksCount > 0;
     const checksPassed = healthData.checks.checksPassed;
     const checksPercentage = (checksPassed / healthData.checks.totalChecks) * 100;
 
@@ -7970,8 +7971,8 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                 <h3 className="text-gray-600 text-sm font-medium">Broken Links</h3>
                                 <InfoTooltip text="Checks for broken internal and external links on your website. Broken links hurt user experience and can negatively impact SEO rankings." />
                             </div>
-                            <p className="text-lg font-bold text-gray-900">{hasBrokenLinks ? 'Issues Found' : 'All Good'}</p>
-                            <p className="text-xs text-gray-500">{hasBrokenLinks ? 'Fix required' : 'No broken links'}</p>
+                            <p className="text-lg font-bold text-gray-900">{hasBrokenLinks ? `${brokenLinksCount} issue${brokenLinksCount === 1 ? '' : 's'}` : 'All Good'}</p>
+                            <p className="text-xs text-gray-500">{hasBrokenLinks ? 'Broken links detected' : 'No broken links'}</p>
                         </div>
                         
                         <div className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 border border-gray-100 hover:border-blue-200/60 hover:-translate-y-0.5 will-change-transform">
