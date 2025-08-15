@@ -490,12 +490,49 @@ function getKeywordsSummary(spreadsheet) {
 function getBacklinksSummary(spreadsheet) {
     const sheetName = 'Backlinks Summary';
     const sheet = spreadsheet.getSheetByName(sheetName);
-    if (!sheet || sheet.getLastRow() < 2) return {};
+    if (!sheet || sheet.getLastRow() < 2) {
+        console.log('Backlinks Summary Debug - Sheet not found or empty:', {
+            sheetExists: !!sheet,
+            lastRow: sheet ? sheet.getLastRow() : 'N/A'
+        });
+        return {};
+    }
     
-    const values = sheet.getRange('A2:N2').getValues()[0];
+    // Check if there are multiple rows of data
+    const lastRow = sheet.getLastRow();
+    console.log('Backlinks Summary Debug - Sheet info:', {
+        totalRows: lastRow,
+        hasMultipleDataRows: lastRow > 2
+    });
     
-    // Debug logging to see what values are being read
-    console.log('Backlinks Summary Debug - Raw values:', {
+    // If there are multiple rows, let's see what's in them
+    if (lastRow > 2) {
+        const allData = sheet.getRange('A2:N' + lastRow).getValues();
+        console.log('Backlinks Summary Debug - Multiple rows found:', {
+            totalDataRows: allData.length,
+            firstRow: allData[0],
+            lastRow: allData[allData.length - 1]
+        });
+    }
+    
+    // Get the most recent row (last row) instead of just row 2
+    // This handles cases where there might be multiple summary entries
+    let values;
+    if (lastRow > 2) {
+        // If multiple rows exist, use the last row (most recent)
+        values = sheet.getRange('A' + lastRow + ':N' + lastRow).getValues()[0];
+        console.log('Using last row (' + lastRow + ') for most recent data');
+    } else {
+        // If only one data row, use row 2
+        values = sheet.getRange('A2:N2').getValues()[0];
+        console.log('Using row 2 for single data row');
+    }
+    
+    // Enhanced debug logging to identify the exact issue
+    console.log('Backlinks Summary Debug - Enhanced:', {
+        sheetName: 'Backlinks Summary',
+        rowRange: 'A2:N2',
+        rawRowLength: values.length,
         website: values[2],
         totalBacklinks: values[3],
         totalDofollow: values[4], 
@@ -503,13 +540,31 @@ function getBacklinksSummary(spreadsheet) {
         newLinks: values[6],
         lostLinks: values[7],
         avgSpamScore: values[8],
-        rawRow: values,
-        // Check all columns to identify any column misalignment
+        // Check data types
+        dataTypes: {
+            totalBacklinks: typeof values[3],
+            totalDofollow: typeof values[4],
+            totalNofollow: typeof values[5],
+            newLinks: typeof values[6],
+            lostLinks: typeof values[7],
+            avgSpamScore: typeof values[8]
+        },
+        // Check all columns with headers
         allColumns: {
-            A: values[0], B: values[1], C: values[2], D: values[3], 
-            E: values[4], F: values[5], G: values[6], H: values[7], 
-            I: values[8], J: values[9], K: values[10], L: values[11], 
-            M: values[12], N: values[13]
+            'A (crawl_date)': values[0], 
+            'B (account_type)': values[1], 
+            'C (website)': values[2], 
+            'D (Total Backlinks)': values[3], 
+            'E (Total Dofollow)': values[4], 
+            'F (Total Nofollow)': values[5], 
+            'G (New Links)': values[6], 
+            'H (Lost Links)': values[7], 
+            'I (Avg Spam Score)': values[8], 
+            'J (Top Referring Domains)': values[9], 
+            'K (Avg Reffer Rank)': values[10], 
+            'L (Titles Captured)': values[11], 
+            'M (Backlinks Change)': values[12], 
+            'N (Spam Score Change)': values[13]
         }
     });
     

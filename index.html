@@ -4708,21 +4708,9 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                         <div className="flex items-center justify-start space-x-10">
                             {(() => {
                                 const siteData = table[active] || [];
-                                // Use the summary data for total count instead of loaded table length
-                                // This ensures we show the actual total from the sheet, not just what's loaded for display
-                                const totalKeywords = currentSummaryData && currentSummaryData.totalKeywords 
-                                    ? parseInt(currentSummaryData.totalKeywords) || siteData.length 
-                                    : siteData.length;
-                                
-                                // Debug logging to identify keyword count discrepancies
-                                if (siteData.length !== totalKeywords) {
-                                    console.log('Keywords Count Mismatch:', {
-                                        loadedKeywords: siteData.length,
-                                        summaryTotal: currentSummaryData?.totalKeywords,
-                                        displayingTotal: totalKeywords,
-                                        siteName: active
-                                    });
-                                }
+                                // Use the loaded table length for per-website totals
+                                // This shows the actual count for each individual website
+                                const totalKeywords = siteData.length;
                                 const newKeywords = siteData.filter(kw => kw.is_new).length;
                                 const upKeywords = siteData.filter(kw => kw.is_up).length;
                                 const downKeywords = siteData.filter(kw => kw.is_down).length;
