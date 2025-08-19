@@ -282,56 +282,7 @@ function getCensusData(spreadsheet) {
 function getAiReport(spreadsheet) {
     const sheet = spreadsheet.getSheetByName('GBP Insights');
     if (!sheet || sheet.getLastRow() < 2) return "";
-
-    // Try to locate the AI report column by header name to avoid breakage when columns shift
-    try {
-        const lastCol = sheet.getLastColumn();
-        const headers = sheet
-            .getRange(1, 1, 1, lastCol)
-            .getValues()[0]
-            .map(function(h) { return String(h).trim().toLowerCase(); });
-
-        // Common header name candidates for the dashboard AI report on GBP Insights
-        var candidates = [
-            'ai_report',
-            'ai swot',
-            'ai_swot',
-            'ai gbp report',
-            'ai_gbp_report',
-            'gbp_ai_report',
-            'ai notes',
-            'ai_notes',
-            'swot_analysis',
-            'swot'
-        ];
-
-        var colIndex = -1;
-        for (var i = 0; i < candidates.length; i++) {
-            var idx = headers.indexOf(candidates[i]);
-            if (idx !== -1) { colIndex = idx; break; }
-        }
-
-        // Fallback: find a header that looks like an AI report field
-        if (colIndex === -1) {
-            for (var j = 0; j < headers.length; j++) {
-                var h = headers[j];
-                if (h && h.indexOf('ai') !== -1 && (h.indexOf('report') !== -1 || h.indexOf('swot') !== -1 || h.indexOf('analysis') !== -1)) {
-                    colIndex = j;
-                    break;
-                }
-            }
-        }
-
-        if (colIndex !== -1) {
-            var val = sheet.getRange(2, colIndex + 1).getValue();
-            if (val !== null && val !== "") return val;
-        }
-    } catch (e) {
-        console.log('getAiReport header lookup failed: ' + e);
-    }
-
-    // Final fallback to original fixed cell
-    return sheet.getRange('AJ2').getValue() || "";
+    return sheet.getRange('AJ2').getValue();
 }
 
 function getAiSentimentData(spreadsheet) {
@@ -364,12 +315,21 @@ function getAiSentimentData(spreadsheet) {
         const geminiVisibility = parseFloat(row[20]) || 0;      // Column U - Gemini Visibility
         const geminiAppearance = parseFloat(row[21]) || 0;      // Column V - Gemini Appearance
         
+        // NEW: Perplexity data - user mentioned these headers: Perplexity Summary, Perplexity Sentiment, Perplexity Strength, Perplexity Confidence, Perplexity Visability, Perplexity Appearance
+        const perplexitySentiment = parseFloat(row[23]) || 0;   // Column X - Perplexity Sentiment
+        const perplexityStrength = parseFloat(row[24]) || 0;    // Column Y - Perplexity Strength  
+        const perplexityConfidence = parseFloat(row[25]) || 0;  // Column Z - Perplexity Confidence
+        const perplexityVisibility = parseFloat(row[26]) || 0;  // Column AA - Perplexity Visibility
+        const perplexityAppearance = parseFloat(row[27]) || 0;  // Column AB - Perplexity Appearance
+        
         // Calculate signed sentiment (strength × sentimentSign)
         const chatGptSentimentSign = chatGptSentiment >= 0 ? 1 : -1;
         const geminiSentimentSign = geminiSentiment >= 0 ? 1 : -1;
+        const perplexitySentimentSign = perplexitySentiment >= 0 ? 1 : -1;
         
         const chatGptSignedSentiment = chatGptStrength * chatGptSentimentSign;
         const geminiSignedSentiment = geminiStrength * geminiSentimentSign;
+        const perplexitySignedSentiment = perplexityStrength * perplexitySentimentSign;
         
         return {
             accountType: accountType,
@@ -404,6 +364,17 @@ function getAiSentimentData(spreadsheet) {
                 visibility: geminiVisibility,              // Column U - Gemini Visibility
                 appearance: geminiAppearance,              // Column V - Gemini Appearance
                 signedSentiment: geminiSignedSentiment     // Calculated: strength × sentimentSign
+            },
+            
+            // Perplexity data
+            perplexity: {
+                summary: row[22] || '',                    // Column W - Perplexity Summary
+                sentiment: perplexitySentiment,            // Column X - Perplexity Sentiment
+                strength: perplexityStrength,              // Column Y - Perplexity Strength
+                confidence: perplexityConfidence,          // Column Z - Perplexity Confidence
+                visibility: perplexityVisibility,          // Column AA - Perplexity Visibility
+                appearance: perplexityAppearance,          // Column AB - Perplexity Appearance
+                signedSentiment: perplexitySignedSentiment // Calculated: strength × sentimentSign
             }
         };
     }).filter(row => row); // Remove null entries
