@@ -1428,20 +1428,14 @@ const DualReports = ({ competitorText, errorText }) => {
             title: 'Competitor Analysis',
             content: competitorText,
             color: 'blue',
-            borderColor: 'border-blue-200',
-            bgColor: 'bg-blue-50',
-            textColor: 'text-blue-700',
-            hoverBg: 'hover:bg-blue-100'
+            info: 'AI-powered analysis comparing your website performance against top competitors in your market.'
         },
         {
             id: 'error',
             title: 'Error Report',
             content: errorText,
             color: 'red',
-            borderColor: 'border-red-200',
-            bgColor: 'bg-red-50',
-            textColor: 'text-red-700',
-            hoverBg: 'hover:bg-red-100'
+            info: 'Comprehensive technical issues and optimization opportunities identified during website crawling.'
         }
     ];
 
@@ -1467,6 +1461,24 @@ const DualReports = ({ competitorText, errorText }) => {
         }
     };
 
+    const handleDownloadReport = () => {
+        const plainText = String(currentContent)
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
+            .replace(/<em>(.*?)<\/em>/gi, '*$1*')
+            .replace(/<[^>]*>/g, '');
+        
+        const blob = new Blob([plainText], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${activeTabData?.title.replace(/\s+/g, '_')}_Report.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    };
+
     // Icons
     const ChevronDown = createIcon(<polyline points="6 9 12 15 18 9" />);
     const ChevronUp = createIcon(<polyline points="18 15 12 9 6 15" />);
@@ -1474,6 +1486,13 @@ const DualReports = ({ competitorText, errorText }) => {
         <>
             <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
             <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+        </>
+    );
+    const Download = createIcon(
+        <>
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
         </>
     );
     const Check = createIcon(<polyline points="20 6 9 17 4 12" />);
@@ -1484,23 +1503,73 @@ const DualReports = ({ competitorText, errorText }) => {
         .replace(/\*(.*?)\*/g, '<em>$1</em>');
 
     return (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            {/* Tab Headers */}
-            <div className="flex border-b border-gray-200">
-                {tabs.map((tab) => (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden">
+            {/* Modern Tab Headers */}
+            <div className="flex bg-gray-50/50 p-1">
+                {tabs.map((tab, index) => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex-1 px-6 py-4 text-sm font-semibold transition-all relative ${
+                        className={`flex-1 relative px-6 py-3 text-sm font-medium transition-all duration-200 ${
+                            index === 0 ? 'rounded-l-xl' : 'rounded-r-xl'
+                        } ${
                             activeTab === tab.id
-                                ? `${tab.textColor} ${tab.bgColor} border-b-2 ${tab.borderColor}`
-                                : `text-gray-500 hover:text-gray-700 ${tab.hoverBg}`
+                                ? `bg-white shadow-sm ${tab.color === 'blue' ? 'border border-blue-200/60 text-blue-700' : 'border border-red-200/60 text-red-700'}`
+                                : 'text-gray-600 hover:text-gray-800 hover:bg-white/50'
                         }`}
                     >
-                        {tab.title}
-                        {activeTab === tab.id && (
-                            <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${tab.color === 'blue' ? 'bg-blue-500' : 'bg-red-500'}`}></div>
-                        )}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                                <span>{tab.title}</span>
+                                <InfoTooltip text={tab.info} />
+                            </div>
+                            {activeTab === tab.id && (
+                                <div className="flex items-center space-x-1">
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleCopyReport();
+                                        }}
+                                        className={`p-1 rounded-md transition-colors ${
+                                            copySuccess === activeTab
+                                                ? 'text-green-600'
+                                                : `${tab.color === 'blue' ? 'text-blue-600 hover:text-blue-800 hover:bg-blue-50' : 'text-red-600 hover:text-red-800 hover:bg-red-50'}`
+                                        }`}
+                                        title="Copy report"
+                                    >
+                                        {copySuccess === activeTab ? (
+                                            <Check className="w-4 h-4" />
+                                        ) : (
+                                            <Copy className="w-4 h-4" />
+                                        )}
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDownloadReport();
+                                        }}
+                                        className={`p-1 rounded-md transition-colors ${tab.color === 'blue' ? 'text-blue-600 hover:text-blue-800 hover:bg-blue-50' : 'text-red-600 hover:text-red-800 hover:bg-red-50'}`}
+                                        title="Download report"
+                                    >
+                                        <Download className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleToggleExpand();
+                                        }}
+                                        className={`p-1 rounded-md transition-colors ${tab.color === 'blue' ? 'text-blue-600 hover:text-blue-800 hover:bg-blue-50' : 'text-red-600 hover:text-red-800 hover:bg-red-50'}`}
+                                        title={isExpanded ? "Show less" : "Show more"}
+                                    >
+                                        {isExpanded ? (
+                                            <ChevronUp className="w-4 h-4" />
+                                        ) : (
+                                            <ChevronDown className="w-4 h-4" />
+                                        )}
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </button>
                 ))}
             </div>
@@ -1510,25 +1579,9 @@ const DualReports = ({ competitorText, errorText }) => {
                 {/* Preview/Summary when collapsed */}
                 {!isExpanded && (
                     <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className={`text-lg font-bold ${activeTabData?.textColor}`}>
-                                {activeTabData?.title} Summary
-                            </h3>
-                            <button
-                                onClick={handleToggleExpand}
-                                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                                    activeTabData?.color === 'blue'
-                                        ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                                        : 'bg-red-100 text-red-700 hover:bg-red-200'
-                                }`}
-                            >
-                                <span>See More</span>
-                                <ChevronDown className="w-4 h-4" />
-                            </button>
-                        </div>
                         <div className="relative">
                             <div 
-                                className="text-sm text-gray-600 leading-relaxed overflow-hidden"
+                                className="text-sm text-gray-700 leading-relaxed overflow-hidden"
                                 style={{ maxHeight: '120px' }}
                                 dangerouslySetInnerHTML={{ __html: formattedContent }}
                             />
@@ -1540,40 +1593,6 @@ const DualReports = ({ competitorText, errorText }) => {
                 {/* Full content when expanded */}
                 {isExpanded && (
                     <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <h3 className={`text-lg font-bold ${activeTabData?.textColor}`}>
-                                {activeTabData?.title}
-                            </h3>
-                            <div className="flex items-center space-x-3">
-                                <button
-                                    onClick={handleCopyReport}
-                                    className="flex items-center space-x-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
-                                >
-                                    {copySuccess === activeTab ? (
-                                        <>
-                                            <Check className="w-4 h-4 text-green-600" />
-                                            <span className="text-green-600">Copied!</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Copy className="w-4 h-4" />
-                                            <span>Copy</span>
-                                        </>
-                                    )}
-                                </button>
-                                <button
-                                    onClick={handleToggleExpand}
-                                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                                        activeTabData?.color === 'blue'
-                                            ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-                                            : 'bg-red-100 text-red-700 hover:bg-red-200'
-                                    }`}
-                                >
-                                    <span>See Less</span>
-                                    <ChevronUp className="w-4 h-4" />
-                                </button>
-                            </div>
-                        </div>
                         <div 
                             className="prose prose-sm max-w-none text-gray-700 leading-relaxed"
                             dangerouslySetInnerHTML={{ __html: formattedContent }}
