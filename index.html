@@ -3959,7 +3959,7 @@ const Dashboard = ({ setActiveTab }) => {
                 const parsed = JSON.parse(cachedData);
                 setDashboardData(parsed);
                 setLoading(false);
-                return;
+                // Do not return; fetch fresh in background to update fields like aiReport if empty/stale
             } catch (e) {
                 // Invalid cache, continue with fresh fetch
             }
