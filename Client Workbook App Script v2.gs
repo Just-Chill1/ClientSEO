@@ -282,7 +282,56 @@ function getCensusData(spreadsheet) {
 function getAiReport(spreadsheet) {
     const sheet = spreadsheet.getSheetByName('GBP Insights');
     if (!sheet || sheet.getLastRow() < 2) return "";
-    return sheet.getRange('AJ2').getValue();
+
+    // Try to locate the AI report column by header name to avoid breakage when columns shift
+    try {
+        const lastCol = sheet.getLastColumn();
+        const headers = sheet
+            .getRange(1, 1, 1, lastCol)
+            .getValues()[0]
+            .map(function(h) { return String(h).trim().toLowerCase(); });
+
+        // Common header name candidates for the dashboard AI report on GBP Insights
+        var candidates = [
+            'ai_report',
+            'ai swot',
+            'ai_swot',
+            'ai gbp report',
+            'ai_gbp_report',
+            'gbp_ai_report',
+            'ai notes',
+            'ai_notes',
+            'swot_analysis',
+            'swot'
+        ];
+
+        var colIndex = -1;
+        for (var i = 0; i < candidates.length; i++) {
+            var idx = headers.indexOf(candidates[i]);
+            if (idx !== -1) { colIndex = idx; break; }
+        }
+
+        // Fallback: find a header that looks like an AI report field
+        if (colIndex === -1) {
+            for (var j = 0; j < headers.length; j++) {
+                var h = headers[j];
+                if (h && h.indexOf('ai') !== -1 && (h.indexOf('report') !== -1 || h.indexOf('swot') !== -1 || h.indexOf('analysis') !== -1)) {
+                    colIndex = j;
+                    break;
+                }
+            }
+        }
+
+        if (colIndex !== -1) {
+            var val = sheet.getRange(2, colIndex + 1).getValue();
+            if (val !== null && val !== "") return val;
+        }
+    } catch (e) {
+        console.log('getAiReport header lookup failed: ' + e);
+    }
+
+    // Final fallback to original fixed cell
+    return sheet.getRange('AJ2').getValue() || "";
 }
 
 function getAiSentimentData(spreadsheet) {
