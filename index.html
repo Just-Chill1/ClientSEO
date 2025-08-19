@@ -1418,39 +1418,169 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
 
 /* Dual Report Section (Competitor Analysis + Error Report) */
 const DualReports = ({ competitorText, errorText }) => {
-    const [active, setActive] = useState('competitor');
-    const CardShell = ({ title, accent, preview, onClick, isActive }) => (
-        <div
-            className={`relative cursor-pointer rounded-xl border p-4 transition-all bg-white ${isActive ? 'shadow-xl' : 'hover:shadow-md'} ${accent === 'blue' ? 'border-blue-200' : 'border-red-200'}`}
-            onClick={onClick}
-        >
-            {/* Tab cap */}
-            <div className={`absolute -top-3 left-4 h-6 px-3 rounded-t-lg ${accent === 'blue' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'} shadow-sm text-xs font-semibold flex items-center`}>{title}</div>
-            <div className="mt-2 flex items-center justify-between">
-                <h3 className={`text-sm font-semibold ${accent === 'blue' ? 'text-blue-700' : 'text-red-700'}`}>Summary</h3>
-                <span className={`text-xs ${accent === 'blue' ? 'text-blue-600' : 'text-red-600'}`}>See more</span>
-            </div>
-            <p className="mt-2 text-sm text-gray-600 line-clamp-3 whitespace-pre-line">{preview || 'No report available yet.'}</p>
-        </div>
+    const [activeTab, setActiveTab] = useState('competitor');
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [copySuccess, setCopySuccess] = useState('');
+
+    const tabs = [
+        {
+            id: 'competitor',
+            title: 'Competitor Analysis',
+            content: competitorText,
+            color: 'blue',
+            borderColor: 'border-blue-200',
+            bgColor: 'bg-blue-50',
+            textColor: 'text-blue-700',
+            hoverBg: 'hover:bg-blue-100'
+        },
+        {
+            id: 'error',
+            title: 'Error Report',
+            content: errorText,
+            color: 'red',
+            borderColor: 'border-red-200',
+            bgColor: 'bg-red-50',
+            textColor: 'text-red-700',
+            hoverBg: 'hover:bg-red-100'
+        }
+    ];
+
+    const activeTabData = tabs.find(tab => tab.id === activeTab);
+    const currentContent = activeTabData?.content || 'No report available yet.';
+
+    const handleToggleExpand = () => {
+        setIsExpanded(!isExpanded);
+    };
+
+    const handleCopyReport = async () => {
+        try {
+            const plainText = String(currentContent)
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
+                .replace(/<em>(.*?)<\/em>/gi, '*$1*')
+                .replace(/<[^>]*>/g, '');
+            await navigator.clipboard.writeText(plainText);
+            setCopySuccess(activeTab);
+            setTimeout(() => setCopySuccess(''), 2000);
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+        }
+    };
+
+    // Icons
+    const ChevronDown = createIcon(<polyline points="6 9 12 15 18 9" />);
+    const ChevronUp = createIcon(<polyline points="18 15 12 9 6 15" />);
+    const Copy = createIcon(
+        <>
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+        </>
     );
-    const Expanded = ({ title, accent, text }) => (
-        <div className={`mt-4 rounded-2xl border p-0 bg-white overflow-hidden ${accent === 'blue' ? 'border-blue-200' : 'border-red-200'}`}>
-            <div className={`px-5 py-3 border-b ${accent === 'blue' ? 'bg-blue-50 border-blue-100' : 'bg-red-50 border-red-100'} flex items-center justify-between`}>
-                <h3 className={`text-base font-bold ${accent === 'blue' ? 'text-blue-700' : 'text-red-700'}`}>{title}</h3>
-                <button onClick={() => setActive(null)} className="text-xs text-gray-500 hover:text-gray-700">See less</button>
-            </div>
-            <div className="p-5 prose max-w-none text-sm text-gray-800 whitespace-pre-line">{text || 'No report available yet.'}</div>
-        </div>
-    );
+    const Check = createIcon(<polyline points="20 6 9 17 4 12" />);
+
+    const formattedContent = String(currentContent || '')
+        .replace(/\n/g, '<br />')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>');
 
     return (
-        <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <CardShell title="Competitor Analysis" accent="blue" preview={competitorText} onClick={() => setActive('competitor')} isActive={active==='competitor'} />
-                <CardShell title="Error Report" accent="red" preview={errorText} onClick={() => setActive('errors')} isActive={active==='errors'} />
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            {/* Tab Headers */}
+            <div className="flex border-b border-gray-200">
+                {tabs.map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex-1 px-6 py-4 text-sm font-semibold transition-all relative ${
+                            activeTab === tab.id
+                                ? `${tab.textColor} ${tab.bgColor} border-b-2 ${tab.borderColor}`
+                                : `text-gray-500 hover:text-gray-700 ${tab.hoverBg}`
+                        }`}
+                    >
+                        {tab.title}
+                        {activeTab === tab.id && (
+                            <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${tab.color === 'blue' ? 'bg-blue-500' : 'bg-red-500'}`}></div>
+                        )}
+                    </button>
+                ))}
             </div>
-            {active === 'competitor' && <Expanded title="Competitor Analysis" accent="blue" text={competitorText} />}
-            {active === 'errors' && <Expanded title="Error Report" accent="red" text={errorText} />}
+
+            {/* Content Area */}
+            <div className="p-6">
+                {/* Preview/Summary when collapsed */}
+                {!isExpanded && (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className={`text-lg font-bold ${activeTabData?.textColor}`}>
+                                {activeTabData?.title} Summary
+                            </h3>
+                            <button
+                                onClick={handleToggleExpand}
+                                className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                                    activeTabData?.color === 'blue'
+                                        ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                        : 'bg-red-100 text-red-700 hover:bg-red-200'
+                                }`}
+                            >
+                                <span>See More</span>
+                                <ChevronDown className="w-4 h-4" />
+                            </button>
+                        </div>
+                        <div className="relative">
+                            <div 
+                                className="text-sm text-gray-600 leading-relaxed overflow-hidden"
+                                style={{ maxHeight: '120px' }}
+                                dangerouslySetInnerHTML={{ __html: formattedContent }}
+                            />
+                            <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Full content when expanded */}
+                {isExpanded && (
+                    <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h3 className={`text-lg font-bold ${activeTabData?.textColor}`}>
+                                {activeTabData?.title}
+                            </h3>
+                            <div className="flex items-center space-x-3">
+                                <button
+                                    onClick={handleCopyReport}
+                                    className="flex items-center space-x-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
+                                >
+                                    {copySuccess === activeTab ? (
+                                        <>
+                                            <Check className="w-4 h-4 text-green-600" />
+                                            <span className="text-green-600">Copied!</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Copy className="w-4 h-4" />
+                                            <span>Copy</span>
+                                        </>
+                                    )}
+                                </button>
+                                <button
+                                    onClick={handleToggleExpand}
+                                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                                        activeTabData?.color === 'blue'
+                                            ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                            : 'bg-red-100 text-red-700 hover:bg-red-200'
+                                    }`}
+                                >
+                                    <span>See Less</span>
+                                    <ChevronUp className="w-4 h-4" />
+                                </button>
+                            </div>
+                        </div>
+                        <div 
+                            className="prose prose-sm max-w-none text-gray-700 leading-relaxed"
+                            dangerouslySetInnerHTML={{ __html: formattedContent }}
+                        />
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
