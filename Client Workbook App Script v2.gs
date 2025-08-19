@@ -108,6 +108,8 @@ function getWebsiteStats(spreadsheet) {
     
     // NEW: Read crawl summary for score and broken links
     const crawlSummary = getWebsiteCrawlSummary(spreadsheet);
+    // NEW: Aggregate checks across all client pages
+    const checksAggregate = getWebsiteCrawlPagesAggregate(spreadsheet);
     
 
 
@@ -120,6 +122,8 @@ function getWebsiteStats(spreadsheet) {
         errors: websiteErrors.errors,
         warnings: websiteErrors.warnings,
         checks: checksData,
+        // NEW aggregate for whole-site technical checks
+        checksAggregate: checksAggregate,
         aiNotes: clientData ? clientData.aiNotes : null,
         lastUpdated: [
             clientData?.lastModifiedHeader,
@@ -859,6 +863,82 @@ function getWebsiteCrawlSummary(spreadsheet) {
     const brokenLinks = brokenLinksIdx >= 0 ? parseInt(row[brokenLinksIdx]) || 0 : 0;
     
     return { averageScore, brokenLinks };
+}
+
+// NEW: Aggregate technical checks across all pages from 'Website Crawl Pages'
+function getWebsiteCrawlPagesAggregate(spreadsheet) {
+	const sheetName = 'Website Crawl Pages';
+	const sheet = spreadsheet.getSheetByName(sheetName);
+	if (!sheet || sheet.getLastRow() < 2) {
+		return null;
+	}
+	const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
+	const headerIndex = {};
+	headers.forEach((h, idx) => { headerIndex[h.toLowerCase()] = idx; });
+	const values = sheet.getDataRange().getValues().slice(1);
+	const totalPages = values.length;
+
+	// Define pass logic similar to getChecksData, but page-wise aggregation
+	const PASS_WHEN_TRUE = ['is_https','has_html_doctype','canonical','meta_charset_consistency','seo_friendly_url','seo_friendly_url_characters_check','seo_friendly_url_dynamic_check','seo_friendly_url_keywords_check','seo_friendly_url_relative_length_check','has_meta_title'];
+	const PASS_WHEN_FALSE = ['no_content_encoding','high_loading_time','is_redirect','is_4xx_code','is_5xx_code','is_broken','is_www','is_http','high_waiting_time','no_doctype','no_encoding_meta_tag','no_h1_tag','https_to_http_links','size_greater_than_3mb','has_meta_refresh_redirect','has_render_blocking_resources','low_content_rate','high_content_rate','low_character_count','high_character_count','small_page_size','large_page_size','low_readability_rate','irrelevant_description','irrelevant_title','irrelevant_meta_keywords','title_too_long','title_too_short','deprecated_html_tags','duplicate_meta_tags','duplicate_title_tag','no_image_alt','no_image_title','no_description','no_title','no_favicon','flash','frame','lorem_ipsum'];
+
+	// Exclude microdata/schema from aggregate per user instruction
+	const EXCLUDE_CHECKS = ['has_micromarkup','has_micromarkup_errors'];
+
+	// Aliases to match UI check keys (left) to sheet columns (right)
+	const ALIASES = {
+		'has_favicon': 'no_favicon', // UI expects has_favicon; sheet provides no_favicon
+		'duplicate_meta_tag': 'duplicate_meta_tags' // singular vs plural
+	};
+
+	// Build the final set of checks to consider
+	const allCheckKeys = Array.from(new Set([...PASS_WHEN_TRUE, ...PASS_WHEN_FALSE, ...Object.keys(ALIASES)]))
+		.filter(k => !EXCLUDE_CHECKS.includes(k));
+
+	const perCheck = {};
+	const isTruthy = (v) => v === true || String(v).toLowerCase() === 'true' || v === 1;
+	const isFalsy = (v) => v === false || String(v).toLowerCase() === 'false' || v === 0 || v === '' || v === null || v === undefined;
+
+	allCheckKeys.forEach((uiKey) => {
+		const sheetKey = (ALIASES[uiKey] || uiKey).toLowerCase();
+		const colIdx = headerIndex[sheetKey];
+		if (colIdx === undefined) {
+			return; // column not present
+		}
+		let passed = 0;
+		let total = 0;
+		for (let i = 0; i < values.length; i++) {
+			const row = values[i];
+			const cell = row[colIdx];
+			// For aliased inverted checks like has_favicon (sheet no_favicon)
+			if (uiKey === 'has_favicon') {
+				// Pass when no_favicon is FALSE
+				if (isFalsy(cell)) passed++;
+				total++;
+				continue;
+			}
+			// Determine rule
+			const ruleTrue = PASS_WHEN_TRUE.includes(uiKey) || PASS_WHEN_TRUE.includes(sheetKey);
+			const ruleFalse = PASS_WHEN_FALSE.includes(uiKey) || PASS_WHEN_FALSE.includes(sheetKey);
+			if (ruleTrue) {
+				if (isTruthy(cell)) passed++;
+				total++;
+			} else if (ruleFalse) {
+				if (isFalsy(cell)) passed++;
+				total++;
+			} else {
+				// If not explicitly listed, skip
+			}
+		}
+		if (total > 0) {
+			perCheck[uiKey] = { passed, total };
+		}
+	});
+
+	const totalChecks = Object.values(perCheck).reduce((sum, c) => sum + c.total, 0);
+	const totalPassed = Object.values(perCheck).reduce((sum, c) => sum + c.passed, 0);
+
+	return { totalPassed, totalChecks, perCheck };
 }
 
 // Helper function to format website URL into a display name

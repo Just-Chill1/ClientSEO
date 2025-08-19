@@ -7017,8 +7017,11 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
     
     const brokenLinksCount = Number(healthData.brokenLinks) || 0;
     const hasBrokenLinks = brokenLinksCount > 0;
-    const checksPassed = healthData.checks.checksPassed;
-    const checksPercentage = (checksPassed / healthData.checks.totalChecks) * 100;
+    // Prefer whole-site aggregate from Website Crawl Pages if available; fallback to legacy single-row checks
+    const aggregate = healthData.checksAggregate;
+    const checksPassed = aggregate ? (aggregate.totalPassed || 0) : (healthData.checks.checksPassed || 0);
+    const checksTotal = aggregate ? (aggregate.totalChecks || 0) : (healthData.checks.totalChecks || 0);
+    const checksPercentage = checksTotal > 0 ? (checksPassed / checksTotal) * 100 : 0;
 
     // Enhanced gradient colors for charts
     const GRADIENT_COLORS = [
@@ -7858,7 +7861,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                     </div>
                                 </div>
                             </div>
-                            <p className="text-2xl font-bold text-gray-900 mb-1">{checksPassed}/{healthData.checks.totalChecks}</p>
+                            <p className="text-2xl font-bold text-gray-900 mb-1">{checksPassed}/{checksTotal}</p>
                             <p className="text-sm text-gray-500">{checksPercentage.toFixed(1)}% passed</p>
                             
                             {/* Category Breakdown */}
@@ -7871,14 +7874,24 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                             const categoryData = checkCategories[category];
                                             if (!categoryData) return null;
                                             
-                                            const categoryChecks = Object.entries(categoryData.checks).filter(([checkName]) => 
-                                                healthData.checks.passedList.includes(checkName) || healthData.checks.failedList.includes(checkName)
-                                            );
-                                            
-                                            if (categoryChecks.length === 0) return null;
-                                            
-                                            const passedCount = categoryChecks.filter(([checkName]) => healthData.checks.passedList.includes(checkName)).length;
-                                            const hasErrors = passedCount < categoryChecks.length;
+                                            // Compute category totals using aggregate when available
+                                            const entries = Object.entries(categoryData.checks);
+                                            // Prefer aggregate per-check counts
+                                            const categoryTotals = entries.map(([checkName]) => {
+                                                const agg = aggregate?.perCheck?.[checkName];
+                                                if (agg && typeof agg.passed === 'number' && typeof agg.total === 'number') {
+                                                    return agg;
+                                                }
+                                                // Fallback to legacy boolean lists => pass=1/0, total=1 if present
+                                                const isConsidered = (healthData.checks.passedList || []).includes(checkName) || (healthData.checks.failedList || []).includes(checkName);
+                                                if (!isConsidered) return null;
+                                                const isPassed = (healthData.checks.passedList || []).includes(checkName);
+                                                return { passed: isPassed ? 1 : 0, total: 1 };
+                                            }).filter(Boolean);
+                                            if (categoryTotals.length === 0) return null;
+                                            const passedCount = categoryTotals.reduce((s,c)=>s + c.passed, 0);
+                                            const totalCount = categoryTotals.reduce((s,c)=>s + c.total, 0);
+                                            const hasErrors = passedCount < totalCount;
                                             
                                             return (
                                                 <div key={category} className="flex items-center justify-between text-xs">
@@ -7890,7 +7903,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                                         <span className={`mr-1 ${hasErrors ? 'text-red-500' : 'text-green-500'}`}>
                                                             {hasErrors ? '❌' : '✅'}
                                                         </span>
-                                                        <span className="text-gray-500">{passedCount}/{categoryChecks.length}</span>
+                                                        <span className="text-gray-500">{passedCount}/{totalCount}</span>
                                                     </div>
                                                 </div>
                                             );
@@ -7924,11 +7937,18 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                                 const categoryData = checkCategories[category];
                                                 if (!categoryData) return null;
                                                 
-                                                const categoryChecks = Object.entries(categoryData.checks).filter(([checkName]) => 
-                                                    healthData.checks.passedList.includes(checkName) || healthData.checks.failedList.includes(checkName)
-                                                );
-                                                
-                                                if (categoryChecks.length === 0) return null;
+                                                const entries = Object.entries(categoryData.checks);
+                                                const categoryTotals = entries.map(([checkName, description]) => {
+                                                    const agg = aggregate?.perCheck?.[checkName];
+                                                    if (agg && typeof agg.passed === 'number' && typeof agg.total === 'number') {
+                                                        return { checkName, description, passed: agg.passed, total: agg.total };
+                                                    }
+                                                    const isConsidered = (healthData.checks.passedList || []).includes(checkName) || (healthData.checks.failedList || []).includes(checkName);
+                                                    if (!isConsidered) return null;
+                                                    const isPassed = (healthData.checks.passedList || []).includes(checkName);
+                                                    return { checkName, description, passed: isPassed ? 1 : 0, total: 1 };
+                                                }).filter(Boolean);
+                                                if (categoryTotals.length === 0) return null;
                                                 
                                                 return (
                                                     <div key={category} className="space-y-2">
@@ -7937,13 +7957,15 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                                             {categoryData.title}
                                                         </h4>
                                                         <ul className="space-y-1.5">
-                                                            {categoryChecks.map(([checkName, description]) => {
-                                                                const isPassed = healthData.checks.passedList.includes(checkName);
+                                                            {categoryTotals.map(({ checkName, description, passed, total }) => {
+                                                                const pct = total > 0 ? (passed / total) * 100 : 0;
+                                                                const color = pct >= 90 ? 'text-green-300' : pct >= 70 ? 'text-yellow-300' : 'text-red-300';
+                                                                const icon = pct >= 90 ? '✅' : pct >= 70 ? '⚠️' : '❌';
                                                                 return (
                                                                     <li key={checkName} className="flex items-start text-xs leading-relaxed">
-                                                                        <span className="mr-2 flex-shrink-0 text-sm">{isPassed ? '✅' : '❌'}</span>
-                                                                        <span className={isPassed ? 'text-green-300' : 'text-red-300'}>
-                                                                            {description}
+                                                                        <span className="mr-2 flex-shrink-0 text-sm">{icon}</span>
+                                                                        <span className={color}>
+                                                                            {description} — {passed}/{total} ({pct.toFixed(0)}%)
                                                                         </span>
                                                                     </li>
                                                                 );
