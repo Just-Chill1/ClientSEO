@@ -4063,9 +4063,26 @@ const Dashboard = ({ setActiveTab }) => {
                     refreshMessage={overviewRefreshMessage}
                 />
                 
+                {/* Dashboard AI Report - SWOT Analysis */}
+                {(() => {
+                    console.log('Dashboard AI Report Debug:');
+                    console.log('- loading:', loading);
+                    console.log('- error:', error);
+                    console.log('- dashboardData:', dashboardData);
+                    console.log('- dashboardData.aiReport:', dashboardData?.aiReport);
+                    console.log('- Should render:', !loading && !error && dashboardData?.aiReport);
+                    return null;
+                })()}
                 {!loading && !error && dashboardData?.aiReport && (
                     <div className="col-span-12">
                        <AIReportSection reportText={dashboardData.aiReport} title="SWOT Analysis" />
+                    </div>
+                )}
+                {!loading && !error && !dashboardData?.aiReport && (
+                    <div className="col-span-12">
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <p className="text-yellow-800">Dashboard AI Report not available - dashboardData.aiReport is missing</p>
+                        </div>
                     </div>
                 )}
 
