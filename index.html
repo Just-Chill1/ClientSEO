@@ -1416,6 +1416,40 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
     );
 };
 
+/* Dual Report Section (Competitor Analysis + Error Report) */
+const DualReports = ({ competitorText, errorText }) => {
+    const [active, setActive] = useState('competitor');
+    const CardShell = ({ title, accent, preview, onClick, isActive }) => (
+        <div className={`cursor-pointer rounded-xl border p-4 transition-all ${isActive ? 'shadow-lg' : 'hover:shadow-md'} ${accent === 'blue' ? 'border-blue-200 hover:border-blue-300' : 'border-red-200 hover:border-red-300'}`} onClick={onClick}>
+            <div className="flex items-center justify-between">
+                <h3 className={`text-sm font-semibold ${accent === 'blue' ? 'text-blue-700' : 'text-red-700'}`}>{title}</h3>
+                <span className={`text-xs ${accent === 'blue' ? 'text-blue-500' : 'text-red-500'}`}>See more</span>
+            </div>
+            <p className="mt-2 text-sm text-gray-600 line-clamp-3 whitespace-pre-line">{preview || 'No report available yet.'}</p>
+        </div>
+    );
+    const Expanded = ({ title, accent, text }) => (
+        <div className={`mt-4 rounded-2xl border p-5 bg-white ${accent === 'blue' ? 'border-blue-200' : 'border-red-200'}`}>
+            <div className="flex items-center justify-between mb-2">
+                <h3 className={`text-lg font-bold ${accent === 'blue' ? 'text-blue-700' : 'text-red-700'}`}>{title}</h3>
+                <button onClick={() => setActive(null)} className="text-xs text-gray-500 hover:text-gray-700">Collapse</button>
+            </div>
+            <div className="prose max-w-none text-sm text-gray-800 whitespace-pre-line">{text || 'No report available yet.'}</div>
+        </div>
+    );
+
+    return (
+        <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <CardShell title="Competitor Analysis" accent="blue" preview={competitorText} onClick={() => setActive('competitor')} isActive={active==='competitor'} />
+                <CardShell title="Error Report" accent="red" preview={errorText} onClick={() => setActive('errors')} isActive={active==='errors'} />
+            </div>
+            {active === 'competitor' && <Expanded title="Competitor Analysis" accent="blue" text={competitorText} />}
+            {active === 'errors' && <Expanded title="Error Report" accent="red" text={errorText} />}
+        </div>
+    );
+};
+
 // --- AI Sentiment Components ---
 const AISentimentBubbleChart = ({ data, loading, error }) => {
     const { ResponsiveContainer, ScatterChart, CartesianGrid, XAxis, YAxis, Tooltip, Cell, Scatter } = window.Recharts;
@@ -8079,11 +8113,11 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                 </div>
             </div>
 
-            {/* AI Report Section */}
+            {/* Dual Reports: Competitor Analysis + Error Report */}
             <div className="mb-8">
-                <AIReportSection 
-                    reportText={aiReport || 'AI Report will appear here once generated in the On-Page Insights sheet (column CP)'} 
-                    title="AI-Powered Analysis" 
+                <DualReports 
+                    competitorText={aiReport || 'Competitor Analysis will appear when generated.'}
+                    errorText={healthData?.errorReport || 'Error Report will appear here once generated in Website Crawl Errors (J2).'}
                 />
             </div>
 
