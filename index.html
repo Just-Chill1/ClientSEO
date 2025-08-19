@@ -7844,8 +7844,9 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                         </div>
                                                 <div className="technical-checks-card bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 p-6 border border-gray-100 hover:border-blue-200/60 group relative hover:-translate-y-0.5 will-change-transform group-hover:z-50">
                             <div className="flex items-start justify-between mb-4">
-                                <div className={`p-3 rounded-xl ${checksPercentage >= 90 ? 'bg-green-100 text-green-600 group-hover:text-green-600' : checksPercentage >= 80 ? 'bg-green-100 text-green-600 group-hover:text-green-600' : checksPercentage >= 60 ? 'bg-yellow-100 text-yellow-600 group-hover:text-yellow-600' : 'bg-red-100 text-red-600 group-hover:text-red-600'}`}>
-                                    <CheckCircle className={`w-6 h-6 ${checksPercentage >= 90 ? 'text-green-600 group-hover:text-green-600' : checksPercentage >= 80 ? 'text-green-600 group-hover:text-green-600' : checksPercentage >= 60 ? 'text-yellow-600 group-hover:text-yellow-600' : 'text-red-600 group-hover:text-red-600'}`} />
+                                <div className={`p-3 rounded-xl ${checksPercentage >= 90 ? 'bg-green-100 text-green-600' : checksPercentage >= 70 ? 'bg-yellow-100 text-yellow-600' : 'bg-red-100 text-red-600'}`}>
+                                    {/* Keep icon color stable on hover */}
+                                    <CheckCircle className={`w-6 h-6 ${checksPercentage >= 90 ? 'text-green-600' : checksPercentage >= 70 ? 'text-yellow-600' : 'text-red-600'}`} />
                                 </div>
                             </div>
                             <div className="flex items-center space-x-2 mb-2">
@@ -7891,7 +7892,9 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                             if (categoryTotals.length === 0) return null;
                                             const passedCount = categoryTotals.reduce((s,c)=>s + c.passed, 0);
                                             const totalCount = categoryTotals.reduce((s,c)=>s + c.total, 0);
-                                            const hasErrors = passedCount < totalCount;
+                                            const pct = totalCount > 0 ? (passedCount/totalCount)*100 : 0;
+                                            const catColor = pct >= 90 ? 'text-green-500' : pct >= 70 ? 'text-yellow-500' : 'text-red-500';
+                                            const catIcon = pct >= 90 ? '✅' : pct >= 70 ? '⚠️' : '❌';
                                             
                                             return (
                                                 <div key={category} className="flex items-center justify-between text-xs">
@@ -7900,8 +7903,8 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                                         <span className="text-gray-600">{categoryData.title}</span>
                                                     </div>
                                                     <div className="flex items-center">
-                                                        <span className={`mr-1 ${hasErrors ? 'text-red-500' : 'text-green-500'}`}>
-                                                            {hasErrors ? '❌' : '✅'}
+                                                        <span className={`mr-1 ${catColor}`}>
+                                                            {catIcon}
                                                         </span>
                                                         <span className="text-gray-500">{passedCount}/{totalCount}</span>
                                                     </div>
@@ -7913,11 +7916,12 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                             </div>
                             
                             {/* Detailed Hover Tooltip – centred unless it would overflow right edge */}
-                            <div className="technical-checks-tooltip opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto group-hover:show w-[600px] max-w-[95vw] bg-gray-900 text-white text-sm rounded-xl shadow-2xl" style={{
+                            <div className="technical-checks-tooltip opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto group-hover:show w-[760px] max-w-[96vw] bg-gray-900 text-white text-sm rounded-xl shadow-2xl" style={{
                                 position: 'absolute',
                                 top: '100%',
                                 left: '50%',
-                                transform: 'translate(-50%, 16px)',
+                                // Bias slightly left to avoid right-edge cutoff
+                                transform: 'translate(calc(-50% - 40px), 16px)',
                                 zIndex: 999999,
                                 maxHeight: '80vh',
                                 margin: '0'

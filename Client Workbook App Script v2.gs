@@ -888,7 +888,9 @@ function getWebsiteCrawlPagesAggregate(spreadsheet) {
 	// Aliases to match UI check keys (left) to sheet columns (right)
 	const ALIASES = {
 		'has_favicon': 'no_favicon', // UI expects has_favicon; sheet provides no_favicon
-		'duplicate_meta_tag': 'duplicate_meta_tags' // singular vs plural
+		'duplicate_meta_tag': 'duplicate_meta_tags', // singular vs plural
+		'no_duplicate_meta_tags': 'duplicate_meta_tags', // inverted virtual check
+		'no_duplicate_titles': 'duplicate_title_tag' // inverted virtual check
 	};
 
 	// Build the final set of checks to consider
@@ -910,8 +912,8 @@ function getWebsiteCrawlPagesAggregate(spreadsheet) {
 		for (let i = 0; i < values.length; i++) {
 			const row = values[i];
 			const cell = row[colIdx];
-			// For aliased inverted checks like has_favicon (sheet no_favicon)
-			if (uiKey === 'has_favicon') {
+			// For aliased inverted checks
+			if (uiKey === 'has_favicon' || uiKey === 'no_duplicate_meta_tags' || uiKey === 'no_duplicate_titles') {
 				// Pass when no_favicon is FALSE
 				if (isFalsy(cell)) passed++;
 				total++;
