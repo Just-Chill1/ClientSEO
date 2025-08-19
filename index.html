@@ -8234,6 +8234,14 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                 </div>
             </div>
 
+            {/* Dual Reports: Competitor Analysis + Error Report */}
+            <div className="mb-8">
+                <DualReports 
+                    competitorText={aiReport || 'Competitor Analysis will appear when generated.'}
+                    errorText={healthData?.errorReport || 'Error Report will appear here once generated in Website Crawl Errors (J2).'}
+                />
+            </div>
+
             {/* Performance Comparison Section */}
             <div className="mb-8">
                 <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 dark:border-transparent">
@@ -8268,14 +8276,6 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                         />
                     </div>
                 </div>
-            </div>
-
-            {/* Dual Reports: Competitor Analysis + Error Report */}
-            <div className="mb-8">
-                <DualReports 
-                    competitorText={aiReport || 'Competitor Analysis will appear when generated.'}
-                    errorText={healthData?.errorReport || 'Error Report will appear here once generated in Website Crawl Errors (J2).'}
-                />
             </div>
 
                         {/* Modern Technical SEO Table */}
