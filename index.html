@@ -1507,13 +1507,13 @@ const DualReports = ({ competitorText, errorText }) => {
         .replace(/\*(.*?)\*/g, '<em>$1</em>');
 
     return (
-        <div className={`bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-200 ${
-            activeTabData?.color === 'blue' 
-                ? 'border-2 border-blue-200/60' 
-                : 'border-2 border-red-200/60'
-        }`}>
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden">
             {/* Modern Tab Headers */}
-            <div className="flex bg-gray-50/50 p-1">
+            <div className={`flex bg-gray-50/50 p-1 transition-all duration-200 ${
+                activeTabData?.color === 'blue' 
+                    ? 'border-2 border-blue-200/60 rounded-t-2xl' 
+                    : 'border-2 border-red-200/60 rounded-t-2xl'
+            }`}>
                 {tabs.map((tab, index) => (
                     <button
                         key={tab.id}
@@ -1582,23 +1582,31 @@ const DualReports = ({ competitorText, errorText }) => {
 
             {/* Content Area */}
             <div 
-                className="p-6 cursor-pointer" 
+                className={`p-6 cursor-pointer transition-all duration-200 ${
+                    activeTabData?.color === 'blue' 
+                        ? 'border-l-2 border-r-2 border-b-2 border-blue-200/60 rounded-b-2xl' 
+                        : 'border-l-2 border-r-2 border-b-2 border-red-200/60 rounded-b-2xl'
+                }`}
                 onClick={(e) => {
-                    // Only toggle if clicking on blank space (not on text elements)
-                    if (e.target === e.currentTarget || e.target.closest('.report-blank-area')) {
+                    // Only toggle if clicking directly on the content area or blank space
+                    const isTextElement = e.target.tagName === 'STRONG' || e.target.tagName === 'EM' || 
+                                        e.target.tagName === 'P' || e.target.tagName === 'SPAN' ||
+                                        e.target.closest('[data-text-content="true"]');
+                    
+                    if (!isTextElement) {
                         handleToggleExpand();
                     }
                 }}
             >
                 {/* Preview/Summary when collapsed */}
                 {!isExpanded && (
-                    <div className="space-y-4 report-blank-area">
+                    <div className="space-y-4">
                         <div className="relative">
                             <div 
-                                className="text-sm text-gray-700 leading-relaxed overflow-hidden select-text"
+                                className="text-sm text-gray-700 leading-relaxed overflow-hidden select-text cursor-text"
                                 style={{ maxHeight: '120px' }}
                                 dangerouslySetInnerHTML={{ __html: formattedContent }}
-                                onClick={(e) => e.stopPropagation()}
+                                data-text-content="true"
                             />
                             <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
                         </div>
@@ -1607,11 +1615,11 @@ const DualReports = ({ competitorText, errorText }) => {
 
                 {/* Full content when expanded */}
                 {isExpanded && (
-                    <div className="space-y-4 report-blank-area">
+                    <div className="space-y-4">
                         <div 
-                            className="prose prose-sm max-w-none text-gray-700 leading-relaxed select-text"
+                            className="prose prose-sm max-w-none text-gray-700 leading-relaxed select-text cursor-text"
                             dangerouslySetInnerHTML={{ __html: formattedContent }}
-                            onClick={(e) => e.stopPropagation()}
+                            data-text-content="true"
                         />
                     </div>
                 )}
