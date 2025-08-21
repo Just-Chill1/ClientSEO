@@ -1507,7 +1507,11 @@ const DualReports = ({ competitorText, errorText }) => {
         .replace(/\*(.*?)\*/g, '<em>$1</em>');
 
     return (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden">
+        <div className={`bg-white rounded-2xl shadow-lg overflow-hidden transition-all duration-200 ${
+            activeTabData?.color === 'blue' 
+                ? 'border-2 border-blue-200/60' 
+                : 'border-2 border-red-200/60'
+        }`}>
             {/* Modern Tab Headers */}
             <div className="flex bg-gray-50/50 p-1">
                 {tabs.map((tab, index) => (
@@ -1577,15 +1581,24 @@ const DualReports = ({ competitorText, errorText }) => {
             </div>
 
             {/* Content Area */}
-            <div className="p-6">
+            <div 
+                className="p-6 cursor-pointer" 
+                onClick={(e) => {
+                    // Only toggle if clicking on blank space (not on text elements)
+                    if (e.target === e.currentTarget || e.target.closest('.report-blank-area')) {
+                        handleToggleExpand();
+                    }
+                }}
+            >
                 {/* Preview/Summary when collapsed */}
                 {!isExpanded && (
-                    <div className="space-y-4">
+                    <div className="space-y-4 report-blank-area">
                         <div className="relative">
                             <div 
-                                className="text-sm text-gray-700 leading-relaxed overflow-hidden"
+                                className="text-sm text-gray-700 leading-relaxed overflow-hidden select-text"
                                 style={{ maxHeight: '120px' }}
                                 dangerouslySetInnerHTML={{ __html: formattedContent }}
+                                onClick={(e) => e.stopPropagation()}
                             />
                             <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
                         </div>
@@ -1594,10 +1607,11 @@ const DualReports = ({ competitorText, errorText }) => {
 
                 {/* Full content when expanded */}
                 {isExpanded && (
-                    <div className="space-y-4">
+                    <div className="space-y-4 report-blank-area">
                         <div 
-                            className="prose prose-sm max-w-none text-gray-700 leading-relaxed"
+                            className="prose prose-sm max-w-none text-gray-700 leading-relaxed select-text"
                             dangerouslySetInnerHTML={{ __html: formattedContent }}
+                            onClick={(e) => e.stopPropagation()}
                         />
                     </div>
                 )}
