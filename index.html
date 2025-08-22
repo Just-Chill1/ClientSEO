@@ -1507,11 +1507,13 @@ const DualReports = ({ competitorText, errorText }) => {
         .replace(/\*(.*?)\*/g, '<em>$1</em>');
 
     return (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden">
+        <div className={`rounded-2xl shadow-lg overflow-hidden transition-all duration-300 ${
+            activeTabData?.color === 'blue' 
+                ? 'bg-blue-50/30 border-2 border-blue-200/60' 
+                : 'bg-red-50/30 border-2 border-red-200/60'
+        }`}>
             {/* Modern Tab Headers */}
-            <div className={`flex bg-white p-1 rounded-t-2xl ${
-                activeTab === 'competitor' ? 'border-2 border-blue-300' : 'border-2 border-red-300'
-            }`}>
+            <div className="flex bg-white/80 backdrop-blur-sm p-1 rounded-t-xl">
                 {tabs.map((tab, index) => (
                     <button
                         key={tab.id}
@@ -1521,7 +1523,7 @@ const DualReports = ({ competitorText, errorText }) => {
                         } ${
                             activeTab === tab.id
                                 ? `bg-white shadow-sm ${tab.color === 'blue' ? 'text-blue-700 font-semibold' : 'text-red-700 font-semibold'}`
-                                : `${tab.color === 'blue' ? 'text-blue-600 border-b-2 border-blue-300' : 'text-red-600 border-b-2 border-red-300'}`
+                                : `${tab.color === 'blue' ? 'text-blue-600 hover:text-blue-700 hover:bg-blue-50/50' : 'text-red-600 hover:text-red-700 hover:bg-red-50/50'}`
                         }`}
                     >
                         <div className="flex items-center justify-between">
@@ -1579,25 +1581,27 @@ const DualReports = ({ competitorText, errorText }) => {
             </div>
 
             {/* Content Area */}
-            <div 
-                className={`rounded-b-2xl ${activeTab === 'competitor' ? 'border-x-2 border-b-2 border-blue-300' : 'border-x-2 border-b-2 border-red-300'}`}
-                onClick={handleToggleExpand}
-                role="button"
-                aria-label={isExpanded ? 'Collapse report' : 'Expand report'}
-                style={{ cursor: 'default' }}
-            >
+            <div className="bg-white rounded-b-xl">
                 <div className="p-6">
                     {/* Preview/Summary when collapsed */}
                     {!isExpanded && (
                         <div className="space-y-4">
                             <div className="relative">
+                                {/* Text content */}
                                 <div 
-                                    className="text-sm text-gray-700 leading-relaxed overflow-hidden select-text"
+                                    className="text-sm text-gray-700 leading-relaxed overflow-hidden select-text cursor-text"
                                     style={{ maxHeight: '120px' }}
                                     dangerouslySetInnerHTML={{ __html: formattedContent }}
-                                    onClick={(e)=>e.stopPropagation()}
                                 />
                                 <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+                            </div>
+                            
+                            {/* Clickable area to expand */}
+                            <div 
+                                className="text-center py-2 cursor-pointer hover:bg-gray-50 rounded-lg transition-colors text-gray-500 text-sm"
+                                onClick={handleToggleExpand}
+                            >
+                                Click anywhere here to expand
                             </div>
                         </div>
                     )}
@@ -1605,11 +1609,19 @@ const DualReports = ({ competitorText, errorText }) => {
                     {/* Full content when expanded */}
                     {isExpanded && (
                         <div className="space-y-4">
+                            {/* Text content */}
                             <div 
-                                className="prose prose-sm max-w-none text-gray-700 leading-relaxed select-text"
+                                className="prose prose-sm max-w-none text-gray-700 leading-relaxed select-text cursor-text"
                                 dangerouslySetInnerHTML={{ __html: formattedContent }}
-                                onClick={(e)=>e.stopPropagation()}
                             />
+                            
+                            {/* Clickable area to collapse */}
+                            <div 
+                                className="text-center py-2 cursor-pointer hover:bg-gray-50 rounded-lg transition-colors text-gray-500 text-sm"
+                                onClick={handleToggleExpand}
+                            >
+                                Click here to collapse
+                            </div>
                         </div>
                     )}
                 </div>
