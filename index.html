@@ -2063,10 +2063,10 @@ const AISentimentBarChart = ({ data, loading, error }) => {
             });
         }
         
-        // Compute signed sentiment score like bubble chart: strength × sign × 100
-        const chatGptScore = (chatGptData.strength || 0) * ((chatGptData.sentiment >= 0 ? 1 : -1)) * 100;
-        const geminiScore  = (geminiData.strength  || 0) * ((geminiData.sentiment  >= 0 ? 1 : -1)) * 100;
-        const perplexityScore = (perplexityData.strength || 0) * ((perplexityData.sentiment >= 0 ? 1 : -1)) * 100;
+        // Use absolute strength values for bars (always positive direction)
+        const chatGptScore = (chatGptData.strength || 0) * 100;
+        const geminiScore  = (geminiData.strength  || 0) * 100;
+        const perplexityScore = (perplexityData.strength || 0) * 100;
         
         const result = {
             clinicName: item.clinicName,
