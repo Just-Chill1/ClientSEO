@@ -292,7 +292,7 @@ function getAiSentimentData(spreadsheet) {
         return [];
     }
     
-    const values = sheet.getRange('A2:V' + sheet.getLastRow()).getValues();
+    const values = sheet.getRange('A2:AB' + sheet.getLastRow()).getValues();
     console.log('AI Sentiment data rows:', values.length);
     
     return values.map((row, index) => {
@@ -316,7 +316,10 @@ function getAiSentimentData(spreadsheet) {
         const geminiAppearance = parseFloat(row[21]) || 0;      // Column V - Gemini Appearance
         
         // NEW: Perplexity data - user mentioned these headers: Perplexity Summary, Perplexity Sentiment, Perplexity Strength, Perplexity Confidence, Perplexity Visability, Perplexity Appearance
-        const perplexitySentiment = parseFloat(row[23]) || 0;   // Column X - Perplexity Sentiment
+        // Handle string sentiment values: "Positive" = 1, "Negative" = -1, "Undefined" = 0
+        const perplexitySentimentRaw = String(row[23] || '').trim().toLowerCase();
+        const perplexitySentiment = perplexitySentimentRaw === 'positive' ? 1 : 
+                                   perplexitySentimentRaw === 'negative' ? -1 : 0;
         const perplexityStrength = parseFloat(row[24]) || 0;    // Column Y - Perplexity Strength  
         const perplexityConfidence = parseFloat(row[25]) || 0;  // Column Z - Perplexity Confidence
         const perplexityVisibility = parseFloat(row[26]) || 0;  // Column AA - Perplexity Visibility
@@ -330,6 +333,19 @@ function getAiSentimentData(spreadsheet) {
         const chatGptSignedSentiment = chatGptStrength * chatGptSentimentSign;
         const geminiSignedSentiment = geminiStrength * geminiSentimentSign;
         const perplexitySignedSentiment = perplexityStrength * perplexitySentimentSign;
+        
+        // Debug logging for Perplexity data
+        if (accountType === 'Client') {
+            console.log('Perplexity Debug for Client:', {
+                rawSentiment: row[23],
+                parsedSentiment: perplexitySentiment,
+                strength: perplexityStrength,
+                confidence: perplexityConfidence,
+                visibility: perplexityVisibility,
+                appearance: perplexityAppearance,
+                signedSentiment: perplexitySignedSentiment
+            });
+        }
         
         return {
             accountType: accountType,

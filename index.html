@@ -1719,6 +1719,17 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
             return null;
         }
         
+        // Debug logging for Perplexity data in bubble chart
+        if (item.isClient && selectedPlatform === 'perplexity') {
+            console.log('Bubble Chart Perplexity Debug for Client:', {
+                platformData: platformData,
+                signedSentiment: platformData.signedSentiment,
+                visibility: platformData.visibility,
+                strength: platformData.strength,
+                sentiment: platformData.sentiment
+            });
+        }
+        
         const sentScore = platformData.strength * (platformData.sentiment >= 0 ? 1 : -1) * 100;
         
         // Assign colors: client gets blue, competitors get different colors
@@ -2041,6 +2052,17 @@ const AISentimentBarChart = ({ data, loading, error }) => {
         const geminiData = item.gemini || {};
         const perplexityData = item.perplexity || {};
         
+        // Debug logging for Perplexity data
+        if (item.isClient) {
+            console.log('Frontend Perplexity Debug for Client:', {
+                perplexityData: perplexityData,
+                visibility: perplexityData.visibility,
+                strength: perplexityData.strength,
+                sentiment: perplexityData.sentiment,
+                signedSentiment: perplexityData.signedSentiment
+            });
+        }
+        
         // Compute signed sentiment score like bubble chart: strength × sign × 100
         const chatGptScore = (chatGptData.strength || 0) * ((chatGptData.sentiment >= 0 ? 1 : -1)) * 100;
         const geminiScore  = (geminiData.strength  || 0) * ((geminiData.sentiment  >= 0 ? 1 : -1)) * 100;
@@ -2176,7 +2198,7 @@ const AISentimentBarChart = ({ data, loading, error }) => {
                 <div className="w-full h-full">
                     <div className="w-full h-full relative">
                         {/* X-axis label */}
-                        <div className="absolute left-[55%] transform -translate-x-1/2 text-sm font-normal" style={{ color: 'var(--text-primary)', bottom: '8px' }}>
+                        <div className="absolute left-[55%] transform -translate-x-1/2 text-sm font-normal" style={{ color: 'var(--text-primary)', bottom: '28px', left: 'calc(55% - 10px)' }}>
                             Sentiment
                         </div>
                         <div className="h-full pb-8">
