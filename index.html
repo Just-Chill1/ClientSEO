@@ -5206,7 +5206,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
     );
 };
 
-const Backlinks = () => {
+const Backlinks = ({ webhooks }) => {
     // Destructure chart components here, as they are only used in this component.
     const { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } = window.Recharts;
 
@@ -5285,8 +5285,16 @@ const Backlinks = () => {
     // Refresh functionality
     const triggerRefresh = async () => {
         console.log('Backlinks refresh triggered');
+        console.log('Webhooks data:', webhooks);
         
-        const webhookUrl = 'https://hook.us1.make.com/r6f9bfom4a3tflibf7hdpkuz928klx1p';
+        // Use the new n8n webhook URL from Config tab, or fallback to direct URL
+        const webhookUrl = webhooks?.Backlinks || 'https://n8n.foreverbooked.com/webhook/90c4abee-7fac-416e-90e2-96d93fb2ae0f';
+        
+        if (!webhookUrl) {
+            alert('Refresh webhook not configured for backlinks');
+            console.log('Webhook check failed. Webhooks:', webhooks);
+            return;
+        }
         
         setIsRefreshing(true);
         setRefreshProgress(5);
@@ -5314,6 +5322,7 @@ const Backlinks = () => {
             
             // Show success message
             console.log('Backlinks webhook triggered successfully!');
+            console.log('Webhook response status:', response.status);
             
             setRefreshProgress(15);
             setRefreshMessage('Backlinks automation started! (~10s expected)...');
@@ -5680,11 +5689,12 @@ const Backlinks = () => {
                         
                         <button 
                             onClick={isRefreshing ? cancelRefresh : triggerRefresh}
+                            disabled={!webhooks && !webhooks?.Backlinks}
                             className={`px-6 py-2 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl ${
                                 isRefreshing 
                                     ? 'bg-red-500 hover:bg-red-600 text-white' 
                                     : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
-                            }`}
+                            } disabled:opacity-50 disabled:cursor-not-allowed`}
                         >
                             {isRefreshing ? 'Cancel' : 'Update Analytics'}
                         </button>
@@ -8637,7 +8647,7 @@ const App = () => {
         );
         break;
       case 'Backlinks':
-        body = <Backlinks />;
+        body = <Backlinks webhooks={data?.webhooks} />;
         break;
       default:
         body = <ToolsPage />;
