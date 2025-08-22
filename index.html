@@ -867,6 +867,47 @@
      [data-theme="dark"] .hover\\:text-black:hover { color: var(--text-primary) !important; }
      [data-theme="dark"] .hover\\:bg-gray-50:hover { background-color: var(--btn-secondary-hover) !important; }
      
+     /* Dual Reports Component - Override theme rules for proper light/dark mode */
+     .dual-reports-header {
+       background-color: rgba(255, 255, 255, 0.8) !important;
+     }
+     [data-theme="dark"] .dual-reports-header {
+       background-color: rgba(55, 65, 81, 0.8) !important;
+     }
+     
+     .dual-reports-content {
+       background-color: white !important;
+     }
+     [data-theme="dark"] .dual-reports-content {
+       background-color: var(--card-bg) !important;
+     }
+
+     /* Fix active tab styling */
+     .dual-reports-active-tab {
+       background-color: white !important;
+     }
+     [data-theme="dark"] .dual-reports-active-tab {
+       background-color: rgba(55, 65, 81, 1) !important;
+     }
+
+     /* Fix hover colors for dual reports buttons */
+     [data-theme="dark"] .dual-reports-hover-blue:hover {
+       background-color: rgba(55, 65, 81, 1) !important;
+     }
+     [data-theme="dark"] .dual-reports-hover-red:hover {
+       background-color: rgba(55, 65, 81, 1) !important;
+     }
+     
+     /* Fix action button hover colors */
+     [data-theme="dark"] .dual-reports-action-hover:hover {
+       background-color: rgba(75, 85, 99, 1) !important;
+     }
+     
+     /* Fix show more/less button hover colors */
+     [data-theme="dark"] .dual-reports-show-more:hover {
+       background-color: rgba(55, 65, 81, 1) !important;
+     }
+     
      /* Light mode uses default Tailwind .text-black; no override needed */
   </style>
   
@@ -1513,7 +1554,7 @@ const DualReports = ({ competitorText, errorText }) => {
                 : 'bg-red-50/30 border-2 border-red-200/60 dark:bg-red-900/20 dark:border-red-700/60'
         }`}>
             {/* Modern Tab Headers */}
-            <div className="flex bg-white/80 backdrop-blur-sm p-1 rounded-t-xl dark:bg-gray-800/80">
+            <div className="flex bg-white/80 backdrop-blur-sm p-1 rounded-t-xl dark:bg-gray-800/80 dual-reports-header">
                 {tabs.map((tab, index) => (
                     <button
                         key={tab.id}
@@ -1522,8 +1563,8 @@ const DualReports = ({ competitorText, errorText }) => {
                             index === 0 ? 'rounded-l-xl' : 'rounded-r-xl'
                         } ${
                             activeTab === tab.id
-                                ? `bg-white shadow-sm ${tab.color === 'blue' ? 'text-blue-700 font-semibold' : 'text-red-700 font-semibold'} dark:bg-gray-700 ${tab.color === 'blue' ? 'dark:text-blue-400' : 'dark:text-red-400'}`
-                                : `${tab.color === 'blue' ? 'text-blue-600 hover:text-blue-700 hover:bg-blue-50/50' : 'text-red-600 hover:text-red-700 hover:bg-red-50/50'} ${tab.color === 'blue' ? 'dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-gray-700' : 'dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-gray-700'}`
+                                ? `bg-white shadow-sm ${tab.color === 'blue' ? 'text-blue-700 font-semibold' : 'text-red-700 font-semibold'} dual-reports-active-tab`
+                                : `${tab.color === 'blue' ? 'text-blue-600 hover:text-blue-700 hover:bg-blue-50/50 dual-reports-hover-blue' : 'text-red-600 hover:text-red-700 hover:bg-red-50/50 dual-reports-hover-red'}`
                         }`}
                     >
                         <div className="flex items-center justify-between">
@@ -1535,7 +1576,7 @@ const DualReports = ({ competitorText, errorText }) => {
                                         e.stopPropagation();
                                         handleToggleExpand();
                                     }}
-                                    className={`p-1 rounded-md transition-colors ${tab.color === 'blue' ? 'text-blue-600 hover:text-blue-800 hover:bg-blue-50' : 'text-red-600 hover:text-red-800 hover:bg-red-50'} ${tab.color === 'blue' ? 'dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-gray-600' : 'dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-gray-600'}`}
+                                    className={`p-1 rounded-md transition-colors ${tab.color === 'blue' ? 'text-blue-600 hover:text-blue-800 hover:bg-blue-50' : 'text-red-600 hover:text-red-800 hover:bg-red-50'} dual-reports-action-hover`}
                                     title={isExpanded ? "Show less" : "Show more"}
                                 >
                                     {isExpanded ? (
@@ -1553,8 +1594,8 @@ const DualReports = ({ competitorText, errorText }) => {
                                     }}
                                     className={`p-1 rounded-md transition-colors ${
                                         copySuccess === activeTab
-                                            ? 'text-green-600 dark:text-green-400'
-                                            : `${tab.color === 'blue' ? 'text-blue-600 hover:text-blue-800 hover:bg-blue-50' : 'text-red-600 hover:text-red-800 hover:bg-red-50'} ${tab.color === 'blue' ? 'dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-gray-600' : 'dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-gray-600'}`
+                                            ? 'text-green-600'
+                                            : `${tab.color === 'blue' ? 'text-blue-600 hover:text-blue-800 hover:bg-blue-50' : 'text-red-600 hover:text-red-800 hover:bg-red-50'} dual-reports-action-hover`
                                     }`}
                                     title="Copy report"
                                 >
@@ -1569,7 +1610,7 @@ const DualReports = ({ competitorText, errorText }) => {
                                         e.stopPropagation();
                                         handleDownloadReport();
                                     }}
-                                    className={`p-1 rounded-md transition-colors ${tab.color === 'blue' ? 'text-blue-600 hover:text-blue-800 hover:bg-blue-50' : 'text-red-600 hover:text-red-800 hover:bg-red-50'} ${tab.color === 'blue' ? 'dark:text-blue-400 dark:hover:text-blue-300 dark:hover:bg-gray-600' : 'dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-gray-600'}`}
+                                    className={`p-1 rounded-md transition-colors ${tab.color === 'blue' ? 'text-blue-600 hover:text-blue-800 hover:bg-blue-50' : 'text-red-600 hover:text-red-800 hover:bg-red-50'} dual-reports-action-hover`}
                                     title="Download report as text file"
                                 >
                                     <Download className="w-4 h-4" />
@@ -1581,7 +1622,7 @@ const DualReports = ({ competitorText, errorText }) => {
             </div>
 
             {/* Content Area */}
-            <div className="bg-white rounded-b-xl dark:bg-gray-800">
+            <div className="bg-white rounded-b-xl dark:bg-gray-800 dual-reports-content">
                 <div className="p-6">
                     {/* Preview/Summary when collapsed */}
                     {!isExpanded && (
@@ -1598,7 +1639,7 @@ const DualReports = ({ competitorText, errorText }) => {
                             
                             {/* Clickable area to expand */}
                             <div 
-                                className="text-center py-1 cursor-pointer hover:bg-blue-50 rounded-lg transition-colors text-gray-500 text-sm dark:hover:bg-gray-700 dark:text-gray-400"
+                                className="text-center py-1 cursor-pointer hover:bg-blue-50 rounded-lg transition-colors text-gray-500 text-sm dual-reports-show-more"
                                 onClick={handleToggleExpand}
                             >
                                 Show More
@@ -1617,7 +1658,7 @@ const DualReports = ({ competitorText, errorText }) => {
                             
                             {/* Clickable area to collapse */}
                             <div 
-                                className="text-center py-1 cursor-pointer hover:bg-blue-50 rounded-lg transition-colors text-gray-500 text-sm dark:hover:bg-gray-700 dark:text-gray-400"
+                                className="text-center py-1 cursor-pointer hover:bg-blue-50 rounded-lg transition-colors text-gray-500 text-sm dual-reports-show-more"
                                 onClick={handleToggleExpand}
                             >
                                 Show Less
