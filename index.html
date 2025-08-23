@@ -867,14 +867,17 @@
      [data-theme="dark"] .hover\\:text-black:hover { color: var(--text-primary) !important; }
      [data-theme="dark"] .hover\\:bg-gray-50:hover { background-color: var(--btn-secondary-hover) !important; }
      
-     /* Dual Reports Component - Override theme rules for proper light/dark mode */
+     /* Dual Reports Component - Comprehensive styling for light/dark modes */
+     
+     /* Header container styling */
      .dual-reports-header {
-       background-color: rgba(255, 255, 255, 0.8) !important;
+       background-color: #f8fafc !important; /* Light gray background */
      }
      [data-theme="dark"] .dual-reports-header {
-       background-color: rgba(55, 65, 81, 0.8) !important;
+       background-color: #1e293b !important; /* Dark slate background */
      }
      
+     /* Content area styling */
      .dual-reports-content {
        background-color: white !important;
      }
@@ -882,33 +885,72 @@
        background-color: var(--card-bg) !important;
      }
 
-     /* Fix active tab styling */
-     .dual-reports-active-tab {
-       background-color: white !important;
+     /* Tab button backgrounds - Competitor Analysis (Blue) */
+     .dual-reports-tab-blue {
+       background-color: #eff5ff !important; /* Light blue fill */
+       color: #3b82f6 !important; /* Better blue color */
      }
-     [data-theme="dark"] .dual-reports-active-tab {
-       background-color: rgba(55, 65, 81, 1) !important;
+     [data-theme="dark"] .dual-reports-tab-blue {
+       background-color: #23314e !important; /* Dark blue fill */
+       color: #3b82f6 !important; /* Same blue for consistency */
      }
 
-     /* Fix hover colors for dual reports buttons */
-     [data-theme="dark"] .dual-reports-hover-blue:hover {
-       background-color: rgba(55, 65, 81, 1) !important;
+     /* Tab button backgrounds - Error Report (Red) */
+     .dual-reports-tab-red {
+       background-color: #fef2f2 !important; /* Light red fill */
+       color: #dc2626 !important;
      }
-     [data-theme="dark"] .dual-reports-hover-red:hover {
-       background-color: rgba(55, 65, 81, 1) !important;
+     [data-theme="dark"] .dual-reports-tab-red {
+       background-color: #4a1d1d !important; /* Dark red fill */
+       color: #f87171 !important; /* Lighter red for dark mode */
+     }
+
+     /* Active tab styling */
+     .dual-reports-active-tab {
+       background-color: white !important;
+       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+     }
+     [data-theme="dark"] .dual-reports-active-tab {
+       background-color: var(--card-bg) !important;
+       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+     }
+
+     /* Remove hover effects - no more hover backgrounds */
+     .dual-reports-tab-blue:hover,
+     .dual-reports-tab-red:hover {
+       opacity: 0.9;
      }
      
-     /* Fix action button hover colors */
-     [data-theme="dark"] .dual-reports-action-hover:hover {
-       background-color: rgba(75, 85, 99, 1) !important;
+     /* Fix text content styling */
+     .dual-reports-text {
+       color: #374151 !important; /* Dark gray for light mode */
+     }
+     [data-theme="dark"] .dual-reports-text {
+       color: #d1d5db !important; /* Light gray for dark mode */
      }
      
-     /* Fix show more/less button hover colors */
+     /* Fix gradient fade for light/dark modes */
+     .dual-reports-fade-light {
+       background: linear-gradient(to top, white, transparent) !important;
+     }
+     [data-theme="dark"] .dual-reports-fade-light {
+       background: linear-gradient(to top, var(--card-bg), transparent) !important;
+     }
+     
+     /* Show more button styling */
+     .dual-reports-show-more {
+       color: #6b7280 !important;
+     }
+     [data-theme="dark"] .dual-reports-show-more {
+       color: #9ca3af !important;
+     }
+     
+     .dual-reports-show-more:hover {
+       background-color: #f3f4f6 !important;
+     }
      [data-theme="dark"] .dual-reports-show-more:hover {
-       background-color: rgba(55, 65, 81, 1) !important;
+       background-color: #374151 !important;
      }
-     
-     /* Light mode uses default Tailwind .text-black; no override needed */
   </style>
   
   <!-- Non-critical CSS loaded after page load -->
@@ -1548,23 +1590,19 @@ const DualReports = ({ competitorText, errorText }) => {
         .replace(/\*(.*?)\*/g, '<em>$1</em>');
 
     return (
-        <div className={`rounded-2xl shadow-lg overflow-hidden transition-all duration-300 ${
-            activeTabData?.color === 'blue' 
-                ? 'bg-blue-50/30 border-2 border-blue-200/60 dark:bg-blue-900/20 dark:border-blue-700/60' 
-                : 'bg-red-50/30 border-2 border-red-200/60 dark:bg-red-900/20 dark:border-red-700/60'
-        }`}>
+        <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-300 bg-white dark:bg-gray-800">
             {/* Modern Tab Headers */}
-            <div className="flex bg-white/80 backdrop-blur-sm p-1 rounded-t-xl dark:bg-gray-800/80 dual-reports-header">
+            <div className="flex p-1 rounded-t-xl dual-reports-header">
                 {tabs.map((tab, index) => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`flex-1 relative px-6 py-3 text-sm font-medium transition-all duration-200 ${
+                        className={`flex-1 relative px-6 py-4 text-base font-semibold transition-all duration-200 ${
                             index === 0 ? 'rounded-l-xl' : 'rounded-r-xl'
                         } ${
                             activeTab === tab.id
-                                ? `bg-white shadow-sm ${tab.color === 'blue' ? 'text-blue-700 font-semibold' : 'text-red-700 font-semibold'} dual-reports-active-tab`
-                                : `${tab.color === 'blue' ? 'text-blue-600 hover:text-blue-700 hover:bg-blue-50/50 dual-reports-hover-blue' : 'text-red-600 hover:text-red-700 hover:bg-red-50/50 dual-reports-hover-red'}`
+                                ? 'dual-reports-active-tab'
+                                : tab.color === 'blue' ? 'dual-reports-tab-blue' : 'dual-reports-tab-red'
                         }`}
                     >
                         <div className="flex items-center justify-between">
@@ -1622,7 +1660,7 @@ const DualReports = ({ competitorText, errorText }) => {
             </div>
 
             {/* Content Area */}
-            <div className="bg-white rounded-b-xl dark:bg-gray-800 dual-reports-content">
+            <div className="rounded-b-xl dual-reports-content">
                 <div className="p-6">
                     {/* Preview/Summary when collapsed */}
                     {!isExpanded && (
@@ -1630,16 +1668,16 @@ const DualReports = ({ competitorText, errorText }) => {
                             <div className="relative">
                                 {/* Text content */}
                                 <div 
-                                    className="text-sm text-gray-700 leading-relaxed overflow-hidden select-text cursor-text dark:text-gray-300"
+                                    className="text-sm leading-relaxed overflow-hidden select-text cursor-text dual-reports-text"
                                     style={{ maxHeight: '120px' }}
                                     dangerouslySetInnerHTML={{ __html: formattedContent }}
                                 />
-                                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white to-transparent pointer-events-none dark:from-gray-800"></div>
+                                <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none dual-reports-fade-light"></div>
                             </div>
                             
                             {/* Clickable area to expand */}
                             <div 
-                                className="text-center py-1 cursor-pointer hover:bg-blue-50 rounded-lg transition-colors text-gray-500 text-sm dual-reports-show-more"
+                                className="text-center py-2 cursor-pointer rounded-lg transition-colors text-sm dual-reports-show-more"
                                 onClick={handleToggleExpand}
                             >
                                 Show More
@@ -1652,13 +1690,13 @@ const DualReports = ({ competitorText, errorText }) => {
                         <div className="space-y-2">
                             {/* Text content */}
                             <div 
-                                className="prose prose-sm max-w-none text-gray-700 leading-relaxed select-text cursor-text dark:text-gray-300"
+                                className="prose prose-sm max-w-none leading-relaxed select-text cursor-text dual-reports-text"
                                 dangerouslySetInnerHTML={{ __html: formattedContent }}
                             />
                             
                             {/* Clickable area to collapse */}
                             <div 
-                                className="text-center py-1 cursor-pointer hover:bg-blue-50 rounded-lg transition-colors text-gray-500 text-sm dual-reports-show-more"
+                                className="text-center py-2 cursor-pointer rounded-lg transition-colors text-sm dual-reports-show-more"
                                 onClick={handleToggleExpand}
                             >
                                 Show Less
