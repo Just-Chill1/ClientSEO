@@ -5325,7 +5325,7 @@ const Backlinks = ({ webhooks }) => {
             console.log('Webhook response status:', response.status);
             
             setRefreshProgress(15);
-            setRefreshMessage('Backlinks automation started! (~10s expected)...');
+            setRefreshMessage('In Progress, Check back in 1.30min...');
             
             // Start polling for data changes
             startPolling();
@@ -5341,20 +5341,20 @@ const Backlinks = ({ webhooks }) => {
 
     const startPolling = () => {
         let attempts = 0;
-        const maxAttempts = 3; // Poll for ~1.5 minutes (30s intervals) since backlinks completes in ~10s
+        const maxAttempts = 6; // Poll for ~3 minutes (30s intervals) since backlinks now takes ~1.5 minutes
         
         const poll = async () => {
             attempts++;
             const elapsed = (Date.now() - refreshStartTimeRef.current) / 1000;
-            const progress = Math.min(15 + (attempts * 20), 95);
+            const progress = Math.min(15 + (attempts * 12), 95); // Slower progress for longer duration
             
             setRefreshProgress(progress);
             
             let message;
-            if (elapsed < 15) {
-                message = `Backlinks automation running... (~10s expected)`;
+            if (elapsed < 90) { // First 1.5 minutes
+                message = `Backlinks automation running... (~1.30min expected)`;
             } else {
-                message = `Checking for data updates...`;
+                message = `Finalizing AI report and checking for completion...`;
             }
             setRefreshMessage(message);
             
@@ -5374,7 +5374,7 @@ const Backlinks = ({ webhooks }) => {
                         // Data has changed! Stop polling and update in-place
                         clearInterval(pollIntervalRef.current);
                         setRefreshProgress(100);
-                        setRefreshMessage('Backlinks updated! Loading fresh data...');
+                        setRefreshMessage('AI report complete! Loading fresh data...');
                         
                         // Update the data in-place
                         const newBacklinksData = {
@@ -5473,8 +5473,12 @@ const Backlinks = ({ webhooks }) => {
     };
 
     const hasBacklinksDataChanged = (oldData, newData) => {
-        // Check if any key backlinks data has changed
-        const hasChanges = (
+        // Primary check: Has the AI report been generated? This indicates completion
+        const hasAiReport = newData?.backlinksSummary?.backlinksAiReport && 
+                           String(newData.backlinksSummary.backlinksAiReport).trim() !== '';
+        
+        // Secondary check: Has other key backlinks data changed (as backup)
+        const hasDataChanges = (
             oldData?.backlinksSummary?.totalBacklinks !== newData?.backlinksSummary?.totalBacklinks ||
             oldData?.backlinksSummary?.newLinks !== newData?.backlinksSummary?.newLinks ||
             oldData?.backlinksSummary?.lostLinks !== newData?.backlinksSummary?.lostLinks ||
@@ -5483,8 +5487,14 @@ const Backlinks = ({ webhooks }) => {
             JSON.stringify(oldData?.backlinksTable) !== JSON.stringify(newData?.backlinksTable)
         );
         
-        console.log('Backlinks change detected:', hasChanges);
-        return hasChanges;
+        console.log('Backlinks polling check:', {
+            hasAiReport: hasAiReport,
+            aiReportContent: newData?.backlinksSummary?.backlinksAiReport?.substring(0, 50) + '...',
+            hasDataChanges: hasDataChanges
+        });
+        
+        // Consider complete when AI report is generated (primary indicator)
+        return hasAiReport;
     };
 
     const cancelRefresh = () => {
@@ -5696,7 +5706,7 @@ const Backlinks = ({ webhooks }) => {
                                     : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
                             } disabled:opacity-50 disabled:cursor-not-allowed`}
                         >
-                            {isRefreshing ? 'Cancel' : 'Update Analytics'}
+                            {isRefreshing ? 'Cancel' : 'Rescan Backlinks'}
                         </button>
                     </div>
                 </div>

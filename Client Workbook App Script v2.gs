@@ -670,7 +670,8 @@ function getBacklinksSummary(spreadsheet) {
         avgRefferRank: parseIntSafe(values[10]),
         titlesCaptured: parseIntSafe(values[11]),
         backlinksChange: parseIntSafe(values[12]),
-        spamScoreChange: parseFloatSafe(values[13])
+        spamScoreChange: parseFloatSafe(values[13]),
+        backlinksAiReport: values[14] || '' // Column O - Backlinks AI Report
     };
     
     // Additional debug logging to see parsed values
