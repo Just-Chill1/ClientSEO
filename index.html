@@ -885,39 +885,46 @@
        background-color: var(--card-bg) !important;
      }
 
-     /* Tab button backgrounds - Competitor Analysis (Blue) */
-     .dual-reports-tab-blue {
+     /* Inactive tab styling - white background, black text */
+     .dual-reports-tab-inactive {
+       background-color: white !important;
+       color: #374151 !important; /* Dark gray text */
+       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+     }
+     [data-theme="dark"] .dual-reports-tab-inactive {
+       background-color: var(--card-bg) !important;
+       color: #d1d5db !important; /* Light gray text for dark mode */
+       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+     }
+
+     /* Active tab backgrounds - Competitor Analysis (Blue) */
+     .dual-reports-active-blue {
        background-color: #eff5ff !important; /* Light blue fill */
        color: #3b82f6 !important; /* Better blue color */
-     }
-     [data-theme="dark"] .dual-reports-tab-blue {
-       background-color: #23314e !important; /* Dark blue fill */
-       color: #3b82f6 !important; /* Same blue for consistency */
-     }
-
-     /* Tab button backgrounds - Error Report (Red) */
-     .dual-reports-tab-red {
-       background-color: #fef2f2 !important; /* Light red fill */
-       color: #dc2626 !important;
-     }
-     [data-theme="dark"] .dual-reports-tab-red {
-       background-color: #4a1d1d !important; /* Dark red fill */
-       color: #f87171 !important; /* Lighter red for dark mode */
-     }
-
-     /* Active tab styling */
-     .dual-reports-active-tab {
-       background-color: white !important;
        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
      }
-     [data-theme="dark"] .dual-reports-active-tab {
-       background-color: var(--card-bg) !important;
+     [data-theme="dark"] .dual-reports-active-blue {
+       background-color: #23314e !important; /* Dark blue fill */
+       color: #3b82f6 !important; /* Same blue for consistency */
        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
      }
 
-     /* Remove hover effects - no more hover backgrounds */
-     .dual-reports-tab-blue:hover,
-     .dual-reports-tab-red:hover {
+     /* Active tab backgrounds - Error Report (Red) */
+     .dual-reports-active-red {
+       background-color: #fef2f2 !important; /* Light red fill */
+       color: #dc2626 !important;
+       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+     }
+     [data-theme="dark"] .dual-reports-active-red {
+       background-color: #2d1b1b !important; /* More subtle dark red fill */
+       color: #f87171 !important; /* Lighter red for dark mode */
+       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+     }
+
+     /* Subtle hover effects */
+     .dual-reports-tab-inactive:hover,
+     .dual-reports-active-blue:hover,
+     .dual-reports-active-red:hover {
        opacity: 0.9;
      }
      
@@ -950,6 +957,15 @@
      }
      [data-theme="dark"] .dual-reports-show-more:hover {
        background-color: #374151 !important;
+     }
+     
+     /* Action button dark mode styling */
+     [data-theme="dark"] .dual-reports-action-hover {
+       color: #9ca3af !important;
+     }
+     [data-theme="dark"] .dual-reports-action-hover:hover {
+       background-color: rgba(75, 85, 99, 0.8) !important;
+       color: #d1d5db !important;
      }
   </style>
   
@@ -1601,8 +1617,8 @@ const DualReports = ({ competitorText, errorText }) => {
                             index === 0 ? 'rounded-l-xl' : 'rounded-r-xl'
                         } ${
                             activeTab === tab.id
-                                ? 'dual-reports-active-tab'
-                                : tab.color === 'blue' ? 'dual-reports-tab-blue' : 'dual-reports-tab-red'
+                                ? tab.color === 'blue' ? 'dual-reports-active-blue' : 'dual-reports-active-red'
+                                : 'dual-reports-tab-inactive'
                         }`}
                     >
                         <div className="flex items-center justify-between">
@@ -1614,9 +1630,10 @@ const DualReports = ({ competitorText, errorText }) => {
                                         e.stopPropagation();
                                         handleToggleExpand();
                                     }}
-                                    className={`p-1 rounded-md transition-colors ${tab.color === 'blue' ? 'text-blue-600 hover:text-blue-800 hover:bg-blue-50' : 'text-red-600 hover:text-red-800 hover:bg-red-50'} dual-reports-action-hover`}
+                                    className="flex items-center space-x-1 px-2 py-1 rounded-md transition-colors text-gray-500 hover:text-gray-700 text-xs dual-reports-action-hover"
                                     title={isExpanded ? "Show less" : "Show more"}
                                 >
+                                    <span>{isExpanded ? "Show Less" : "Show More"}</span>
                                     {isExpanded ? (
                                         <ChevronUp className="w-3 h-3" />
                                     ) : (
