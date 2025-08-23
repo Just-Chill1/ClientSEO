@@ -554,11 +554,12 @@ function getKeywordsSummary(spreadsheet) {
   const sheetName = 'Keywords Summary';
   const sheet = spreadsheet.getSheetByName(sheetName);
   if (!sheet || sheet.getLastRow() < 2) return {};
-  const values = sheet.getRange('A2:N2').getValues()[0]; 
+  const values = sheet.getRange('A2:P2').getValues()[0]; // Extended to include column P
   return {
     website: values[2], totalKeywords: values[3], pos1: values[4], pos2_3: values[5],
     pos4_10: values[6], pos11_20: values[7], isNew: values[8], isUp: values[9],
     isDown: values[10], isLost: values[11], etv: values[12], estPaidCost: values[13],
+    keywordsAiReport: values[15] || '' // Column P - Keywords AI Report
   };
 }
 
