@@ -4295,11 +4295,15 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
 
     // Refresh functionality
     const triggerRefresh = async () => {
-        console.log('Keywords refresh - Webhooks data:', webhooks);
+        console.log('Keywords refresh triggered');
+        console.log('Webhooks data:', webhooks);
         
-        if (!webhooks || !webhooks['Keywords']) {
-            alert('Keywords refresh webhook not configured for this workbook');
-            console.log('Keywords webhook check failed. Webhooks:', webhooks);
+        // Use the new n8n webhook URL from Config tab, or fallback to direct URL
+        const webhookUrl = webhooks?.Keywords || 'https://n8n.foreverbooked.com/webhook/0a292f97-a1a2-4dc3-ac90-15077cacb676';
+        
+        if (!webhookUrl) {
+            alert('Refresh webhook not configured for keywords');
+            console.log('Webhook check failed. Webhooks:', webhooks);
             return;
         }
 
@@ -4318,21 +4322,21 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
             }
 
             // Construct the webhook URL with required parameters
-            const baseWebhookUrl = webhooks['Keywords'];
-            const webhookUrl = `${baseWebhookUrl}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('Keywords Archive')}`;
+            const fullWebhookUrl = `${webhookUrl}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('Keywords Archive')}`;
             
-            console.log('Triggering keywords webhook:', webhookUrl);
+            console.log('Triggering keywords webhook:', fullWebhookUrl);
             
-            const response = await fetch(webhookUrl, {
+            const response = await fetch(fullWebhookUrl, {
                 method: 'GET',
                 mode: 'no-cors' // Many webhooks don't support CORS
             });
             
             // Show success message
             console.log('Keywords webhook triggered successfully!');
+            console.log('Webhook response status:', response.status);
             
             setRefreshProgress(15);
-            setRefreshMessage('Keywords automation started! (~10s expected)...');
+            setRefreshMessage('In Progress, Check back in 1.30min...');
             
             // Start polling for data changes
             startPolling();
@@ -4348,21 +4352,20 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
 
     const startPolling = () => {
         let attempts = 0;
-        const maxAttempts = 4; // Poll for ~20 seconds (5s intervals), then fallback to auto-refresh
+        const maxAttempts = 6; // Poll for ~3 minutes (30s intervals) since keywords now takes ~1.5 minutes
         
         const poll = async () => {
             attempts++;
             const elapsed = (Date.now() - refreshStartTimeRef.current) / 1000;
-            const progress = Math.min(15 + (attempts * 20), 95);
+            const progress = Math.min(15 + (attempts * 12), 95); // Slower progress for longer duration
             
             setRefreshProgress(progress);
             
-            // Simple messaging without exposing timeout details
             let message;
-            if (elapsed < 15) {
-                message = `Keywords automation running... (~10s expected)`;
+            if (elapsed < 90) { // First 1.5 minutes
+                message = `Keywords automation running... (~1.30min expected)`;
             } else {
-                message = `Checking for data updates...`;
+                message = `Finalizing AI report and checking for completion...`;
             }
             setRefreshMessage(message);
             
@@ -4382,7 +4385,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                          // Data has changed! Stop polling and update in-place
                          clearInterval(pollIntervalRef.current);
                          setRefreshProgress(100);
-                         setRefreshMessage('Keywords Archive updated! Loading fresh data...');
+                         setRefreshMessage('AI report complete! Loading fresh data...');
                          
                          // Update the data in-place
                          setData(newData);
@@ -4498,7 +4501,11 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
     };
 
     const hasKeywordsDataChanged = (oldSummary, oldTable, newSummary, newTable) => {
-        // Hybrid approach: Check for actual keyword data changes in individual entries
+        // Primary check: Has the AI report been generated? This indicates completion
+        const hasAiReport = newSummary?.keywordsAiReport && 
+                           String(newSummary.keywordsAiReport).trim() !== '';
+        
+        // Secondary check: Has other key keywords data changed (as backup)
         let hasActualChanges = false;
         
         // Check if any keyword data has actually changed (positions, URLs, etc.)
@@ -4543,15 +4550,15 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
             parseInt(oldSummary?.isLost) !== parseInt(newSummary?.isLost)
         );
         
-        const hasChanges = hasActualChanges || hasSummaryChanges;
-        
-        console.log('Keywords change detection:', {
+        console.log('Keywords polling check:', {
+            hasAiReport: hasAiReport,
+            aiReportContent: newSummary?.keywordsAiReport?.substring(0, 50) + '...',
             actualDataChanges: hasActualChanges,
-            summaryChanges: hasSummaryChanges,
-            overallChange: hasChanges
+            summaryChanges: hasSummaryChanges
         });
         
-        return hasChanges;
+        // Consider complete when AI report is generated (primary indicator)
+        return hasAiReport;
     };
 
     const cancelRefresh = () => {
@@ -4705,14 +4712,14 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                         
                         <button 
                             onClick={isRefreshing ? cancelRefresh : triggerRefresh}
-                            disabled={!webhooks}
+                            disabled={!webhooks && !webhooks?.Keywords}
                             className={`px-6 py-2 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl ${
                                 isRefreshing 
                                     ? 'bg-red-500 hover:bg-red-600 text-white' 
                                     : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
                             } disabled:opacity-50 disabled:cursor-not-allowed`}
                         >
-                            {isRefreshing ? 'Cancel' : 'Update Analytics'}
+                            {isRefreshing ? 'Cancel' : 'Rescan Keywords'}
                         </button>
                     </div>
                 </div>
@@ -8113,14 +8120,14 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                         
                         <button 
                             onClick={isRefreshing ? cancelRefresh : triggerRefresh}
-                            disabled={!webhooks}
+                            disabled={!webhooks && !webhooks?.Keywords}
                             className={`px-6 py-2 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl ${
                                 isRefreshing 
                                     ? 'bg-red-500 hover:bg-red-600 text-white' 
                                     : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
                             } disabled:opacity-50 disabled:cursor-not-allowed`}
                         >
-                            {isRefreshing ? 'Cancel' : 'Update Analytics'}
+                            {isRefreshing ? 'Cancel' : 'Rescan Keywords'}
                         </button>
                     </div>
                 </div>
