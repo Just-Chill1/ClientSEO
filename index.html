@@ -916,7 +916,7 @@
        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
      }
      [data-theme="dark"] .dual-reports-active-red {
-       background-color: #2d1b1b !important; /* More subtle dark red fill */
+       background-color: #332C3C !important; /* Custom purple-tinted fill */
        color: #f87171 !important; /* Lighter red for dark mode */
        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
      }
@@ -1606,7 +1606,7 @@ const DualReports = ({ competitorText, errorText }) => {
         .replace(/\*(.*?)\*/g, '<em>$1</em>');
 
     return (
-        <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-300 bg-white dark:bg-gray-800">
+        <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-300 bg-white dark:bg-gray-800 border-0">
             {/* Modern Tab Headers */}
             <div className="flex p-1 rounded-t-xl dual-reports-header">
                 {tabs.map((tab, index) => (
