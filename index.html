@@ -4513,12 +4513,12 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
 
     const startPolling = () => {
         let attempts = 0;
-        const maxAttempts = 6; // Poll for ~3 minutes (30s intervals) since keywords now takes ~1.5 minutes
+        const maxAttempts = 12; // Poll for ~3 minutes (15s intervals) since keywords now takes ~1.5 minutes
         
         const poll = async () => {
             attempts++;
             const elapsed = (Date.now() - refreshStartTimeRef.current) / 1000;
-            const progress = Math.min(15 + (attempts * 12), 95); // Slower progress for longer duration
+            const progress = Math.min(15 + (attempts * 7), 95); // Adjusted progress for 12 attempts
             
             setRefreshProgress(progress);
             
@@ -4654,8 +4654,8 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
             }
         };
         
-        // Start with immediate poll, then continue with 5-second intervals for faster detection
-        pollIntervalRef.current = setInterval(poll, 5000);
+        // Start with immediate poll, then continue with 15-second intervals for reliable detection
+        pollIntervalRef.current = setInterval(poll, 15000);
         
         // Poll immediately to start
         poll();
@@ -4664,7 +4664,8 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
     const hasKeywordsDataChanged = (oldSummary, oldTable, newSummary, newTable) => {
         // Primary check: Has the AI report been generated? This indicates completion
         const hasAiReport = newSummary?.keywordsAiReport && 
-                           String(newSummary.keywordsAiReport).trim() !== '';
+                           String(newSummary.keywordsAiReport).trim() !== '' &&
+                           String(newSummary.keywordsAiReport).trim().length > 10; // Ensure it's substantial content
         
         // Secondary check: Has other key keywords data changed (as backup)
         let hasActualChanges = false;
@@ -4713,9 +4714,12 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
         
         console.log('Keywords polling check:', {
             hasAiReport: hasAiReport,
-            aiReportContent: newSummary?.keywordsAiReport?.substring(0, 50) + '...',
+            aiReportContent: newSummary?.keywordsAiReport?.substring(0, 100) + '...',
+            aiReportLength: newSummary?.keywordsAiReport?.length || 0,
             actualDataChanges: hasActualChanges,
-            summaryChanges: hasSummaryChanges
+            summaryChanges: hasSummaryChanges,
+            keywordsTableSites: Object.keys(newTable || {}),
+            totalKeywords: newSummary?.totalKeywords
         });
         
         // Consider complete when AI report is generated (primary indicator)
