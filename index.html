@@ -1562,7 +1562,7 @@ const BacklinksReport = ({ reportText }) => {
         document.body.removeChild(element);
     };
 
-    const formattedContent = String(reportText || 'No report available yet.')
+    const formattedContent = String(reportText || 'Backlinks targeting report will appear here once generated.')
         .replace(/\n/g, '<br />')
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<em>$1</em>');
@@ -1573,8 +1573,8 @@ const BacklinksReport = ({ reportText }) => {
             <div className="flex p-1 rounded-t-xl dual-reports-header">
                 <div className="flex-1 relative px-6 py-4 text-base font-semibold transition-all duration-200 rounded-xl dual-reports-active-blue">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                            <span>Backlinks To Target This Month</span>
+                                                   <div className="flex items-center space-x-2">
+                               <span>Backlinks to Target this Month</span>
                             <InfoTooltip text="AI-generated recommendations for high-value backlink opportunities to pursue this month based on competitor analysis and market research." />
                             <button
                                 onClick={(e) => {
@@ -1636,7 +1636,7 @@ const BacklinksReport = ({ reportText }) => {
                                 {/* Text content */}
                                 <div 
                                     className="text-sm leading-relaxed overflow-hidden select-text cursor-text dual-reports-text"
-                                    style={{ maxHeight: '120px' }}
+                                    style={{ maxHeight: '160px' }}
                                     dangerouslySetInnerHTML={{ __html: formattedContent }}
                                 />
                                 <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none dual-reports-fade-light"></div>
@@ -6212,7 +6212,7 @@ const Backlinks = ({ webhooks }) => {
             {/* Backlinks Report Section */}
             <div className="mb-8">
                 <BacklinksReport 
-                    reportText={backlinksSummary?.backlinksAiReport || 'Backlinks targeting report will appear here once generated in Backlinks Summary (Column O).'}
+                    reportText={backlinksSummary?.backlinksAiReport || 'Backlinks targeting report will appear here once generated.'}
                 />
             </div>
 

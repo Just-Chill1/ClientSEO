@@ -583,7 +583,7 @@ function getBacklinksSummary(spreadsheet) {
     
     // If there are multiple rows, let's see what's in them
     if (lastRow > 2) {
-        const allData = sheet.getRange('A2:N' + lastRow).getValues();
+        const allData = sheet.getRange('A2:O' + lastRow).getValues();
         console.log('Backlinks Summary Debug - Multiple rows found:', {
             totalDataRows: allData.length,
             firstRow: allData[0],
@@ -596,18 +596,18 @@ function getBacklinksSummary(spreadsheet) {
     let values;
     if (lastRow > 2) {
         // If multiple rows exist, use the last row (most recent)
-        values = sheet.getRange('A' + lastRow + ':N' + lastRow).getValues()[0];
+        values = sheet.getRange('A' + lastRow + ':O' + lastRow).getValues()[0];
         console.log('Using last row (' + lastRow + ') for most recent data');
     } else {
         // If only one data row, use row 2
-        values = sheet.getRange('A2:N2').getValues()[0];
+        values = sheet.getRange('A2:O2').getValues()[0];
         console.log('Using row 2 for single data row');
     }
     
     // Enhanced debug logging to identify the exact issue
     console.log('Backlinks Summary Debug - Enhanced:', {
         sheetName: 'Backlinks Summary',
-        rowRange: 'A2:N2',
+        rowRange: 'A2:O2',
         rawRowLength: values.length,
         website: values[2],
         totalBacklinks: values[3],
@@ -616,6 +616,7 @@ function getBacklinksSummary(spreadsheet) {
         newLinks: values[6],
         lostLinks: values[7],
         avgSpamScore: values[8],
+        backlinksAiReport: values[14],
         // Check data types
         dataTypes: {
             totalBacklinks: typeof values[3],
@@ -640,7 +641,8 @@ function getBacklinksSummary(spreadsheet) {
             'K (Avg Reffer Rank)': values[10], 
             'L (Titles Captured)': values[11], 
             'M (Backlinks Change)': values[12], 
-            'N (Spam Score Change)': values[13]
+            'N (Spam Score Change)': values[13],
+            'O (Backlinks AI Report)': values[14]
         }
     });
     
