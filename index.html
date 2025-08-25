@@ -1581,7 +1581,7 @@ const KeywordsReport = ({ reportText }) => {
         .replace(/\*(.*?)\*/g, '<em>$1</em>');
 
     return (
-        <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-300 bg-white dark:bg-gray-800 border-0">
+        <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-300 bg-white dark:bg-gray-800" style={{border: 'none'}}>
             {/* Single Tab Header */}
             <div className="flex p-1 rounded-t-xl dual-reports-header">
                 <div className="flex-1 relative px-6 py-4 text-base font-semibold transition-all duration-200 rounded-xl dual-reports-active-green">
@@ -1742,7 +1742,7 @@ const BacklinksReport = ({ reportText }) => {
         .replace(/\*(.*?)\*/g, '<em>$1</em>');
 
     return (
-        <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-300 bg-white dark:bg-gray-800 border-0">
+        <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-300 bg-white dark:bg-gray-800" style={{border: 'none'}}>
             {/* Single Tab Header */}
             <div className="flex p-1 rounded-t-xl dual-reports-header">
                 <div className="flex-1 relative px-6 py-4 text-base font-semibold transition-all duration-200 rounded-xl dual-reports-active-blue">
@@ -4831,15 +4831,27 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
         // Start with immediate poll, then continue with 15-second intervals for reliable detection
         pollIntervalRef.current = setInterval(poll, 15000);
         
-        // Poll immediately to start
-        poll();
+        // Wait 30 seconds before first poll to avoid detecting data wipe as completion
+        setTimeout(() => {
+            console.log('Keywords polling: Starting after 30-second delay to avoid data wipe detection');
+            poll();
+        }, 30000);
     };
 
     const hasKeywordsDataChanged = (oldSummary, oldTable, newSummary, newTable) => {
         // Primary check: Has the AI report been generated? This indicates completion
         const hasAiReport = newSummary?.keywordsAiReport && 
                            String(newSummary.keywordsAiReport).trim() !== '' &&
-                           String(newSummary.keywordsAiReport).trim().length > 10; // Ensure it's substantial content
+                           String(newSummary.keywordsAiReport).trim().length > 50; // Ensure it's substantial content, not just placeholder
+        
+        // Additional validation: Check if we have meaningful summary data (not wiped)
+        const hasMeaningfulData = newSummary?.totalKeywords && 
+                                 parseInt(newSummary.totalKeywords) > 0 &&
+                                 newSummary?.website && 
+                                 String(newSummary.website).trim() !== '';
+        
+        // Combined check: Must have both AI report AND meaningful data
+        const isComplete = hasAiReport && hasMeaningfulData;
         
         // Secondary check: Has other key keywords data changed (as backup)
         let hasActualChanges = false;
@@ -4888,16 +4900,19 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
         
         console.log('Keywords polling check:', {
             hasAiReport: hasAiReport,
+            hasMeaningfulData: hasMeaningfulData,
+            isComplete: isComplete,
             aiReportContent: newSummary?.keywordsAiReport?.substring(0, 100) + '...',
             aiReportLength: newSummary?.keywordsAiReport?.length || 0,
             actualDataChanges: hasActualChanges,
             summaryChanges: hasSummaryChanges,
             keywordsTableSites: Object.keys(newTable || {}),
-            totalKeywords: newSummary?.totalKeywords
+            totalKeywords: newSummary?.totalKeywords,
+            website: newSummary?.website
         });
         
-        // Consider complete when AI report is generated (primary indicator)
-        return hasAiReport;
+        // Consider complete when both AI report is generated AND we have meaningful data
+        return isComplete;
     };
 
     const cancelRefresh = () => {
@@ -6396,6 +6411,14 @@ const Backlinks = ({ webhooks }) => {
 
             {/* Backlinks Report Section */}
             <div className="mb-8">
+                {(() => {
+                    console.log('Backlinks Report Debug:', {
+                        backlinksSummary: backlinksSummary,
+                        backlinksAiReport: backlinksSummary?.backlinksAiReport,
+                        reportLength: backlinksSummary?.backlinksAiReport?.length || 0
+                    });
+                    return null;
+                })()}
                 <BacklinksReport 
                     reportText={backlinksSummary?.backlinksAiReport || 'Backlinks targeting report will appear here once generated.'}
                 />
