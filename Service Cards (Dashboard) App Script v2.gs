@@ -59,13 +59,49 @@ function doGet(e) {
         sheetName = 'Canada (Whole)';
         locationColumnIndex = 4; // Country column
         console.log(`Canada route selected`);
-    } else if (location.includes(',')) { // City, State format (e.g., "New York, NY")
-        sheetName = 'City (US & CA)';
-        locationColumnIndex = 2; // City column
-        console.log(`City route selected for: ${location}`);
+    } else if (location.includes(',')) {
+        // Disambiguate between "City, ST" and "State, Country"
+        const parts = location.split(',').map(p => p.trim());
+        const left = parts[0] || '';
+        const right = (parts[1] || '').toLowerCase();
+
+        // Known country tokens that indicate State/Province route
+        const countryTokens = new Set(['usa', 'united states', 'canada', 'ca', 'us']);
+
+        // Known state/province abbreviations (US + CA common) – used to detect City, ST
+        const stateAbbrevs = new Set([
+          'al','ak','az','ar','ca','co','ct','de','fl','ga','hi','id','il','in','ia','ks','ky','la','me','md','ma','mi','mn','ms','mo','mt','ne','nv','nh','nj','nm','ny','nc','nd','oh','ok','or','pa','ri','sc','sd','tn','tx','ut','vt','va','wa','wv','wi','wy',
+          'ab','bc','mb','nb','nl','ns','nt','nu','on','pe','qc','sk','yt'
+        ]);
+
+        if (countryTokens.has(right)) {
+          // e.g., "Alabama, USA" → State & Province, filter = "Alabama"
+          sheetName = 'State & Province';
+          locationColumnIndex = 3; // State column
+          locationFilterValue = left;
+          console.log(`STATE/PROVINCE route selected (State, Country pattern) for: ${location}`);
+        } else if (right.length === 2 && stateAbbrevs.has(right)) {
+          // e.g., "New York, NY" → City route
+          sheetName = 'City (US & CA)';
+          locationColumnIndex = 2; // City column
+          console.log(`City route selected (City, ST) for: ${location}`);
+        } else {
+          // Fallback heuristic: If the left side looks like a multi-word city name (contains space)
+          // treat as city, otherwise treat as state/province
+          const isLikelyCity = /\s/.test(left);
+          if (isLikelyCity) {
+            sheetName = 'City (US & CA)';
+            locationColumnIndex = 2; // City column
+            console.log(`City route selected (fallback heuristic) for: ${location}`);
+          } else {
+            sheetName = 'State & Province';
+            locationColumnIndex = 3; // State column
+            locationFilterValue = left;
+            console.log(`STATE/PROVINCE route selected (fallback heuristic) for: ${location}`);
+          }
+        }
     } else { 
-        // Single location name - assume it's a State or Province
-        // This handles cases like "Alabama", "Alaska", "Ontario", "British Columbia", etc.
+        // Single token – assume it's a State or Province name
         sheetName = 'State & Province';
         locationColumnIndex = 3; // State column
         console.log(`STATE/PROVINCE route selected for: ${location}`);
