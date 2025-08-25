@@ -4850,7 +4850,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
         // Wait 30 seconds before first poll to avoid detecting data wipe as completion
         setTimeout(() => {
             console.log('Keywords polling: Starting after 30-second delay to avoid data wipe detection');
-            poll();
+        poll();
         }, 30000);
     };
 
@@ -7561,15 +7561,19 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
         console.log('Webhooks data:', webhooks);
         console.log('All data keys:', Object.keys(data || {}));
         
-        if (!webhooks || !webhooks['On-Page Insights']) {
-            alert('Refresh webhook not configured for this workbook');
+        // Check for both required webhooks
+        const hasOnPageInsights = webhooks && webhooks['On-Page Insights'];
+        const hasWebsiteFullScan = webhooks && webhooks['Website Full Scan'];
+        
+        if (!hasOnPageInsights && !hasWebsiteFullScan) {
+            alert('Website refresh webhooks not configured for this workbook');
             console.log('Webhook check failed. Webhooks:', webhooks);
             return;
         }
 
         setIsRefreshing(true);
         setRefreshProgress(5);
-        setRefreshMessage('Triggering automation...');
+        setRefreshMessage('Full scan underway, check back in 10 minutes...');
         refreshStartTimeRef.current = Date.now();
 
         try {
@@ -7581,54 +7585,74 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                 throw new Error('No workbook ID found in URL');
             }
 
-            // Construct the webhook URL with required parameters
-            const baseWebhookUrl = webhooks['On-Page Insights'];
-            const webhookUrl = `${baseWebhookUrl}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('On-Page Insights')}`;
+            const webhookPromises = [];
             
-            console.log('Triggering webhook:', webhookUrl);
-            console.log('Base webhook URL:', baseWebhookUrl);
-            console.log('Workbook ID:', workbookId);
-            
-            const response = await fetch(webhookUrl, {
+            // Trigger On-Page Insights webhook if available
+            if (hasOnPageInsights) {
+                const onPageWebhookUrl = `${webhooks['On-Page Insights']}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('On-Page Insights')}`;
+                console.log('Triggering On-Page Insights webhook:', onPageWebhookUrl);
+                
+                webhookPromises.push(
+                    fetch(onPageWebhookUrl, {
                 method: 'GET',
-                mode: 'no-cors' // Many webhooks don't support CORS
-            });
+                        mode: 'no-cors'
+                    }).catch(error => console.error('On-Page Insights webhook error:', error))
+                );
+            }
+            
+            // Trigger Website Full Scan webhook if available
+            if (hasWebsiteFullScan) {
+                const fullScanWebhookUrl = `${webhooks['Website Full Scan']}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('On-Page Insights')}`;
+                console.log('Triggering Website Full Scan webhook:', fullScanWebhookUrl);
+                
+                webhookPromises.push(
+                    fetch(fullScanWebhookUrl, {
+                        method: 'GET',
+                        mode: 'no-cors'
+                    }).catch(error => console.error('Website Full Scan webhook error:', error))
+                );
+            }
+            
+            // Wait for all webhooks to be triggered
+            await Promise.allSettled(webhookPromises);
             
             // Show success message
-            console.log('Webhook triggered successfully!');
+            console.log('Website scan webhooks triggered successfully!');
             
             setRefreshProgress(15);
-            setRefreshMessage('Automation started! Fetching fresh data...');
+            setRefreshMessage('Full scan underway, check back in 10 minutes...');
             
             // Start polling for data changes
             startPolling();
             
         } catch (error) {
-            console.error('Error triggering refresh:', error);
+            console.error('Error triggering website refresh:', error);
             setIsRefreshing(false);
             setRefreshProgress(0);
             setRefreshMessage('');
-            alert(`Failed to trigger refresh: ${error.message}`);
+            alert(`Failed to trigger website scan: ${error.message}`);
         }
     };
 
     const startPolling = () => {
         let attempts = 0;
-        const maxAttempts = 6; // Poll for ~4.5 minutes (45s intervals) - reduced to avoid jarring refreshes
+        const maxAttempts = 11; // Poll for ~11 minutes (60s intervals) for full website scan
         
         const poll = async () => {
             attempts++;
             const elapsed = (Date.now() - refreshStartTimeRef.current) / 1000;
-            const progress = Math.min(15 + (attempts * 14), 95); // Adjusted for fewer attempts
+            const progress = Math.min(15 + (attempts * 7), 95); // Spread progress over 11 attempts
             
             setRefreshProgress(progress);
             
-            // Simplified messaging to avoid jarring updates
+            // Updated messaging for longer automation
             let message;
-            if (elapsed < 90) {
-                message = `Running automation... (~60s expected)`;
-            } else {
-                message = `Finalizing updates...`;
+            if (elapsed < 300) { // First 5 minutes
+                message = `Full scan underway, check back in 10 minutes...`;
+            } else if (elapsed < 600) { // 5-10 minutes
+                message = `Analyzing website data...`;
+            } else { // 10+ minutes
+                message = `Finalizing AI report...`;
             }
             setRefreshMessage(message);
             
@@ -7648,7 +7672,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                         // Data has changed! Stop polling and update in-place
                         clearInterval(pollIntervalRef.current);
                         setRefreshProgress(100);
-                        setRefreshMessage('Update complete! Loading fresh data...');
+                        setRefreshMessage('Website scan complete! Loading fresh data...');
                         
                         // Update the data in-place instead of page reload
                         setData(newData);
@@ -7699,39 +7723,51 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             }
         };
         
-        // Start with immediate poll, then continue with 45-second intervals to reduce jarring refreshes
-        pollIntervalRef.current = setInterval(poll, 45000);
+        // Start with immediate poll, then continue with 60-second intervals for full website scan
+        pollIntervalRef.current = setInterval(poll, 60000);
         
         // Poll immediately to start
         poll();
     };
 
     const hasDataChanged = (oldData, newData) => {
-        // Check if any key data has changed, with special focus on AI Report
-        const oldAiNotes = oldData.healthData?.aiNotes;
-        const newAiNotes = newData.healthData?.aiNotes;
+        // Primary check: Has the AI error report been generated? This indicates completion
+        const oldErrorReport = oldData.websiteStats?.errorReport;
+        const newErrorReport = newData.websiteStats?.errorReport;
         
-        // Log AI Notes comparison for debugging
-        console.log('AI Notes comparison:', {
-            old: oldAiNotes,
-            new: newAiNotes,
-            changed: oldAiNotes !== newAiNotes
+        // Check if AI error report has meaningful content (not just empty/placeholder)
+        const hasAiErrorReport = newErrorReport && 
+                                String(newErrorReport).trim() !== '' &&
+                                String(newErrorReport).trim().length > 50; // Ensure substantial content
+        
+        // Log AI Error Report comparison for debugging
+        console.log('Website AI Error Report comparison:', {
+            old: oldErrorReport,
+            new: newErrorReport,
+            hasAiErrorReport: hasAiErrorReport,
+            newLength: newErrorReport?.length || 0,
+            changed: oldErrorReport !== newErrorReport
         });
         
-        // Check for changes in multiple key areas
-        const hasChanges = (
-            // AI Report is the main indicator that automation is complete
-            oldAiNotes !== newAiNotes ||
-            // Also check other key metrics
-            oldData.healthData?.pageScore !== newData.healthData?.pageScore ||
-            oldData.healthData?.siteSpeed !== newData.healthData?.siteSpeed ||
-            JSON.stringify(oldData.healthData?.speedDetails) !== JSON.stringify(newData.healthData?.speedDetails) ||
-            // Check if schema data has changed
-            oldData.healthData?.hasSchema !== newData.healthData?.hasSchema ||
-            oldData.healthData?.hasSchemaErrors !== newData.healthData?.hasSchemaErrors
+        // Additional validation: Check if we have meaningful data updates
+        const hasOtherChanges = (
+            // Check other key metrics as backup indicators
+            oldData.websiteStats?.healthData?.pageScore !== newData.websiteStats?.healthData?.pageScore ||
+            oldData.websiteStats?.healthData?.siteSpeed !== newData.websiteStats?.healthData?.siteSpeed ||
+            JSON.stringify(oldData.websiteStats?.healthData?.speedDetails) !== JSON.stringify(newData.websiteStats?.healthData?.speedDetails) ||
+            // Check if crawl summary has been updated
+            oldData.websiteStats?.healthData?.brokenLinks !== newData.websiteStats?.healthData?.brokenLinks
         );
         
-        console.log('Data change detected:', hasChanges);
+        // Consider complete when AI error report is generated (primary indicator)
+        const hasChanges = hasAiErrorReport || hasOtherChanges;
+        
+        console.log('Website scan completion check:', {
+            hasAiErrorReport: hasAiErrorReport,
+            hasOtherChanges: hasOtherChanges,
+            overallChanged: hasChanges
+        });
+        
         return hasChanges;
     };
 
@@ -8512,14 +8548,14 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                         
                         <button 
                             onClick={isRefreshing ? cancelRefresh : triggerRefresh}
-                            disabled={!webhooks && !webhooks?.Keywords}
+                            disabled={!webhooks && (!webhooks?.['On-Page Insights'] && !webhooks?.['Website Full Scan'])}
                             className={`px-6 py-2 rounded-xl font-medium transition-all duration-200 shadow-lg hover:shadow-xl ${
                                 isRefreshing 
                                     ? 'bg-red-500 hover:bg-red-600 text-white' 
                                     : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white'
                             } disabled:opacity-50 disabled:cursor-not-allowed`}
                         >
-                            {isRefreshing ? 'Cancel' : 'Rescan Keywords'}
+                            {isRefreshing ? 'Cancel' : 'Rescan Website'}
                         </button>
                     </div>
                 </div>
