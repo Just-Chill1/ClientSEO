@@ -4643,7 +4643,11 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
     const [keywordsData, setKeywordsData] = useState(null);
-    const siteNames = Object.keys(table);
+
+    // Safely use table/summary from props or fall back to background-fetched state
+    const effectiveTable = table || (keywordsData && keywordsData.keywordsTable) || {};
+    const effectiveSummary = summary || (keywordsData && keywordsData.keywordsSummary) || {};
+    const siteNames = Object.keys(effectiveTable);
     
     // Refresh state management
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -4660,7 +4664,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
         }
     }, [siteNames]);
 
-    // Fetch keywords archive data on component mount
+    // Fetch keywords data on component mount (works with new sections API or full payload)
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const workbookId = params.get('workbookId');
@@ -4681,7 +4685,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
             }
         }
 
-        const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}`;
+        const scriptUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}&sections=${encodeURIComponent('keywordsSummary,keywordsTable,keywordsSummaryArchive')}`;
         
         fetchWithCorsWorkaround(scriptUrl, (err, data) => {
             if (err) {
@@ -4694,8 +4698,8 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
             }
             
             const keywords = {
-                keywordsSummary: data.keywordsSummary,
-                keywordsTable: data.keywordsTable,
+                keywordsSummary: data.keywordsSummary || data?.dashboard?.keywordsSummary || {},
+                keywordsTable: data.keywordsTable || data?.dashboard?.keywordsTable || {},
                 keywordsSummaryArchive: data.keywordsSummaryArchive || []
             };
             
@@ -5528,7 +5532,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                     <div className="mb-3 py-1.5 px-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
                         <div className="flex items-center justify-start space-x-10">
                             {(() => {
-                                const siteData = table[active] || [];
+                                const siteData = effectiveTable[active] || [];
                                 // Use the loaded table length for per-website totals
                                 // This shows the actual count for each individual website
                                 const totalKeywords = siteData.length;
@@ -5618,7 +5622,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {table[active]?.filter(row =>
+                            {effectiveTable[active]?.filter(row =>
                                 row.keyword?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                                 row.ranking_url?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                                 row.ranking_title?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -5701,7 +5705,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                             ))}
                         </tbody>
                     </table>
-                    {table[active]?.filter(row =>
+                    {effectiveTable[active]?.filter(row =>
                         row.keyword?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         row.ranking_url?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         row.ranking_title?.toLowerCase().includes(searchTerm.toLowerCase())
