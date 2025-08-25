@@ -39,6 +39,11 @@
  * limitations under the License.
  */
 
+// Toggle verbose logging globally (set to false in production)
+var DEBUG = false;
+
+function log(){ if (DEBUG) console.log.apply(console, arguments); }
+
 function doGet(e) {
   try {
     // Read the workbookId from the URL parameter sent by the React app
@@ -48,19 +53,66 @@ function doGet(e) {
     }
     const spreadsheet = SpreadsheetApp.openById(workbookId);
     
+    // Optional: sections to fetch (comma-separated). When provided, we only compute those sections.
+    // Example: sections=dashboard,webhooks or sections=keywordsSummary,keywordsTable
+    const sectionsParam = (e.parameter.sections || '').trim();
+    const requestedSections = sectionsParam ? sectionsParam.split(',').map(s => s.trim()).filter(Boolean) : null;
+    const cacheBust = String(e.parameter.cacheBust || '').trim() !== '';
+    const cache = CacheService.getDocumentCache();
+    
     // Aggregate all data from the specified workbook
-    const data = {
-      dashboard: getDashboardData(spreadsheet),
-      websiteStats: getWebsiteStats(spreadsheet),
-      geogridData: getGeogridData(spreadsheet),
-      backlinksSummary: getBacklinksSummary(spreadsheet),
-      backlinksTable: getBacklinksTables(spreadsheet),
-      backlinksSummaryArchive: getBacklinksSummaryArchive(spreadsheet),
-      keywordsSummary: getKeywordsSummary(spreadsheet),
-      keywordsTable: getKeywordsTables(spreadsheet),
-      keywordsSummaryArchive: getKeywordsSummaryArchive(spreadsheet),
-      webhooks: getWebhookUrls(spreadsheet)
+    // Helper to compute a single section with lightweight caching
+    const computeSection = (name) => {
+      const key = `cw:${workbookId}:${name}`;
+      if (!cacheBust) {
+        const cached = cache.get(key);
+        if (cached) {
+          try {
+            return JSON.parse(cached);
+          } catch (ignored) {}
+        }
+      }
+      let value;
+      switch (name) {
+        case 'dashboard': value = getDashboardData(spreadsheet); break;
+        case 'websiteStats': value = getWebsiteStats(spreadsheet); break;
+        case 'geogridData': value = getGeogridData(spreadsheet); break;
+        case 'backlinksSummary': value = getBacklinksSummary(spreadsheet); break;
+        case 'backlinksTable': value = getBacklinksTables(spreadsheet); break;
+        case 'backlinksSummaryArchive': value = getBacklinksSummaryArchive(spreadsheet); break;
+        case 'keywordsSummary': value = getKeywordsSummary(spreadsheet); break;
+        case 'keywordsTable': value = getKeywordsTables(spreadsheet); break;
+        case 'keywordsSummaryArchive': value = getKeywordsSummaryArchive(spreadsheet); break;
+        case 'webhooks': value = getWebhookUrls(spreadsheet); break;
+        default:
+          value = null;
+      }
+      try { cache.put(key, JSON.stringify(value), 300); } catch (ignored) {}
+      return value;
     };
+
+    let data;
+    if (requestedSections && requestedSections.length > 0) {
+      // Only compute requested sections
+      data = {};
+      requestedSections.forEach(sec => {
+        data[sec] = computeSection(sec);
+      });
+    } else {
+      // Backwards-compatible: compute full payload
+      data = {
+        dashboard: computeSection('dashboard'),
+        websiteStats: computeSection('websiteStats'),
+        geogridData: computeSection('geogridData'),
+        backlinksSummary: computeSection('backlinksSummary'),
+        backlinksTable: computeSection('backlinksTable'),
+        backlinksSummaryArchive: computeSection('backlinksSummaryArchive'),
+        keywordsSummary: computeSection('keywordsSummary'),
+        keywordsTable: computeSection('keywordsTable'),
+        keywordsSummaryArchive: computeSection('keywordsSummaryArchive'),
+        webhooks: computeSection('webhooks')
+      };
+    }
 
     return ContentService
       .createTextOutput(JSON.stringify(data, null, 2))

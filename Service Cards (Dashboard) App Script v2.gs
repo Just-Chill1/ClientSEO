@@ -24,6 +24,11 @@
  */
 
 // --- Configuration ---
+// Disable verbose logging in production to reduce execution overhead
+var DEBUG = false;
+if (!DEBUG && typeof console !== 'undefined' && typeof console.log === 'function') {
+  console.log = function() {};
+}
 const NORMAL_SERVICES = [
   'Botox', 'Lip Filler', 'Laser Facial', 'Semaglutide', 'HydraFacial', 
   'Laser hair Removal', 'Body Contouring', 'Skin Tighenting', 'IV Therapy', 

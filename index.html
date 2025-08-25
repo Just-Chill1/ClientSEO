@@ -9163,7 +9163,46 @@ const App = () => {
     const id = new URLSearchParams(location.search).get('workbookId');
     if (!id) { setErr('Add ?workbookId=YOUR_ID to the URL'); setLoad(false); return; }
 
-    fetchWithCorsWorkaround(`https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${id}`, (err, j) => {
+    // Helper to prefetch remaining sections in the background after dashboard loads
+    const prefetchRemainingSections = (workbookId) => {
+      const base = 'https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec';
+      const fetchJson = (sections) => fetch(`${base}?workbookId=${workbookId}&sections=${encodeURIComponent(sections)}`)
+        .then(r => r.json())
+        .catch(() => null);
+
+      Promise.all([
+        fetchJson('websiteStats'),
+        fetchJson('geogridData'),
+        fetchJson('keywordsSummary,keywordsTable,keywordsSummaryArchive'),
+        fetchJson('backlinksSummary,backlinksTable,backlinksSummaryArchive')
+      ]).then(([ws, gg, kw, bl]) => {
+        if (ws && ws.websiteStats) {
+          setData(prev => ({ ...(prev || {}), websiteStats: ws.websiteStats }));
+        }
+        if (gg && gg.geogridData) {
+          setData(prev => ({ ...(prev || {}), geogridData: gg.geogridData }));
+        }
+        if (kw && kw.keywordsSummary && kw.keywordsTable) {
+          const kwPayload = {
+            keywordsSummary: kw.keywordsSummary,
+            keywordsTable: kw.keywordsTable,
+            keywordsSummaryArchive: kw.keywordsSummaryArchive || []
+          };
+          sessionStorage.setItem(`keywords_${workbookId}`, JSON.stringify(kwPayload));
+        }
+        if (bl && bl.backlinksSummary && bl.backlinksTable) {
+          const blPayload = {
+            backlinksSummary: bl.backlinksSummary,
+            backlinksTable: bl.backlinksTable,
+            backlinksSummaryArchive: bl.backlinksSummaryArchive || []
+          };
+          sessionStorage.setItem(`backlinks_${workbookId}`, JSON.stringify(blPayload));
+        }
+      });
+    };
+
+    // First load only dashboard + webhooks to reduce payload, then prefetch the rest
+    fetchWithCorsWorkaround(`https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${id}&sections=${encodeURIComponent('dashboard,webhooks')}`, (err, j) => {
       if (err) {
         console.error(err);
         setErr(err.message);
@@ -9175,10 +9214,11 @@ const App = () => {
         setLoad(false);
         return;
       }
-      console.log('Data loaded successfully:', Object.keys(j));
-      console.log('Webhooks in data:', j.webhooks);
+      console.log('Initial sections loaded:', Object.keys(j));
       setData(j); 
       setLoad(false); 
+      // Kick off background prefetch for other sections so tabs are ready
+      prefetchRemainingSections(id);
     });
   }, []);
 
