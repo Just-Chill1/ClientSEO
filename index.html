@@ -2666,7 +2666,7 @@ const AISentimentBarChart = ({ data, loading, error }) => {
     );
 };
 
-const Dashboard = ({ setActiveTab }) => {
+const Dashboard = ({ setActiveTab, webhooks, setData }) => {
     const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, PieChart, Pie, Legend, ScatterChart, Scatter } = window.Recharts;
     
     // --- Additional Icon Components for this page ---
@@ -4269,17 +4269,21 @@ const Dashboard = ({ setActiveTab }) => {
         }
         
         console.log('Overview table refresh triggered');
+        console.log('Available webhooks:', webhooks);
         
-        const webhooks = {
-            onPageInsights: 'https://hook.us1.make.com/rytnhogl86u66kb84c8x4jvb9crkhwwv',
-            gbpInsights: 'https://hook.us1.make.com/njgvoslc2tis3l5dkm1smswmwlvs91pb',
-            facebookAds: 'https://hook.us1.make.com/rc54yq5e4b6erln6qbyltcbswgul4vj7',
-            googleAds: 'https://justchill.app.n8n.cloud/webhook/718a9a18-d40f-4240-a381-761ca4ec4f82'
-        };
+        // Check for required webhooks from Config tab
+        const requiredWebhooks = ['On-Page Insights', 'GBP Insights', 'Facebook Ads', 'Google Ads'];
+        const availableWebhooks = requiredWebhooks.filter(name => webhooks && webhooks[name]);
+        
+        if (availableWebhooks.length === 0) {
+            alert('Dashboard refresh webhooks not configured for this workbook');
+            console.log('Webhook check failed. Required:', requiredWebhooks, 'Available:', availableWebhooks);
+            return;
+        }
         
         setIsOverviewRefreshing(true);
         setOverviewRefreshProgress(5);
-        setOverviewRefreshMessage('Triggering overview automation...');
+        setOverviewRefreshMessage('Analytics update in progress, check back in 7 minutes...');
         overviewRefreshStartTimeRef.current = Date.now();
 
         try {
@@ -4291,59 +4295,84 @@ const Dashboard = ({ setActiveTab }) => {
                 throw new Error('No workbook ID found in URL');
             }
 
-            // Trigger all four webhooks in parallel
-            const webhookPromises = [
-                fetch(`${webhooks.onPageInsights}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('On-Page Insights')}`, { method: 'GET', mode: 'no-cors' }),
-                fetch(`${webhooks.gbpInsights}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('GBP Insights')}`, { method: 'GET', mode: 'no-cors' }),
-                fetch(`${webhooks.facebookAds}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('Links')}`, { method: 'GET', mode: 'no-cors' }),
-                fetch(`${webhooks.googleAds}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('Links')}`, { method: 'GET', mode: 'no-cors' })
-            ];
+            const webhookPromises = [];
             
-            console.log('Triggering all overview webhooks:', {
-                onPageInsights: `${webhooks.onPageInsights}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('On-Page Insights')}`,
-                gbpInsights: `${webhooks.gbpInsights}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('GBP Insights')}`,
-                facebookAds: `${webhooks.facebookAds}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('Links')}`,
-                googleAds: `${webhooks.googleAds}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('Links')}`
-            });
+            // Trigger On-Page Insights webhook
+            if (webhooks['On-Page Insights']) {
+                const url = `${webhooks['On-Page Insights']}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('On-Page Insights')}`;
+                console.log('Triggering On-Page Insights webhook:', url);
+                webhookPromises.push(
+                    fetch(url, { method: 'GET', mode: 'no-cors' }).catch(error => console.error('On-Page Insights webhook error:', error))
+                );
+            }
             
-            await Promise.all(webhookPromises);
+            // Trigger GBP Insights webhook
+            if (webhooks['GBP Insights']) {
+                const url = `${webhooks['GBP Insights']}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('GBP Insights')}`;
+                console.log('Triggering GBP Insights webhook:', url);
+                webhookPromises.push(
+                    fetch(url, { method: 'GET', mode: 'no-cors' }).catch(error => console.error('GBP Insights webhook error:', error))
+                );
+            }
+            
+            // Trigger Facebook Ads webhook
+            if (webhooks['Facebook Ads']) {
+                const url = `${webhooks['Facebook Ads']}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('Links')}`;
+                console.log('Triggering Facebook Ads webhook:', url);
+                webhookPromises.push(
+                    fetch(url, { method: 'GET', mode: 'no-cors' }).catch(error => console.error('Facebook Ads webhook error:', error))
+                );
+            }
+            
+            // Trigger Google Ads webhook
+            if (webhooks['Google Ads']) {
+                const url = `${webhooks['Google Ads']}?spreadsheetId=${workbookId}&tabName=${encodeURIComponent('Links')}`;
+                console.log('Triggering Google Ads webhook:', url);
+                webhookPromises.push(
+                    fetch(url, { method: 'GET', mode: 'no-cors' }).catch(error => console.error('Google Ads webhook error:', error))
+                );
+            }
+            
+            // Wait for all webhooks to be triggered
+            await Promise.allSettled(webhookPromises);
             
             // Show success message
-            console.log('All overview webhooks triggered successfully!');
+            console.log('Analytics update webhooks triggered successfully!');
             
             setOverviewRefreshProgress(15);
-            setOverviewRefreshMessage('Overview automation started! Waiting 1 minute before checking for updates...');
+            setOverviewRefreshMessage('Analytics update in progress, check back in 7 minutes...');
             
-            // Wait 1 minute before starting to poll for changes
-            setTimeout(() => {
+            // Start polling for data changes
                 startOverviewPolling();
-            }, 60000); // 60 seconds delay
             
         } catch (error) {
-            console.error('Error triggering overview refresh:', error);
+            console.error('Error triggering analytics update:', error);
             setIsOverviewRefreshing(false);
             setOverviewRefreshProgress(0);
             setOverviewRefreshMessage('');
-            alert(`Failed to trigger overview refresh: ${error.message}`);
+            alert(`Failed to trigger analytics update: ${error.message}`);
         }
     };
 
     const startOverviewPolling = () => {
         let attempts = 0;
-        const maxAttempts = 3; // Poll for ~3 minutes (60s intervals)
+        const maxAttempts = 7; // Poll for ~7 minutes (60s intervals) for analytics update
         
         const poll = async () => {
             attempts++;
             const elapsed = (Date.now() - overviewRefreshStartTimeRef.current) / 1000;
-            const progress = Math.min(15 + (attempts * 20), 95);
+            const progress = Math.min(15 + (attempts * 12), 95); // Spread progress over 7 attempts
             
             setOverviewRefreshProgress(progress);
             
+            // Updated messaging for longer automation
             let message;
-            if (elapsed < 60) {
-                message = `Overview automation running... (~60s expected)`;
-            } else {
-                message = `Checking for data updates...`;
+            if (elapsed < 180) { // First 3 minutes
+                message = `Analytics update in progress, check back in 7 minutes...`;
+            } else if (elapsed < 360) { // 3-6 minutes
+                message = `Processing data updates...`;
+            } else { // 6+ minutes
+                message = `Finalizing analytics report...`;
             }
             setOverviewRefreshMessage(message);
             
@@ -4363,7 +4392,7 @@ const Dashboard = ({ setActiveTab }) => {
                         // Data has changed! Stop polling and update only the overview table
                         clearInterval(overviewPollIntervalRef.current);
                         setOverviewRefreshProgress(100);
-                        setOverviewRefreshMessage('Overview table updated successfully!');
+                        setOverviewRefreshMessage('Analytics update complete! Loading fresh data...');
                         
                         // Update only the overview data in the dashboard, keeping other data intact
                         const updatedDashboardData = {
@@ -4459,14 +4488,40 @@ const Dashboard = ({ setActiveTab }) => {
     };
 
     const hasOverviewDataChanged = (oldData, newData) => {
-        // Check if any key overview data has changed
-        const hasChanges = (
+        // Primary check: Has the GBP Insights AI Notes been generated? This indicates completion
+        const oldAiReport = oldData?.aiReport;
+        const newAiReport = newData?.aiReport;
+        
+        // Check if AI report has meaningful content (not just empty/placeholder)
+        const hasAiReport = newAiReport && 
+                           String(newAiReport).trim() !== '' &&
+                           String(newAiReport).trim().length > 50; // Ensure substantial content
+        
+        // Log AI Report comparison for debugging
+        console.log('Dashboard AI Report comparison:', {
+            old: oldAiReport,
+            new: newAiReport,
+            hasAiReport: hasAiReport,
+            newLength: newAiReport?.length || 0,
+            changed: oldAiReport !== newAiReport
+        });
+        
+        // Additional validation: Check if we have meaningful data updates
+        const hasOtherChanges = (
+            // Check other key data as backup indicators
             JSON.stringify(oldData?.overviewData) !== JSON.stringify(newData?.overviewData) ||
-            oldData?.aiReport !== newData?.aiReport ||
-            oldData?.censusData !== newData?.censusData
+            JSON.stringify(oldData?.censusData) !== JSON.stringify(newData?.censusData)
         );
         
-        console.log('Overview change detected:', hasChanges);
+        // Consider complete when AI report is generated (primary indicator)
+        const hasChanges = hasAiReport || hasOtherChanges;
+        
+        console.log('Analytics update completion check:', {
+            hasAiReport: hasAiReport,
+            hasOtherChanges: hasOtherChanges,
+            overallChanged: hasChanges
+        });
+        
         return hasChanges;
     };
 
@@ -9128,7 +9183,7 @@ const App = () => {
   } else {
     switch (tab) {
       case 'Dashboard':
-        body = <Dashboard setActiveTab={setTab} />;
+        body = <Dashboard setActiveTab={setTab} webhooks={data.webhooks} setData={setData} />;
         break;
       case 'Website Stats':
         body = <WebsiteStats data={data.websiteStats} webhooks={data.webhooks} setData={setData} />;
