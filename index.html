@@ -4283,7 +4283,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
         
         setIsOverviewRefreshing(true);
         setOverviewRefreshProgress(5);
-        setOverviewRefreshMessage('Analytics update in progress, check back in 7 minutes...');
+        setOverviewRefreshMessage('Analytics update in progress, check back in 10 minutes...');
         overviewRefreshStartTimeRef.current = Date.now();
 
         try {
@@ -4340,10 +4340,13 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
             console.log('Analytics update webhooks triggered successfully!');
             
             setOverviewRefreshProgress(15);
-            setOverviewRefreshMessage('Analytics update in progress, check back in 7 minutes...');
+            setOverviewRefreshMessage('Analytics update in progress, check back in 10 minutes...');
             
-            // Start polling for data changes
+            // Wait 2 minutes before starting to poll for changes to avoid detecting data wipe
+            setTimeout(() => {
+                console.log('Dashboard polling: Starting after 2-minute delay to avoid data wipe detection');
                 startOverviewPolling();
+            }, 120000); // 2 minutes delay
             
         } catch (error) {
             console.error('Error triggering analytics update:', error);
@@ -4356,22 +4359,22 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
 
     const startOverviewPolling = () => {
         let attempts = 0;
-        const maxAttempts = 7; // Poll for ~7 minutes (60s intervals) for analytics update
+        const maxAttempts = 10; // Poll for ~10 minutes (60s intervals) for analytics update
         
         const poll = async () => {
             attempts++;
             const elapsed = (Date.now() - overviewRefreshStartTimeRef.current) / 1000;
-            const progress = Math.min(15 + (attempts * 12), 95); // Spread progress over 7 attempts
+            const progress = Math.min(15 + (attempts * 8), 95); // Spread progress over 10 attempts
             
             setOverviewRefreshProgress(progress);
             
             // Updated messaging for longer automation
             let message;
-            if (elapsed < 180) { // First 3 minutes
-                message = `Analytics update in progress, check back in 7 minutes...`;
-            } else if (elapsed < 360) { // 3-6 minutes
+            if (elapsed < 300) { // First 5 minutes
+                message = `Analytics update in progress, check back in 10 minutes...`;
+            } else if (elapsed < 480) { // 5-8 minutes
                 message = `Processing data updates...`;
-            } else { // 6+ minutes
+            } else { // 8+ minutes
                 message = `Finalizing analytics report...`;
             }
             setOverviewRefreshMessage(message);
@@ -4492,32 +4495,45 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
         const oldAiReport = oldData?.aiReport;
         const newAiReport = newData?.aiReport;
         
-        // Check if AI report has meaningful content (not just empty/placeholder)
+        // Check if AI report has meaningful content (not just empty/placeholder/wiped)
         const hasAiReport = newAiReport && 
                            String(newAiReport).trim() !== '' &&
-                           String(newAiReport).trim().length > 50; // Ensure substantial content
+                           String(newAiReport).trim().length > 100 && // Increased threshold for substantial content
+                           !String(newAiReport).toLowerCase().includes('generating') &&  // Avoid placeholder text
+                           !String(newAiReport).toLowerCase().includes('processing'); // Avoid placeholder text
+        
+        // Additional validation: Check if we have meaningful overview data (not wiped)
+        const hasMeaningfulOverviewData = newData?.overviewData && 
+                                         Array.isArray(newData.overviewData) && 
+                                         newData.overviewData.length > 0 &&
+                                         newData.overviewData.some(item => item.clinicName && item.clinicName.trim() !== '');
         
         // Log AI Report comparison for debugging
         console.log('Dashboard AI Report comparison:', {
             old: oldAiReport,
             new: newAiReport,
             hasAiReport: hasAiReport,
+            hasMeaningfulOverviewData: hasMeaningfulOverviewData,
             newLength: newAiReport?.length || 0,
+            overviewDataLength: newData?.overviewData?.length || 0,
             changed: oldAiReport !== newAiReport
         });
         
         // Additional validation: Check if we have meaningful data updates
         const hasOtherChanges = (
-            // Check other key data as backup indicators
-            JSON.stringify(oldData?.overviewData) !== JSON.stringify(newData?.overviewData) ||
-            JSON.stringify(oldData?.censusData) !== JSON.stringify(newData?.censusData)
+            // Check other key data as backup indicators - but only if data looks complete
+            hasMeaningfulOverviewData && (
+                JSON.stringify(oldData?.overviewData) !== JSON.stringify(newData?.overviewData) ||
+                JSON.stringify(oldData?.censusData) !== JSON.stringify(newData?.censusData)
+            )
         );
         
-        // Consider complete when AI report is generated (primary indicator)
-        const hasChanges = hasAiReport || hasOtherChanges;
+        // Consider complete when BOTH AI report is generated AND we have meaningful data
+        const hasChanges = hasAiReport && hasMeaningfulOverviewData;
         
         console.log('Analytics update completion check:', {
             hasAiReport: hasAiReport,
+            hasMeaningfulOverviewData: hasMeaningfulOverviewData,
             hasOtherChanges: hasOtherChanges,
             overallChanged: hasChanges
         });
