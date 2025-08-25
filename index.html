@@ -5118,9 +5118,9 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
         : [];
     
     // Determine which summary data to use based on current month selection
-    const currentSummaryData = processedArchiveData.length > 0 && currentMonthIndex < processedArchiveData.length
+    const currentSummaryData = (processedArchiveData.length > 0 && currentMonthIndex < processedArchiveData.length
         ? processedArchiveData[currentMonthIndex]
-        : summary;
+        : effectiveSummary) || {};
 
     return (
         <PageContent>
