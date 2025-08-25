@@ -1580,8 +1580,11 @@ const KeywordsReport = ({ reportText }) => {
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<em>$1</em>');
 
+    // Check if this is just placeholder text
+    const isPlaceholderOnly = !reportText || reportText.trim() === '' || reportText === 'Keywords targeting report will appear here once generated.';
+
     return (
-        <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-300 bg-white dark:bg-gray-800" style={{border: 'none'}}>
+        <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-300 bg-white dark:bg-gray-800" style={{border: 'none', outline: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'}}>
             {/* Single Tab Header */}
             <div className="flex p-1 rounded-t-xl dual-reports-header">
                 <div className="flex-1 relative px-6 py-4 text-base font-semibold transition-all duration-200 rounded-xl dual-reports-active-green">
@@ -1652,16 +1655,21 @@ const KeywordsReport = ({ reportText }) => {
                                     style={{ maxHeight: '160px' }}
                                     dangerouslySetInnerHTML={{ __html: formattedContent }}
                                 />
-                                <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none dual-reports-fade-light"></div>
+                                {/* Only show fade if not placeholder text */}
+                                {!isPlaceholderOnly && (
+                                    <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none dual-reports-fade-light"></div>
+                                )}
                             </div>
 
-                            {/* Clickable area to expand */}
-                            <div
-                                className="text-center py-2 cursor-pointer rounded-lg transition-colors text-sm dual-reports-show-more"
-                                onClick={handleToggleExpand}
-                            >
-                                Show More
-                            </div>
+                            {/* Clickable area to expand - only show if not placeholder */}
+                            {!isPlaceholderOnly && (
+                                <div
+                                    className="text-center py-2 cursor-pointer rounded-lg transition-colors text-sm dual-reports-show-more"
+                                    onClick={handleToggleExpand}
+                                >
+                                    Show More
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -1741,8 +1749,11 @@ const BacklinksReport = ({ reportText }) => {
         .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.*?)\*/g, '<em>$1</em>');
 
+    // Check if this is just placeholder text
+    const isPlaceholderOnly = !reportText || reportText.trim() === '' || reportText === 'Backlinks targeting report will appear here once generated.';
+
     return (
-        <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-300 bg-white dark:bg-gray-800" style={{border: 'none'}}>
+        <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-300 bg-white dark:bg-gray-800" style={{border: 'none', outline: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'}}>
             {/* Single Tab Header */}
             <div className="flex p-1 rounded-t-xl dual-reports-header">
                 <div className="flex-1 relative px-6 py-4 text-base font-semibold transition-all duration-200 rounded-xl dual-reports-active-blue">
@@ -1813,16 +1824,21 @@ const BacklinksReport = ({ reportText }) => {
                                     style={{ maxHeight: '160px' }}
                                     dangerouslySetInnerHTML={{ __html: formattedContent }}
                                 />
-                                <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none dual-reports-fade-light"></div>
+                                {/* Only show fade if not placeholder text */}
+                                {!isPlaceholderOnly && (
+                                    <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none dual-reports-fade-light"></div>
+                                )}
                             </div>
                             
-                            {/* Clickable area to expand */}
-                            <div 
-                                className="text-center py-2 cursor-pointer rounded-lg transition-colors text-sm dual-reports-show-more"
-                                onClick={handleToggleExpand}
-                            >
-                                Show More
-                            </div>
+                            {/* Clickable area to expand - only show if not placeholder */}
+                            {!isPlaceholderOnly && (
+                                <div 
+                                    className="text-center py-2 cursor-pointer rounded-lg transition-colors text-sm dual-reports-show-more"
+                                    onClick={handleToggleExpand}
+                                >
+                                    Show More
+                                </div>
+                            )}
                         </div>
                     )}
 
