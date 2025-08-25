@@ -7856,7 +7856,16 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
     };
 
     if (!data) {
-        return <PageContent><div className="p-8 text-center text-gray-500">No Website Stats data available.</div></PageContent>;
+        return (
+            <PageContent>
+                <div className="p-8 text-center text-gray-500">
+                    <div className="flex flex-col items-center space-y-3">
+                        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                        <div>Loading Website Stats…</div>
+                    </div>
+                </div>
+            </PageContent>
+        );
     }
 
     const { healthData, competitorPerfData: rawCompetitorPerfData, technicalSeoData } = data;
