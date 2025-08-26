@@ -241,6 +241,12 @@ function getDashboardOverview(spreadsheet) {
     const linksRange = linksSheet.getRange('A2:U' + linksSheet.getLastRow());
     const linksValues = linksRange.getDisplayValues(); // Use getDisplayValues for consistency
     const linksRichTextValues = linksRange.getRichTextValues();
+    // Also read headers so we can find social columns robustly
+    const linksHeaders = linksSheet.getRange(1, 1, 1, linksSheet.getLastColumn()).getValues()[0];
+    const linksHeadersLower = linksHeaders.map(function(h){ return String(h).trim().toLowerCase(); });
+    const fbColIdx = linksHeadersLower.indexOf('facebook');
+    const igColIdx = linksHeadersLower.indexOf('instagram');
+    const ytColIdx = linksHeadersLower.indexOf('youtube');
 
     return clientInfoValues.map((clientRow, index) => {
         const name = clientRow[1];  // Column B - Clinic Name
@@ -290,6 +296,20 @@ function getDashboardOverview(spreadsheet) {
         const gAdsLink = (richTextLinksRow[18] ? richTextLinksRow[18].getLinkUrl() : null) || (linksRow[20] || '').trim();
         const fbAdsLink = (richTextLinksRow[17] ? richTextLinksRow[17].getLinkUrl() : null) || (linksRow[19] || '').trim();
 
+        // --- Social Links (Facebook / Instagram / YouTube) ---
+        function extractUrl(idx){
+            if (idx < 0) return '';
+            try {
+                var url = (richTextLinksRow[idx] && richTextLinksRow[idx].getLinkUrl()) || (linksRow[idx] || '').toString().trim();
+                // Basic validation: must look like a URL
+                if (url && /https?:\/\//i.test(url)) return url;
+            } catch (ignored) {}
+            return '';
+        }
+        const facebook = extractUrl(fbColIdx);
+        const instagram = extractUrl(igColIdx);
+        const youtube = extractUrl(ytColIdx);
+
         return {
             id: index,
             clinicName: name,
@@ -307,6 +327,9 @@ function getDashboardOverview(spreadsheet) {
             gAdsLink: gAdsLink,
             fbAds: fbAdsStatus,
             fbAdsLink: fbAdsLink,
+            facebook: facebook,
+            instagram: instagram,
+            youtube: youtube,
             isClient: clientRow[0] === 'Client'
         };
     }).filter(row => row);
