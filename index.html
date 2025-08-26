@@ -3086,7 +3086,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
         }
 
         return (
-                            <Card className="col-span-12 lg:col-span-8 group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
+            <Card className="col-span-12 lg:col-span-8">
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     {/* Modern Competitor Rankings */}
                     {currentDashboardData.competitors && currentDashboardData.competitors.length > 0 && (
@@ -4635,8 +4635,8 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                     </div>
                 </div>
 
-                <ServiceList title="Services by Search Volume" dataSet="topServices" tooltipText="Lists the most popular, established MedSpa services based on monthly search volume in the selected geographic area." disablePop />
-                <ServiceList title="New Services by Search Volume" dataSet="newServices" tooltipText="Highlights emerging or newer services with growing search interest, indicating potential new market opportunities." disablePop />
+                <ServiceList title="Services by Search Volume" dataSet="topServices" tooltipText="Lists the most popular, established MedSpa services based on monthly search volume in the selected geographic area." />
+                <ServiceList title="New Services by Search Volume" dataSet="newServices" tooltipText="Highlights emerging or newer services with growing search interest, indicating potential new market opportunities." />
             </div>
         </PageContent>
     );
