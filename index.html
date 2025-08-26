@@ -2079,8 +2079,10 @@ const DualReports = ({ competitorText, errorText }) => {
 
     const applyInlineMarkdown = (str) => {
         let s = str;
+        // Normalize NBSP so **bold** is matched even after emoji or pasted content
+        s = s.replace(/\u00A0/g, ' ');
         // Bold first
-        s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        s = s.replace(/\*\*([\s\S]+?)\*\*/g, '<strong class="font-bold">$1</strong>');
         // Italic using single asterisks (avoid matching bold)
         s = s.replace(/(^|[^*])\*(?!\*)([^*]+)\*(?!\*)/g, '$1<em>$2</em>');
         // Italic using underscores
@@ -2113,12 +2115,12 @@ const DualReports = ({ competitorText, errorText }) => {
                 tableRows = tableRows.slice(2);
             }
             const thead = headerCells
-                ? '<thead><tr>' + headerCells.map((c,i) => `<th class="border border-gray-200 px-3 py-2 ${i===0?'font-semibold':''} bg-gray-50 dark:bg-gray-700">${applyInlineMarkdown(c)}</th>`).join('') + '</tr></thead>'
+                ? '<thead><tr>' + headerCells.map((c) => `<th class="border border-gray-200 px-3 py-2 font-semibold bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100">${applyInlineMarkdown(c)}</th>`).join('') + '</tr></thead>'
                 : '';
             const tbody = '<tbody>' + tableRows.map(row => (
-                '<tr>' + row.map((c,i) => `<td class=\"border border-gray-200 px-3 py-2 ${i===0?'font-medium':''}\">${applyInlineMarkdown(c)}</td>`).join('') + '</tr>'
+                '<tr>' + row.map((c,i) => `<td class=\"border border-gray-200 px-3 py-2 ${i===0?'font-medium':''} whitespace-nowrap\">${applyInlineMarkdown(c)}</td>`).join('') + '</tr>'
             )).join('') + '</tbody>';
-            html.push(`<div class="overflow-x-auto my-4"><table class="min-w-full text-sm border border-gray-200 rounded-lg border-collapse">${thead}${tbody}</table></div>`);
+            html.push(`<div class="my-4 flex justify-center"><div class="max-w-full overflow-x-auto"><table class="table-auto w-auto text-sm border border-gray-200 rounded-lg border-collapse">${thead}${tbody}</table></div></div>`);
             inTable = false;
             tableRows = [];
         };
@@ -2128,10 +2130,10 @@ const DualReports = ({ competitorText, errorText }) => {
             if (!line) { blankStreak++; closeLists(); flushTable(); return; }
             if (blankStreak > 0) { html.push(`<div class="${blankStreak >= 2 ? 'my-8' : 'my-5'}"></div>`); blankStreak = 0; }
             if (/^---+$/.test(line)) { closeLists(); flushTable(); html.push('<hr class="my-8 border-t border-gray-200" />'); return; }
-            if (/^####\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h4 class="mt-4 mb-2 font-semibold text-2xl leading-tight">${applyInlineMarkdown(line.replace(/^####\s+/, ''))}</h4>`); return; }
-            if (/^###\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h3 class="mt-5 mb-3 font-semibold text-3xl leading-tight">${applyInlineMarkdown(line.replace(/^###\s+/, ''))}</h3>`); return; }
-            if (/^##\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h2 class="mt-6 mb-4 font-semibold text-4xl leading-tight">${applyInlineMarkdown(line.replace(/^##\s+/, ''))}</h2>`); return; }
-            if (/^#\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h1 class="mt-7 mb-5 font-bold text-5xl leading-tight">${applyInlineMarkdown(line.replace(/^#\s+/, ''))}</h1>`); return; }
+            if (/^####\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h4 class="mt-4 mb-2 font-semibold text-lg leading-tight">${applyInlineMarkdown(line.replace(/^####\s+/, ''))}</h4>`); return; }
+            if (/^###\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h3 class="mt-5 mb-3 font-semibold text-xl leading-tight">${applyInlineMarkdown(line.replace(/^###\s+/, ''))}</h3>`); return; }
+            if (/^##\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h2 class="mt-6 mb-4 font-semibold text-2xl leading-tight">${applyInlineMarkdown(line.replace(/^##\s+/, ''))}</h2>`); return; }
+            if (/^#\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h1 class="mt-7 mb-5 font-bold text-4xl leading-tight">${applyInlineMarkdown(line.replace(/^#\s+/, ''))}</h1>`); return; }
             if (/^\|.*\|$/.test(line)) {
                 // Accumulate markdown table rows, will flush on non-table line
                 const cells = line.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
