@@ -3563,7 +3563,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                             <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Keywords #1</th>
                             <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Backlinks</th>
                             <th className="py-4 px-4 font-semibold text-gray-800 w-1/4">Opening Hours</th>
-                            <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Links</th>
+                            <th className="py-4 px-6 text-center font-semibold text-gray-800 w-[12%]">Links</th>
                             <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Google Ads</th>
                             <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Facebook Ads</th>
                         </tr>
@@ -3664,21 +3664,21 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                                     })()}
                                 </td>
                                 {/* Social Links */}
-                                <td className="py-4 px-4 text-center">
-                                    <div className="inline-flex items-center gap-2">
+                                <td className="py-4 px-6 text-center">
+                                    <div className="inline-flex items-center gap-3">
                                         {c.facebook && (
                                             <a href={c.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800" title="Facebook" aria-label="Facebook">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M22 12a10 10 0 1 0-11.563 9.875v-6.985H7.898V12h2.54V9.797c0-2.506 1.492-3.89 3.776-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.242 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.985A10 10 0 0 0 22 12"/></svg>
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" className="w-5 h-5"><path fill="currentColor" d="M232 128a104 104 0 1 0-120 102.37V160H88a8 8 0 0 1 0-16h24v-24c0-22.06 13.24-40 40-40a88.6 88.6 0 0 1 24 3.31a8 8 0 0 1-4.38 15.39A72.77 72.77 0 0 0 152 96c-17.65 0-24 12.9-24 24v24h40a8 8 0 0 1 0 16h-40v70.37A104.12 104.12 0 0 0 232 128Z"/></svg>
                                             </a>
                                         )}
                                         {c.instagram && (
                                             <a href={c.instagram} target="_blank" rel="noopener noreferrer" className="text-pink-600 hover:text-pink-700" title="Instagram" aria-label="Instagram">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3zm5 3a5 5 0 1 1 0 10a5 5 0 0 1 0-10m0 2.5A2.5 2.5 0 1 0 14.5 12A2.5 2.5 0 0 0 12 9.5M18 6.5a1 1 0 1 1-1 1a1 1 0 0 1 1-1"/></svg>
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" className="w-5 h-5"><path fill="currentColor" d="M128 80a48 48 0 1 0 48 48a48.05 48.05 0 0 0-48-48Zm0 80a32 32 0 1 1 32-32a32 32 0 0 1-32 32Zm44-124H84a44.05 44.05 0 0 0-44 44v88a44.05 44.05 0 0 0 44 44h88a44.05 44.05 0 0 0 44-44V80a44.05 44.05 0 0 0-44-44Zm28 132a28 28 0 0 1-28 28H84a28 28 0 0 1-28-28V80a28 28 0 0 1 28-28h88a28 28 0 0 1 28 28ZM196 76a12 12 0 1 1-12-12a12 12 0 0 1 12 12Z"/></svg>
                                             </a>
                                         )}
                                         {c.youtube && (
                                             <a href={c.youtube} target="_blank" rel="noopener noreferrer" className="text-red-600 hover:text-red-700" title="YouTube" aria-label="YouTube">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="w-5 h-5"><path fill="currentColor" d="M21.583 7.2a3.008 3.008 0 0 0-2.118-2.132C17.9 4.6 12 4.6 12 4.6s-5.9 0-7.465.468A3.008 3.008 0 0 0 2.417 7.2A31.6 31.6 0 0 0 2 12a31.6 31.6 0 0 0 .417 4.8a3.008 3.008 0 0 0 2.118 2.132C6.1 19.4 12 19.4 12 19.4s5.9 0 7.465-.468A3.008 3.008 0 0 0 21.583 16.8A31.6 31.6 0 0 0 22 12a31.6 31.6 0 0 0-.417-4.8M10 15V9l5 3z"/></svg>
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" className="w-5 h-5"><path fill="currentColor" d="M236.8 72.22a23.93 23.93 0 0 0-16.69-16.93C206 52 128 52 128 52s-78 0-92.11 3.29a23.93 23.93 0 0 0-16.69 16.93C16 86.44 16 116 16 116s0 29.56 3.2 43.78a23.93 23.93 0 0 0 16.69 16.93C50 180 128 180 128 180s78 0 92.11-3.29a23.93 23.93 0 0 0 16.69-16.93C240 145.56 240 116 240 116s0-29.56-3.2-43.78ZM104 152V80l56 36Z"/></svg>
                                             </a>
                                         )}
                                     </div>
