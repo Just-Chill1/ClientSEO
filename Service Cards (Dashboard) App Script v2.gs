@@ -155,6 +155,27 @@ function doGet(e) {
       }
     }
     
+    // Collect sample values from the target column (for debugging state matching)
+    var stateSamples = [];
+    var uniqueStatesSample = [];
+    try {
+      var totalRows = sheet.getLastRow();
+      if (totalRows > 1) {
+        var colValues = sheet
+          .getRange(2, locationColumnIndex + 1, Math.max(0, totalRows - 1), 1)
+          .getValues()
+          .map(function(r){ return (r[0] !== null && r[0] !== undefined) ? r[0].toString() : ''; });
+        stateSamples = colValues.slice(0, 20);
+        var seen = {};
+        for (var i = 0; i < colValues.length && uniqueStatesSample.length < 50; i++) {
+          var v = colValues[i].toString().trim();
+          if (v && !seen[v]) { seen[v] = true; uniqueStatesSample.push(v); }
+        }
+      }
+    } catch (e) {
+      stateSamples = ['Error collecting samples: ' + e.message];
+    }
+
     const debugInfo = {
       requestLocation: location,
       selectedSheet: sheetName,
@@ -171,6 +192,13 @@ function doGet(e) {
           const hdrs = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
           return hdrs.filter(function(h){ return /\b(?:january|february|march|april|may|june|july|august|september|october|november|december)\b/i.test(String(h)); });
         } catch (e) { return []; }
+      })(),
+      stateSamples: stateSamples,
+      uniqueStatesSample: uniqueStatesSample,
+      targetPresentExact: uniqueStatesSample.indexOf(locationFilterValue) !== -1,
+      targetPresentCaseInsensitive: (function(){
+        var lower = locationFilterValue.toLowerCase();
+        return uniqueStatesSample.some(function(v){ return v.toLowerCase() === lower; });
       })()
     };
     
