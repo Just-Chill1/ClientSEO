@@ -422,6 +422,11 @@
        color: #ffffff !important;
      }
 
+     /* Force white numerals on service rank badges in light mode */
+     :root .rank-badge {
+       color: #ffffff !important;
+     }
+
      /* Fix hover effects - prevent text shifting */
      .group:hover * {
        backface-visibility: hidden;
@@ -742,7 +747,6 @@
       z-index: 999999 !important;
       position: fixed !important;
     }
-    
          .ai-report-section .info-tooltip-trigger {
        position: relative !important;
        z-index: 999998 !important;
@@ -970,7 +974,7 @@
      [data-theme="dark"] .dual-reports-show-more:hover {
        background-color: #374151 !important;
      }
-     
+
      /* Action button dark mode styling */
      [data-theme="dark"] .dual-reports-action-hover {
        color: #9ca3af !important;
@@ -1470,7 +1474,6 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
         </Card>
     );
 };
-
 /* Single Keywords Report Component */
 const KeywordsReport = ({ reportText }) => {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -2180,7 +2183,6 @@ const DualReports = ({ competitorText, errorText }) => {
         </div>
     );
 };
-
 // --- AI Sentiment Components ---
 const AISentimentBubbleChart = ({ data, loading, error }) => {
     const { ResponsiveContainer, ScatterChart, CartesianGrid, XAxis, YAxis, Tooltip, Cell, Scatter } = window.Recharts;
@@ -2769,7 +2771,6 @@ const AISentimentBarChart = ({ data, loading, error }) => {
         </Card>
     );
 };
-
 const Dashboard = ({ setActiveTab, webhooks, setData }) => {
     const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, PieChart, Pie, Legend, ScatterChart, Scatter } = window.Recharts;
     
@@ -3486,7 +3487,6 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
             </Card>
         );
     };
-
     const OverviewTable = ({ overviewData, loading, error, onRefresh, isRefreshing, refreshProgress, refreshMessage }) => {
         if (loading) {
             return <Card className="col-span-12 overflow-x-auto flex items-center justify-center"><p className="text-gray-500">Loading Overview data...</p></Card>;
@@ -4051,7 +4051,6 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
             </div>
         );
     };
-
     const ServiceList = ({ title, dataSet, tooltipText }) => {
         const [serviceData, setServiceData] = useState(null);
         const [loading, setLoading] = useState(true);
@@ -4245,7 +4244,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                                         <div className="flex items-center space-x-4" style={{ width: 'calc(100% - 280px)' }}>
                                             {/* Rank Badge */}
                                             <div className="flex-shrink-0">
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                                                <div className={`rank-badge w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
                                                     index === 0 ? 'bg-amber-400 text-white dark:bg-amber-500/25 dark:text-amber-200' :
                                                     index === 1 ? 'bg-gray-400 text-white dark:bg-gray-400/25 dark:text-gray-200' :
                                                     index === 2 ? 'bg-amber-700 text-white dark:bg-amber-700/25 dark:text-amber-200' :
@@ -4773,7 +4772,6 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
         </PageContent>
     );
 };
-
 /* ------------------------------------------------------------------ */
 /* KEYWORDS PAGE – full live version                                  */
 /* ------------------------------------------------------------------ */
@@ -5260,7 +5258,6 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
     const currentSummaryData = (processedArchiveData.length > 0 && currentMonthIndex < processedArchiveData.length
         ? processedArchiveData[currentMonthIndex]
         : effectiveSummary) || {};
-
     return (
         <PageContent>
             {/* Header Section */}
@@ -5858,7 +5855,6 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
         </PageContent>
     );
 };
-
 const Backlinks = ({ webhooks }) => {
     // Destructure chart components here, as they are only used in this component.
     const { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } = window.Recharts;
@@ -6316,7 +6312,6 @@ const Backlinks = ({ webhooks }) => {
             </span>
         </div>
     );
-
     return (
         <PageContent>
             {/* Header Section */}
@@ -6814,7 +6809,6 @@ const Backlinks = ({ webhooks }) => {
         </PageContent>
     );
 };
-
 const ToolsPage     = () => <PageContent><h2 className="text-center text-gray-500">Tools – coming soon</h2></PageContent>;
 const GeogridMaps = () => {
     const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, LabelList } = window.Recharts;
@@ -7605,7 +7599,6 @@ const getConsistentColor = (businessName, isClient, allBusinesses = []) => {
         gradientEnd: '#6b728040'
     };
 };
-
 /* ------------------------------------------------------------------ */
 /* WEBSITE STATS - HELPER COMPONENTS & DATA                           */
 /* ------------------------------------------------------------------ */
@@ -8342,7 +8335,6 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             </div>
         </div>
     );
-
         // Enhanced gauge component with smooth animation
     const ModernGauge = ({ score, size = 200 }) => {
         const [isDisableTransition, setIsDisableTransition] = useState(false);
@@ -8735,7 +8727,6 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             </div>
         );
     };
-
     return (
         <PageContent>
             {/* Header Section */}
