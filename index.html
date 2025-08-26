@@ -1697,6 +1697,167 @@ const KeywordsReport = ({ reportText }) => {
     );
 };
 
+/* GBP Report Component (Dashboard) */
+const GBPReportSection = ({ reportText }) => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [copySuccess, setCopySuccess] = useState('');
+
+    // Icons
+    const ChevronDown = createIcon(<polyline points="6 9 12 15 18 9" />);
+    const ChevronUp = createIcon(<polyline points="18 15 12 9 6 15" />);
+    const Copy = createIcon(
+        <>
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+        </>
+    );
+    const Download = createIcon(
+        <>
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+        </>
+    );
+    const Check = createIcon(<polyline points="20 6 9 17 4 12" />);
+
+    const handleToggleExpand = () => {
+        setIsExpanded(!isExpanded);
+    };
+
+    const handleCopyReport = async () => {
+        try {
+            await navigator.clipboard.writeText(reportText || '');
+            setCopySuccess('copied');
+            setTimeout(() => setCopySuccess(''), 2000);
+        } catch (err) {
+            console.error('Failed to copy text: ', err);
+        }
+    };
+
+    const handleDownloadReport = () => {
+        const element = document.createElement('a');
+        const file = new Blob([reportText || ''], { type: 'text/plain' });
+        element.href = URL.createObjectURL(file);
+        element.download = 'gbp-report.txt';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+    };
+
+    const formattedContent = String(reportText || 'Google Business Profile analysis will appear here once generated.')
+        .replace(/\n/g, '<br />')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+    // Check if this is just placeholder text
+    const isPlaceholderOnly = !reportText || reportText.trim() === '' || reportText === 'Google Business Profile analysis will appear here once generated.';
+
+    return (
+        <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-300 bg-white dark:bg-gray-800" style={{border: 'none', outline: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'}}>
+            {/* Single Tab Header */}
+            <div className="flex p-1 rounded-t-xl dual-reports-header">
+                <div className="flex-1 relative px-6 py-4 text-base font-semibold transition-all duration-200 rounded-xl dual-reports-active-green">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                            <span>Google Business Profile Report</span>
+                            <InfoTooltip text="AI-generated analysis of your Google Business Profile performance, including insights on visibility, engagement, and optimization opportunities." />
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleToggleExpand();
+                                }}
+                                className="flex items-center space-x-1 px-2 py-1 rounded-md transition-colors text-gray-500 hover:text-gray-700 text-xs dual-reports-action-hover"
+                                title={isExpanded ? "Show less" : "Show more"}
+                            >
+                                <span>{isExpanded ? "Show Less" : "Show More"}</span>
+                                {isExpanded ? (
+                                    <ChevronUp className="w-3 h-3" />
+                                ) : (
+                                    <ChevronDown className="w-3 h-3" />
+                                )}
+                            </button>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleCopyReport();
+                                }}
+                                className={`p-1 rounded-md transition-colors ${
+                                    copySuccess === 'copied'
+                                        ? 'text-green-600'
+                                        : 'text-green-600 hover:text-green-800 hover:bg-green-50 dual-reports-action-hover'
+                                }`}
+                                title="Copy report"
+                            >
+                                {copySuccess === 'copied' ? (
+                                    <Check className="w-4 h-4" />
+                                ) : (
+                                    <Copy className="w-4 h-4" />
+                                )}
+                            </button>
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDownloadReport();
+                                }}
+                                className="p-1 rounded-md transition-colors text-green-600 hover:text-green-800 hover:bg-green-50 dual-reports-action-hover"
+                                title="Download report as text file"
+                            >
+                                <Download className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Content Area */}
+            <div className="rounded-b-xl dual-reports-content">
+                <div className="p-6">
+                    {/* Preview/Summary when collapsed */}
+                    {!isExpanded && (
+                        <div className="space-y-2">
+                            <div className="relative">
+                                {/* Text content */}
+                                <div 
+                                    className="text-sm leading-relaxed overflow-hidden select-text cursor-text dual-reports-text"
+                                    style={{ maxHeight: '160px' }}
+                                    dangerouslySetInnerHTML={{ __html: formattedContent }}
+                                />
+                                {/* Only show fade if not placeholder text */}
+                                {!isPlaceholderOnly && (
+                                    <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none dual-reports-fade-light"></div>
+                                )}
+                            </div>
+                            
+                            {/* Clickable area to expand - only show if not placeholder */}
+                            {!isPlaceholderOnly && (
+                                <div 
+                                    className="text-center py-2 cursor-pointer rounded-lg transition-colors text-sm dual-reports-show-more"
+                                    onClick={handleToggleExpand}
+                                >
+                                    Show More
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Full content when expanded */}
+                    {isExpanded && (
+                        <div className="space-y-2">
+                            {/* Text content */}
+                            <div 
+                                className="prose prose-sm max-w-none leading-relaxed select-text cursor-text dual-reports-text"
+                                dangerouslySetInnerHTML={{ __html: formattedContent }}
+                            />
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 /* Single Backlinks Report Component */
 const BacklinksReport = ({ reportText }) => {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -4609,13 +4770,6 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                     refreshMessage={overviewRefreshMessage}
                 />
                 
-                {/* Dashboard AI Report - SWOT Analysis */}
-                {!loading && !error && dashboardData?.aiReport && String(dashboardData.aiReport).trim() && (
-                    <div className="col-span-12">
-                       <AIReportSection reportText={dashboardData.aiReport} title="SWOT Analysis" />
-                    </div>
-                )}
-
                 {/* AI Sentiment Cards */}
                 <AISentimentBubbleChart 
                     data={dashboardData?.aiSentimentData} 
@@ -4637,6 +4791,13 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
 
                 <ServiceList title="Services by Search Volume" dataSet="topServices" tooltipText="Lists the most popular, established MedSpa services based on monthly search volume in the selected geographic area." />
                 <ServiceList title="New Services by Search Volume" dataSet="newServices" tooltipText="Highlights emerging or newer services with growing search interest, indicating potential new market opportunities." />
+
+                {/* Google Business Profile Report */}
+                {!loading && !error && dashboardData?.aiReport && String(dashboardData.aiReport).trim() && (
+                    <div className="col-span-12">
+                       <GBPReportSection reportText={dashboardData.aiReport} />
+                    </div>
+                )}
             </div>
         </PageContent>
     );
