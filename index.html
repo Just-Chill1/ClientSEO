@@ -4078,7 +4078,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
         
         return (
             <div className="col-span-12 md:col-span-6 service-card">
-                <div className={`bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden group ${disablePop ? '' : 'hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60'}`}>
+                <div className={"bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60"}>
                     {/* Header Section */}
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-5 border-b border-gray-100">
                         <div className="flex justify-between items-start">
@@ -4530,7 +4530,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
         const hasOtherChanges = (
             // Check other key data as backup indicators - but only if data looks complete
             hasMeaningfulOverviewData && (
-                JSON.stringify(oldData?.overviewData) !== JSON.stringify(newData?.overviewData) ||
+            JSON.stringify(oldData?.overviewData) !== JSON.stringify(newData?.overviewData) ||
                 JSON.stringify(oldData?.censusData) !== JSON.stringify(newData?.censusData)
             )
         );
