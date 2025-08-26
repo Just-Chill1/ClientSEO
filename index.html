@@ -4219,10 +4219,10 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                                             {/* Rank Badge */}
                                             <div className="flex-shrink-0">
                                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                                                    index === 0 ? 'bg-yellow-400 text-yellow-900 dark:bg-yellow-500/20 dark:text-yellow-300' :
-                                                    index === 1 ? 'bg-gray-400 text-gray-900 dark:bg-gray-500/20 dark:text-gray-300' :
-                                                    index === 2 ? 'bg-orange-400 text-orange-900 dark:bg-orange-500/20 dark:text-orange-300' :
-                                                    'bg-blue-400 text-blue-900 dark:bg-blue-500/20 dark:text-blue-300'
+                                                    index === 0 ? 'bg-blue-600 text-white dark:bg-blue-500/30 dark:text-blue-200' :
+                                                    index === 1 ? 'bg-blue-500 text-white dark:bg-blue-500/25 dark:text-blue-200' :
+                                                    index === 2 ? 'bg-blue-400 text-white dark:bg-blue-500/20 dark:text-blue-200' :
+                                                    'bg-blue-300 text-blue-900 dark:bg-blue-500/15 dark:text-blue-200'
                                                 }`}>
                                                     {index + 1}
                                                 </div>
@@ -4712,6 +4712,10 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                     refreshProgress={overviewRefreshProgress}
                     refreshMessage={overviewRefreshMessage}
                 />
+
+                {/* Service Cards - positioned after map/census, before AI sentiment */}
+                <ServiceList title="Services by Search Volume" dataSet="topServices" tooltipText="Lists the most popular, established MedSpa services based on monthly search volume in the selected geographic area." />
+                <ServiceList title="New Services by Search Volume" dataSet="newServices" tooltipText="Highlights emerging or newer services with growing search interest, indicating potential new market opportunities." />
                 
                 {/* AI Sentiment Cards */}
                 <AISentimentBubbleChart 
@@ -4731,9 +4735,6 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                         <SentimentStatCard data={dashboardData?.aiSentimentData} />
                     </div>
                 </div>
-
-                <ServiceList title="Services by Search Volume" dataSet="topServices" tooltipText="Lists the most popular, established MedSpa services based on monthly search volume in the selected geographic area." />
-                <ServiceList title="New Services by Search Volume" dataSet="newServices" tooltipText="Highlights emerging or newer services with growing search interest, indicating potential new market opportunities." />
 
                 {/* Google Business Profile Report */}
                 {!loading && !error && dashboardData?.aiReport && String(dashboardData.aiReport).trim() && (
