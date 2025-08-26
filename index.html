@@ -1063,6 +1063,14 @@
         -moz-osx-font-smoothing: grayscale !important;
         text-rendering: optimizeLegibility !important;
     }
+
+    /* Bubble tooltip (AI Visibility vs Sentiment) dark-mode cleanup */
+    [data-theme="dark"] .ai-bubble-tooltip .dark\:bg-transparent {
+      background: transparent !important;
+    }
+    [data-theme="dark"] .ai-bubble-tooltip .dark\:border {
+      border-color: #374151 !important; /* gray-700 */
+    }
   </style>
 
   <!-- Preconnect to CDNs for faster loading -->
@@ -2301,7 +2309,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
             const summary = data.summary.length > 500 ? data.summary.substring(0, 500) + '...' : data.summary;
             
             return (
-                <div className="bg-white dark:bg-gray-900 p-5 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-w-sm backdrop-blur-sm">
+                <div className="ai-bubble-tooltip bg-white dark:bg-gray-900 p-5 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl max-w-sm backdrop-blur-sm">
                     <div className="flex items-center justify-between mb-3">
                         <p className="font-bold text-gray-800 dark:text-gray-100">{data.clinicName}</p>
                         {data.isClient && (
@@ -2317,15 +2325,15 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                                 {data.hasData ? `${data.signedSentiment >= 0 ? '+' : ''}${Math.round(data.signedSentiment)}% ${sentimentText}` : 'Not found'}
                             </span>
                         </div>
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between dark:bg-transparent">
                             <span className="text-sm text-gray-600 dark:text-gray-300">Visibility</span>
                             <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{Math.round(data.visibility)}%</span>
                         </div>
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between dark:bg-transparent">
                             <span className="text-sm text-gray-600 dark:text-gray-300">Appearance</span>
                             <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{Math.round(data.appearance * 100)}%</span>
                         </div>
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between dark:bg-transparent">
                             <span className="text-sm text-gray-600 dark:text-gray-300">Confidence</span>
                             <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{Math.round(data.confidence * 100)}%</span>
                         </div>
