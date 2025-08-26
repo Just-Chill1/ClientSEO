@@ -5482,19 +5482,22 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                         <div className="p-6 rounded-xl text-center flex-grow flex flex-col justify-center border border-gray-200">
                             <p className="text-base text-gray-500">Total Keywords Tracked</p>
                             <p className="text-5xl font-bold text-blue-600">{(() => {
-                                // ALWAYS use the base summary data from Keywords Summary sheet (not archive data)
-                                // This ensures it shows 151 consistently, not 117 from archive months
-                                const originalTotal = parseInt(summary?.totalKeywords) || 0;
-                                console.log('Total Keywords Tracked - Using base summary:', {
-                                    baseValue: summary?.totalKeywords,
-                                    archiveValue: currentSummaryData?.totalKeywords,
-                                    displayingValue: originalTotal
-                                });
-                                return originalTotal.toLocaleString();
+                                // Use Client_kw count from effectiveTable as source of truth
+                                const siteNamesAll = Object.keys(effectiveTable || {});
+                                const clientSite = siteNamesAll.length > 0 ? siteNamesAll[0] : '';
+                                const clientRows = clientSite ? (effectiveTable[clientSite] || []) : [];
+                                const tableTotal = clientRows.length;
+
+                                // Fallback to summary if table not available yet
+                                const summaryTotal = parseInt(summary?.totalKeywords) || parseInt(currentSummaryData?.totalKeywords) || 0;
+                                const display = tableTotal > 0 ? tableTotal : summaryTotal;
+
+                                console.log('Total Keywords Tracked - Computed:', { clientSite, tableTotal, summaryTotal, display });
+                                return Number(display).toLocaleString();
                             })()}</p>
                             <p className="text-sm text-gray-500 mt-2">
-                                <span className={(Number(summary?.totalKeywordsChange) || 0) >= 0 ? 'text-green-600' : 'text-red-600'}>
-                                    {(Number(summary?.totalKeywordsChange) || 0) >= 0 ? '+' : ''}{Number(summary?.totalKeywordsChange) || 0}
+                                <span className={(Number(currentSummaryData?.totalKeywordsChange) || 0) >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                    {(Number(currentSummaryData?.totalKeywordsChange) || 0) >= 0 ? '+' : ''}{Number(currentSummaryData?.totalKeywordsChange) || 0}
                                 </span> vs prev month
                             </p>
                             </div>
