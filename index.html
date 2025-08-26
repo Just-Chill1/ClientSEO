@@ -1175,82 +1175,26 @@ const fetchWithCorsWorkaround = (url, callback) => {
         }
     };
 
-    // Handle map interaction
-    const handleMapClick = (event) => {
-        // Prevent event bubbling to avoid interference
+    // Simple map activation on click; deactivation on mouseleave is handled via events on containers
+    const handleMapActivate = (event) => {
         event.stopPropagation();
-        
-        const mapContainer = event.currentTarget;
-        const iframe = mapContainer.querySelector('iframe');
-        
-        // Ensure we have the iframe element
-        if (!iframe) {
-            console.warn('Map iframe not found');
-            return;
-        }
-        
-        // Add active class immediately
-        mapContainer.classList.add('active');
-        
-        // Enable pointer events with a small delay to ensure CSS is applied
-        setTimeout(() => {
+        const container = event.currentTarget;
+        container.classList.add('active');
+        const iframe = container.querySelector('iframe');
+        if (iframe) {
             iframe.style.pointerEvents = 'auto';
             iframe.style.transition = 'none';
-        }, 10);
-
-        // Disable interaction when clicking outside the map
-        const handleOutsideClick = (e) => {
-            // Check if click is outside the map container
-            if (!mapContainer.contains(e.target)) {
-                mapContainer.classList.remove('active');
-                if (iframe) {
-                    iframe.style.pointerEvents = 'none';
-                }
-                document.removeEventListener('click', handleOutsideClick);
-            }
-        };
-
-        // Remove any existing outside click listeners to prevent duplicates
-        document.removeEventListener('click', handleOutsideClick);
-        
-        // Attach new listener with a small delay to avoid immediate triggering
-        setTimeout(() => {
-            document.addEventListener('click', handleOutsideClick);
-        }, 100);
+        }
     };
 
-    // Enhanced map interaction for better reliability
-    const enhanceMapInteraction = () => {
-        // Find all map containers and add additional event listeners
-        const mapContainers = document.querySelectorAll('.map-container');
-        
-        mapContainers.forEach(container => {
-            // Add mousedown event for more reliable activation
-            container.addEventListener('mousedown', (e) => {
-                e.stopPropagation();
-                const iframe = container.querySelector('iframe');
-                if (iframe) {
-                    container.classList.add('active');
-                    iframe.style.pointerEvents = 'auto';
-                }
-            });
-            
-            // Add touch events for mobile devices
-            container.addEventListener('touchstart', (e) => {
-                e.stopPropagation();
-                const iframe = container.querySelector('iframe');
-                if (iframe) {
-                    container.classList.add('active');
-                    iframe.style.pointerEvents = 'auto';
-                }
-            });
-        });
+    const handleMapDeactivate = (event) => {
+        const container = event.currentTarget;
+        container.classList.remove('active');
+        const iframe = container.querySelector('iframe');
+        if (iframe) {
+            iframe.style.pointerEvents = 'none';
+        }
     };
-
-    // Initialize enhanced map interaction when DOM is ready
-    document.addEventListener('DOMContentLoaded', enhanceMapInteraction);
-    // Also run it after a short delay to catch dynamically loaded maps
-    setTimeout(enhanceMapInteraction, 1000);
 
 /* ------------------------------------------------------------------ */
 /* helpers  – icon factory  +  shared icons                           */
@@ -3415,7 +3359,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                             )}
                         </div>
                         {currentDashboardData.mapLink ? (
-                            <div className="relative w-full h-[600px] overflow-hidden map-container" onClick={handleMapClick}>
+                            <div className="relative w-full h-[600px] overflow-hidden map-container" onClick={handleMapActivate} onMouseLeave={handleMapDeactivate}>
                                 <iframe 
                                     src={processMapUrlForCentering(currentDashboardData.mapLink)}
                                     className="w-full h-full rounded-lg border border-gray-200 map-iframe"
@@ -7380,7 +7324,7 @@ const GeogridMaps = () => {
                     {/* Right Column: Map */}
                     <div className="md:col-span-3">
                         {currentData.mapLink ? (
-                            <div className="relative w-full h-[550px] overflow-hidden mx-0 map-container" onClick={handleMapClick}>
+                            <div className="relative w-full h-[550px] overflow-hidden mx-0 map-container" onClick={handleMapActivate} onMouseLeave={handleMapDeactivate}>
                                 <iframe 
                                     src={processMapUrlForCentering(currentData.mapLink)}
                                     className="w-full h-full rounded-lg map-iframe"
