@@ -1071,6 +1071,11 @@
     [data-theme="dark"] .ai-bubble-tooltip .dark\:border {
       border-color: #374151 !important; /* gray-700 */
     }
+    
+    /* AI Visibility vs Sentiment tooltip: remove row gray backgrounds in dark mode */
+    [data-theme="dark"] .ai-bubble-tooltip .tooltip-header { background: transparent !important; }
+    [data-theme="dark"] .ai-bubble-tooltip .space-y-3 > div { background: transparent !important; border: none !important; }
+    [data-theme="dark"] .ai-bubble-tooltip .space-y-3 > div * { background: transparent !important; }
   </style>
 
   <!-- Preconnect to CDNs for faster loading -->
@@ -2317,7 +2322,7 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                         )}
                     </div>
                     <div className="space-y-3">
-                        <div className="flex items-center justify-between p-2 bg-gray-50 dark:bg-transparent dark:border dark:border-gray-700 rounded-lg">
+                        <div className="tooltip-header flex items-center justify-between p-2 bg-gray-50 dark:bg-transparent dark:border dark:border-gray-700 rounded-lg">
                             <span className="text-sm font-medium" style={{ color: platformColors[selectedPlatform] }}>
                                 {platformName} Sentiment
                             </span>
