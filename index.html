@@ -4059,6 +4059,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
             setLoading(true);
             setError(null);
             
+            console.log('[ServiceList] Fetching services:', { selectedLocation, dataSet, scriptUrl });
             fetchWithCorsWorkaround(scriptUrl, (err, data) => {
                 if (err) {
                     console.error("ServiceList Fetch Error:", err);
@@ -4088,6 +4089,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                         sheetRows: data._debug.sheetRows,
                         dataRowsFound: data._debug.dataRowsFound,
                         availableSheets: data._debug.availableSheets,
+                        monthHeaders: data._debug.monthHeaders,
                         topServicesCount: data.topServices?.length || 0,
                         newServicesCount: data.newServices?.length || 0
                     });
