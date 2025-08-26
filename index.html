@@ -1806,7 +1806,7 @@ const GBPReportSection = ({ reportText }) => {
                         <div className="space-y-2">
                             {/* Text content */}
                             <div 
-                                className="prose prose-sm max-w-none leading-relaxed select-text cursor-text dual-reports-text"
+                                className="prose prose-base max-w-none leading-relaxed select-text cursor-text dual-reports-text prose-p:my-5 prose-h1:mt-7 prose-h1:mb-5 prose-h2:mt-6 prose-h2:mb-4 prose-h3:mt-5 prose-h3:mb-3 prose-ul:my-3 prose-ol:my-3"
                                 dangerouslySetInnerHTML={{ __html: formattedContent }}
                             />
                         </div>
@@ -2104,9 +2104,22 @@ const DualReports = ({ competitorText, errorText }) => {
             if (!line) { blankStreak++; closeLists(); return; }
             if (blankStreak > 0) { html.push(`<div class="${blankStreak >= 2 ? 'my-8' : 'my-5'}"></div>`); blankStreak = 0; }
             if (/^---+$/.test(line)) { closeLists(); html.push('<hr class="my-8 border-t border-gray-200" />'); return; }
+            if (/^####\s+/.test(line)) { closeLists(); html.push(`<h4 class="mt-4 mb-2 font-semibold">${applyInlineMarkdown(line.replace(/^####\s+/, ''))}</h4>`); return; }
             if (/^###\s+/.test(line)) { closeLists(); html.push(`<h3 class="mt-5 mb-3">${applyInlineMarkdown(line.replace(/^###\s+/, ''))}</h3>`); return; }
             if (/^##\s+/.test(line)) { closeLists(); html.push(`<h2 class="mt-6 mb-4">${applyInlineMarkdown(line.replace(/^##\s+/, ''))}</h2>`); return; }
             if (/^#\s+/.test(line)) { closeLists(); html.push(`<h1 class="mt-7 mb-5">${applyInlineMarkdown(line.replace(/^#\s+/, ''))}</h1>`); return; }
+            if (/^\|.*\|$/.test(line)) {
+                // Markdown table row support
+                const cells = line.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+                // If previous element isn't a table, start one
+                const prev = html[html.length - 1] || '';
+                if (!/</table>$/i.test(prev)) {
+                    html.push('<div class="overflow-x-auto my-4"><table class="min-w-full text-sm border border-gray-200 rounded-lg"><tbody>');
+                }
+                html.push('<tr>' + cells.map((c, i) => `<td class="border border-gray-200 px-3 py-2 ${i===0?'font-medium':''}">${applyInlineMarkdown(c)}</td>`).join('') + '</tr>');
+                // Look ahead to close table when next line isn't a table row
+                return;
+            }
             if (/^\d+\.\s+/.test(line)) {
                 if (!inOl) { closeLists(); html.push('<ol class="list-decimal pl-5 my-2 space-y-1.5">'); inOl = true; }
                 html.push(`<li>${applyInlineMarkdown(line.replace(/^\d+\.\s+/, ''))}</li>`);
@@ -2118,11 +2131,19 @@ const DualReports = ({ competitorText, errorText }) => {
                 return;
             }
             closeLists();
-            // Convert explicit line breaks within a paragraph block: use <br> for '\\n' sequences inside long lines
+            // Join colon-labeled heading followed immediately by content: reduce accidental blank gap
+            // e.g., "Analysis Summary:" followed by text on next non-blank line should feel like a section intro
             html.push(`<p class="my-5">${applyInlineMarkdown(line)}</p>`);
         });
         closeLists();
-        return html.join('\n');
+        // Ensure any open table is closed
+        if (html.length && !(/<\/table>$/i).test(html[html.length-1]) && html.some(x => (/<table /).test(x) && !(/<\/table>/).test(x))) {
+            html.push('</tbody></table></div>');
+        }
+        // Post-process: if a line ends with ':' and is followed by a block gap, ensure only a small gap
+        let result = html.join('\n');
+        result = result.replace(/(<p[^>]*>[^<:]*:[^<]*<\/p>)\s*(<div class=\"my-5\"><\/div>)/g, '$1');
+        return result;
     };
 
     const formattedContent = activeTab === 'competitor'
