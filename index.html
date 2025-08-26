@@ -2113,7 +2113,8 @@ const DualReports = ({ competitorText, errorText }) => {
                 const cells = line.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
                 // If previous element isn't a table, start one
                 const prev = html[html.length - 1] || '';
-                if (!/</table>$/i.test(prev)) {
+                // Avoid regex literal with closing tag; use RegExp constructor
+                if (!(new RegExp('</\\/table>$','i')).test(prev)) {
                     html.push('<div class="overflow-x-auto my-4"><table class="min-w-full text-sm border border-gray-200 rounded-lg"><tbody>');
                 }
                 html.push('<tr>' + cells.map((c, i) => `<td class="border border-gray-200 px-3 py-2 ${i===0?'font-medium':''}">${applyInlineMarkdown(c)}</td>`).join('') + '</tr>');
