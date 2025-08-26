@@ -3045,7 +3045,14 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
         }, []);
 
         if (loading) {
-            return <Card className="col-span-12 lg:col-span-8 flex items-center justify-center"><p className="text-gray-500">Loading Geogrid data...</p></Card>;
+            return (
+                <Card className="col-span-12 lg:col-span-8">
+                    <div className="flex items-center justify-center p-12 select-none">
+                        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mr-3"></div>
+                        <p className="text-gray-500">Loading Geogrid data...</p>
+                    </div>
+                </Card>
+            );
         }
         if (error) {
             return <Card className="col-span-12 lg:col-span-8 flex items-center justify-center"><p className="text-red-500">Geogrid Error: {error}</p></Card>;
@@ -4071,7 +4078,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
         
         return (
             <div className="col-span-12 md:col-span-6 service-card">
-                <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60">
+                <div className={`bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden group ${disablePop ? '' : 'hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 hover:border-blue-200/60'}`}>
                     {/* Header Section */}
                     <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-5 border-b border-gray-100">
                         <div className="flex justify-between items-start">
@@ -4628,8 +4635,8 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                     </div>
                 </div>
 
-                <ServiceList title="Services by Search Volume" dataSet="topServices" tooltipText="Lists the most popular, established MedSpa services based on monthly search volume in the selected geographic area." />
-                <ServiceList title="New Services by Search Volume" dataSet="newServices" tooltipText="Highlights emerging or newer services with growing search interest, indicating potential new market opportunities." />
+                <ServiceList title="Services by Search Volume" dataSet="topServices" tooltipText="Lists the most popular, established MedSpa services based on monthly search volume in the selected geographic area." disablePop />
+                <ServiceList title="New Services by Search Volume" dataSet="newServices" tooltipText="Highlights emerging or newer services with growing search interest, indicating potential new market opportunities." disablePop />
             </div>
         </PageContent>
     );
