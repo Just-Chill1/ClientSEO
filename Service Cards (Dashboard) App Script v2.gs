@@ -24,8 +24,8 @@
  */
 
 // --- Configuration ---
-// Disable verbose logging in production to reduce execution overhead
-var DEBUG = false;
+// Enable verbose logging while we diagnose state filtering issues
+var DEBUG = true;
 if (!DEBUG && typeof console !== 'undefined' && typeof console.log === 'function') {
   console.log = function() {};
 }
@@ -164,7 +164,14 @@ function doGet(e) {
       sheetColumns: sheet ? sheet.getLastColumn() : 0,
       dataRowsFound: data.topServices.length + data.newServices.length,
       availableSheets: SpreadsheetApp.getActiveSpreadsheet().getSheets().map(s => s.getName()),
-      hasSheet: !!sheet
+      hasSheet: !!sheet,
+      // expose month headers we detected and a few unique states to help debug
+      monthHeaders: (function(){
+        try {
+          const hdrs = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+          return hdrs.filter(function(h){ return /\b(?:january|february|march|april|may|june|july|august|september|october|november|december)\b/i.test(String(h)); });
+        } catch (e) { return []; }
+      })()
     };
     
     // Include debug info in response
