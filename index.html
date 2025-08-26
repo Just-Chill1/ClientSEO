@@ -480,9 +480,8 @@
       transition: none;
     }
     
-    /* Enable pointer events only when clicked/active */
-    .map-container.active .map-iframe,
-    .map-container:active .map-iframe {
+    /* Enable pointer events only when explicitly activated (one click) */
+    .map-container.active .map-iframe {
       pointer-events: auto;
     }
     
