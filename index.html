@@ -5743,7 +5743,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
             {/* Keywords Report Section */}
             <div className="mb-8">
                 <KeywordsReport 
-                    reportText={summary?.keywordsAiReport || 'Keywords targeting report will appear here once generated.'}
+                    reportText={effectiveSummary?.keywordsAiReport || 'Keywords targeting report will appear here once generated.'}
                 />
             </div>
 
