@@ -2095,32 +2095,52 @@ const DualReports = ({ competitorText, errorText }) => {
         const html = [];
         let inUl = false, inOl = false;
         let blankStreak = 0;
+        // Table parsing state
+        let inTable = false;
+        let tableRows = []; // array of string[] (cells)
+
         const closeLists = () => {
             if (inUl) { html.push('</ul>'); inUl = false; }
             if (inOl) { html.push('</ol>'); inOl = false; }
         };
+
+        const flushTable = () => {
+            if (!inTable || tableRows.length === 0) return;
+            // Detect header separator row like --- or :---: etc.
+            let headerCells = null;
+            if (tableRows.length >= 2 && tableRows[1].every(cell => /^:?-{3,}:?$/.test(cell))) {
+                headerCells = tableRows[0];
+                tableRows = tableRows.slice(2);
+            }
+            const thead = headerCells
+                ? '<thead><tr>' + headerCells.map((c,i) => `<th class="border border-gray-200 px-3 py-2 ${i===0?'font-semibold':''} bg-gray-50 dark:bg-gray-700">${applyInlineMarkdown(c)}</th>`).join('') + '</tr></thead>'
+                : '';
+            const tbody = '<tbody>' + tableRows.map(row => (
+                '<tr>' + row.map((c,i) => `<td class=\"border border-gray-200 px-3 py-2 ${i===0?'font-medium':''}\">${applyInlineMarkdown(c)}</td>`).join('') + '</tr>'
+            )).join('') + '</tbody>';
+            html.push(`<div class="overflow-x-auto my-4"><table class="min-w-full text-sm border border-gray-200 rounded-lg border-collapse">${thead}${tbody}</table></div>`);
+            inTable = false;
+            tableRows = [];
+        };
+
         lines.forEach(raw => {
             const line = raw.replace(/\s+$/,'').replace(/^\s+/,'');
-            if (!line) { blankStreak++; closeLists(); return; }
+            if (!line) { blankStreak++; closeLists(); flushTable(); return; }
             if (blankStreak > 0) { html.push(`<div class="${blankStreak >= 2 ? 'my-8' : 'my-5'}"></div>`); blankStreak = 0; }
-            if (/^---+$/.test(line)) { closeLists(); html.push('<hr class="my-8 border-t border-gray-200" />'); return; }
-            if (/^####\s+/.test(line)) { closeLists(); html.push(`<h4 class="mt-4 mb-2 font-semibold">${applyInlineMarkdown(line.replace(/^####\s+/, ''))}</h4>`); return; }
-            if (/^###\s+/.test(line)) { closeLists(); html.push(`<h3 class="mt-5 mb-3">${applyInlineMarkdown(line.replace(/^###\s+/, ''))}</h3>`); return; }
-            if (/^##\s+/.test(line)) { closeLists(); html.push(`<h2 class="mt-6 mb-4">${applyInlineMarkdown(line.replace(/^##\s+/, ''))}</h2>`); return; }
-            if (/^#\s+/.test(line)) { closeLists(); html.push(`<h1 class="mt-7 mb-5">${applyInlineMarkdown(line.replace(/^#\s+/, ''))}</h1>`); return; }
+            if (/^---+$/.test(line)) { closeLists(); flushTable(); html.push('<hr class="my-8 border-t border-gray-200" />'); return; }
+            if (/^####\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h4 class="mt-4 mb-2 font-semibold text-2xl leading-tight">${applyInlineMarkdown(line.replace(/^####\s+/, ''))}</h4>`); return; }
+            if (/^###\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h3 class="mt-5 mb-3 font-semibold text-3xl leading-tight">${applyInlineMarkdown(line.replace(/^###\s+/, ''))}</h3>`); return; }
+            if (/^##\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h2 class="mt-6 mb-4 font-semibold text-4xl leading-tight">${applyInlineMarkdown(line.replace(/^##\s+/, ''))}</h2>`); return; }
+            if (/^#\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h1 class="mt-7 mb-5 font-bold text-5xl leading-tight">${applyInlineMarkdown(line.replace(/^#\s+/, ''))}</h1>`); return; }
             if (/^\|.*\|$/.test(line)) {
-                // Markdown table row support
+                // Accumulate markdown table rows, will flush on non-table line
                 const cells = line.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
-                // If previous element isn't a table, start one
-                const prev = html[html.length - 1] || '';
-                // Avoid regex literal with closing tag; use RegExp constructor
-                if (!(new RegExp('</\\/table>$','i')).test(prev)) {
-                    html.push('<div class="overflow-x-auto my-4"><table class="min-w-full text-sm border border-gray-200 rounded-lg"><tbody>');
-                }
-                html.push('<tr>' + cells.map((c, i) => `<td class="border border-gray-200 px-3 py-2 ${i===0?'font-medium':''}">${applyInlineMarkdown(c)}</td>`).join('') + '</tr>');
-                // Look ahead to close table when next line isn't a table row
+                if (!inTable) { inTable = true; tableRows = []; }
+                tableRows.push(cells);
                 return;
             }
+            // Non-table content triggers a flush
+            flushTable();
             if (/^\d+\.\s+/.test(line)) {
                 if (!inOl) { closeLists(); html.push('<ol class="list-decimal pl-5 my-2 space-y-1.5">'); inOl = true; }
                 html.push(`<li>${applyInlineMarkdown(line.replace(/^\d+\.\s+/, ''))}</li>`);
@@ -2132,15 +2152,10 @@ const DualReports = ({ competitorText, errorText }) => {
                 return;
             }
             closeLists();
-            // Join colon-labeled heading followed immediately by content: reduce accidental blank gap
-            // e.g., "Analysis Summary:" followed by text on next non-blank line should feel like a section intro
             html.push(`<p class="my-5">${applyInlineMarkdown(line)}</p>`);
         });
         closeLists();
-        // Ensure any open table is closed
-        if (html.length && !(/<\/table>$/i).test(html[html.length-1]) && html.some(x => (/<table /).test(x) && !(/<\/table>/).test(x))) {
-            html.push('</tbody></table></div>');
-        }
+        flushTable();
         // Post-process: if a line ends with ':' and is followed by a block gap, ensure only a small gap
         let result = html.join('\n');
         result = result.replace(/(<p[^>]*>[^<:]*:[^<]*<\/p>)\s*(<div class=\"my-5\"><\/div>)/g, '$1');
