@@ -1610,7 +1610,7 @@ const KeywordsReport = ({ reportText }) => {
                             <div className="relative">
                                 {/* Text content */}
                                 <div 
-                                    className="text-sm leading-relaxed overflow-hidden select-text cursor-text dual-reports-text"
+                                    className="prose prose-sm max-w-none leading-relaxed overflow-hidden select-text cursor-text dual-reports-text"
                                     style={{ maxHeight: '160px' }}
                                     dangerouslySetInnerHTML={{ __html: formattedContent }}
                                 />
@@ -2071,10 +2071,61 @@ const DualReports = ({ competitorText, errorText }) => {
     );
     const Check = createIcon(<polyline points="20 6 9 17 4 12" />);
 
-    const formattedContent = String(currentContent || '')
-        .replace(/\n/g, '<br />')
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>');
+    // Markdown parsing for Competitor Analysis (headings, hr, lists, bold/italic)
+    const escapeHtml = (str) => String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    const applyInlineMarkdown = (str) => {
+        let s = str;
+        // Bold first
+        s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        // Italic using single asterisks (avoid matching bold)
+        s = s.replace(/(^|[^*])\*(?!\*)([^*]+)\*(?!\*)/g, '$1<em>$2</em>');
+        // Italic using underscores
+        s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
+        return s;
+    };
+
+    const parseMarkdownToHtml = (markdown) => {
+        const lines = escapeHtml(markdown).replace(/\r\n?/g, '\n').split('\n');
+        const html = [];
+        let inUl = false, inOl = false;
+        const closeLists = () => {
+            if (inUl) { html.push('</ul>'); inUl = false; }
+            if (inOl) { html.push('</ol>'); inOl = false; }
+        };
+        lines.forEach(raw => {
+            const line = raw.trim();
+            if (!line) { closeLists(); return; }
+            if (/^---+$/.test(line)) { closeLists(); html.push('<hr />'); return; }
+            if (/^###\s+/.test(line)) { closeLists(); html.push(`<h3>${applyInlineMarkdown(line.replace(/^###\s+/, ''))}</h3>`); return; }
+            if (/^##\s+/.test(line)) { closeLists(); html.push(`<h2>${applyInlineMarkdown(line.replace(/^##\s+/, ''))}</h2>`); return; }
+            if (/^#\s+/.test(line)) { closeLists(); html.push(`<h1>${applyInlineMarkdown(line.replace(/^#\s+/, ''))}</h1>`); return; }
+            if (/^\d+\.\s+/.test(line)) {
+                if (!inOl) { closeLists(); html.push('<ol class="list-decimal pl-5 space-y-1">'); inOl = true; }
+                html.push(`<li>${applyInlineMarkdown(line.replace(/^\d+\.\s+/, ''))}</li>`);
+                return;
+            }
+            if (/^-\s+/.test(line)) {
+                if (!inUl) { closeLists(); html.push('<ul class="list-disc pl-5 space-y-1">'); inUl = true; }
+                html.push(`<li>${applyInlineMarkdown(line.replace(/^-\s+/, ''))}</li>`);
+                return;
+            }
+            closeLists();
+            html.push(`<p>${applyInlineMarkdown(line)}</p>`);
+        });
+        closeLists();
+        return html.join('\n');
+    };
+
+    const formattedContent = activeTab === 'competitor'
+        ? parseMarkdownToHtml(String(currentContent || ''))
+        : String(currentContent || '')
+            .replace(/\n/g, '<br />')
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>');
 
     return (
         <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-300 bg-white dark:bg-gray-800 border-0">
