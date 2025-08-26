@@ -607,7 +607,7 @@ function getChecksData(spreadsheet) {
     const headerRow = sheet.getRange('A1:CP1').getValues()[0];
     const clientRow = sheet.getRange('A2:CP' + sheet.getLastRow()).getValues().find(r => r[0] === 'Client');
     if (!clientRow) return { checksPassed: 0, totalChecks: 0, passedList: [], failedList: [] };
-    const PASS_WHEN_TRUE = ['is_https', 'has_html_doctype', 'canonical', 'meta_charset_consistency', 'seo_friendly_url', 'seo_friendly_url_characters_check', 'seo_friendly_url_dynamic_check', 'seo_friendly_url_keywords_check', 'seo_friendly_url_relative_length_check', 'has_meta_title'];
+    const PASS_WHEN_TRUE = ['is_https', 'has_html_doctype', 'canonical', 'meta_charset_consistency', 'seo_friendly_url', 'seo_friendly_url_characters_check', 'seo_friendly_url_dynamic_check', 'seo_friendly_url_keywords_check', 'seo_friendly_url_relative_length_check', 'has_meta_title', 'no_duplicate_meta_tags', 'no_duplicate_titles'];
     const PASS_WHEN_FALSE = ['no_content_encoding', 'high_loading_time', 'is_redirect', 'is_4xx_code', 'is_5xx_code', 'is_broken', 'is_www', 'is_http', 'high_waiting_time', 'has_micromarkup', 'has_micromarkup_errors', 'no_doctype', 'no_encoding_meta_tag', 'no_h1_tag', 'https_to_http_links', 'size_greater_than_3mb', 'has_meta_refresh_redirect', 'has_render_blocking_resources', 'low_content_rate', 'high_content_rate', 'low_character_count', 'high_character_count', 'small_page_size', 'large_page_size', 'low_readability_rate', 'irrelevant_description', 'irrelevant_title', 'irrelevant_meta_keywords', 'title_too_long', 'title_too_short', 'deprecated_html_tags', 'duplicate_meta_tags', 'duplicate_title_tag', 'no_image_alt', 'no_image_title', 'no_description', 'no_title', 'no_favicon', 'flash', 'frame', 'lorem_ipsum'];
     const allChecks = [...PASS_WHEN_TRUE, ...PASS_WHEN_FALSE];
     let checksPassed = 0;
@@ -1018,18 +1018,25 @@ function getWebsiteCrawlPagesAggregate(spreadsheet) {
 	const totalPages = values.length;
 
 	// Define pass logic similar to getChecksData, but page-wise aggregation
-	const PASS_WHEN_TRUE = ['is_https','has_html_doctype','canonical','meta_charset_consistency','seo_friendly_url','seo_friendly_url_characters_check','seo_friendly_url_dynamic_check','seo_friendly_url_keywords_check','seo_friendly_url_relative_length_check','has_meta_title'];
+	const PASS_WHEN_TRUE = ['is_https','has_html_doctype','canonical','meta_charset_consistency','seo_friendly_url','seo_friendly_url_characters_check','seo_friendly_url_dynamic_check','seo_friendly_url_keywords_check','seo_friendly_url_relative_length_check','has_meta_title','no_duplicate_meta_tags','no_duplicate_titles'];
 	const PASS_WHEN_FALSE = ['no_content_encoding','high_loading_time','is_redirect','is_4xx_code','is_5xx_code','is_broken','is_www','is_http','high_waiting_time','no_doctype','no_encoding_meta_tag','no_h1_tag','https_to_http_links','size_greater_than_3mb','has_meta_refresh_redirect','has_render_blocking_resources','low_content_rate','high_content_rate','low_character_count','high_character_count','small_page_size','large_page_size','low_readability_rate','irrelevant_description','irrelevant_title','irrelevant_meta_keywords','title_too_long','title_too_short','deprecated_html_tags','duplicate_meta_tags','duplicate_title_tag','no_image_alt','no_image_title','no_description','no_title','no_favicon','flash','frame','lorem_ipsum'];
 
 	// Exclude microdata/schema from aggregate per user instruction
 	const EXCLUDE_CHECKS = ['has_micromarkup','has_micromarkup_errors'];
 
 	// Aliases to match UI check keys (left) to sheet columns (right)
+	// Values can be a string or an array of candidate column names (first present is used)
 	const ALIASES = {
 		'has_favicon': 'no_favicon', // UI expects has_favicon; sheet provides no_favicon
 		'duplicate_meta_tag': 'duplicate_meta_tags', // singular vs plural
 		'no_duplicate_meta_tags': 'duplicate_meta_tags', // inverted virtual check
-		'no_duplicate_titles': 'duplicate_title_tag' // inverted virtual check
+		'no_duplicate_titles': 'duplicate_title_tag', // inverted virtual check
+		// Prefer positive columns; fall back to negative equivalents (inverted)
+		'has_meta_title': ['has_meta_title','no_title'],
+		'has_html_doctype': ['has_html_doctype','no_doctype'],
+		// Robust render-blocking/frames aliases (DataForSEO variants)
+		'has_render_blocking_resources': ['has_render_blocking_resources','render_blocking_resources','render_blocking_js','render_blocking_css'],
+		'frame': ['frame','has_frame','frames','iframes']
 	};
 
 	// Build the final set of checks to consider
@@ -1041,31 +1048,44 @@ function getWebsiteCrawlPagesAggregate(spreadsheet) {
 	const isFalsy = (v) => v === false || String(v).toLowerCase() === 'false' || v === 0 || v === '' || v === null || v === undefined;
 
 	allCheckKeys.forEach((uiKey) => {
-		const sheetKey = (ALIASES[uiKey] || uiKey).toLowerCase();
-		const colIdx = headerIndex[sheetKey];
-		if (colIdx === undefined) {
-			return; // column not present
+		const aliasValue = ALIASES[uiKey] || uiKey;
+		// Determine which sheet column(s) to use
+		const candidateKeys = Array.isArray(aliasValue) ? aliasValue.map(k => k.toLowerCase()) : [String(aliasValue).toLowerCase()];
+		// Choose first available column; for arrays we may need to OR values
+		const availableCols = candidateKeys
+			.map(key => ({ key, idx: headerIndex[key] }))
+			.filter(entry => entry.idx !== undefined);
+		if (availableCols.length === 0) {
+			return; // No matching columns present
 		}
 		let passed = 0;
 		let total = 0;
+		const chosenKey = availableCols[0].key; // primary column actually used
+		const isAliasedToDifferentKey = chosenKey !== String(uiKey).toLowerCase();
 		for (let i = 0; i < values.length; i++) {
 			const row = values[i];
-			const cell = row[colIdx];
-			// For aliased inverted checks
-			if (uiKey === 'has_favicon' || uiKey === 'no_duplicate_meta_tags' || uiKey === 'no_duplicate_titles') {
-				// Pass when no_favicon is FALSE
-				if (isFalsy(cell)) passed++;
+			// If multiple columns available for this check, treat cell as OR across them (any truthy means the condition exists)
+			const cellTruthy = availableCols.some(({ idx }) => isTruthy(row[idx]));
+			// Inversion for specific UI keys when they are mapped to negative columns
+			if (
+				uiKey === 'has_favicon' ||
+				uiKey === 'no_duplicate_meta_tags' ||
+				uiKey === 'no_duplicate_titles' ||
+				((uiKey === 'has_meta_title' || uiKey === 'has_html_doctype') && isAliasedToDifferentKey)
+			) {
+				// Pass when negative column is FALSE
+				if (!cellTruthy) passed++;
 				total++;
 				continue;
 			}
 			// Determine rule
-			const ruleTrue = PASS_WHEN_TRUE.includes(uiKey) || PASS_WHEN_TRUE.includes(sheetKey);
-			const ruleFalse = PASS_WHEN_FALSE.includes(uiKey) || PASS_WHEN_FALSE.includes(sheetKey);
+			const ruleTrue = PASS_WHEN_TRUE.includes(uiKey) || PASS_WHEN_TRUE.includes(chosenKey);
+			const ruleFalse = PASS_WHEN_FALSE.includes(uiKey) || PASS_WHEN_FALSE.includes(chosenKey);
 			if (ruleTrue) {
-				if (isTruthy(cell)) passed++;
+				if (cellTruthy) passed++;
 				total++;
 			} else if (ruleFalse) {
-				if (isFalsy(cell)) passed++;
+				if (!cellTruthy) passed++;
 				total++;
 			} else {
 				// If not explicitly listed, skip
