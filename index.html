@@ -4709,6 +4709,12 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
             <div className="grid grid-cols-12 gap-6">
                 <GeogridSection setActiveTab={setActiveTab} />
                 <CensusInfo censusData={dashboardData?.censusData} loading={loading} error={error} />
+                {/* Google Business Profile Report */}
+                {!loading && !error && dashboardData?.aiReport && String(dashboardData.aiReport).trim() && (
+                    <div className="col-span-12">
+                       <GBPReportSection reportText={dashboardData.aiReport} />
+                    </div>
+                )}
                 <OverviewTable 
                     overviewData={dashboardData?.overviewData} 
                     loading={loading} 
@@ -4742,12 +4748,6 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                     </div>
                 </div>
 
-                {/* Google Business Profile Report */}
-                {!loading && !error && dashboardData?.aiReport && String(dashboardData.aiReport).trim() && (
-                    <div className="col-span-12">
-                       <GBPReportSection reportText={dashboardData.aiReport} />
-                    </div>
-                )}
             </div>
         </PageContent>
     );
