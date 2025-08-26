@@ -3682,18 +3682,38 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                                 <td className="py-4 px-4 text-center">
                                     <div className="inline-flex items-center gap-3">
                                         {c.facebook && (
-                                            <a href={c.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800" title="Facebook" aria-label="Facebook">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" className="w-5 h-5"><path fill="currentColor" d="M232 128a104 104 0 1 0-120 102.37V160H88a8 8 0 0 1 0-16h24v-24c0-22.06 13.24-40 40-40a88.6 88.6 0 0 1 24 3.31a8 8 0 0 1-4.38 15.39A72.77 72.77 0 0 0 152 96c-17.65 0-24 12.9-24 24v24h40a8 8 0 0 1 0 16h-40v70.37A104.12 104.12 0 0 0 232 128Z"/></svg>
+                                            <a href={c.facebook} target="_blank" rel="noopener noreferrer" className="hover:opacity-90" title="Facebook" aria-label="Facebook">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" className="w-5 h-5" aria-hidden="true">
+                                                    <rect width="256" height="256" rx="56" fill="#1877F2"/>
+                                                    <path fill="#ffffff" d="M168 86h-24c-9.6 0-13 4.6-13 12.8V120h35l-4.7 30h-30.3v68h-32v-68H92v-30h7.7v-21.3C99.7 78.5 115.3 64 140 64h28z"/>
+                                                </svg>
                                             </a>
                                         )}
                                         {c.instagram && (
-                                            <a href={c.instagram} target="_blank" rel="noopener noreferrer" className="text-pink-600 hover:text-pink-700" title="Instagram" aria-label="Instagram">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" className="w-5 h-5"><path fill="currentColor" d="M128 80a48 48 0 1 0 48 48a48.05 48.05 0 0 0-48-48Zm0 80a32 32 0 1 1 32-32a32 32 0 0 1-32 32Zm44-124H84a44.05 44.05 0 0 0-44 44v88a44.05 44.05 0 0 0 44 44h88a44.05 44.05 0 0 0 44-44V80a44.05 44.05 0 0 0-44-44Zm28 132a28 28 0 0 1-28 28H84a28 28 0 0 1-28-28V80a28 28 0 0 1 28-28h88a28 28 0 0 1 28 28ZM196 76a12 12 0 1 1-12-12a12 12 0 0 1 12 12Z"/></svg>
+                                            <a href={c.instagram} target="_blank" rel="noopener noreferrer" className="hover:opacity-90" title="Instagram" aria-label="Instagram">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" className="w-5 h-5" aria-hidden="true">
+                                                    <defs>
+                                                        <linearGradient id="igGradient" x1="0" y1="0" x2="1" y2="1">
+                                                            <stop offset="0%" stop-color="#F58529"/>
+                                                            <stop offset="30%" stop-color="#FEDA77"/>
+                                                            <stop offset="50%" stop-color="#DD2A7B"/>
+                                                            <stop offset="70%" stop-color="#8134AF"/>
+                                                            <stop offset="100%" stop-color="#515BD4"/>
+                                                        </linearGradient>
+                                                    </defs>
+                                                    <rect width="256" height="256" rx="56" fill="url(#igGradient)"/>
+                                                    <rect x="68" y="68" width="120" height="120" rx="34" fill="none" stroke="#ffffff" stroke-width="16"/>
+                                                    <circle cx="128" cy="128" r="34" fill="none" stroke="#ffffff" stroke-width="16"/>
+                                                    <circle cx="178" cy="78" r="10" fill="#ffffff"/>
+                                                </svg>
                                             </a>
                                         )}
                                         {c.youtube && (
-                                            <a href={c.youtube} target="_blank" rel="noopener noreferrer" className="text-red-600 hover:text-red-700" title="YouTube" aria-label="YouTube">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" className="w-5 h-5"><path fill="currentColor" d="M236.8 72.22a23.93 23.93 0 0 0-16.69-16.93C206 52 128 52 128 52s-78 0-92.11 3.29a23.93 23.93 0 0 0-16.69 16.93C16 86.44 16 116 16 116s0 29.56 3.2 43.78a23.93 23.93 0 0 0 16.69 16.93C50 180 128 180 128 180s78 0 92.11-3.29a23.93 23.93 0 0 0 16.69-16.93C240 145.56 240 116 240 116s0-29.56-3.2-43.78ZM104 152V80l56 36Z"/></svg>
+                                            <a href={c.youtube} target="_blank" rel="noopener noreferrer" className="hover:opacity-90" title="YouTube" aria-label="YouTube">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 180" className="w-5 h-5" aria-hidden="true">
+                                                    <rect width="256" height="180" rx="28" fill="#FF0000"/>
+                                                    <polygon points="110,45 110,135 176,90" fill="#ffffff"/>
+                                                </svg>
                                             </a>
                                         )}
                                     </div>
