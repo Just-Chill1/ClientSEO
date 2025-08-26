@@ -3561,16 +3561,26 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                 </div>
 
                 <table className="w-full text-left text-sm whitespace-nowrap">
+                    <colgroup>
+                        <col style={{ width: '28%' }} />
+                        <col style={{ width: '10%' }} />
+                        <col style={{ width: '10%' }} />
+                        <col style={{ width: '10%' }} />
+                        <col style={{ width: '22%' }} />
+                        <col style={{ width: '8%' }} />
+                        <col style={{ width: '6%' }} />
+                        <col style={{ width: '6%' }} />
+                    </colgroup>
                     <thead>
                         <tr className="competitor-table-header border-b border-gray-200">
-                            <th className="py-4 px-4 font-semibold text-gray-800 w-1/4">Clinic</th>
-                            <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Site Speed</th>
-                            <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Keywords #1</th>
-                            <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Backlinks</th>
-                            <th className="py-4 px-4 font-semibold text-gray-800 w-1/4">Opening Hours</th>
-                            <th className="py-4 px-6 text-center font-semibold text-gray-800 w-[12%]">Links</th>
-                            <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Google Ads</th>
-                            <th className="py-4 px-4 text-center font-semibold text-gray-800 w-[10%]">Facebook Ads</th>
+                            <th className="py-4 px-4 font-semibold text-gray-800 text-left">Clinic</th>
+                            <th className="py-4 px-4 text-center font-semibold text-gray-800">Site Speed</th>
+                            <th className="py-4 px-4 text-center font-semibold text-gray-800">Keywords #1</th>
+                            <th className="py-4 px-4 text-center font-semibold text-gray-800">Backlinks</th>
+                            <th className="py-4 px-4 font-semibold text-gray-800 text-left">Opening Hours</th>
+                            <th className="py-4 px-4 text-center font-semibold text-gray-800">Links</th>
+                            <th className="py-4 px-4 text-center font-semibold text-gray-800">Google Ads</th>
+                            <th className="py-4 px-4 text-center font-semibold text-gray-800">Facebook Ads</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 bg-white">
@@ -3669,7 +3679,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                                     })()}
                                 </td>
                                 {/* Social Links */}
-                                <td className="py-4 px-6 text-center">
+                                <td className="py-4 px-4 text-center">
                                     <div className="inline-flex items-center gap-3">
                                         {c.facebook && (
                                             <a href={c.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800" title="Facebook" aria-label="Facebook">
