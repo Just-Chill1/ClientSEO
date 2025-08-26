@@ -1207,8 +1207,8 @@ const fetchWithCorsWorkaround = (url, callback) => {
     const handleMapDeactivate = (event) => {
         const container = event.currentTarget;
         container.classList.remove('active');
-        const iframe = container.querySelector('iframe');
-        if (iframe) {
+                const iframe = container.querySelector('iframe');
+                if (iframe) {
             iframe.style.pointerEvents = 'none';
         }
     };
@@ -1715,7 +1715,7 @@ const GBPReportSection = ({ reportText }) => {
         <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-300 bg-white dark:bg-gray-800" style={{border: 'none', outline: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'}}>
             {/* Single Tab Header */}
             <div className="flex p-1 rounded-t-xl dual-reports-header">
-                <div className="flex-1 relative px-6 py-4 text-base font-semibold transition-all duration-200 rounded-xl dual-reports-active-green">
+                <div className="flex-1 relative px-6 py-4 text-base font-semibold transition-all duration-200 rounded-xl dual-reports-active-blue">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
                             <span>Google Business Profile Report</span>
@@ -1744,8 +1744,8 @@ const GBPReportSection = ({ reportText }) => {
                                 }}
                                 className={`p-1 rounded-md transition-colors ${
                                     copySuccess === 'copied'
-                                        ? 'text-green-600'
-                                        : 'text-green-600 hover:text-green-800 hover:bg-green-50 dual-reports-action-hover'
+                                        ? 'text-blue-600'
+                                        : 'text-blue-600 hover:text-blue-800 hover:bg-blue-50 dual-reports-action-hover'
                                 }`}
                                 title="Copy report"
                             >
@@ -1760,7 +1760,7 @@ const GBPReportSection = ({ reportText }) => {
                                     e.stopPropagation();
                                     handleDownloadReport();
                                 }}
-                                className="p-1 rounded-md transition-colors text-green-600 hover:text-green-800 hover:bg-green-50 dual-reports-action-hover"
+                                className="p-1 rounded-md transition-colors text-blue-600 hover:text-blue-800 hover:bg-blue-50 dual-reports-action-hover"
                                 title="Download report as text file"
                             >
                                 <Download className="w-4 h-4" />
@@ -4788,11 +4788,11 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                     refreshProgress={overviewRefreshProgress}
                     refreshMessage={overviewRefreshMessage}
                 />
-
+                
                 {/* Service Cards - positioned after map/census, before AI sentiment */}
                 <ServiceList title="Services by Search Volume" dataSet="topServices" tooltipText="Lists the most popular, established MedSpa services based on monthly search volume in the selected geographic area." />
                 <ServiceList title="New Services by Search Volume" dataSet="newServices" tooltipText="Highlights emerging or newer services with growing search interest, indicating potential new market opportunities." />
-                
+
                 {/* AI Sentiment Cards */}
                 <AISentimentBubbleChart 
                     data={dashboardData?.aiSentimentData} 
