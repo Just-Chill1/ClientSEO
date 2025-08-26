@@ -2098,23 +2098,23 @@ const DualReports = ({ competitorText, errorText }) => {
         };
         lines.forEach(raw => {
             const line = raw.trim();
-            if (!line) { closeLists(); return; }
-            if (/^---+$/.test(line)) { closeLists(); html.push('<hr />'); return; }
-            if (/^###\s+/.test(line)) { closeLists(); html.push(`<h3>${applyInlineMarkdown(line.replace(/^###\s+/, ''))}</h3>`); return; }
-            if (/^##\s+/.test(line)) { closeLists(); html.push(`<h2>${applyInlineMarkdown(line.replace(/^##\s+/, ''))}</h2>`); return; }
-            if (/^#\s+/.test(line)) { closeLists(); html.push(`<h1>${applyInlineMarkdown(line.replace(/^#\s+/, ''))}</h1>`); return; }
+            if (!line) { closeLists(); html.push('<div class="my-2"></div>'); return; }
+            if (/^---+$/.test(line)) { closeLists(); html.push('<hr class="my-5 border-t border-gray-200" />'); return; }
+            if (/^###\s+/.test(line)) { closeLists(); html.push(`<h3 class="mt-4 mb-2">${applyInlineMarkdown(line.replace(/^###\s+/, ''))}</h3>`); return; }
+            if (/^##\s+/.test(line)) { closeLists(); html.push(`<h2 class="mt-5 mb-2.5">${applyInlineMarkdown(line.replace(/^##\s+/, ''))}</h2>`); return; }
+            if (/^#\s+/.test(line)) { closeLists(); html.push(`<h1 class="mt-6 mb-3">${applyInlineMarkdown(line.replace(/^#\s+/, ''))}</h1>`); return; }
             if (/^\d+\.\s+/.test(line)) {
-                if (!inOl) { closeLists(); html.push('<ol class="list-decimal pl-5 space-y-1">'); inOl = true; }
+                if (!inOl) { closeLists(); html.push('<ol class="list-decimal pl-5 my-2 space-y-1.5">'); inOl = true; }
                 html.push(`<li>${applyInlineMarkdown(line.replace(/^\d+\.\s+/, ''))}</li>`);
                 return;
             }
             if (/^-\s+/.test(line)) {
-                if (!inUl) { closeLists(); html.push('<ul class="list-disc pl-5 space-y-1">'); inUl = true; }
+                if (!inUl) { closeLists(); html.push('<ul class="list-disc pl-5 my-2 space-y-1.5">'); inUl = true; }
                 html.push(`<li>${applyInlineMarkdown(line.replace(/^-\s+/, ''))}</li>`);
                 return;
             }
             closeLists();
-            html.push(`<p>${applyInlineMarkdown(line)}</p>`);
+            html.push(`<p class="my-2">${applyInlineMarkdown(line)}</p>`);
         });
         closeLists();
         return html.join('\n');
