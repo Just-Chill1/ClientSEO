@@ -5532,7 +5532,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                                 const calculateClientRankingDistribution = () => {
                                     // IMPORTANT: Always use first website (client) for ranking distribution
                                     // regardless of which tab is currently active
-                                    const siteNames = Object.keys(table || {});
+                                    const siteNames = Object.keys(effectiveTable || {});
                                     let clientKeywords = [];
                                     let clientSiteName = '';
                                     
@@ -5540,7 +5540,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
                                         // Always use the FIRST website as the client for ranking distribution
                                         // This ensures consistency regardless of active tab
                                         clientSiteName = siteNames[0];
-                                        const clientSiteData = table[clientSiteName] || [];
+                                        const clientSiteData = effectiveTable[clientSiteName] || [];
                                         
                                         clientKeywords = clientSiteData.filter(keyword => 
                                             keyword.rank_now && keyword.rank_now > 0
