@@ -1610,7 +1610,7 @@ const KeywordsReport = ({ reportText }) => {
                             <div className="relative">
                                 {/* Text content */}
                                 <div 
-                                    className="prose prose-sm max-w-none leading-relaxed overflow-hidden select-text cursor-text dual-reports-text"
+                                    className="prose prose-sm max-w-none leading-relaxed overflow-hidden select-text cursor-text dual-reports-text prose-p:my-3 prose-h1:mt-6 prose-h1:mb-3 prose-h2:mt-5 prose-h2:mb-2.5 prose-h3:mt-4 prose-h3:mb-2 prose-ul:my-2 prose-ol:my-2"
                                     style={{ maxHeight: '160px' }}
                                     dangerouslySetInnerHTML={{ __html: formattedContent }}
                                 />
@@ -1637,7 +1637,7 @@ const KeywordsReport = ({ reportText }) => {
                         <div className="space-y-2">
                             {/* Text content */}
                             <div
-                                className="prose prose-sm max-w-none leading-relaxed select-text cursor-text dual-reports-text"
+                                className="prose prose-sm max-w-none leading-relaxed select-text cursor-text dual-reports-text prose-p:my-3 prose-h1:mt-6 prose-h1:mb-3 prose-h2:mt-5 prose-h2:mb-2.5 prose-h3:mt-4 prose-h3:mb-2 prose-ul:my-2 prose-ol:my-2"
                                 dangerouslySetInnerHTML={{ __html: formattedContent }}
                             />
 
@@ -2085,6 +2085,8 @@ const DualReports = ({ competitorText, errorText }) => {
         s = s.replace(/(^|[^*])\*(?!\*)([^*]+)\*(?!\*)/g, '$1<em>$2</em>');
         // Italic using underscores
         s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
+        // Auto-link plain URLs
+        s = s.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" class="text-blue-600 underline">$1<\/a>');
         return s;
     };
 
@@ -2092,13 +2094,15 @@ const DualReports = ({ competitorText, errorText }) => {
         const lines = escapeHtml(markdown).replace(/\r\n?/g, '\n').split('\n');
         const html = [];
         let inUl = false, inOl = false;
+        let blankStreak = 0;
         const closeLists = () => {
             if (inUl) { html.push('</ul>'); inUl = false; }
             if (inOl) { html.push('</ol>'); inOl = false; }
         };
         lines.forEach(raw => {
-            const line = raw.trim();
-            if (!line) { closeLists(); html.push('<div class="my-2"></div>'); return; }
+            const line = raw.replace(/\s+$/,'').replace(/^\s+/,'');
+            if (!line) { blankStreak++; closeLists(); return; }
+            if (blankStreak > 0) { html.push(`<div class="${blankStreak >= 2 ? 'my-5' : 'my-3'}"></div>`); blankStreak = 0; }
             if (/^---+$/.test(line)) { closeLists(); html.push('<hr class="my-5 border-t border-gray-200" />'); return; }
             if (/^###\s+/.test(line)) { closeLists(); html.push(`<h3 class="mt-4 mb-2">${applyInlineMarkdown(line.replace(/^###\s+/, ''))}</h3>`); return; }
             if (/^##\s+/.test(line)) { closeLists(); html.push(`<h2 class="mt-5 mb-2.5">${applyInlineMarkdown(line.replace(/^##\s+/, ''))}</h2>`); return; }
@@ -2108,13 +2112,14 @@ const DualReports = ({ competitorText, errorText }) => {
                 html.push(`<li>${applyInlineMarkdown(line.replace(/^\d+\.\s+/, ''))}</li>`);
                 return;
             }
-            if (/^-\s+/.test(line)) {
+            if (/^(?:-|\u2022|\u2013)\s+/.test(line)) { // -, •, –
                 if (!inUl) { closeLists(); html.push('<ul class="list-disc pl-5 my-2 space-y-1.5">'); inUl = true; }
-                html.push(`<li>${applyInlineMarkdown(line.replace(/^-\s+/, ''))}</li>`);
+                html.push(`<li>${applyInlineMarkdown(line.replace(/^(?:-|\u2022|\u2013)\s+/, ''))}</li>`);
                 return;
             }
             closeLists();
-            html.push(`<p class="my-2">${applyInlineMarkdown(line)}</p>`);
+            // Convert explicit line breaks within a paragraph block: use <br> for '\\n' sequences inside long lines
+            html.push(`<p class="my-3">${applyInlineMarkdown(line)}</p>`);
         });
         closeLists();
         return html.join('\n');
