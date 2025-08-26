@@ -252,19 +252,36 @@ function doGet(e) {
 
 // Custom parser to handle "Month YYYY" format
 function parseDateHeader(header) {
-    if (!header || typeof header !== 'string') return null;
-    const months = {
-        'january': 0, 'february': 1, 'march': 2, 'april': 3, 'may': 4, 'june': 5,
-        'july': 6, 'august': 7, 'september': 8, 'october': 9, 'november': 10, 'december': 11
-    };
-    const parts = header.trim().split(/\s+/);
-    if (parts.length !== 2) return null;
-    
-    const month = months[parts[0].toLowerCase()];
-    const year = parseInt(parts[1], 10);
-
-    if (month !== undefined && !isNaN(year)) {
-        return new Date(year, month, 1);
+    // Accept Google Sheets Date objects directly
+    if (header instanceof Date && !isNaN(header.getTime())) {
+        return header;
+    }
+    // Accept numeric serials (in case values are numeric). Google Sheets usually returns Date,
+    // but this is a safe fallback. Serial is days since 1899-12-30 in Sheets.
+    if (typeof header === 'number' && isFinite(header)) {
+        var serialEpoch = new Date(1899, 11, 30);
+        var millis = serialEpoch.getTime() + Math.round(header * 24 * 60 * 60 * 1000);
+        var d = new Date(millis);
+        if (!isNaN(d.getTime())) return d;
+    }
+    // Accept strings like "May 2025"
+    if (typeof header === 'string') {
+        var months = {
+            'january': 0, 'february': 1, 'march': 2, 'april': 3, 'may': 4, 'june': 5,
+            'july': 6, 'august': 7, 'september': 8, 'october': 9, 'november': 10, 'december': 11
+        };
+        var str = header.trim();
+        var parts = str.split(/\s+/);
+        if (parts.length === 2) {
+            var m = months[parts[0].toLowerCase()];
+            var y = parseInt(parts[1], 10);
+            if (m !== undefined && !isNaN(y)) {
+                return new Date(y, m, 1);
+            }
+        }
+        // Final fallback: let JS try to parse
+        var parsed = new Date(str);
+        if (!isNaN(parsed.getTime())) return parsed;
     }
     return null;
 }
@@ -317,16 +334,16 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
   }
 
   // Find the indices of all month columns using the robust date parser
-  const monthColumns = headers.reduce((acc, header, index) => {
-    const date = parseDateHeader(header);
+  const monthColumns = headers.reduce(function(acc, header, index) {
+    var date = parseDateHeader(header);
     if (date) {
-      acc.push({ header, index, date });
+      acc.push({ header: header, index: index, date: date });
     }
     return acc;
   }, []);
 
   // Sort by date to find the latest two months
-  monthColumns.sort((a, b) => b.date - a.date);
+  monthColumns.sort(function(a, b) { return b.date - a.date; });
 
   // Before filtering, let's count how many rows match our target location
   const locationCounts = {};
