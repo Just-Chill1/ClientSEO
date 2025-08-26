@@ -4090,6 +4090,10 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                         dataRowsFound: data._debug.dataRowsFound,
                         availableSheets: data._debug.availableSheets,
                         monthHeaders: data._debug.monthHeaders,
+                        stateSamples: data._debug.stateSamples,
+                        uniqueStatesSample: data._debug.uniqueStatesSample,
+                        targetPresentExact: data._debug.targetPresentExact,
+                        targetPresentCaseInsensitive: data._debug.targetPresentCaseInsensitive,
                         topServicesCount: data.topServices?.length || 0,
                         newServicesCount: data.newServices?.length || 0
                     });
