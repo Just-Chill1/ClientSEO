@@ -2079,10 +2079,12 @@ const DualReports = ({ competitorText, errorText }) => {
 
     const applyInlineMarkdown = (str) => {
         let s = str;
-        // Normalize NBSP so **bold** is matched even after emoji or pasted content
-        s = s.replace(/\u00A0/g, ' ');
+        // Normalize NBSP and remove zero-width chars that often trail emojis
+        s = s.replace(/\u00A0/g, ' ').replace(/[\u200B-\u200D\uFEFF]/g, '');
         // Bold first
         s = s.replace(/\*\*([\s\S]+?)\*\*/g, '<strong class="font-bold">$1</strong>');
+        // Also support __bold__ syntax
+        s = s.replace(/__([\s\S]+?)__/g, '<strong class="font-bold">$1</strong>');
         // Italic using single asterisks (avoid matching bold)
         s = s.replace(/(^|[^*])\*(?!\*)([^*]+)\*(?!\*)/g, '$1<em>$2</em>');
         // Italic using underscores
@@ -2166,10 +2168,7 @@ const DualReports = ({ competitorText, errorText }) => {
 
     const formattedContent = activeTab === 'competitor'
         ? parseMarkdownToHtml(String(currentContent || ''))
-        : String(currentContent || '')
-            .replace(/\n/g, '<br />')
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            .replace(/\*(.*?)\*/g, '<em>$1</em>');
+        : applyInlineMarkdown(String(currentContent || '')).replace(/\n/g, '<br />');
 
     return (
         <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-300 bg-white dark:bg-gray-800 border-0">
