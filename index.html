@@ -1493,6 +1493,7 @@ const KeywordsReport = ({ reportText }) => {
     const [copySuccess, setCopySuccess] = useState('');
     const [promptCopyState, setPromptCopyState] = useState(''); // 'ok' | 'err' | ''
     const [isCopying, setIsCopying] = useState(false);
+    const [cachedPrompt, setCachedPrompt] = useState('');
 
     // Icons
     const ChevronDown = createIcon(<polyline points="6 9 12 15 18 9" />);
@@ -1783,18 +1784,68 @@ const KeywordsReport = ({ reportText }) => {
 
     const handleCopyImplementationPrompt = async () => {
         if (isCopying) return;
-        setIsCopying(true);
         try {
+            setIsCopying(true);
             setPromptCopyState('');
+            // If we have a prebuilt prompt ready, copy instantly
+            if (cachedPrompt) {
+                await navigator.clipboard.writeText(cachedPrompt);
+                setPromptCopyState('ok');
+                return;
+            }
+            // Fallback: build on-demand, then cache and copy
             const prompt = await buildImplementationPrompt();
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const workbookId = params.get('workbookId') || '';
+                const cacheKey = `impl_prompt_${workbookId}`;
+                const payload = { prompt, aiText: String(reportText || ''), ts: Date.now() };
+                sessionStorage.setItem(cacheKey, JSON.stringify(payload));
+                setCachedPrompt(prompt);
+            } catch {}
             await navigator.clipboard.writeText(prompt);
             setPromptCopyState('ok');
         } catch (e) {
             setPromptCopyState('err');
         } finally {
-            setTimeout(() => { setPromptCopyState(''); setIsCopying(false); }, 2800);
+            setTimeout(() => { setPromptCopyState(''); setIsCopying(false); }, 1800);
         }
     };
+
+    // Prebuild the prompt after initial render (idle or short delay) and cache it
+    useEffect(() => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const workbookId = params.get('workbookId') || '';
+            const cacheKey = `impl_prompt_${workbookId}`;
+            // Read existing cache
+            const raw = sessionStorage.getItem(cacheKey);
+            if (raw) {
+                try {
+                    const parsed = JSON.parse(raw);
+                    const isFresh = parsed && parsed.aiText === String(reportText || '') && (Date.now() - (parsed.ts || 0) < 10 * 60 * 1000);
+                    if (isFresh && parsed.prompt) {
+                        setCachedPrompt(parsed.prompt);
+                        return;
+                    }
+                } catch {}
+            }
+            const build = async () => {
+                try {
+                    const prompt = await buildImplementationPrompt();
+                    const payload = { prompt, aiText: String(reportText || ''), ts: Date.now() };
+                    sessionStorage.setItem(cacheKey, JSON.stringify(payload));
+                    setCachedPrompt(prompt);
+                } catch {}
+            };
+            // Defer to idle time if available, else small timeout so we don't affect initial load
+            if ('requestIdleCallback' in window) {
+                window.requestIdleCallback(() => { build(); }, { timeout: 3000 });
+            } else {
+                setTimeout(build, 2500);
+            }
+        } catch {}
+    }, [reportText]);
 
     const handleRequestImplement = () => {
         window.open('https://www.skool.com/forever-booked/classroom/a23620ff?md=00953c20f4574ccdb6d5edfe0a0298ed', '_blank');
