@@ -1668,16 +1668,24 @@ const KeywordsReport = ({ reportText }) => {
 
             // Compose prompt
             const lines = [];
-            lines.push(`You are an elite SEO specialist. Analyze and guide step-by-step.`);
+            // Strong role + context preamble (keyword-centric)
+            lines.push('ROLE: You are a senior MedSpa SEO strategist and implementation partner.');
+            lines.push('CONTEXT: The client has just generated a monthly keyword-focused report. Use the data below to guide them step-by-step to implement the most impactful actions first, while keeping instructions practical and non-technical.');
+            lines.push('GOAL: Improve keyword rankings, organic traffic, and conversions by prioritizing keyword opportunities, mapping them to pages, and executing on-page/content/internal-linking tasks.');
+            lines.push('WORKING MODE:');
+            lines.push('- Ask any critical clarifying questions BEFORE starting (e.g., target neighborhoods, top services, CMS, brand tone, approval constraints).');
+            lines.push('- Then proceed one step at a time with numbered instructions the client can follow.');
+            lines.push('- Keep outputs concise and actionable: include exact Titles/H1s/Meta, URL suggestions, internal link anchors, FAQ ideas, and schema notes.');
+            lines.push('- After each step, confirm completion and offer to continue to the next step.');
             lines.push('');
-            lines.push(`Client:`);
+            lines.push('CLIENT PROFILE:');
             lines.push(`- Clinic Name: ${clinicName}`);
             lines.push(`- Website: ${website || 'N/A'}`);
             if (accountType) lines.push(`- Account Type: ${accountType}`);
             const locParts = [borough, city, state].filter(Boolean).join(', ');
             if (locParts) lines.push(`- Location: ${locParts}`);
             lines.push('');
-            lines.push('Core On-Page/Technical Stats:');
+            lines.push('CORE ON-PAGE / TECHNICAL SNAPSHOT:');
             if (titleTag) lines.push(`- Title Tag: ${titleTag}`);
             if (metaDescription) lines.push(`- Meta Description: ${metaDescription}`);
             if (h1) lines.push(`- H1: ${h1}`);
@@ -1700,18 +1708,18 @@ const KeywordsReport = ({ reportText }) => {
             if (gbpStats.length) lines.push(`GBP Stats: ${gbpStats.join(' | ')}`);
             if (crawlPages.length) {
                 lines.push('');
-                lines.push('Website Crawl Pages (sample):');
+                lines.push('WEBSITE CRAWL PAGES (sample):');
                 lines.push(crawlPages.map(p => `- ${p}`).join('\n'));
             }
             lines.push('');
-            lines.push('Top 30 Client Keywords (by best rank):');
+            lines.push('TOP 30 CLIENT KEYWORDS (by best rank):');
             if (topClientKeywords.length) {
                 lines.push(topClientKeywords.map(r => `- ${r.k} — rank ${r.rank}${r.sv?`, sv ${r.sv}`:''}${r.url?` — ${r.url}`:''}`).join('\n'));
             } else {
                 lines.push('- N/A');
             }
             lines.push('');
-            lines.push('Competitor Keywords:');
+            lines.push('COMPETITOR KEYWORDS:');
             competitorData.forEach(c => {
                 lines.push(`• ${c.name} — Top by Rank (20):`);
                 lines.push(c.topByRank.map(r => `  - ${r.k} — rank ${r.rank}${r.sv?`, sv ${r.sv}`:''}`).join('\n') || '  - N/A');
@@ -1719,13 +1727,22 @@ const KeywordsReport = ({ reportText }) => {
                 lines.push(c.topBySv.map(r => `  - ${r.k} — sv ${r.sv}${r.rank?`, rank ${r.rank}`:''}`).join('\n') || '  - N/A');
             });
             lines.push('');
-            lines.push('Keywords AI Report (Client):');
+            lines.push('KEYWORDS AI REPORT (Client):');
             lines.push(String(reportText || '').trim() || 'N/A');
             lines.push('');
-            lines.push('Instructions:');
-            lines.push('- Analyze all data above, identify gaps, ask clarifying questions if needed.');
-            lines.push('- Then guide the client step-by-step to implement the first recommendation.');
-            lines.push('- Continue iteratively through the list, validating progress and outcomes.');
+            lines.push('OPERATING PLAN (follow in this order):');
+            lines.push('1) Ask 3-6 clarifying questions you truly need (target areas/services, CMS, content approval, tone). If all clear, proceed.');
+            lines.push('2) Opportunity Summary: In 5 bullets, summarize the biggest keyword wins and why (intent + impact).');
+            lines.push('3) Prioritized Keyword Backlog: Create a short, ranked list (10–15) with rationale (current rank/SV, intent, competitor coverage).');
+            lines.push('4) Keyword-to-Page Mapping: For top 3–5 targets, map each to an existing URL (or propose a new URL) and note gaps.');
+            lines.push('5) On-Page Implementation for the FIRST target:');
+            lines.push('   - Provide exact Title (<=60 chars), H1, Meta Description (<=155 chars), H2/H3 outline, and 5–7 keywords/LSIs.');
+            lines.push('   - Internal links: list 3–5 anchor texts and source pages to link from.');
+            lines.push('   - Content additions: bullets, FAQs (3–5) with concise answers; suggest adding local modifiers.');
+            lines.push('   - Schema: specify the most relevant type(s) to add/update (e.g., LocalBusiness, FAQ).');
+            lines.push('6) Implementation Checklist: Provide a checkbox list the client can work through inside their CMS.');
+            lines.push('7) Measurement Plan: define success metrics (rank targets, CTR, impressions) and how to verify in GSC/GA4 weekly.');
+            lines.push('8) Next Step: after finishing the first target, offer to proceed to the next item in the backlog.');
 
             return lines.join('\n');
         } catch (e) {
