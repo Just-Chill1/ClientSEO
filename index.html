@@ -2304,6 +2304,9 @@ const GBPReportSection = ({ reportText }) => {
 const BacklinksReport = ({ reportText }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [copySuccess, setCopySuccess] = useState('');
+    const [isCopying, setIsCopying] = useState(false);
+    const [promptCopyState, setPromptCopyState] = useState('');
+    const [cachedPrompt, setCachedPrompt] = useState('');
 
     // Icons
     const ChevronDown = createIcon(<polyline points="6 9 12 15 18 9" />);
@@ -2345,6 +2348,272 @@ const BacklinksReport = ({ reportText }) => {
         document.body.appendChild(element);
         element.click();
         document.body.removeChild(element);
+    };
+
+    // ---- Prompt Builder for "Implement Recommendations Myself" (Backlinks) ----
+    const readSessionJsonBL = (key) => {
+        try {
+            const raw = sessionStorage.getItem(key);
+            return raw ? JSON.parse(raw) : null;
+        } catch { return null; }
+    };
+    const fetchSectionsBL = (workbookId, sections) => new Promise((resolve) => {
+        const base = 'https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec';
+        const url = `${base}?workbookId=${workbookId}&sections=${encodeURIComponent(sections)}`;
+        fetchWithCorsWorkaround(url, (err, data) => {
+            resolve(err ? null : data);
+        });
+    });
+    const toArrayBL = (v) => Array.isArray(v) ? v : (v ? [v] : []);
+    const pickCaseInsensitiveBL = (obj, keyLike) => {
+        if (!obj) return undefined;
+        const entries = Object.entries(obj);
+        const found = entries.find(([k]) => k.toLowerCase() === keyLike.toLowerCase());
+        if (found) return found[1];
+        const fuzzy = entries.find(([k]) => k.toLowerCase().includes(keyLike.toLowerCase()));
+        return fuzzy ? fuzzy[1] : undefined;
+    };
+
+    const buildBacklinksImplementationPrompt = async () => {
+        const params = new URLSearchParams(window.location.search);
+        const workbookId = params.get('workbookId') || '';
+
+        // Try caches first
+        const blCache = readSessionJsonBL(`backlinks_${workbookId}`);
+        const dashCache = readSessionJsonBL(`dashboard_data_${workbookId}`);
+        const kwCache = readSessionJsonBL(`keywords_${workbookId}`);
+
+        let backlinksSummary = blCache?.backlinksSummary || {};
+        let backlinksTable = blCache?.backlinksTable || {};
+        let overviewData = dashCache?.overviewData || [];
+        let websiteStats = null;
+        let gbpInsights = null;
+        let keywordsSummary = kwCache?.keywordsSummary || {};
+
+        // Attempt to read generic cache for websiteStats
+        const base = 'https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec';
+        const wsUrl = `${base}?workbookId=${workbookId}&sections=websiteStats`;
+        const wsCache = readSessionJsonBL(`seo_data_${wsUrl}`);
+        if (wsCache?.websiteStats) websiteStats = wsCache.websiteStats;
+
+        // Fetch missing in one shot
+        if (!websiteStats || !overviewData || Object.keys(backlinksTable).length === 0) {
+            const data = await fetchSectionsBL(workbookId, 'websiteStats,backlinksSummary,backlinksTable,dashboard,gbpInsights,keywordsSummary');
+            if (data) {
+                websiteStats = websiteStats || data.websiteStats || data?.websiteStats;
+                backlinksSummary = Object.keys(backlinksSummary).length ? backlinksSummary : (data.backlinksSummary || {});
+                backlinksTable = Object.keys(backlinksTable).length ? backlinksTable : (data.backlinksTable || {});
+                if ((!overviewData || overviewData.length === 0) && data.dashboard?.overviewData) overviewData = data.dashboard.overviewData;
+                if (!keywordsSummary && data.keywordsSummary) keywordsSummary = data.keywordsSummary;
+                if (data.gbpInsights) gbpInsights = data.gbpInsights;
+            }
+        }
+        if (!gbpInsights) {
+            const gbpData = await fetchSectionsBL(workbookId, 'gbpInsights');
+            if (gbpData && gbpData.gbpInsights) gbpInsights = gbpData.gbpInsights;
+        }
+
+        // Identify client site (first key)
+        const siteNamesAll = Object.keys(backlinksTable || {});
+        const clientSite = siteNamesAll.length > 0 ? siteNamesAll[0] : (backlinksSummary?.siteName || 'Client');
+        const clientLinks = clientSite ? (backlinksTable[clientSite] || []) : [];
+
+        // Competitor backlinks top 20 each (dofollow first, low spam score, then higher rank)
+        const competitorSites = siteNamesAll.slice(1);
+        const competitorBacklinks = competitorSites.map(name => {
+            const rows = (backlinksTable[name] || []).slice();
+            rows.sort((a, b) => {
+                const af = a.following ? 1 : 0; const bf = b.following ? 1 : 0;
+                const aSpam = isFinite(Number(a.spamScore)) ? Number(a.spamScore) : 999;
+                const bSpam = isFinite(Number(b.spamScore)) ? Number(b.spamScore) : 999;
+                const aRank = isFinite(Number(a.rank)) ? Number(a.rank) : -1;
+                const bRank = isFinite(Number(b.rank)) ? Number(b.rank) : -1;
+                if (bf !== af) return bf - af; // dofollow first
+                if (aSpam !== bSpam) return aSpam - bSpam; // lower spam first
+                return bRank - aRank; // higher rank first
+            });
+            const top20 = rows.slice(0, 20).map(r => ({ url: r.backlinkUrl, follow: !!r.following, spam: Number(r.spamScore ?? 0), rank: Number(r.rank ?? 0), title: r.title || '', link: r.linkUrl || '' }));
+            return { name, top20 };
+        });
+
+        // Website stats
+        const health = websiteStats?.healthData || {};
+        const tseo = toArrayBL(websiteStats?.technicalSeoData || []);
+        const perf = toArrayBL(websiteStats?.competitorPerfData || []).find(x => x?.isClient) || {};
+        const siteSpeedMs = Number(health?.siteSpeed) || 0;
+        const siteSpeedDisplayMs = isFinite(siteSpeedMs) && siteSpeedMs > 0 ? `${Math.round(siteSpeedMs)} ms` : 'N/A';
+        const pageScore = isFinite(Number(health?.pageScore)) ? Number(health.pageScore) : null;
+        const referringDomains = isFinite(Number(perf['Referring Domains'])) ? Number(perf['Referring Domains']) : undefined;
+
+        // Extract H1/Title/Meta for client
+        const tseoClient = tseo.find(s => (s?.isClient || (s?.clinicName || s?.name || '').toLowerCase().includes('client')) ) || tseo[0] || {};
+        const titleTag = tseoClient?.title || '';
+        const metaDescription = tseoClient?.description || '';
+        const h1 = tseoClient?.h1 || '';
+        const website = tseoClient?.website || '';
+        const clinicName = tseoClient?.clinicName || clientSite || 'Client';
+
+        // GBP fields
+        let gbpRecord = null;
+        if (Array.isArray(gbpInsights)) {
+            gbpRecord = gbpInsights.find(r => {
+                const at = String(pickCaseInsensitiveBL(r, 'Account Type') || pickCaseInsensitiveBL(r, 'AccountType') || pickCaseInsensitiveBL(r, 'Type') || '').toLowerCase();
+                return at.includes('client');
+            }) || gbpInsights[0] || null;
+        } else if (gbpInsights && typeof gbpInsights === 'object') {
+            gbpRecord = gbpInsights;
+        }
+        const primaryCategory = (gbpRecord?.primaryCategory || pickCaseInsensitiveBL(gbpRecord, 'Primary Categorie') || pickCaseInsensitiveBL(gbpRecord, 'Primary Category') || '').toString();
+        const secondaryCategories = (gbpRecord?.secondaryCategories || pickCaseInsensitiveBL(gbpRecord, 'Secondary Categories') || '').toString();
+        const gbpDescription = (gbpRecord?.description || pickCaseInsensitiveBL(gbpRecord, 'Description') || '').toString();
+        const reviewScore = (gbpRecord?.reviewScore || pickCaseInsensitiveBL(gbpRecord, 'Review Score') || '').toString();
+        const reviewCount = (gbpRecord?.reviewCount || pickCaseInsensitiveBL(gbpRecord, 'Review Count') || '').toString();
+        const photoCount = (gbpRecord?.photoCount || gbpRecord?.totalPhotos || pickCaseInsensitiveBL(gbpRecord, 'Photo Count') || pickCaseInsensitiveBL(gbpRecord, 'Total Photos') || '').toString();
+        const qaCount = (gbpRecord?.qaCount || pickCaseInsensitiveBL(gbpRecord, 'QACount') || pickCaseInsensitiveBL(gbpRecord, 'Q&A Count') || '').toString();
+
+        // Keyword position buckets (from On-Page/Keywords summary if available)
+        const pos1 = keywordsSummary['Position 1'] ?? keywordsSummary['Keywords Position 1'] ?? keywordsSummary.pos1 ?? null;
+        const pos23 = keywordsSummary['Position 2-3'] ?? keywordsSummary['Keywords Position 2-3'] ?? keywordsSummary.pos23 ?? null;
+        const pos410 = keywordsSummary['Position 4-10'] ?? keywordsSummary['Keywords Position 4-10'] ?? keywordsSummary.pos410 ?? null;
+
+        // Compose prompt
+        const lines = [];
+        lines.push('ROLE: You are a senior MedSpa SEO strategist and link-building partner.');
+        lines.push('CONTEXT: The client has generated a backlinks-focused report. Use the data below to craft a practical link acquisition plan, prioritizing low-risk, high-impact opportunities.');
+        lines.push('GOAL: Improve authority and rankings by acquiring quality, relevant backlinks, reclaiming lost links, and strengthening local signals.');
+        lines.push('WORKING MODE:');
+        lines.push('- Present a succinct plan and the first actionable step immediately.');
+        lines.push('- The first action must be click-by-click with direct URL(s) to visit (e.g., top citation/directories or specific outreach targets).');
+        lines.push('- Keep outputs concise and operational: include target URLs, outreach angle, suggested anchor texts, and risk notes.');
+        lines.push('- After the first step, ask only 1–3 essential questions (CMS/platform optional).');
+        lines.push('');
+        lines.push('CLIENT PROFILE:');
+        lines.push(`- Clinic Name: ${clinicName}`);
+        lines.push(`- Website: ${website || 'N/A'}`);
+        lines.push('');
+        lines.push('CORE ON-PAGE / TECHNICAL SNAPSHOT:');
+        if (titleTag) lines.push(`- Title Tag: ${titleTag}`);
+        if (metaDescription) lines.push(`- Meta Description: ${metaDescription}`);
+        if (h1) lines.push(`- H1: ${h1}`);
+        lines.push(`- Site Speed: ${siteSpeedDisplayMs}`);
+        if (pageScore !== null) lines.push(`- Page Score: ${pageScore}`);
+        if (typeof referringDomains !== 'undefined') lines.push(`- Referring Domains: ${referringDomains}`);
+        lines.push(`- SSL: ${ (health?.ssl === true || health?.ssl === 'true' || health?.ssl === 'Yes') ? 'Yes' : (health?.ssl === false ? 'No' : 'Unknown') }`);
+        lines.push(`- Schema: ${ (health?.hasSchema === true || health?.hasSchema === 'true' || health?.hasSchema === 'Yes') ? 'Yes' : (health?.hasSchema === false ? 'No' : (health?.hasSchemaErrors ? 'Has errors' : 'Unknown')) }`);
+        if (pos1 != null || pos23 != null || pos410 != null) {
+            lines.push(`- Keywords Position 1: ${pos1 ?? 'N/A'}`);
+            lines.push(`- Keywords Position 2-3: ${pos23 ?? 'N/A'}`);
+            lines.push(`- Keywords Position 4-10: ${pos410 ?? 'N/A'}`);
+        }
+        lines.push('');
+        lines.push('GOOGLE BUSINESS PROFILE INSIGHTS:');
+        lines.push(`- Primary Category: ${primaryCategory || 'N/A'}`);
+        lines.push(`- Secondary Categories: ${secondaryCategories || 'N/A'}`);
+        lines.push(`- Description: ${gbpDescription || 'N/A'}`);
+        lines.push(`- Stats: ${[ `Review Score: ${reviewScore || 'N/A'}`, `Reviews: ${reviewCount || 'N/A'}`, `Photos: ${photoCount || 'N/A'}`, `Q&A: ${qaCount || 'N/A'}` ].join(' | ')}`);
+        lines.push('');
+        lines.push('CLIENT BACKLINKS (all):');
+        if (clientLinks.length) {
+            lines.push(clientLinks.map(r => `- ${r.backlinkUrl} — ${r.following?'dofollow':'nofollow'} — spam ${r.spamScore ?? 'N/A'} — rank ${r.rank ?? 'N/A'}${r.title?` — ${r.title}`:''}`).join('\n'));
+        } else {
+            lines.push('- N/A');
+        }
+        lines.push('');
+        lines.push('COMPETITOR BACKLINKS (Top 20 each):');
+        competitorBacklinks.forEach(c => {
+            lines.push(`• ${c.name}:`);
+            if (c.top20.length) {
+                lines.push(c.top20.map(r => `  - ${r.url} — ${r.follow?'dofollow':'nofollow'} — spam ${r.spam} — rank ${r.rank}${r.title?` — ${r.title}`:''}`).join('\n'));
+            } else {
+                lines.push('  - N/A');
+            }
+        });
+        lines.push('');
+        lines.push('BACKLINKS AI REPORT (Client):');
+        lines.push(String(reportText || '').trim() || 'N/A');
+        lines.push('');
+        lines.push('--- End of report ---');
+        lines.push('');
+        lines.push('OPERATING PLAN (follow in this order):');
+        lines.push('1) Rapid Analysis + Plan: In 5 bullets, summarize the highest-impact backlink opportunities (citations, partnerships, PR mentions, resource pages, guest posts, supplier/brand links).');
+        lines.push('2) First Action (Click-by-click): Provide explicit steps to execute now. Prefer the quickest, lowest-risk win (e.g., top citation submission or reclaiming a lost link). Include:');
+        lines.push('   - Exact URL(s) to visit to submit or contact.');
+        lines.push('   - What to fill in (business name, website, categories).');
+        lines.push('   - Suggested anchor text and target page on client site.');
+        lines.push('   - If outreach is needed, include a short email template.');
+        lines.push('3) Minimal Questions (≤3): Ask ONLY essentials to refine next steps (primary service areas/cities to prioritize, CMS if needed for adding links, brand voice for outreach).');
+        lines.push('4) Prioritized Prospect List: 10–20 opportunities with rationale (relevance, spam score, authority proxies like rank metric, competitor overlap).');
+        lines.push('5) Outreach/Submission Tracker: Provide a simple checklist with status fields.');
+        lines.push('6) Measurement Plan: define success (new links acquired, referring domains, traffic to target pages) and how to verify monthly.');
+
+        return lines.join('\n');
+    };
+
+    const handleCopyImplementationPromptBL = async () => {
+        if (isCopying) return;
+        try {
+            setIsCopying(true);
+            setPromptCopyState('');
+            // If we have a prebuilt prompt ready, copy instantly
+            if (cachedPrompt) {
+                await navigator.clipboard.writeText(cachedPrompt);
+                setPromptCopyState('ok');
+                return;
+            }
+            // Fallback: build on-demand, then cache and copy
+            const prompt = await buildBacklinksImplementationPrompt();
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const workbookId = params.get('workbookId') || '';
+                const cacheKey = `impl_prompt_backlinks_${workbookId}`;
+                const payload = { prompt, aiText: String(reportText || ''), ts: Date.now() };
+                sessionStorage.setItem(cacheKey, JSON.stringify(payload));
+                setCachedPrompt(prompt);
+            } catch {}
+            await navigator.clipboard.writeText(prompt);
+            setPromptCopyState('ok');
+        } catch (e) {
+            setPromptCopyState('err');
+        } finally {
+            setTimeout(() => { setPromptCopyState(''); setIsCopying(false); }, 1800);
+        }
+    };
+
+    // Prebuild the prompt after initial render (idle or short delay) and cache it
+    useEffect(() => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const workbookId = params.get('workbookId') || '';
+            const cacheKey = `impl_prompt_backlinks_${workbookId}`;
+            const raw = sessionStorage.getItem(cacheKey);
+            if (raw) {
+                try {
+                    const parsed = JSON.parse(raw);
+                    const isFresh = parsed && parsed.aiText === String(reportText || '') && (Date.now() - (parsed.ts || 0) < 10 * 60 * 1000);
+                    if (isFresh && parsed.prompt) {
+                        setCachedPrompt(parsed.prompt);
+                        return;
+                    }
+                } catch {}
+            }
+            const build = async () => {
+                try {
+                    const prompt = await buildBacklinksImplementationPrompt();
+                    const payload = { prompt, aiText: String(reportText || ''), ts: Date.now() };
+                    sessionStorage.setItem(cacheKey, JSON.stringify(payload));
+                    setCachedPrompt(prompt);
+                } catch {}
+            };
+            if ('requestIdleCallback' in window) {
+                window.requestIdleCallback(() => { build(); }, { timeout: 3000 });
+            } else {
+                setTimeout(build, 2500);
+            }
+        } catch {}
+    }, [reportText]);
+
+    const handleRequestImplementBL = () => {
+        window.open('https://www.skool.com/forever-booked/classroom/a23620ff?md=00953c20f4574ccdb6d5edfe0a0298ed', '_blank');
     };
 
     // Reuse robust inline+block markdown parser from DualReports
@@ -2499,6 +2768,32 @@ const BacklinksReport = ({ reportText }) => {
                                 className="prose prose-sm max-w-none leading-relaxed select-text cursor-text dual-reports-text"
                                 dangerouslySetInnerHTML={{ __html: formattedContent }}
                             />
+                            {/* Action Buttons - above Show Less, bottom-right inside report */}
+                            <div className="mt-2 flex items-center justify-end space-x-3">
+                                <button
+                                    onClick={handleCopyImplementationPromptBL}
+                                    className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md disabled:opacity-60"
+                                    title="Copy implementation prompt"
+                                    disabled={isCopying}
+                                >
+                                    Implement Recommendations Myself
+                                </button>
+                                <button
+                                    onClick={handleRequestImplementBL}
+                                    className="px-4 py-2 rounded-lg font-semibold text-white"
+                                    style={{ backgroundColor: '#F8857E' }}
+                                    title="Request paid implementation"
+                                >
+                                    Request Forever Booked Implement (Paid SEO)
+                                </button>
+                            </div>
+                            {!!promptCopyState && (
+                                <div className={`mt-1 text-right text-sm ${promptCopyState==='ok'?'text-green-600':'text-red-600'}`}>
+                                    {promptCopyState==='ok' 
+                                        ? 'Prompt copied! Open your favourite AI model and paste it into the chat to get started.' 
+                                        : 'Failed to build or copy the prompt. Please try again in a moment.'}
+                                </div>
+                            )}
                             
                             {/* Clickable area to collapse */}
                             <div
