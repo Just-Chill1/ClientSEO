@@ -1575,7 +1575,6 @@ const KeywordsReport = ({ reportText }) => {
             let keywordsSummary = kwCache?.keywordsSummary || {};
             let keywordsTable = kwCache?.keywordsTable || {};
             let overviewData = dashCache?.overviewData || [];
-            let gbpAiReport = dashCache?.aiReport || '';
             let websiteStats = null;
 
             // Attempt to read generic cache for websiteStats from previous calls
@@ -1593,7 +1592,6 @@ const KeywordsReport = ({ reportText }) => {
                     keywordsTable = Object.keys(keywordsTable).length ? keywordsTable : (data.keywordsTable || {});
                     if ((!overviewData || overviewData.length === 0) && data.dashboard?.overviewData) {
                         overviewData = data.dashboard.overviewData;
-                        gbpAiReport = data.dashboard.aiReport || gbpAiReport;
                     }
                 }
             }
@@ -1723,11 +1721,6 @@ const KeywordsReport = ({ reportText }) => {
             lines.push('');
             lines.push('Keywords AI Report (Client):');
             lines.push(String(reportText || '').trim() || 'N/A');
-            if (gbpAiReport) {
-                lines.push('');
-                lines.push('GBP AI Report (Context):');
-                lines.push(String(gbpAiReport).trim());
-            }
             lines.push('');
             lines.push('Instructions:');
             lines.push('- Analyze all data above, identify gaps, ask clarifying questions if needed.');
@@ -1755,11 +1748,7 @@ const KeywordsReport = ({ reportText }) => {
     };
 
     const handleRequestImplement = () => {
-        const params = new URLSearchParams(window.location.search);
-        const workbookId = params.get('workbookId') || '';
-        const subject = encodeURIComponent('Request: Forever Booked SEO Implementation');
-        const body = encodeURIComponent('Hi team,\n\nI would like help implementing the monthly keyword recommendations.\nWorkbook ID: ' + workbookId + '\n\nPlease reply with next steps and pricing.');
-        window.open(`mailto:sales@foreverbooked.com?subject=${subject}&body=${body}`, '_blank');
+        window.open('https://www.skool.com/forever-booked/classroom/a23620ff?md=00953c20f4574ccdb6d5edfe0a0298ed', '_blank');
     };
 
     // Reuse robust markdown parser
@@ -1924,23 +1913,26 @@ const KeywordsReport = ({ reportText }) => {
                         </div>
                     )}
 
-                    {/* Action Buttons - bottom right */}
-                    <div className="mt-6 flex items-center justify-end space-x-3">
-                        <button
-                            onClick={handleCopyImplementationPrompt}
-                            className="px-4 py-2 rounded-lg font-medium bg-gray-100 hover:bg-gray-200 text-gray-800 transition-colors"
-                            title="Copy implementation prompt"
-                        >
-                            Implement Recommendations Myself
-                        </button>
-                        <button
-                            onClick={handleRequestImplement}
-                            className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md"
-                            title="Request paid implementation"
-                        >
-                            Request Forever Booked Implement (Paid SEO)
-                        </button>
-                    </div>
+                    {/* Action Buttons - bottom right (only visible when expanded; placed before Show Less) */}
+                    {isExpanded && (
+                        <div className="mt-6 flex items-center justify-end space-x-3">
+                            <button
+                                onClick={handleCopyImplementationPrompt}
+                                className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md"
+                                title="Copy implementation prompt"
+                            >
+                                Implement Recommendations Myself
+                            </button>
+                            <button
+                                onClick={handleRequestImplement}
+                                className="px-4 py-2 rounded-lg font-semibold text-white"
+                                style={{ backgroundColor: '#F8857E' }}
+                                title="Request paid implementation"
+                            >
+                                Request Forever Booked Implement (Paid SEO)
+                            </button>
+                        </div>
+                    )}
                     {!!promptCopyState && (
                         <div className={`mt-2 text-right text-sm ${promptCopyState==='ok'?'text-green-600':'text-red-600'}`}>
                             {promptCopyState==='ok' ? 'Prompt copied to clipboard' : 'Failed to build/copy prompt'}
@@ -2395,7 +2387,7 @@ const BacklinksReport = ({ reportText }) => {
                             />
                             
                             {/* Clickable area to collapse */}
-                            <div 
+                            <div
                                 className="text-center py-2 cursor-pointer rounded-lg transition-colors text-sm dual-reports-show-more"
                                 onClick={handleToggleExpand}
                             >
