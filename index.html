@@ -1657,6 +1657,7 @@ const KeywordsReport = ({ reportText }) => {
             const state = pickCaseInsensitive(clientOverview, 'State') || '';
             const primaryCategory = pickCaseInsensitive(clientOverview, 'Primary Category') || '';
             const secondaryCategories = pickCaseInsensitive(clientOverview, 'Secondary Categories') || '';
+            const gbpDescription = pickCaseInsensitive(clientOverview, 'Description') || '';
             const reviewScore = pickCaseInsensitive(clientOverview, 'Review Score') || '';
             const reviewCount = pickCaseInsensitive(clientOverview, 'Review Count') || '';
             const photoCount = pickCaseInsensitive(clientOverview, 'Photo Count') || '';
@@ -1698,16 +1699,20 @@ const KeywordsReport = ({ reportText }) => {
             lines.push(`- SSL: ${ssl}`);
             lines.push(`- Schema: ${hasSchema}`);
             lines.push('');
-            const gbpParts = [];
-            if (primaryCategory) gbpParts.push(`Primary: ${primaryCategory}`);
-            if (secondaryCategories) gbpParts.push(`Secondary: ${secondaryCategories}`);
-            if (gbpParts.length) lines.push(`GBP Categories: ${gbpParts.join(' | ')}`);
-            const gbpStats = [];
-            if (reviewScore) gbpStats.push(`Review Score: ${reviewScore}`);
-            if (reviewCount) gbpStats.push(`Reviews: ${reviewCount}`);
-            if (photoCount) gbpStats.push(`Photos: ${photoCount}`);
-            if (qaCount) gbpStats.push(`Q&A: ${qaCount}`);
-            if (gbpStats.length) lines.push(`GBP Stats: ${gbpStats.join(' | ')}`);
+            // GBP mini section (Client)
+            if (primaryCategory || secondaryCategories || gbpDescription || reviewScore || reviewCount || photoCount || qaCount) {
+                lines.push('');
+                lines.push('GBP INSIGHTS (Client):');
+                if (primaryCategory) lines.push(`- Primary Category: ${primaryCategory}`);
+                if (secondaryCategories) lines.push(`- Secondary Categories: ${secondaryCategories}`);
+                if (gbpDescription) lines.push(`- Description: ${gbpDescription}`);
+                const gbpStats = [];
+                if (reviewScore) gbpStats.push(`Review Score: ${reviewScore}`);
+                if (reviewCount) gbpStats.push(`Reviews: ${reviewCount}`);
+                if (photoCount) gbpStats.push(`Photos: ${photoCount}`);
+                if (qaCount) gbpStats.push(`Q&A: ${qaCount}`);
+                if (gbpStats.length) lines.push(`- Stats: ${gbpStats.join(' | ')}`);
+            }
             if (crawlPages.length) {
                 lines.push('');
                 lines.push('WEBSITE CRAWL PAGES (sample):');
@@ -1732,17 +1737,19 @@ const KeywordsReport = ({ reportText }) => {
             lines.push('KEYWORDS AI REPORT (Client):');
             lines.push(String(reportText || '').trim() || 'N/A');
             lines.push('');
+            lines.push('--- End of report ---');
+            lines.push('');
             lines.push('OPERATING PLAN (follow in this order):');
-            lines.push('1) Rapid Analysis + Plan: In 5 bullets, summarize the biggest keyword wins (intent + impact) and outline a short plan.');
-            lines.push('2) First Action: Provide the exact step to execute now for the top keyword/page (do not wait for answers) with concrete fields.');
+            lines.push('1) Rapid Analysis + Plan: In 5 bullets, summarize the biggest keyword wins (intent + impact) and outline a short plan. Include any quick GBP fixes (missing category or description) if they materially affect visibility.');
+            lines.push('2) First Action: Provide the exact step to execute now for the top keyword/page (do not wait for answers) with concrete fields. If a GBP gap is critical (e.g., missing primary category), propose that as the immediate action instead.');
             lines.push('3) Minimal Questions (≤3): Ask ONLY essential questions to refine subsequent steps (e.g., CMS, approvals, brand tone).');
             lines.push('4) Prioritized Keyword Backlog: Create a short, ranked list (10–15) with rationale (current rank/SV, intent, competitor coverage).');
             lines.push('5) Keyword-to-Page Mapping: For top 3–5 targets, map each to an existing URL (or propose a new URL) and note gaps.');
-            lines.push('6) On-Page Implementation for the NEXT target:');
+            lines.push('6) On-Page Implementation for the NEXT target (or GBP optimization if prioritized):');
             lines.push('   - Provide exact Title (<=60 chars), H1, Meta Description (<=155 chars), H2/H3 outline, and 5–7 keywords/LSIs.');
             lines.push('   - Internal links: list 3–5 anchor texts and source pages to link from.');
             lines.push('   - Content additions: bullets, FAQs (3–5) with concise answers; suggest adding local modifiers.');
-            lines.push('   - Schema: specify the most relevant type(s) to add/update (e.g., LocalBusiness, FAQ).');
+            lines.push('   - Schema: specify the most relevant type(s) to add/update (e.g., LocalBusiness, FAQ). If GBP changes apply, note the exact Primary/Secondary category string(s) and a suggested 750+ character description.');
             lines.push('7) Implementation Checklist: Provide a checkbox list the client can work through inside their CMS.');
             lines.push('8) Measurement Plan: define success metrics (rank targets, CTR, impressions) and how to verify in GSC/GA4 weekly.');
             lines.push('9) Next Step: after finishing the first target, offer to proceed to the next item in the backlog.');
