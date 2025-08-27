@@ -1534,10 +1534,55 @@ const KeywordsReport = ({ reportText }) => {
         document.body.removeChild(element);
     };
 
-    const formattedContent = String(reportText || 'Keywords targeting report will appear here once generated.')
-        .replace(/\n/g, '<br />')
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>');
+    // Reuse robust markdown parser
+    const escapeHtmlKW = (str) => String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    const applyInlineMarkdownKW = (str) => {
+        let s = str;
+        s = s.replace(/\u00A0/g, ' ').replace(/[\u200B-\u200D\uFEFF]/g, '');
+        s = s.replace(/\*\*([\s\S]+?)\*\*/g, '<strong class="font-bold">$1</strong>');
+        s = s.replace(/__([\s\S]+?)__/g, '<strong class="font-bold">$1</strong>');
+        s = s.replace(/(^|[^*])\*(?!\*)([^*]+)\*(?!\*)/g, '$1<em>$2</em>');
+        s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
+        s = s.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" class="text-blue-600 underline">$1<\/a>');
+        return s;
+    };
+    const parseMarkdownToHtmlKW = (markdown) => {
+        const lines = escapeHtmlKW(markdown).replace(/\r\n?/g, '\n').split('\n');
+        const html = []; let inUl = false, inOl = false, blankStreak = 0, inTable = false; let tableRows = [];
+        const closeLists = () => { if (inUl) { html.push('</ul>'); inUl = false; } if (inOl) { html.push('</ol>'); inOl = false; } };
+        const flushTable = () => {
+            if (!inTable || tableRows.length === 0) return;
+            let headerCells = null;
+            if (tableRows.length >= 2 && tableRows[1].every(cell => /^:?-{3,}:?$/.test(cell))) { headerCells = tableRows[0]; tableRows = tableRows.slice(2); }
+            const thead = headerCells ? '<thead><tr>' + headerCells.map((c) => `<th class=\"border border-gray-200 px-3 py-2 font-semibold bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100\">${applyInlineMarkdownKW(c)}</th>`).join('') + '</tr></thead>' : '';
+            const tbody = '<tbody>' + tableRows.map(row => ('<tr>' + row.map((c,i) => `<td class=\"border border-gray-200 px-3 py-2 ${i===0?'font-medium':''} whitespace-nowrap\">${applyInlineMarkdownKW(c)}</td>`).join('') + '</tr>')).join('') + '</tbody>';
+            html.push(`<div class=\"my-4\"><div class=\"max-w-full overflow-x-auto\"><table class=\"table-auto w-auto text-sm border border-gray-200 rounded-lg border-collapse\">${thead}${tbody}</table></div></div>`);
+            inTable = false; tableRows = [];
+        };
+        lines.forEach(raw => {
+            const line = raw.replace(/\s+$/,'').replace(/^\s+/, '');
+            if (!line) { blankStreak++; closeLists(); flushTable(); return; }
+            if (blankStreak > 0) { html.push(`<div class=\"${blankStreak >= 2 ? 'my-8' : 'my-5'}\"></div>`); blankStreak = 0; }
+            if (/^---+$/.test(line)) { closeLists(); flushTable(); html.push('<hr class=\"my-8 border-t border-gray-200\" />'); return; }
+            if (/^####\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h4 class=\"mt-4 mb-2 font-semibold text-lg leading-tight\">${applyInlineMarkdownKW(line.replace(/^####\s+/, ''))}</h4>`); return; }
+            if (/^###\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h3 class=\"mt-5 mb-3 font-semibold text-xl leading-tight\">${applyInlineMarkdownKW(line.replace(/^###\s+/, ''))}</h3>`); return; }
+            if (/^##\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h2 class=\"mt-6 mb-4 font-semibold text-2xl leading-tight\">${applyInlineMarkdownKW(line.replace(/^##\s+/, ''))}</h2>`); return; }
+            if (/^#\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h1 class=\"mt-7 mb-5 font-bold text-4xl leading-tight\">${applyInlineMarkdownKW(line.replace(/^#\s+/, ''))}</h1>`); return; }
+            if (/^\|.*\|$/.test(line)) { const cells = line.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim()); if (!inTable) { inTable = true; tableRows = []; } tableRows.push(cells); return; }
+            flushTable();
+            if (/^\d+\.\s+/.test(line)) { if (!inOl) { closeLists(); html.push('<ol class=\"list-decimal pl-5 my-2 space-y-1.5\">'); inOl = true; } html.push(`<li>${applyInlineMarkdownKW(line.replace(/^\d+\.\s+/, ''))}</li>`); return; }
+            if (/^(?:-|\u2022|\u2013)\s+/.test(line)) { if (!inUl) { closeLists(); html.push('<ul class=\"list-disc pl-5 my-2 space-y-1.5\">'); inUl = true; } html.push(`<li>${applyInlineMarkdownKW(line.replace(/^(?:-|\u2022|\u2013)\s+/, ''))}</li>`); return; }
+            closeLists(); html.push(`<p class=\"my-5\">${applyInlineMarkdownKW(line)}</p>`);
+        });
+        closeLists(); flushTable();
+        let result = html.join('\n');
+        result = result.replace(/(<p[^>]*>[^<:]*:[^<]*<\/p>)\s*(<div class=\"my-5\"><\/div>)/g, '$1');
+        return result;
+    };
+    const formattedContent = parseMarkdownToHtmlKW(String(reportText || 'Keywords targeting report will appear here once generated.'));
 
     // Check if this is just placeholder text
     const isPlaceholderOnly = !reportText || reportText.trim() === '' || reportText === 'Keywords targeting report will appear here once generated.';
@@ -1703,10 +1748,91 @@ const GBPReportSection = ({ reportText }) => {
         document.body.removeChild(element);
     };
 
-    const formattedContent = String(reportText || 'Google Business Profile analysis will appear here once generated.')
-        .replace(/\n/g, '<br />')
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>');
+    // Markdown helpers (match DualReports behavior)
+    const escapeHtml = (str) => String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+    const applyInlineMarkdown = (str) => {
+        let s = str;
+        s = s.replace(/\u00A0/g, ' ').replace(/[\u200B-\u200D\uFEFF]/g, '');
+        s = s.replace(/\*\*([\s\S]+?)\*\*/g, '<strong class="font-bold">$1</strong>');
+        s = s.replace(/__([\s\S]+?)__/g, '<strong class="font-bold">$1</strong>');
+        s = s.replace(/(^|[^*])\*(?!\*)([^*]+)\*(?!\*)/g, '$1<em>$2</em>');
+        s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
+        s = s.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" class="text-blue-600 underline">$1<\/a>');
+        return s;
+    };
+
+    const parseMarkdownToHtml = (markdown) => {
+        const lines = escapeHtml(markdown).replace(/\r\n?/g, '\n').split('\n');
+        const html = [];
+        let inUl = false, inOl = false;
+        let blankStreak = 0;
+        let inTable = false;
+        let tableRows = [];
+
+        const closeLists = () => {
+            if (inUl) { html.push('</ul>'); inUl = false; }
+            if (inOl) { html.push('</ol>'); inOl = false; }
+        };
+
+        const flushTable = () => {
+            if (!inTable || tableRows.length === 0) return;
+            let headerCells = null;
+            if (tableRows.length >= 2 && tableRows[1].every(cell => /^:?-{3,}:?$/.test(cell))) {
+                headerCells = tableRows[0];
+                tableRows = tableRows.slice(2);
+            }
+            const thead = headerCells
+                ? '<thead><tr>' + headerCells.map((c) => `<th class="border border-gray-200 px-3 py-2 font-semibold bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100">${applyInlineMarkdown(c)}</th>`).join('') + '</tr></thead>'
+                : '';
+            const tbody = '<tbody>' + tableRows.map(row => (
+                '<tr>' + row.map((c,i) => `<td class=\"border border-gray-200 px-3 py-2 ${i===0?'font-medium':''} whitespace-nowrap\">${applyInlineMarkdown(c)}</td>`).join('') + '</tr>'
+            )).join('') + '</tbody>';
+            html.push(`<div class="my-4"><div class="max-w-full overflow-x-auto"><table class="table-auto w-auto text-sm border border-gray-200 rounded-lg border-collapse">${thead}${tbody}</table></div></div>`);
+            inTable = false;
+            tableRows = [];
+        };
+
+        lines.forEach(raw => {
+            const line = raw.replace(/\s+$/,'').replace(/^\s+/, '');
+            if (!line) { blankStreak++; closeLists(); flushTable(); return; }
+            if (blankStreak > 0) { html.push(`<div class="${blankStreak >= 2 ? 'my-8' : 'my-5'}"></div>`); blankStreak = 0; }
+            if (/^---+$/.test(line)) { closeLists(); flushTable(); html.push('<hr class="my-8 border-t border-gray-200" />'); return; }
+            if (/^####\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h4 class="mt-4 mb-2 font-semibold text-lg leading-tight">${applyInlineMarkdown(line.replace(/^####\s+/, ''))}</h4>`); return; }
+            if (/^###\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h3 class="mt-5 mb-3 font-semibold text-xl leading-tight">${applyInlineMarkdown(line.replace(/^###\s+/, ''))}</h3>`); return; }
+            if (/^##\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h2 class="mt-6 mb-4 font-semibold text-2xl leading-tight">${applyInlineMarkdown(line.replace(/^##\s+/, ''))}</h2>`); return; }
+            if (/^#\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h1 class="mt-7 mb-5 font-bold text-4xl leading-tight">${applyInlineMarkdown(line.replace(/^#\s+/, ''))}</h1>`); return; }
+            if (/^\|.*\|$/.test(line)) {
+                const cells = line.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim());
+                if (!inTable) { inTable = true; tableRows = []; }
+                tableRows.push(cells);
+                return;
+            }
+            flushTable();
+            if (/^\d+\.\s+/.test(line)) {
+                if (!inOl) { closeLists(); html.push('<ol class="list-decimal pl-5 my-2 space-y-1.5">'); inOl = true; }
+                html.push(`<li>${applyInlineMarkdown(line.replace(/^\d+\.\s+/, ''))}</li>`);
+                return;
+            }
+            if (/^(?:-|\u2022|\u2013)\s+/.test(line)) {
+                if (!inUl) { closeLists(); html.push('<ul class="list-disc pl-5 my-2 space-y-1.5">'); inUl = true; }
+                html.push(`<li>${applyInlineMarkdown(line.replace(/^(?:-|\u2022|\u2013)\s+/, ''))}</li>`);
+                return;
+            }
+            closeLists();
+            html.push(`<p class="my-5">${applyInlineMarkdown(line)}</p>`);
+        });
+        closeLists();
+        flushTable();
+        let result = html.join('\n');
+        result = result.replace(/(<p[^>]*>[^<:]*:[^<]*<\/p>)\s*(<div class=\"my-5\"><\/div>)/g, '$1');
+        return result;
+    };
+
+    const formattedContent = parseMarkdownToHtml(String(reportText || 'Google Business Profile analysis will appear here once generated.'));
 
     // Check if this is just placeholder text
     const isPlaceholderOnly = !reportText || reportText.trim() === '' || reportText === 'Google Business Profile analysis will appear here once generated.';
@@ -1864,10 +1990,56 @@ const BacklinksReport = ({ reportText }) => {
         document.body.removeChild(element);
     };
 
-    const formattedContent = String(reportText || 'Backlinks targeting report will appear here once generated.')
-        .replace(/\n/g, '<br />')
-        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\*(.*?)\*/g, '<em>$1</em>');
+    // Reuse robust inline+block markdown parser from DualReports
+    const escapeHtmlBL = (str) => String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    const applyInlineMarkdownBL = (str) => {
+        let s = str;
+        s = s.replace(/\u00A0/g, ' ').replace(/[\u200B-\u200D\uFEFF]/g, '');
+        s = s.replace(/\*\*([\s\S]+?)\*\*/g, '<strong class="font-bold">$1</strong>');
+        s = s.replace(/__([\s\S]+?)__/g, '<strong class="font-bold">$1</strong>');
+        s = s.replace(/(^|[^*])\*(?!\*)([^*]+)\*(?!\*)/g, '$1<em>$2</em>');
+        s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
+        s = s.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" class="text-blue-600 underline">$1<\/a>');
+        return s;
+    };
+    const parseMarkdownToHtmlBL = (markdown) => {
+        const lines = escapeHtmlBL(markdown).replace(/\r\n?/g, '\n').split('\n');
+        const html = [];
+        let inUl = false, inOl = false, blankStreak = 0, inTable = false; let tableRows = [];
+        const closeLists = () => { if (inUl) { html.push('</ul>'); inUl = false; } if (inOl) { html.push('</ol>'); inOl = false; } };
+        const flushTable = () => {
+            if (!inTable || tableRows.length === 0) return;
+            let headerCells = null;
+            if (tableRows.length >= 2 && tableRows[1].every(cell => /^:?-{3,}:?$/.test(cell))) { headerCells = tableRows[0]; tableRows = tableRows.slice(2); }
+            const thead = headerCells ? '<thead><tr>' + headerCells.map((c) => `<th class=\"border border-gray-200 px-3 py-2 font-semibold bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100\">${applyInlineMarkdownBL(c)}</th>`).join('') + '</tr></thead>' : '';
+            const tbody = '<tbody>' + tableRows.map(row => ('<tr>' + row.map((c,i) => `<td class=\"border border-gray-200 px-3 py-2 ${i===0?'font-medium':''} whitespace-nowrap\">${applyInlineMarkdownBL(c)}</td>`).join('') + '</tr>')).join('') + '</tbody>';
+            html.push(`<div class=\"my-4\"><div class=\"max-w-full overflow-x-auto\"><table class=\"table-auto w-auto text-sm border border-gray-200 rounded-lg border-collapse\">${thead}${tbody}</table></div></div>`);
+            inTable = false; tableRows = [];
+        };
+        lines.forEach(raw => {
+            const line = raw.replace(/\s+$/,'').replace(/^\s+/, '');
+            if (!line) { blankStreak++; closeLists(); flushTable(); return; }
+            if (blankStreak > 0) { html.push(`<div class=\"${blankStreak >= 2 ? 'my-8' : 'my-5'}\"></div>`); blankStreak = 0; }
+            if (/^---+$/.test(line)) { closeLists(); flushTable(); html.push('<hr class=\"my-8 border-t border-gray-200\" />'); return; }
+            if (/^####\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h4 class=\"mt-4 mb-2 font-semibold text-lg leading-tight\">${applyInlineMarkdownBL(line.replace(/^####\s+/, ''))}</h4>`); return; }
+            if (/^###\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h3 class=\"mt-5 mb-3 font-semibold text-xl leading-tight\">${applyInlineMarkdownBL(line.replace(/^###\s+/, ''))}</h3>`); return; }
+            if (/^##\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h2 class=\"mt-6 mb-4 font-semibold text-2xl leading-tight\">${applyInlineMarkdownBL(line.replace(/^##\s+/, ''))}</h2>`); return; }
+            if (/^#\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h1 class=\"mt-7 mb-5 font-bold text-4xl leading-tight\">${applyInlineMarkdownBL(line.replace(/^#\s+/, ''))}</h1>`); return; }
+            if (/^\|.*\|$/.test(line)) { const cells = line.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim()); if (!inTable) { inTable = true; tableRows = []; } tableRows.push(cells); return; }
+            flushTable();
+            if (/^\d+\.\s+/.test(line)) { if (!inOl) { closeLists(); html.push('<ol class=\"list-decimal pl-5 my-2 space-y-1.5\">'); inOl = true; } html.push(`<li>${applyInlineMarkdownBL(line.replace(/^\d+\.\s+/, ''))}</li>`); return; }
+            if (/^(?:-|\u2022|\u2013)\s+/.test(line)) { if (!inUl) { closeLists(); html.push('<ul class=\"list-disc pl-5 my-2 space-y-1.5\">'); inUl = true; } html.push(`<li>${applyInlineMarkdownBL(line.replace(/^(?:-|\u2022|\u2013)\s+/, ''))}</li>`); return; }
+            closeLists(); html.push(`<p class=\"my-5\">${applyInlineMarkdownBL(line)}</p>`);
+        });
+        closeLists(); flushTable();
+        let result = html.join('\n');
+        result = result.replace(/(<p[^>]*>[^<:]*:[^<]*<\/p>)\s*(<div class=\"my-5\"><\/div>)/g, '$1');
+        return result;
+    };
+    const formattedContent = parseMarkdownToHtmlBL(String(reportText || 'Backlinks targeting report will appear here once generated.'));
 
     // Check if this is just placeholder text
     const isPlaceholderOnly = !reportText || reportText.trim() === '' || reportText === 'Backlinks targeting report will appear here once generated.';
