@@ -1617,7 +1617,7 @@ const KeywordsReport = ({ reportText }) => {
                 .filter(r => Number(r?.rank_now) > 0)
                 .sort((a,b) => Number(a.rank_now) - Number(b.rank_now))
                 .slice(0, 30)
-                .map(r => ({ k: r.keyword, rank: Number(r.rank_now), sv: Number(r.sv || r.search_volume || 0), url: r.ranking_url || '', title: r.ranking_title || '' }));
+                .map(r => ({ k: r.keyword, rank: Number(r.rank_now), sv: Number(r.search_vol || r.sv || r.search_volume || 0), url: r.ranking_url || '', title: r.ranking_title || '' }));
 
             // Competitor keywords – for each competitor (other site names)
             const competitorSites = siteNamesAll.slice(1);
@@ -1627,16 +1627,18 @@ const KeywordsReport = ({ reportText }) => {
                                    .sort((a,b) => Number(a.rank_now) - Number(b.rank_now))
                                    .slice(0, 20)
                                    .map(r => ({ k: r.keyword, rank: Number(r.rank_now), sv: Number(r.sv || r.search_volume || 0) }));
-                const bySvAll = rows.slice().sort((a,b) => Number(b.sv || b.search_volume || 0) - Number(a.sv || a.search_volume || 0));
+                const bySvAll = rows.slice().sort((a,b) => Number(b.search_vol || b.sv || b.search_volume || 0) - Number(a.search_vol || a.sv || a.search_volume || 0));
                 const bySv = [];
                 const top20Set = new Set(byRank.map(x => x.k?.toLowerCase()));
                 for (const r of bySvAll) {
                     const kw = String(r.keyword || '').toLowerCase();
                     if (top20Set.has(kw)) continue; // exclude those already in top20 by rank
-                    bySv.push({ k: r.keyword, sv: Number(r.sv || r.search_volume || 0), rank: Number(r.rank_now || 0) });
+                    bySv.push({ k: r.keyword, sv: Number(r.search_vol || r.sv || r.search_volume || 0), rank: Number(r.rank_now || 0) });
                     if (bySv.length >= 15) break;
                 }
-                return { name, topByRank: byRank, topBySv: bySv };
+                // Include SV on the topByRank items as well
+                const byRankWithSv = byRank.map(r => ({ ...r, sv: Number(r.search_vol || r.sv || r.search_volume || 0) }));
+                return { name, topByRank: byRankWithSv, topBySv: bySv };
             });
 
             // Pull Website Stats (On-Page Insights proxy)
