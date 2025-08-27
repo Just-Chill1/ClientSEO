@@ -1148,7 +1148,33 @@ function getWebsiteCrawlPagesAggregate(spreadsheet) {
 	const totalChecks = Object.values(perCheck).reduce((sum, c) => sum + c.total, 0);
 	const totalPassed = Object.values(perCheck).reduce((sum, c) => sum + c.passed, 0);
 
-	return { totalPassed, totalChecks, perCheck };
+	// Build a lightweight list of client page paths to use in prompts (limit to avoid huge payloads)
+	const urlIdx = headerIndex['url'];
+	const pagesList = [];
+	if (urlIdx !== undefined) {
+		const seen = {};
+		for (let i = 0; i < values.length; i++) {
+			const fullUrl = values[i][urlIdx];
+			if (!fullUrl) continue;
+			try {
+				let u = String(fullUrl).trim();
+				// Normalize and extract path only
+				u = u.replace(/^https?:\/\//i, '');
+				const slash = u.indexOf('/');
+				let path = slash >= 0 ? u.substring(slash) : '/';
+				// Ensure leading slash and collapse double slashes
+				if (!path.startsWith('/')) path = '/' + path;
+				path = path.replace(/\/+/g, '/');
+				if (!seen[path]) {
+					pagesList.push(path);
+					seen[path] = true;
+				}
+				if (pagesList.length >= 120) break; // keep payload bounded
+			} catch (ignored) {}
+		}
+	}
+
+	return { totalPassed, totalChecks, perCheck, pagesList };
 }
 
 // Helper function to format website URL into a display name

@@ -1686,10 +1686,11 @@ const KeywordsReport = ({ reportText }) => {
             const photoCount = (gbpRecord?.photoCount || gbpRecord?.totalPhotos || pickCaseInsensitive(gbpRecord, 'Photo Count') || pickCaseInsensitive(gbpRecord, 'Total Photos') || pickCaseInsensitive(clientOverview, 'Photo Count') || pickCaseInsensitive(clientOverview, 'Total Photos') || '').toString();
             const qaCount = (gbpRecord?.qaCount || pickCaseInsensitive(gbpRecord, 'QACount') || pickCaseInsensitive(gbpRecord, 'Q&A Count') || pickCaseInsensitive(clientOverview, 'QACount') || pickCaseInsensitive(clientOverview, 'Q&A Count') || '').toString();
 
-            // Website Crawl Pages (if available under healthData.pagesList or similar)
-            const crawlPages = toArray(health?.pagesList || health?.topPages || []).slice(0, 25)
+            // Website Crawl Pages (lightweight list of path slugs from websiteStats)
+            const crawlPages = toArray(health?.checksAggregate?.pagesList || health?.pagesList || health?.topPages || [])
                 .map(p => (typeof p === 'string' ? p : (p?.url || p?.path || '')))
-                .filter(Boolean);
+                .filter(Boolean)
+                .slice(0, 60);
 
             // Compose prompt
             const lines = [];
@@ -1736,7 +1737,7 @@ const KeywordsReport = ({ reportText }) => {
             ].join(' | ')}`);
             if (crawlPages.length) {
                 lines.push('');
-                lines.push('WEBSITE CRAWL PAGES (sample):');
+                lines.push('CLIENT WEBSITE PAGES:');
                 lines.push(crawlPages.map(p => `- ${p}`).join('\n'));
             }
             lines.push('');
