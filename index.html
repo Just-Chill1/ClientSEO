@@ -1677,13 +1677,13 @@ const KeywordsReport = ({ reportText }) => {
                 gbpRecord = gbpInsights;
             }
 
-            const primaryCategory = (pickCaseInsensitive(gbpRecord, 'Primary Categorie') || pickCaseInsensitive(gbpRecord, 'Primary Category') || pickCaseInsensitive(clientOverview, 'Primary Category') || '').toString();
-            const secondaryCategories = (pickCaseInsensitive(gbpRecord, 'Secondary Categories') || pickCaseInsensitive(clientOverview, 'Secondary Categories') || '').toString();
-            const gbpDescription = (pickCaseInsensitive(gbpRecord, 'Description') || pickCaseInsensitive(clientOverview, 'Description') || '').toString();
-            const reviewScore = (pickCaseInsensitive(gbpRecord, 'Review Score') || pickCaseInsensitive(clientOverview, 'Review Score') || '').toString();
-            const reviewCount = (pickCaseInsensitive(gbpRecord, 'Review Count') || pickCaseInsensitive(clientOverview, 'Review Count') || '').toString();
-            const photoCount = (pickCaseInsensitive(gbpRecord, 'Photo Count') || pickCaseInsensitive(clientOverview, 'Photo Count') || '').toString();
-            const qaCount = (pickCaseInsensitive(gbpRecord, 'QACount') || pickCaseInsensitive(gbpRecord, 'Q&A Count') || pickCaseInsensitive(clientOverview, 'QACount') || pickCaseInsensitive(clientOverview, 'Q&A Count') || '').toString();
+            const primaryCategory = (gbpRecord?.primaryCategory || pickCaseInsensitive(gbpRecord, 'Primary Categorie') || pickCaseInsensitive(gbpRecord, 'Primary Category') || pickCaseInsensitive(clientOverview, 'Primary Category') || '').toString();
+            const secondaryCategories = (gbpRecord?.secondaryCategories || pickCaseInsensitive(gbpRecord, 'Secondary Categories') || pickCaseInsensitive(clientOverview, 'Secondary Categories') || '').toString();
+            const gbpDescription = (gbpRecord?.description || pickCaseInsensitive(gbpRecord, 'Description') || pickCaseInsensitive(clientOverview, 'Description') || '').toString();
+            const reviewScore = (gbpRecord?.reviewScore || pickCaseInsensitive(gbpRecord, 'Review Score') || pickCaseInsensitive(clientOverview, 'Review Score') || '').toString();
+            const reviewCount = (gbpRecord?.reviewCount || pickCaseInsensitive(gbpRecord, 'Review Count') || pickCaseInsensitive(clientOverview, 'Review Count') || '').toString();
+            const photoCount = (gbpRecord?.photoCount || gbpRecord?.totalPhotos || pickCaseInsensitive(gbpRecord, 'Photo Count') || pickCaseInsensitive(gbpRecord, 'Total Photos') || pickCaseInsensitive(clientOverview, 'Photo Count') || pickCaseInsensitive(clientOverview, 'Total Photos') || '').toString();
+            const qaCount = (gbpRecord?.qaCount || pickCaseInsensitive(gbpRecord, 'QACount') || pickCaseInsensitive(gbpRecord, 'Q&A Count') || pickCaseInsensitive(clientOverview, 'QACount') || pickCaseInsensitive(clientOverview, 'Q&A Count') || '').toString();
 
             // Website Crawl Pages (if available under healthData.pagesList or similar)
             const crawlPages = toArray(health?.pagesList || health?.topPages || []).slice(0, 25)
