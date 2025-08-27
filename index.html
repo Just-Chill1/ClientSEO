@@ -1565,6 +1565,20 @@ const KeywordsReport = ({ reportText }) => {
         return fuzzy ? fuzzy[1] : undefined;
     };
 
+    // Format any ISO timestamps in text to US-readable date/time
+    const formatISOToUSInText = (text) => {
+        try {
+            return String(text || '').replace(/\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z\b/g, (m) => {
+                const d = new Date(m);
+                if (isNaN(d.getTime())) return m;
+                return d.toLocaleString('en-US', {
+                    year: 'numeric', month: 'short', day: '2-digit',
+                    hour: 'numeric', minute: '2-digit'
+                });
+            });
+        } catch { return text; }
+    };
+
     const buildImplementationPrompt = async () => {
         try {
             const params = new URLSearchParams(window.location.search);
@@ -1788,7 +1802,9 @@ const KeywordsReport = ({ reportText }) => {
             lines.push('8) Measurement Plan: define success metrics (rank targets, CTR, impressions) and how to verify in GSC/GA4 weekly.');
             lines.push('9) Next Step: after finishing the first target, offer to proceed to the next item in the backlog.');
 
-            return lines.join('\n');
+            let output = lines.join('\n');
+            output = formatISOToUSInText(output);
+            return output;
         } catch (e) {
             console.error('Prompt build error', e);
             throw e;
@@ -1821,7 +1837,7 @@ const KeywordsReport = ({ reportText }) => {
         } catch (e) {
             setPromptCopyState('err');
         } finally {
-            setTimeout(() => { setPromptCopyState(''); setIsCopying(false); }, 1800);
+            setTimeout(() => { setPromptCopyState(''); setIsCopying(false); }, 20000);
         }
     };
 
@@ -2546,7 +2562,9 @@ const BacklinksReport = ({ reportText }) => {
         lines.push('5) Outreach/Submission Tracker: Provide a simple checklist with status fields.');
         lines.push('6) Measurement Plan: define success (new links acquired, referring domains, traffic to target pages) and how to verify monthly.');
 
-        return lines.join('\n');
+        let output = lines.join('\n');
+        output = formatISOToUSInText(output);
+        return output;
     };
 
     const handleCopyImplementationPromptBL = async () => {
@@ -2575,7 +2593,7 @@ const BacklinksReport = ({ reportText }) => {
         } catch (e) {
             setPromptCopyState('err');
         } finally {
-            setTimeout(() => { setPromptCopyState(''); setIsCopying(false); }, 1800);
+            setTimeout(() => { setPromptCopyState(''); setIsCopying(false); }, 20000);
         }
     };
 
