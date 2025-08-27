@@ -1577,6 +1577,7 @@ const KeywordsReport = ({ reportText }) => {
             let keywordsTable = kwCache?.keywordsTable || {};
             let overviewData = dashCache?.overviewData || [];
             let websiteStats = null;
+            let gbpInsights = null;
 
             // Attempt to read generic cache for websiteStats from previous calls
             const base = 'https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec';
@@ -1586,7 +1587,7 @@ const KeywordsReport = ({ reportText }) => {
 
             // Fetch missing pieces in one shot
             if (!websiteStats || !overviewData || Object.keys(keywordsTable).length === 0) {
-                const data = await fetchSections(workbookId, 'websiteStats,keywordsSummary,keywordsTable,dashboard');
+                const data = await fetchSections(workbookId, 'websiteStats,keywordsSummary,keywordsTable,dashboard,gbpInsights');
                 if (data) {
                     websiteStats = websiteStats || data.websiteStats || data?.websiteStats;
                     keywordsSummary = Object.keys(keywordsSummary).length ? keywordsSummary : (data.keywordsSummary || {});
@@ -1594,7 +1595,15 @@ const KeywordsReport = ({ reportText }) => {
                     if ((!overviewData || overviewData.length === 0) && data.dashboard?.overviewData) {
                         overviewData = data.dashboard.overviewData;
                     }
+                    if (data.gbpInsights) {
+                        gbpInsights = data.gbpInsights;
+                    }
                 }
+            }
+            // If still missing, try a direct gbpInsights fetch
+            if (!gbpInsights) {
+                const gbpData = await fetchSections(workbookId, 'gbpInsights');
+                if (gbpData && gbpData.gbpInsights) gbpInsights = gbpData.gbpInsights;
             }
 
             // Identify client site (first key used throughout UI)
@@ -1655,13 +1664,25 @@ const KeywordsReport = ({ reportText }) => {
             const borough = pickCaseInsensitive(clientOverview, 'Borough') || '';
             const city = pickCaseInsensitive(clientOverview, 'City') || '';
             const state = pickCaseInsensitive(clientOverview, 'State') || '';
-            const primaryCategory = pickCaseInsensitive(clientOverview, 'Primary Category') || '';
-            const secondaryCategories = pickCaseInsensitive(clientOverview, 'Secondary Categories') || '';
-            const gbpDescription = pickCaseInsensitive(clientOverview, 'Description') || '';
-            const reviewScore = pickCaseInsensitive(clientOverview, 'Review Score') || '';
-            const reviewCount = pickCaseInsensitive(clientOverview, 'Review Count') || '';
-            const photoCount = pickCaseInsensitive(clientOverview, 'Photo Count') || '';
-            const qaCount = pickCaseInsensitive(clientOverview, 'QACount') || pickCaseInsensitive(clientOverview, 'Q&A Count') || '';
+
+            // Prefer GBP Insights tab for GBP-specific fields; fallback to overview
+            let gbpRecord = null;
+            if (Array.isArray(gbpInsights)) {
+                gbpRecord = gbpInsights.find(r => {
+                    const at = String(pickCaseInsensitive(r, 'Account Type') || pickCaseInsensitive(r, 'AccountType') || pickCaseInsensitive(r, 'Type') || '').toLowerCase();
+                    return at.includes('client');
+                }) || gbpInsights[0] || null;
+            } else if (gbpInsights && typeof gbpInsights === 'object') {
+                gbpRecord = gbpInsights.client || gbpInsights.Client || null;
+            }
+
+            const primaryCategory = (pickCaseInsensitive(gbpRecord, 'Primary Categorie') || pickCaseInsensitive(gbpRecord, 'Primary Category') || pickCaseInsensitive(clientOverview, 'Primary Category') || '').toString();
+            const secondaryCategories = (pickCaseInsensitive(gbpRecord, 'Secondary Categories') || pickCaseInsensitive(clientOverview, 'Secondary Categories') || '').toString();
+            const gbpDescription = (pickCaseInsensitive(gbpRecord, 'Description') || pickCaseInsensitive(clientOverview, 'Description') || '').toString();
+            const reviewScore = (pickCaseInsensitive(gbpRecord, 'Review Score') || pickCaseInsensitive(clientOverview, 'Review Score') || '').toString();
+            const reviewCount = (pickCaseInsensitive(gbpRecord, 'Review Count') || pickCaseInsensitive(clientOverview, 'Review Count') || '').toString();
+            const photoCount = (pickCaseInsensitive(gbpRecord, 'Photo Count') || pickCaseInsensitive(clientOverview, 'Photo Count') || '').toString();
+            const qaCount = (pickCaseInsensitive(gbpRecord, 'QACount') || pickCaseInsensitive(gbpRecord, 'Q&A Count') || pickCaseInsensitive(clientOverview, 'QACount') || pickCaseInsensitive(clientOverview, 'Q&A Count') || '').toString();
 
             // Website Crawl Pages (if available under healthData.pagesList or similar)
             const crawlPages = toArray(health?.pagesList || health?.topPages || []).slice(0, 25)
