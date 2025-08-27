@@ -77,6 +77,7 @@ function doGet(e) {
         case 'dashboard': value = getDashboardData(spreadsheet); break;
         case 'websiteStats': value = getWebsiteStats(spreadsheet); break;
         case 'geogridData': value = getGeogridData(spreadsheet); break;
+        case 'gbpInsights': value = getGbpInsights(spreadsheet); break;
         case 'backlinksSummary': value = getBacklinksSummary(spreadsheet); break;
         case 'backlinksTable': value = getBacklinksTables(spreadsheet); break;
         case 'backlinksSummaryArchive': value = getBacklinksSummaryArchive(spreadsheet); break;
@@ -104,6 +105,7 @@ function doGet(e) {
         dashboard: computeSection('dashboard'),
         websiteStats: computeSection('websiteStats'),
         geogridData: computeSection('geogridData'),
+        gbpInsights: computeSection('gbpInsights'),
         backlinksSummary: computeSection('backlinksSummary'),
         backlinksTable: computeSection('backlinksTable'),
         backlinksSummaryArchive: computeSection('backlinksSummaryArchive'),
@@ -358,6 +360,53 @@ function getAiReport(spreadsheet) {
     const sheet = spreadsheet.getSheetByName('GBP Insights');
     if (!sheet || sheet.getLastRow() < 2) return "";
     return sheet.getRange('AJ2').getValue();
+}
+
+// NEW: Expose GBP Insights client mini section
+function getGbpInsights(spreadsheet) {
+  const sheet = spreadsheet.getSheetByName('GBP Insights');
+  if (!sheet || sheet.getLastRow() < 2) return {};
+
+  // Read headers for robust column lookup
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const headersLower = headers.map(function(h){ return String(h).trim().toLowerCase(); });
+  const idxOf = function(name){ return headersLower.indexOf(String(name).trim().toLowerCase()); };
+
+  // Column names from user sample
+  const accountTypeIdx = idxOf('Account Type');
+  const primaryCategoryIdx = idxOf('Primary Categorie') >= 0 ? idxOf('Primary Categorie') : idxOf('Primary Category');
+  const secondaryCategoriesIdx = idxOf('Secondary Categories');
+  const descriptionIdx = idxOf('Description');
+  const reviewScoreIdx = idxOf('Review Score');
+  const reviewCountIdx = idxOf('Review Count');
+  const totalPhotosIdx = idxOf('Total Photos');
+  const qaCountIdx = idxOf('Questions & Answers Count');
+
+  const values = sheet.getDataRange().getValues().slice(1);
+
+  // Find client row (Account Type == 'Client')
+  const clientRow = values.find(function(row){
+    if (accountTypeIdx < 0) return false;
+    return String(row[accountTypeIdx]).trim().toLowerCase() === 'client';
+  });
+  if (!clientRow) return {};
+
+  function getVal(idx){
+    if (idx < 0) return '';
+    var v = clientRow[idx];
+    if (v === null || v === undefined) return '';
+    return typeof v === 'string' ? v.trim() : String(v).trim();
+  }
+
+  return {
+    primaryCategory: getVal(primaryCategoryIdx),
+    secondaryCategories: getVal(secondaryCategoriesIdx),
+    description: getVal(descriptionIdx),
+    reviewScore: getVal(reviewScoreIdx),
+    reviewCount: getVal(reviewCountIdx),
+    totalPhotos: getVal(totalPhotosIdx),
+    qaCount: getVal(qaCountIdx)
+  };
 }
 
 function getAiSentimentData(spreadsheet) {
