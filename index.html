@@ -1492,6 +1492,7 @@ const KeywordsReport = ({ reportText }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [copySuccess, setCopySuccess] = useState('');
     const [promptCopyState, setPromptCopyState] = useState(''); // 'ok' | 'err' | ''
+    const [isCopying, setIsCopying] = useState(false);
 
     // Icons
     const ChevronDown = createIcon(<polyline points="6 9 12 15 18 9" />);
@@ -1752,15 +1753,17 @@ const KeywordsReport = ({ reportText }) => {
     };
 
     const handleCopyImplementationPrompt = async () => {
+        if (isCopying) return;
+        setIsCopying(true);
         try {
             setPromptCopyState('');
             const prompt = await buildImplementationPrompt();
             await navigator.clipboard.writeText(prompt);
             setPromptCopyState('ok');
-            setTimeout(() => setPromptCopyState(''), 2500);
         } catch (e) {
             setPromptCopyState('err');
-            setTimeout(() => setPromptCopyState(''), 3000);
+        } finally {
+            setTimeout(() => { setPromptCopyState(''); setIsCopying(false); }, 2800);
         }
     };
 
@@ -1920,6 +1923,33 @@ const KeywordsReport = ({ reportText }) => {
                                 dangerouslySetInnerHTML={{ __html: formattedContent }}
                             />
 
+                            {/* Action Buttons - above Show Less, bottom-right inside report */}
+                            <div className="mt-2 flex items-center justify-end space-x-3">
+                                <button
+                                    onClick={handleCopyImplementationPrompt}
+                                    className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md disabled:opacity-60"
+                                    title="Copy implementation prompt"
+                                    disabled={isCopying}
+                                >
+                                    Implement Recommendations Myself
+                                </button>
+                                <button
+                                    onClick={handleRequestImplement}
+                                    className="px-4 py-2 rounded-lg font-semibold text-white"
+                                    style={{ backgroundColor: '#F8857E' }}
+                                    title="Request paid implementation"
+                                >
+                                    Request Forever Booked Implement (Paid SEO)
+                                </button>
+                            </div>
+                            {!!promptCopyState && (
+                                <div className={`mt-1 text-right text-sm ${promptCopyState==='ok'?'text-green-600':'text-red-600'}`}>
+                                    {promptCopyState==='ok' 
+                                        ? 'Prompt copied! Open your favourite AI model and paste it into the chat to get started.' 
+                                        : 'Failed to build or copy the prompt. Please try again in a moment.'}
+                                </div>
+                            )}
+
                             {/* Clickable area to collapse */}
                             <div
                                 className="text-center py-2 cursor-pointer rounded-lg transition-colors text-sm dual-reports-show-more"
@@ -1927,32 +1957,6 @@ const KeywordsReport = ({ reportText }) => {
                             >
                                 Show Less
                             </div>
-                        </div>
-                    )}
-
-                    {/* Action Buttons - bottom right (only visible when expanded; placed before Show Less) */}
-                    {isExpanded && (
-                        <div className="mt-6 flex items-center justify-end space-x-3">
-                            <button
-                                onClick={handleCopyImplementationPrompt}
-                                className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md"
-                                title="Copy implementation prompt"
-                            >
-                                Implement Recommendations Myself
-                            </button>
-                            <button
-                                onClick={handleRequestImplement}
-                                className="px-4 py-2 rounded-lg font-semibold text-white"
-                                style={{ backgroundColor: '#F8857E' }}
-                                title="Request paid implementation"
-                            >
-                                Request Forever Booked Implement (Paid SEO)
-                            </button>
-                        </div>
-                    )}
-                    {!!promptCopyState && (
-                        <div className={`mt-2 text-right text-sm ${promptCopyState==='ok'?'text-green-600':'text-red-600'}`}>
-                            {promptCopyState==='ok' ? 'Prompt copied to clipboard' : 'Failed to build/copy prompt'}
                         </div>
                     )}
                 </div>
