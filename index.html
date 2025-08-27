@@ -2367,6 +2367,20 @@ const BacklinksReport = ({ reportText }) => {
     };
 
     // ---- Prompt Builder for "Implement Recommendations Myself" (Backlinks) ----
+    // Local ISO timestamp formatter for this component
+    const formatISOToUSInTextBL = (text) => {
+        try {
+            return String(text || '').replace(/\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z\b/g, (m) => {
+                const d = new Date(m);
+                if (isNaN(d.getTime())) return m;
+                return d.toLocaleString('en-US', {
+                    year: 'numeric', month: 'short', day: '2-digit',
+                    hour: 'numeric', minute: '2-digit'
+                });
+            });
+        } catch { return text; }
+    };
+
     const readSessionJsonBL = (key) => {
         try {
             const raw = sessionStorage.getItem(key);
@@ -2579,7 +2593,7 @@ const BacklinksReport = ({ reportText }) => {
         lines.push('6) Measurement Plan: define success (new links acquired, referring domains, traffic to target pages) and how to verify monthly.');
 
         let output = lines.join('\n');
-        output = formatISOToUSInText(output);
+        output = formatISOToUSInTextBL(output);
         return output;
     };
 
