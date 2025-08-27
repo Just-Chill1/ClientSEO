@@ -1491,6 +1491,7 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
 const KeywordsReport = ({ reportText }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [copySuccess, setCopySuccess] = useState('');
+    const [promptCopyState, setPromptCopyState] = useState(''); // 'ok' | 'err' | ''
 
     // Icons
     const ChevronDown = createIcon(<polyline points="6 9 12 15 18 9" />);
@@ -1532,6 +1533,233 @@ const KeywordsReport = ({ reportText }) => {
         document.body.appendChild(element);
         element.click();
         document.body.removeChild(element);
+    };
+
+    // ---- Prompt Builder for "Implement Recommendations Myself" ----
+    const readSessionJson = (key) => {
+        try {
+            const raw = sessionStorage.getItem(key);
+            return raw ? JSON.parse(raw) : null;
+        } catch { return null; }
+    };
+
+    const fetchSections = (workbookId, sections) => new Promise((resolve) => {
+        const base = 'https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec';
+        const url = `${base}?workbookId=${workbookId}&sections=${encodeURIComponent(sections)}`;
+        fetchWithCorsWorkaround(url, (err, data) => {
+            resolve(err ? null : data);
+        });
+    });
+
+    const toArray = (v) => Array.isArray(v) ? v : (v ? [v] : []);
+
+    const pickCaseInsensitive = (obj, keyLike) => {
+        if (!obj) return undefined;
+        const entries = Object.entries(obj);
+        const found = entries.find(([k]) => k.toLowerCase() === keyLike.toLowerCase());
+        if (found) return found[1];
+        // fuzzy contains
+        const fuzzy = entries.find(([k]) => k.toLowerCase().includes(keyLike.toLowerCase()));
+        return fuzzy ? fuzzy[1] : undefined;
+    };
+
+    const buildImplementationPrompt = async () => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const workbookId = params.get('workbookId') || '';
+
+            // Try caches first
+            const kwCache = readSessionJson(`keywords_${workbookId}`);
+            const dashCache = readSessionJson(`dashboard_data_${workbookId}`);
+
+            let keywordsSummary = kwCache?.keywordsSummary || {};
+            let keywordsTable = kwCache?.keywordsTable || {};
+            let overviewData = dashCache?.overviewData || [];
+            let gbpAiReport = dashCache?.aiReport || '';
+            let websiteStats = null;
+
+            // Attempt to read generic cache for websiteStats from previous calls
+            const base = 'https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec';
+            const wsUrl = `${base}?workbookId=${workbookId}&sections=websiteStats`;
+            const wsCache = readSessionJson(`seo_data_${wsUrl}`);
+            if (wsCache?.websiteStats) websiteStats = wsCache.websiteStats;
+
+            // Fetch missing pieces in one shot
+            if (!websiteStats || !overviewData || Object.keys(keywordsTable).length === 0) {
+                const data = await fetchSections(workbookId, 'websiteStats,keywordsSummary,keywordsTable,dashboard');
+                if (data) {
+                    websiteStats = websiteStats || data.websiteStats || data?.websiteStats;
+                    keywordsSummary = Object.keys(keywordsSummary).length ? keywordsSummary : (data.keywordsSummary || {});
+                    keywordsTable = Object.keys(keywordsTable).length ? keywordsTable : (data.keywordsTable || {});
+                    if ((!overviewData || overviewData.length === 0) && data.dashboard?.overviewData) {
+                        overviewData = data.dashboard.overviewData;
+                        gbpAiReport = data.dashboard.aiReport || gbpAiReport;
+                    }
+                }
+            }
+
+            // Identify client site (first key used throughout UI)
+            const siteNamesAll = Object.keys(keywordsTable || {});
+            const clientSite = siteNamesAll.length > 0 ? siteNamesAll[0] : (keywordsSummary?.siteName || 'Client');
+            const clientRows = clientSite ? (keywordsTable[clientSite] || []) : [];
+
+            // Build Client Top 30 keywords (rank asc, >0)
+            const topClientKeywords = clientRows
+                .filter(r => Number(r?.rank_now) > 0)
+                .sort((a,b) => Number(a.rank_now) - Number(b.rank_now))
+                .slice(0, 30)
+                .map(r => ({ k: r.keyword, rank: Number(r.rank_now), sv: Number(r.sv || r.search_volume || 0), url: r.ranking_url || '', title: r.ranking_title || '' }));
+
+            // Competitor keywords – for each competitor (other site names)
+            const competitorSites = siteNamesAll.slice(1);
+            const competitorData = competitorSites.map(name => {
+                const rows = (keywordsTable[name] || []).slice();
+                const byRank = rows.filter(r => Number(r?.rank_now) > 0)
+                                   .sort((a,b) => Number(a.rank_now) - Number(b.rank_now))
+                                   .slice(0, 20)
+                                   .map(r => ({ k: r.keyword, rank: Number(r.rank_now), sv: Number(r.sv || r.search_volume || 0) }));
+                const bySvAll = rows.slice().sort((a,b) => Number(b.sv || b.search_volume || 0) - Number(a.sv || a.search_volume || 0));
+                const bySv = [];
+                const top20Set = new Set(byRank.map(x => x.k?.toLowerCase()));
+                for (const r of bySvAll) {
+                    const kw = String(r.keyword || '').toLowerCase();
+                    if (top20Set.has(kw)) continue; // exclude those already in top20 by rank
+                    bySv.push({ k: r.keyword, sv: Number(r.sv || r.search_volume || 0), rank: Number(r.rank_now || 0) });
+                    if (bySv.length >= 15) break;
+                }
+                return { name, topByRank: byRank, topBySv: bySv };
+            });
+
+            // Pull Website Stats (On-Page Insights proxy)
+            const health = websiteStats?.healthData || {};
+            const tseo = toArray(websiteStats?.technicalSeoData || []);
+            const perf = toArray(websiteStats?.competitorPerfData || []).find(x => x?.isClient) || {};
+            const siteSpeedMs = Number(health?.siteSpeed) || 0;
+            const siteSpeedDisplayMs = isFinite(siteSpeedMs) && siteSpeedMs > 0 ? `${Math.round(siteSpeedMs)} ms` : 'N/A';
+            const pageScore = isFinite(Number(health?.pageScore)) ? Number(health.pageScore) : null;
+            const ssl = (health?.ssl === true || health?.ssl === 'true' || health?.ssl === 'Yes') ? 'Yes' : (health?.ssl === false ? 'No' : 'Unknown');
+            const hasSchema = (health?.hasSchema === true || health?.hasSchema === 'true' || health?.hasSchema === 'Yes') ? 'Yes' : (health?.hasSchema === false ? 'No' : (health?.hasSchemaErrors ? 'Has errors' : 'Unknown'));
+            const referringDomains = isFinite(Number(perf['Referring Domains'])) ? Number(perf['Referring Domains']) : undefined;
+            const totalBacklinks = isFinite(Number(perf['Total Backlinks'])) ? Number(perf['Total Backlinks']) : undefined;
+
+            // Extract H1/Title/Meta from technicalSeoData for client
+            const tseoClient = tseo.find(s => (s?.isClient || (s?.clinicName || s?.name || '').toLowerCase().includes('client')) ) || tseo[0] || {};
+            const titleTag = tseoClient?.title || '';
+            const metaDescription = tseoClient?.description || '';
+            const h1 = tseoClient?.h1 || '';
+            const website = tseoClient?.website || (keywordsSummary?.website || '');
+            const clinicName = tseoClient?.clinicName || keywordsSummary?.siteName || clientSite || 'Client';
+
+            // Dashboard/GBP fields via overviewData (best-effort, keys vary)
+            const clientOverview = toArray(overviewData).find(x => (x?.isClient || (x?.Clinic || x?.clinic || x?.clinicName) === clinicName)) || {};
+            const accountType = pickCaseInsensitive(clientOverview, 'Account Type') || '';
+            const borough = pickCaseInsensitive(clientOverview, 'Borough') || '';
+            const city = pickCaseInsensitive(clientOverview, 'City') || '';
+            const state = pickCaseInsensitive(clientOverview, 'State') || '';
+            const primaryCategory = pickCaseInsensitive(clientOverview, 'Primary Category') || '';
+            const secondaryCategories = pickCaseInsensitive(clientOverview, 'Secondary Categories') || '';
+            const reviewScore = pickCaseInsensitive(clientOverview, 'Review Score') || '';
+            const reviewCount = pickCaseInsensitive(clientOverview, 'Review Count') || '';
+            const photoCount = pickCaseInsensitive(clientOverview, 'Photo Count') || '';
+            const qaCount = pickCaseInsensitive(clientOverview, 'QACount') || pickCaseInsensitive(clientOverview, 'Q&A Count') || '';
+
+            // Website Crawl Pages (if available under healthData.pagesList or similar)
+            const crawlPages = toArray(health?.pagesList || health?.topPages || []).slice(0, 25)
+                .map(p => (typeof p === 'string' ? p : (p?.url || p?.path || '')))
+                .filter(Boolean);
+
+            // Compose prompt
+            const lines = [];
+            lines.push(`You are an elite SEO specialist. Analyze and guide step-by-step.`);
+            lines.push('');
+            lines.push(`Client:`);
+            lines.push(`- Clinic Name: ${clinicName}`);
+            lines.push(`- Website: ${website || 'N/A'}`);
+            if (accountType) lines.push(`- Account Type: ${accountType}`);
+            const locParts = [borough, city, state].filter(Boolean).join(', ');
+            if (locParts) lines.push(`- Location: ${locParts}`);
+            lines.push('');
+            lines.push('Core On-Page/Technical Stats:');
+            if (titleTag) lines.push(`- Title Tag: ${titleTag}`);
+            if (metaDescription) lines.push(`- Meta Description: ${metaDescription}`);
+            if (h1) lines.push(`- H1: ${h1}`);
+            lines.push(`- Site Speed: ${siteSpeedDisplayMs}`);
+            if (pageScore !== null) lines.push(`- Page Score: ${pageScore}`);
+            if (typeof referringDomains !== 'undefined') lines.push(`- Referring Domains: ${referringDomains}`);
+            if (typeof totalBacklinks !== 'undefined') lines.push(`- Total Backlinks: ${totalBacklinks}`);
+            lines.push(`- SSL: ${ssl}`);
+            lines.push(`- Schema: ${hasSchema}`);
+            lines.push('');
+            const gbpParts = [];
+            if (primaryCategory) gbpParts.push(`Primary: ${primaryCategory}`);
+            if (secondaryCategories) gbpParts.push(`Secondary: ${secondaryCategories}`);
+            if (gbpParts.length) lines.push(`GBP Categories: ${gbpParts.join(' | ')}`);
+            const gbpStats = [];
+            if (reviewScore) gbpStats.push(`Review Score: ${reviewScore}`);
+            if (reviewCount) gbpStats.push(`Reviews: ${reviewCount}`);
+            if (photoCount) gbpStats.push(`Photos: ${photoCount}`);
+            if (qaCount) gbpStats.push(`Q&A: ${qaCount}`);
+            if (gbpStats.length) lines.push(`GBP Stats: ${gbpStats.join(' | ')}`);
+            if (crawlPages.length) {
+                lines.push('');
+                lines.push('Website Crawl Pages (sample):');
+                lines.push(crawlPages.map(p => `- ${p}`).join('\n'));
+            }
+            lines.push('');
+            lines.push('Top 30 Client Keywords (by best rank):');
+            if (topClientKeywords.length) {
+                lines.push(topClientKeywords.map(r => `- ${r.k} — rank ${r.rank}${r.sv?`, sv ${r.sv}`:''}${r.url?` — ${r.url}`:''}`).join('\n'));
+            } else {
+                lines.push('- N/A');
+            }
+            lines.push('');
+            lines.push('Competitor Keywords:');
+            competitorData.forEach(c => {
+                lines.push(`• ${c.name} — Top by Rank (20):`);
+                lines.push(c.topByRank.map(r => `  - ${r.k} — rank ${r.rank}${r.sv?`, sv ${r.sv}`:''}`).join('\n') || '  - N/A');
+                lines.push(`  Top by Search Volume (15, excluding above):`);
+                lines.push(c.topBySv.map(r => `  - ${r.k} — sv ${r.sv}${r.rank?`, rank ${r.rank}`:''}`).join('\n') || '  - N/A');
+            });
+            lines.push('');
+            lines.push('Keywords AI Report (Client):');
+            lines.push(String(reportText || '').trim() || 'N/A');
+            if (gbpAiReport) {
+                lines.push('');
+                lines.push('GBP AI Report (Context):');
+                lines.push(String(gbpAiReport).trim());
+            }
+            lines.push('');
+            lines.push('Instructions:');
+            lines.push('- Analyze all data above, identify gaps, ask clarifying questions if needed.');
+            lines.push('- Then guide the client step-by-step to implement the first recommendation.');
+            lines.push('- Continue iteratively through the list, validating progress and outcomes.');
+
+            return lines.join('\n');
+        } catch (e) {
+            console.error('Prompt build error', e);
+            throw e;
+        }
+    };
+
+    const handleCopyImplementationPrompt = async () => {
+        try {
+            setPromptCopyState('');
+            const prompt = await buildImplementationPrompt();
+            await navigator.clipboard.writeText(prompt);
+            setPromptCopyState('ok');
+            setTimeout(() => setPromptCopyState(''), 2500);
+        } catch (e) {
+            setPromptCopyState('err');
+            setTimeout(() => setPromptCopyState(''), 3000);
+        }
+    };
+
+    const handleRequestImplement = () => {
+        const params = new URLSearchParams(window.location.search);
+        const workbookId = params.get('workbookId') || '';
+        const subject = encodeURIComponent('Request: Forever Booked SEO Implementation');
+        const body = encodeURIComponent('Hi team,\n\nI would like help implementing the monthly keyword recommendations.\nWorkbook ID: ' + workbookId + '\n\nPlease reply with next steps and pricing.');
+        window.open(`mailto:sales@foreverbooked.com?subject=${subject}&body=${body}`, '_blank');
     };
 
     // Reuse robust markdown parser
@@ -1648,7 +1876,7 @@ const KeywordsReport = ({ reportText }) => {
 
             {/* Content Area */}
             <div className="rounded-b-xl dual-reports-content">
-                <div className="p-6">
+                <div className="p-6 relative">
                     {/* Preview/Summary when collapsed */}
                     {!isExpanded && (
                         <div className="space-y-2">
@@ -1693,6 +1921,29 @@ const KeywordsReport = ({ reportText }) => {
                             >
                                 Show Less
                             </div>
+                        </div>
+                    )}
+
+                    {/* Action Buttons - bottom right */}
+                    <div className="mt-6 flex items-center justify-end space-x-3">
+                        <button
+                            onClick={handleCopyImplementationPrompt}
+                            className="px-4 py-2 rounded-lg font-medium bg-gray-100 hover:bg-gray-200 text-gray-800 transition-colors"
+                            title="Copy implementation prompt"
+                        >
+                            Implement Recommendations Myself
+                        </button>
+                        <button
+                            onClick={handleRequestImplement}
+                            className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md"
+                            title="Request paid implementation"
+                        >
+                            Request Forever Booked Implement (Paid SEO)
+                        </button>
+                    </div>
+                    {!!promptCopyState && (
+                        <div className={`mt-2 text-right text-sm ${promptCopyState==='ok'?'text-green-600':'text-red-600'}`}>
+                            {promptCopyState==='ok' ? 'Prompt copied to clipboard' : 'Failed to build/copy prompt'}
                         </div>
                     )}
                 </div>
