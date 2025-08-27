@@ -1674,8 +1674,9 @@ const KeywordsReport = ({ reportText }) => {
             lines.push('CONTEXT: The client has just generated a monthly keyword-focused report. Use the data below to guide them step-by-step to implement the most impactful actions first, while keeping instructions practical and non-technical.');
             lines.push('GOAL: Improve keyword rankings, organic traffic, and conversions by prioritizing keyword opportunities, mapping them to pages, and executing on-page/content/internal-linking tasks.');
             lines.push('WORKING MODE:');
-            lines.push('- Ask any critical clarifying questions BEFORE starting (e.g., target neighborhoods, top services, CMS, brand tone, approval constraints).');
-            lines.push('- Then proceed one step at a time with numbered instructions the client can follow.');
+            lines.push('- Start by analyzing the data below and, if needed, conduct brief independent research to fill gaps.');
+            lines.push('- Present a succinct plan and the first actionable step immediately (do not wait for answers).');
+            lines.push('- Ask only the most essential 1–3 questions after the first step (e.g., CMS, approvals, tone) to tailor follow-up steps.');
             lines.push('- Keep outputs concise and actionable: include exact Titles/H1s/Meta, URL suggestions, internal link anchors, FAQ ideas, and schema notes.');
             lines.push('- After each step, confirm completion and offer to continue to the next step.');
             lines.push('');
@@ -1732,18 +1733,19 @@ const KeywordsReport = ({ reportText }) => {
             lines.push(String(reportText || '').trim() || 'N/A');
             lines.push('');
             lines.push('OPERATING PLAN (follow in this order):');
-            lines.push('1) Ask 3-6 clarifying questions you truly need (target areas/services, CMS, content approval, tone). If all clear, proceed.');
-            lines.push('2) Opportunity Summary: In 5 bullets, summarize the biggest keyword wins and why (intent + impact).');
-            lines.push('3) Prioritized Keyword Backlog: Create a short, ranked list (10–15) with rationale (current rank/SV, intent, competitor coverage).');
-            lines.push('4) Keyword-to-Page Mapping: For top 3–5 targets, map each to an existing URL (or propose a new URL) and note gaps.');
-            lines.push('5) On-Page Implementation for the FIRST target:');
+            lines.push('1) Rapid Analysis + Plan: In 5 bullets, summarize the biggest keyword wins (intent + impact) and outline a short plan.');
+            lines.push('2) First Action: Provide the exact step to execute now for the top keyword/page (do not wait for answers) with concrete fields.');
+            lines.push('3) Minimal Questions (≤3): Ask ONLY essential questions to refine subsequent steps (e.g., CMS, approvals, brand tone).');
+            lines.push('4) Prioritized Keyword Backlog: Create a short, ranked list (10–15) with rationale (current rank/SV, intent, competitor coverage).');
+            lines.push('5) Keyword-to-Page Mapping: For top 3–5 targets, map each to an existing URL (or propose a new URL) and note gaps.');
+            lines.push('6) On-Page Implementation for the NEXT target:');
             lines.push('   - Provide exact Title (<=60 chars), H1, Meta Description (<=155 chars), H2/H3 outline, and 5–7 keywords/LSIs.');
             lines.push('   - Internal links: list 3–5 anchor texts and source pages to link from.');
             lines.push('   - Content additions: bullets, FAQs (3–5) with concise answers; suggest adding local modifiers.');
             lines.push('   - Schema: specify the most relevant type(s) to add/update (e.g., LocalBusiness, FAQ).');
-            lines.push('6) Implementation Checklist: Provide a checkbox list the client can work through inside their CMS.');
-            lines.push('7) Measurement Plan: define success metrics (rank targets, CTR, impressions) and how to verify in GSC/GA4 weekly.');
-            lines.push('8) Next Step: after finishing the first target, offer to proceed to the next item in the backlog.');
+            lines.push('7) Implementation Checklist: Provide a checkbox list the client can work through inside their CMS.');
+            lines.push('8) Measurement Plan: define success metrics (rank targets, CTR, impressions) and how to verify in GSC/GA4 weekly.');
+            lines.push('9) Next Step: after finishing the first target, offer to proceed to the next item in the backlog.');
 
             return lines.join('\n');
         } catch (e) {
