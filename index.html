@@ -1673,7 +1673,8 @@ const KeywordsReport = ({ reportText }) => {
                     return at.includes('client');
                 }) || gbpInsights[0] || null;
             } else if (gbpInsights && typeof gbpInsights === 'object') {
-                gbpRecord = gbpInsights.client || gbpInsights.Client || null;
+                // Apps Script returns a flat object with the client fields directly
+                gbpRecord = gbpInsights;
             }
 
             const primaryCategory = (pickCaseInsensitive(gbpRecord, 'Primary Categorie') || pickCaseInsensitive(gbpRecord, 'Primary Category') || pickCaseInsensitive(clientOverview, 'Primary Category') || '').toString();
@@ -1720,20 +1721,18 @@ const KeywordsReport = ({ reportText }) => {
             lines.push(`- SSL: ${ssl}`);
             lines.push(`- Schema: ${hasSchema}`);
             lines.push('');
-            // GBP mini section (Client)
-            if (primaryCategory || secondaryCategories || gbpDescription || reviewScore || reviewCount || photoCount || qaCount) {
-                lines.push('');
-                lines.push('GBP INSIGHTS (Client):');
-                if (primaryCategory) lines.push(`- Primary Category: ${primaryCategory}`);
-                if (secondaryCategories) lines.push(`- Secondary Categories: ${secondaryCategories}`);
-                if (gbpDescription) lines.push(`- Description: ${gbpDescription}`);
-                const gbpStats = [];
-                if (reviewScore) gbpStats.push(`Review Score: ${reviewScore}`);
-                if (reviewCount) gbpStats.push(`Reviews: ${reviewCount}`);
-                if (photoCount) gbpStats.push(`Photos: ${photoCount}`);
-                if (qaCount) gbpStats.push(`Q&A: ${qaCount}`);
-                if (gbpStats.length) lines.push(`- Stats: ${gbpStats.join(' | ')}`);
-            }
+            // GBP mini section (always include, with placeholders if missing)
+            lines.push('');
+            lines.push('GOOGLE BUSINESS PROFILE INSIGHTS:');
+            lines.push(`- Primary Category: ${primaryCategory || 'N/A'}`);
+            lines.push(`- Secondary Categories: ${secondaryCategories || 'N/A'}`);
+            lines.push(`- Description: ${gbpDescription || 'N/A'}`);
+            lines.push(`- Stats: ${[
+                `Review Score: ${reviewScore || 'N/A'}`,
+                `Reviews: ${reviewCount || 'N/A'}`,
+                `Photos: ${photoCount || 'N/A'}`,
+                `Q&A: ${qaCount || 'N/A'}`
+            ].join(' | ')}`);
             if (crawlPages.length) {
                 lines.push('');
                 lines.push('WEBSITE CRAWL PAGES (sample):');
