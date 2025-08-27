@@ -2405,6 +2405,7 @@ const BacklinksReport = ({ reportText }) => {
         let websiteStats = null;
         let gbpInsights = null;
         let keywordsSummary = kwCache?.keywordsSummary || {};
+        let keywordsTableForFallback = null;
 
         // Attempt to read generic cache for websiteStats
         const base = 'https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec';
@@ -2414,13 +2415,14 @@ const BacklinksReport = ({ reportText }) => {
 
         // Fetch missing in one shot
         if (!websiteStats || !overviewData || Object.keys(backlinksTable).length === 0) {
-            const data = await fetchSectionsBL(workbookId, 'websiteStats,backlinksSummary,backlinksTable,dashboard,gbpInsights,keywordsSummary');
+            const data = await fetchSectionsBL(workbookId, 'websiteStats,backlinksSummary,backlinksTable,dashboard,gbpInsights,keywordsSummary,keywordsTable');
             if (data) {
                 websiteStats = websiteStats || data.websiteStats || data?.websiteStats;
                 backlinksSummary = Object.keys(backlinksSummary).length ? backlinksSummary : (data.backlinksSummary || {});
                 backlinksTable = Object.keys(backlinksTable).length ? backlinksTable : (data.backlinksTable || {});
                 if ((!overviewData || overviewData.length === 0) && data.dashboard?.overviewData) overviewData = data.dashboard.overviewData;
                 if (!keywordsSummary && data.keywordsSummary) keywordsSummary = data.keywordsSummary;
+                if (data.keywordsTable) keywordsTableForFallback = data.keywordsTable;
                 if (data.gbpInsights) gbpInsights = data.gbpInsights;
             }
         }
@@ -2488,9 +2490,22 @@ const BacklinksReport = ({ reportText }) => {
         const qaCount = (gbpRecord?.qaCount || pickCaseInsensitiveBL(gbpRecord, 'QACount') || pickCaseInsensitiveBL(gbpRecord, 'Q&A Count') || '').toString();
 
         // Keyword position buckets (from On-Page/Keywords summary if available)
-        const pos1 = keywordsSummary['Position 1'] ?? keywordsSummary['Keywords Position 1'] ?? keywordsSummary.pos1 ?? null;
-        const pos23 = keywordsSummary['Position 2-3'] ?? keywordsSummary['Keywords Position 2-3'] ?? keywordsSummary.pos23 ?? null;
-        const pos410 = keywordsSummary['Position 4-10'] ?? keywordsSummary['Keywords Position 4-10'] ?? keywordsSummary.pos410 ?? null;
+        let pos1 = keywordsSummary['Position 1'] ?? keywordsSummary['Keywords Position 1'] ?? keywordsSummary.pos1 ?? null;
+        let pos23 = keywordsSummary['Position 2-3'] ?? keywordsSummary['Keywords Position 2-3'] ?? keywordsSummary.pos23 ?? null;
+        let pos410 = keywordsSummary['Position 4-10'] ?? keywordsSummary['Keywords Position 4-10'] ?? keywordsSummary.pos410 ?? null;
+        // Fallback: compute from keywords table if values are missing
+        if ((pos1 == null && pos23 == null && pos410 == null) && keywordsTableForFallback) {
+            const rows = (keywordsTableForFallback[clientSite] || []).filter(r => Number(r?.rank_now) > 0);
+            let c1 = 0, c23 = 0, c410c = 0;
+            for (const r of rows) {
+                const rank = Number(r.rank_now);
+                if (!isFinite(rank)) continue;
+                if (rank === 1) c1++;
+                else if (rank >= 2 && rank <= 3) c23++;
+                else if (rank >= 4 && rank <= 10) c410c++;
+            }
+            pos1 = c1; pos23 = c23; pos410 = c410c;
+        }
 
         // Compose prompt
         const lines = [];
@@ -2500,6 +2515,7 @@ const BacklinksReport = ({ reportText }) => {
         lines.push('WORKING MODE:');
         lines.push('- Present a succinct plan and the first actionable step immediately.');
         lines.push('- The first action must be click-by-click with direct URL(s) to visit (e.g., top citation/directories or specific outreach targets).');
+        lines.push('- If needed, perform light independent research to validate targets or find contact/submission pages.');
         lines.push('- Keep outputs concise and operational: include target URLs, outreach angle, suggested anchor texts, and risk notes.');
         lines.push('- After the first step, ask only 1–3 essential questions (CMS/platform optional).');
         lines.push('');
@@ -2551,7 +2567,7 @@ const BacklinksReport = ({ reportText }) => {
         lines.push('--- End of report ---');
         lines.push('');
         lines.push('OPERATING PLAN (follow in this order):');
-        lines.push('1) Rapid Analysis + Plan: In 5 bullets, summarize the highest-impact backlink opportunities (citations, partnerships, PR mentions, resource pages, guest posts, supplier/brand links).');
+        lines.push('1) Analysis + Plan: In 5 bullets, summarize the highest-impact backlink opportunities (citations, partnerships, PR mentions, resource pages, guest posts, supplier/brand links).');
         lines.push('2) First Action (Click-by-click): Provide explicit steps to execute now. Prefer the quickest, lowest-risk win (e.g., top citation submission or reclaiming a lost link). Include:');
         lines.push('   - Exact URL(s) to visit to submit or contact.');
         lines.push('   - What to fill in (business name, website, categories).');
