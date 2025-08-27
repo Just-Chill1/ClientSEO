@@ -2122,7 +2122,7 @@ const DualReports = ({ competitorText, errorText }) => {
             const tbody = '<tbody>' + tableRows.map(row => (
                 '<tr>' + row.map((c,i) => `<td class=\"border border-gray-200 px-3 py-2 ${i===0?'font-medium':''} whitespace-nowrap\">${applyInlineMarkdown(c)}</td>`).join('') + '</tr>'
             )).join('') + '</tbody>';
-            html.push(`<div class="my-4 flex justify-center"><div class="max-w-full overflow-x-auto"><table class="table-auto w-auto text-sm border border-gray-200 rounded-lg border-collapse">${thead}${tbody}</table></div></div>`);
+            html.push(`<div class="my-4"><div class="max-w-full overflow-x-auto"><table class="table-auto w-auto text-sm border border-gray-200 rounded-lg border-collapse">${thead}${tbody}</table></div></div>`);
             inTable = false;
             tableRows = [];
         };
