@@ -1494,9 +1494,7 @@ const KeywordsReport = ({ reportText }) => {
     const [isCopyingError, setIsCopyingError] = useState(false);
     const [promptCopyStateError, setPromptCopyStateError] = useState('');
     const [cachedErrorPrompt, setCachedErrorPrompt] = useState('');
-    const [isCopyingCompetitor, setIsCopyingCompetitor] = useState(false);
-    const [promptCopyStateCompetitor, setPromptCopyStateCompetitor] = useState('');
-    const [cachedCompetitorPrompt, setCachedCompetitorPrompt] = useState('');
+    // competitor prompt states are managed in DualReports; no competitor states here
     const [promptCopyState, setPromptCopyState] = useState(''); // 'ok' | 'err' | ''
     const [isCopying, setIsCopying] = useState(false);
     const [cachedPrompt, setCachedPrompt] = useState('');
