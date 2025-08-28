@@ -1491,6 +1491,9 @@ const AIReportSection = ({ reportText, title = "SWOT Analysis" }) => {
 const KeywordsReport = ({ reportText }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [copySuccess, setCopySuccess] = useState('');
+    const [isCopyingError, setIsCopyingError] = useState(false);
+    const [promptCopyStateError, setPromptCopyStateError] = useState('');
+    const [cachedErrorPrompt, setCachedErrorPrompt] = useState('');
     const [promptCopyState, setPromptCopyState] = useState(''); // 'ok' | 'err' | ''
     const [isCopying, setIsCopying] = useState(false);
     const [cachedPrompt, setCachedPrompt] = useState('');
@@ -3341,6 +3344,220 @@ const DualReports = ({ competitorText, errorText }) => {
         ? parseMarkdownToHtml(String(currentContent || ''))
         : applyInlineMarkdown(String(currentContent || '')).replace(/\n/g, '<br />');
 
+    // ---------- Error Report Implementation Prompt (only for error tab) ----------
+    const formatISOToUSInTextER = (text) => {
+        try {
+            return String(text || '').replace(/\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z\b/g, (m) => {
+                const d = new Date(m);
+                if (isNaN(d.getTime())) return m;
+                return d.toLocaleString('en-US', { year: 'numeric', month: 'short', day: '2-digit', hour: 'numeric', minute: '2-digit' });
+            });
+        } catch { return text; }
+    };
+    const readSessionJsonER = (key) => { try { const raw = sessionStorage.getItem(key); return raw ? JSON.parse(raw) : null; } catch { return null; } };
+    const fetchSectionsER = (workbookId, sections) => new Promise((resolve) => {
+        const base = 'https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec';
+        const url = `${base}?workbookId=${workbookId}&sections=${encodeURIComponent(sections)}`;
+        fetchWithCorsWorkaround(url, (err, data) => resolve(err ? null : data));
+    });
+    const toArrayER = (v) => Array.isArray(v) ? v : (v ? [v] : []);
+    const pickCaseInsensitiveER = (obj, keyLike) => {
+        if (!obj) return undefined;
+        const entries = Object.entries(obj);
+        const found = entries.find(([k]) => k.toLowerCase() === keyLike.toLowerCase());
+        if (found) return found[1];
+        const fuzzy = entries.find(([k]) => k.toLowerCase().includes(keyLike.toLowerCase()));
+        return fuzzy ? fuzzy[1] : undefined;
+    };
+
+    const buildErrorImplementationPrompt = async () => {
+        const params = new URLSearchParams(window.location.search);
+        const workbookId = params.get('workbookId') || '';
+
+        // Try caches
+        const dashCache = readSessionJsonER(`dashboard_data_${workbookId}`);
+        const wsUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}&sections=websiteStats`;
+        const wsCache = readSessionJsonER(`seo_data_${wsUrl}`);
+        let websiteStats = wsCache?.websiteStats || null;
+        let overviewData = dashCache?.overviewData || [];
+        let gbpInsights = null;
+
+        if (!websiteStats || !overviewData) {
+            const data = await fetchSectionsER(workbookId, 'websiteStats,dashboard,gbpInsights');
+            if (data) {
+                websiteStats = websiteStats || data.websiteStats || data?.websiteStats;
+                if ((!overviewData || overviewData.length === 0) && data.dashboard?.overviewData) overviewData = data.dashboard.overviewData;
+                if (data.gbpInsights) gbpInsights = data.gbpInsights;
+            }
+        }
+        if (!gbpInsights) {
+            const g = await fetchSectionsER(workbookId, 'gbpInsights');
+            if (g && g.gbpInsights) gbpInsights = g.gbpInsights;
+        }
+
+        // On-page snapshot
+        const health = websiteStats?.healthData || {};
+        const tseo = toArrayER(websiteStats?.technicalSeoData || []);
+        const perf = toArrayER(websiteStats?.competitorPerfData || []).find(x => x?.isClient) || {};
+        const siteSpeedMs = Number(health?.siteSpeed) || 0;
+        const siteSpeedDisplayMs = isFinite(siteSpeedMs) && siteSpeedMs > 0 ? `${Math.round(siteSpeedMs)} ms` : 'N/A';
+        const pageScore = isFinite(Number(health?.pageScore)) ? Number(health.pageScore) : null;
+        const ssl = (health?.ssl === true || health?.ssl === 'true' || health?.ssl === 'Yes') ? 'Yes' : (health?.ssl === false ? 'No' : 'Unknown');
+        const hasSchema = (health?.hasSchema === true || health?.hasSchema === 'true' || health?.hasSchema === 'Yes') ? 'Yes' : (health?.hasSchema === false ? 'No' : (health?.hasSchemaErrors ? 'Has errors' : 'Unknown'));
+        const referringDomains = isFinite(Number(perf['Referring Domains'])) ? Number(perf['Referring Domains']) : undefined;
+        const totalBacklinks = isFinite(Number(perf['Total Backlinks'])) ? Number(perf['Total Backlinks']) : undefined;
+
+        const tseoClient = tseo.find(s => (s?.isClient || (s?.clinicName || s?.name || '').toLowerCase().includes('client')) ) || tseo[0] || {};
+        const titleTag = tseoClient?.title || '';
+        const metaDescription = tseoClient?.description || '';
+        const h1 = tseoClient?.h1 || '';
+        const website = tseoClient?.website || '';
+        const clinicName = tseoClient?.clinicName || 'Client';
+
+        // Quick GBP fields
+        let gbpRecord = null;
+        if (Array.isArray(gbpInsights)) {
+            gbpRecord = gbpInsights.find(r => {
+                const at = String(pickCaseInsensitiveER(r, 'Account Type') || pickCaseInsensitiveER(r, 'AccountType') || pickCaseInsensitiveER(r, 'Type') || '').toLowerCase();
+                return at.includes('client');
+            }) || gbpInsights[0] || null;
+        } else if (gbpInsights && typeof gbpInsights === 'object') {
+            gbpRecord = gbpInsights;
+        }
+        const primaryCategory = (gbpRecord?.primaryCategory || pickCaseInsensitiveER(gbpRecord, 'Primary Categorie') || pickCaseInsensitiveER(gbpRecord, 'Primary Category') || '').toString();
+        const secondaryCategories = (gbpRecord?.secondaryCategories || pickCaseInsensitiveER(gbpRecord, 'Secondary Categories') || '').toString();
+        const gbpDescription = (gbpRecord?.description || pickCaseInsensitiveER(gbpRecord, 'Description') || '').toString();
+        const reviewScore = (gbpRecord?.reviewScore || pickCaseInsensitiveER(gbpRecord, 'Review Score') || '').toString();
+        const reviewCount = (gbpRecord?.reviewCount || pickCaseInsensitiveER(gbpRecord, 'Review Count') || '').toString();
+
+        // Website pages
+        const crawlPages = toArrayER(health?.checksAggregate?.pagesList || health?.pagesList || health?.topPages || [])
+            .map(p => (typeof p === 'string' ? p : (p?.url || p?.path || ''))) 
+            .filter(Boolean)
+            .slice(0, 60);
+
+        // Error report content (plain text best-effort)
+        const errorTextPlain = String(errorText || currentContent || '')
+            .replace(/<br\s*\/?>/gi, '\n')
+            .replace(/<[^>]*>/g, '')
+            .trim();
+
+        const lines = [];
+        lines.push('ROLE: You are a senior MedSpa Technical SEO specialist.');
+        lines.push('CONTEXT: The client has generated a Website Error Report. Use the data below to diagnose and fix issues pragmatically for a non-technical user.');
+        lines.push('GOAL: Improve technical health and rankings by resolving the highest-impact issues first, while keeping steps simple.');
+        lines.push('WORKING MODE:');
+        lines.push('- Provide one concrete, click-by-click first action with exact paths/fields (tailor by common CMS if unknown).');
+        lines.push('- You may perform light independent checks/scrapes to validate issues or suggest precise fixes.');
+        lines.push('- Keep outputs concise and operational; include exact text/fields to paste where applicable.');
+        lines.push('- After the first step, ask 2–3 essential questions (CMS, who manages the site: owner vs dev/agency, staging/deployment process).');
+        lines.push('');
+        lines.push('CLIENT PROFILE:');
+        lines.push(`- Clinic Name: ${clinicName}`);
+        lines.push(`- Website: ${website || 'N/A'}`);
+        lines.push('');
+        lines.push('CORE ON-PAGE / TECHNICAL SNAPSHOT:');
+        lines.push(`- Title Tag: ${titleTag || 'N/A'}`);
+        lines.push(`- Meta Description: ${metaDescription || 'N/A'}`);
+        lines.push(`- H1: ${h1 || 'N/A'}`);
+        lines.push(`- Site Speed: ${siteSpeedDisplayMs}`);
+        lines.push(`- Page Score: ${pageScore !== null ? pageScore : 'N/A'}`);
+        lines.push(`- Referring Domains: ${typeof referringDomains !== 'undefined' ? referringDomains : 'N/A'}`);
+        if (typeof totalBacklinks !== 'undefined') lines.push(`- Total Backlinks: ${totalBacklinks}`);
+        lines.push(`- SSL: ${ssl}`);
+        lines.push(`- Schema: ${hasSchema}`);
+        lines.push('');
+        lines.push('GOOGLE BUSINESS PROFILE (Quick View):');
+        lines.push(`- Primary Category: ${primaryCategory || 'N/A'}`);
+        lines.push(`- Secondary Categories: ${secondaryCategories || 'N/A'}`);
+        lines.push(`- Description: ${gbpDescription || 'N/A'}`);
+        lines.push(`- Review Score: ${reviewScore || 'N/A'} | Reviews: ${reviewCount || 'N/A'}`);
+        if (crawlPages.length) {
+            lines.push('');
+            lines.push('CLIENT WEBPAGES:');
+            lines.push(crawlPages.map(p => `- ${p}`).join('\n'));
+        }
+        lines.push('');
+        lines.push('ERROR REPORT (Client):');
+        lines.push(errorTextPlain || 'N/A');
+        lines.push('');
+        lines.push('--- End of report ---');
+        lines.push('');
+        lines.push('OPERATING PLAN (follow in this order):');
+        lines.push('1) First Action (Click-by-click): Select the highest-impact issue (e.g., missing meta titles, render-blocking resources, SSL, 4xx/5xx, or duplicate tags) and provide exact steps to fix now. Include:');
+        lines.push('   - CMS-specific path (WordPress, Wix, Squarespace, generic) to update settings/content/code.');
+        lines.push('   - Exact text to paste or configuration to toggle, and where.');
+        lines.push('   - How to verify the fix (view-source, devtools, or live URL).');
+        lines.push('2) Minimal Questions (≤3): CMS/platform, who manages the site (owner vs developer/agency), and whether a staging environment exists.');
+        lines.push('3) Prioritized Fix List: Short ranked list of next 5–10 fixes with brief rationale (impact/risk/effort).');
+        lines.push('4) Verification & Monitoring: How to validate fixes (crawl, Lighthouse, GSC Coverage) and monitor weekly.');
+
+        let output = lines.join('\n');
+        output = formatISOToUSInTextER(output);
+        return output;
+    };
+
+    const handleCopyImplementationPromptError = async () => {
+        if (isCopyingError) return;
+        try {
+            setIsCopyingError(true);
+            setPromptCopyStateError('');
+            if (cachedErrorPrompt) {
+                await navigator.clipboard.writeText(cachedErrorPrompt);
+                setPromptCopyStateError('ok');
+                return;
+            }
+            const prompt = await buildErrorImplementationPrompt();
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const workbookId = params.get('workbookId') || '';
+                const cacheKey = `impl_prompt_error_${workbookId}`;
+                const payload = { prompt, aiText: String(currentContent || ''), ts: Date.now() };
+                sessionStorage.setItem(cacheKey, JSON.stringify(payload));
+                setCachedErrorPrompt(prompt);
+            } catch {}
+            await navigator.clipboard.writeText(prompt);
+            setPromptCopyStateError('ok');
+        } catch (e) {
+            setPromptCopyStateError('err');
+        } finally {
+            setTimeout(() => { setPromptCopyStateError(''); setIsCopyingError(false); }, 20000);
+        }
+    };
+
+    useEffect(() => {
+        try {
+            if (activeTab !== 'error') return;
+            const params = new URLSearchParams(window.location.search);
+            const workbookId = params.get('workbookId') || '';
+            const cacheKey = `impl_prompt_error_${workbookId}`;
+            const raw = sessionStorage.getItem(cacheKey);
+            if (raw) {
+                try {
+                    const parsed = JSON.parse(raw);
+                    const isFresh = parsed && parsed.aiText === String(currentContent || '') && (Date.now() - (parsed.ts || 0) < 10 * 60 * 1000);
+                    if (isFresh && parsed.prompt) {
+                        setCachedErrorPrompt(parsed.prompt);
+                        return;
+                    }
+                } catch {}
+            }
+            const build = async () => {
+                try {
+                    const prompt = await buildErrorImplementationPrompt();
+                    const payload = { prompt, aiText: String(currentContent || ''), ts: Date.now() };
+                    sessionStorage.setItem(cacheKey, JSON.stringify(payload));
+                    setCachedErrorPrompt(prompt);
+                } catch {}
+            };
+            if ('requestIdleCallback' in window) {
+                window.requestIdleCallback(() => { build(); }, { timeout: 3000 });
+            } else {
+                setTimeout(build, 2500);
+            }
+        } catch {}
+    }, [activeTab, currentContent]);
+
     return (
         <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-300 bg-white dark:bg-gray-800 border-0">
             {/* Modern Tab Headers */}
@@ -3446,6 +3663,35 @@ const DualReports = ({ competitorText, errorText }) => {
                                 className="prose prose-sm max-w-none leading-relaxed select-text cursor-text dual-reports-text"
                                 dangerouslySetInnerHTML={{ __html: formattedContent }}
                             />
+                            {activeTab === 'error' && (
+                                <>
+                                    <div className="mt-2 flex items-center justify-end space-x-3">
+                                        <button
+                                            onClick={handleCopyImplementationPromptError}
+                                            className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md disabled:opacity-60"
+                                            title="Copy implementation prompt"
+                                            disabled={isCopyingError}
+                                        >
+                                            Implement Recommendations Myself
+                                        </button>
+                                        <button
+                                            onClick={() => window.open('https://www.skool.com/forever-booked/classroom/a23620ff?md=00953c20f4574ccdb6d5edfe0a0298ed', '_blank')}
+                                            className="px-4 py-2 rounded-lg font-semibold text-white"
+                                            style={{ backgroundColor: '#F8857E' }}
+                                            title="Request paid implementation"
+                                        >
+                                            Request Forever Booked Implement (Paid SEO)
+                                        </button>
+                                    </div>
+                                    {!!promptCopyStateError && (
+                                        <div className={`mt-1 text-right text-sm ${promptCopyStateError==='ok'?'text-green-600':'text-red-600'}`}>
+                                            {promptCopyStateError==='ok' 
+                                                ? 'Prompt copied! Open your favourite AI model and paste it into the chat to get started.' 
+                                                : 'Failed to build or copy the prompt. Please try again in a moment.'}
+                                        </div>
+                                    )}
+                                </>
+                            )}
                             
                             {/* Clickable area to collapse */}
                             <div 
