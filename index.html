@@ -3343,9 +3343,7 @@ const DualReports = ({ competitorText, errorText }) => {
         return result;
     };
 
-    const formattedContent = activeTab === 'competitor'
-        ? parseMarkdownToHtml(String(currentContent || ''))
-        : applyInlineMarkdown(String(currentContent || '')).replace(/\n/g, '<br />');
+    const formattedContent = parseMarkdownToHtml(String(currentContent || ''));
 
     // ---------- Error Report Implementation Prompt (only for error tab) ----------
     const formatISOToUSInTextER = (text) => {
