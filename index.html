@@ -1730,12 +1730,12 @@ const KeywordsReport = ({ reportText }) => {
             if (locParts) lines.push(`- Location: ${locParts}`);
             lines.push('');
             lines.push('CORE ON-PAGE / TECHNICAL SNAPSHOT:');
-            if (titleTag) lines.push(`- Title Tag: ${titleTag}`);
-            if (metaDescription) lines.push(`- Meta Description: ${metaDescription}`);
-            if (h1) lines.push(`- H1: ${h1}`);
+            lines.push(`- Title Tag: ${titleTag || 'N/A'}`);
+            lines.push(`- Meta Description: ${metaDescription || 'N/A'}`);
+            lines.push(`- H1: ${h1 || 'N/A'}`);
             lines.push(`- Site Speed: ${siteSpeedDisplayMs}`);
-            if (pageScore !== null) lines.push(`- Page Score: ${pageScore}`);
-            if (typeof referringDomains !== 'undefined') lines.push(`- Referring Domains: ${referringDomains}`);
+            lines.push(`- Page Score: ${pageScore !== null ? pageScore : 'N/A'}`);
+            lines.push(`- Referring Domains: ${typeof referringDomains !== 'undefined' ? referringDomains : 'N/A'}`);
             if (typeof totalBacklinks !== 'undefined') lines.push(`- Total Backlinks: ${totalBacklinks}`);
             lines.push(`- SSL: ${ssl}`);
             lines.push(`- Schema: ${hasSchema}`);
@@ -1752,10 +1752,12 @@ const KeywordsReport = ({ reportText }) => {
                 `Photos: ${photoCount || 'N/A'}`,
                 `Q&A: ${qaCount || 'N/A'}`
             ].join(' | ')}`);
+            lines.push('');
+            lines.push('CLIENT WEBPAGES:');
             if (crawlPages.length) {
-                lines.push('');
-                lines.push('CLIENT WEBSITE PAGES:');
                 lines.push(crawlPages.map(p => `- ${p}`).join('\n'));
+            } else {
+                lines.push('- N/A');
             }
             lines.push('');
             lines.push('TOP 30 CLIENT KEYWORDS (by best rank):');
