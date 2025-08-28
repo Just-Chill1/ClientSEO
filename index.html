@@ -2340,6 +2340,9 @@ const GBPReportSection = ({ reportText }) => {
         const gbpReviewScore = (gbpRecord?.reviewScore || pickCaseInsensitiveGBP(gbpRecord, 'Review Score') || '').toString();
         const gbpReviewCount = (gbpRecord?.reviewCount || pickCaseInsensitiveGBP(gbpRecord, 'Review Count') || '').toString();
         const gbpDescription = (gbpRecord?.description || pickCaseInsensitiveGBP(gbpRecord, 'Description') || '').toString();
+        const gbpTotalPhotos = (pickCaseInsensitiveGBP(gbpRecord, 'Total Photos') || pickCaseInsensitiveGBP(gbpRecord, 'Photo Count') || pickCaseInsensitiveGBP(gbpRecord, 'Photos') || '').toString();
+        const gbpBookOnline = (pickCaseInsensitiveGBP(gbpRecord, 'Book Online') || '').toString();
+        const gbpWebsiteGBP = (pickCaseInsensitiveGBP(gbpRecord, 'GBP Website') || pickCaseInsensitiveGBP(gbpRecord, 'Website (GBP)') || pickCaseInsensitiveGBP(gbpRecord, 'GBP Link') || '').toString();
 
         // Client website pages
         const crawlPages = toArrayGBP(health?.checksAggregate?.pagesList || health?.pagesList || health?.topPages || [])
@@ -2378,13 +2381,16 @@ const GBPReportSection = ({ reportText }) => {
         }
         lines.push('');
         lines.push('GOOGLE BUSINESS PROFILE INSIGHTS:');
+        lines.push(`- Total Photos: ${gbpTotalPhotos || 'N/A'}`);
+        lines.push(`- Book Online: ${gbpBookOnline || 'N/A'}`);
+        lines.push(`- GBP Website: ${gbpWebsiteGBP || 'N/A'}`);
         lines.push(`- Claimed: ${gbpClaimed || 'N/A'}`);
         lines.push(`- Primary Category: ${gbpPrimary || 'N/A'}`);
         lines.push(`- Secondary Categories: ${gbpSecondary || 'N/A'}`);
-        if (gbpHours) lines.push(`- Opening Hours: ${gbpHours}`);
-        if (gbpLogo) lines.push(`- Logo: ${gbpLogo}`);
-        if (gbpAttributes) lines.push(`- Attributes: ${gbpAttributes}`);
-        lines.push(`- Q&A Count: ${gbpQACount || 'N/A'}`);
+        lines.push(`- Opening Hours: ${gbpHours || 'N/A'}`);
+        lines.push(`- Logo: ${gbpLogo || 'N/A'}`);
+        lines.push(`- Attributes: ${gbpAttributes || 'N/A'}`);
+        lines.push(`- Questions & Answers Count: ${gbpQACount || 'N/A'}`);
         lines.push(`- Place Topics Count: ${gbpTopics || 'N/A'}`);
         lines.push(`- Review Score: ${gbpReviewScore || 'N/A'}`);
         lines.push(`- Review Count: ${gbpReviewCount || 'N/A'}`);
