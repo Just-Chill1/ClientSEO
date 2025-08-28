@@ -1494,6 +1494,9 @@ const KeywordsReport = ({ reportText }) => {
     const [isCopyingError, setIsCopyingError] = useState(false);
     const [promptCopyStateError, setPromptCopyStateError] = useState('');
     const [cachedErrorPrompt, setCachedErrorPrompt] = useState('');
+    const [isCopyingCompetitor, setIsCopyingCompetitor] = useState(false);
+    const [promptCopyStateCompetitor, setPromptCopyStateCompetitor] = useState('');
+    const [cachedCompetitorPrompt, setCachedCompetitorPrompt] = useState('');
     const [promptCopyState, setPromptCopyState] = useState(''); // 'ok' | 'err' | ''
     const [isCopying, setIsCopying] = useState(false);
     const [cachedPrompt, setCachedPrompt] = useState('');
@@ -3559,6 +3562,208 @@ const DualReports = ({ competitorText, errorText }) => {
         } catch {}
     }, [activeTab, currentContent]);
 
+    // ---------- Competitor Analysis Implementation Prompt (only for competitor tab) ----------
+    const formatISOToUSInTextCA = (text) => {
+        try {
+            return String(text || '').replace(/\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z\b/g, (m) => {
+                const d = new Date(m);
+                if (isNaN(d.getTime())) return m;
+                return d.toLocaleString('en-US', { year: 'numeric', month: 'short', day: '2-digit', hour: 'numeric', minute: '2-digit' });
+            });
+        } catch { return text; }
+    };
+
+    const buildCompetitorImplementationPrompt = async () => {
+        const params = new URLSearchParams(window.location.search);
+        const workbookId = params.get('workbookId') || '';
+
+        const data = await fetchSectionsER(workbookId, 'websiteStats,gbpInsights,dashboard');
+        const websiteStats = data?.websiteStats || {};
+        const gbpInsights = data?.gbpInsights || null;
+        const health = websiteStats?.healthData || {};
+        const tseo = Array.isArray(websiteStats?.technicalSeoData) ? websiteStats.technicalSeoData : [];
+        const perfAll = Array.isArray(websiteStats?.competitorPerfData) ? websiteStats.competitorPerfData : [];
+
+        const clientTseo = tseo.find(s => s?.isClient || (String(s?.clinicName || s?.name || '').toLowerCase().includes('client'))) || tseo[0] || {};
+        const clientName = clientTseo?.clinicName || clientTseo?.name || 'Client';
+        const clientWebsite = clientTseo?.website || '';
+        const titleTag = clientTseo?.title || '';
+        const metaDescription = clientTseo?.description || '';
+        const h1 = clientTseo?.h1 || '';
+
+        const siteSpeedMs = Number(health?.siteSpeed) || 0;
+        const siteSpeedDisplayMs = isFinite(siteSpeedMs) && siteSpeedMs > 0 ? `${Math.round(siteSpeedMs)} ms` : 'N/A';
+        const pageScore = isFinite(Number(health?.pageScore)) ? Number(health.pageScore) : null;
+        const ssl = (health?.ssl === true || health?.ssl === 'true' || health?.ssl === 'Yes') ? 'Yes' : (health?.ssl === false ? 'No' : 'Unknown');
+        const hasSchema = (health?.hasSchema === true || health?.hasSchema === 'true' || health?.hasSchema === 'Yes') ? 'Yes' : (health?.hasSchema === false ? 'No' : (health?.hasSchemaErrors ? 'Has errors' : 'Unknown'));
+
+        const kd = websiteStats?.keywordsDistribution || health?.keywordsDistribution || {};
+        const kwPos1 = Number(kd?.pos1 || kd?.position1 || kd?.p1 || 0) || 0;
+        const kwPos2to3 = Number(kd?.pos2_3 || kd?.pos2to3 || kd?.position2_3 || 0) || 0;
+        const kwPos4to10 = Number(kd?.pos4_10 || kd?.pos4to10 || kd?.position4_10 || 0) || 0;
+
+        const clientPerf = perfAll.find(p => String(p?.Name || p?.Clinic || p?.clinicName || '').toLowerCase().includes(String(clientName).toLowerCase()))
+            || perfAll.find(p => p?.isClient) || {};
+        const referringDomains = isFinite(Number(clientPerf['Referring Domains'] ?? clientPerf.referringDomains)) ? Number(clientPerf['Referring Domains'] ?? clientPerf.referringDomains) : undefined;
+        const totalBacklinks = isFinite(Number(clientPerf['Total Backlinks'] ?? clientPerf.totalBacklinks)) ? Number(clientPerf['Total Backlinks'] ?? clientPerf.totalBacklinks) : undefined;
+
+        let clientGbp = null;
+        if (Array.isArray(gbpInsights)) {
+            clientGbp = gbpInsights.find(r => {
+                const nm = String(pickCaseInsensitiveER(r, 'Clinic Name') || pickCaseInsensitiveER(r, 'Name') || '').toLowerCase();
+                return nm && clientName && nm.includes(String(clientName).toLowerCase());
+            }) || gbpInsights.find(r => (r?.isClient)) || gbpInsights[0] || null;
+        } else if (gbpInsights && typeof gbpInsights === 'object') {
+            clientGbp = gbpInsights;
+        }
+        const gbpPrimary = (clientGbp?.primaryCategory || pickCaseInsensitiveER(clientGbp, 'Primary Category') || '').toString();
+        const gbpSecondary = (clientGbp?.secondaryCategories || pickCaseInsensitiveER(clientGbp, 'Secondary Categories') || '').toString();
+        const gbpDesc = (clientGbp?.description || pickCaseInsensitiveER(clientGbp, 'Description') || '').toString();
+        const gbpScore = (clientGbp?.reviewScore || pickCaseInsensitiveER(clientGbp, 'Review Score') || '').toString();
+        const gbpCount = (clientGbp?.reviewCount || pickCaseInsensitiveER(clientGbp, 'Review Count') || '').toString();
+
+        const crawlPages = (Array.isArray(health?.checksAggregate?.pagesList) ? health.checksAggregate.pagesList : (health?.pagesList || health?.topPages || []))
+            .map(p => (typeof p === 'string' ? p : (p?.url || p?.path || '')))
+            .filter(Boolean)
+            .slice(0, 80);
+
+        const competitorsTseo = tseo.filter(s => !(s?.isClient) && !String(s?.clinicName || s?.name || '').toLowerCase().includes('client')).slice(0, 4);
+        const findPerfFor = (name) => {
+            return perfAll.find(p => String(p?.Name || p?.Clinic || p?.clinicName || '').toLowerCase().includes(String(name || '').toLowerCase())) || {};
+        };
+        const findGbpFor = (name) => {
+            if (!Array.isArray(gbpInsights)) return null;
+            return gbpInsights.find(r => {
+                const nm = String(pickCaseInsensitiveER(r, 'Clinic Name') || pickCaseInsensitiveER(r, 'Name') || '').toLowerCase();
+                return nm && name && nm.includes(String(name).toLowerCase());
+            }) || null;
+        };
+
+        const lines = [];
+        lines.push('ROLE: You are a senior MedSpa SEO strategist.');
+        lines.push('CONTEXT: Analyze the client vs top competitors using on-page, technical, GBP, and authority data.');
+        lines.push('GOAL: Provide focused, actionable steps to close competitive gaps and grow qualified traffic.');
+        lines.push('');
+        lines.push('CLIENT PROFILE:');
+        lines.push(`- Clinic Name: ${clientName}`);
+        lines.push(`- Website: ${clientWebsite || 'N/A'}`);
+        lines.push('');
+        lines.push('CORE ON-PAGE / TECHNICAL SNAPSHOT:');
+        lines.push(`- Title Tag: ${titleTag || 'N/A'}`);
+        lines.push(`- Meta Description: ${metaDescription || 'N/A'}`);
+        lines.push(`- H1: ${h1 || 'N/A'}`);
+        lines.push(`- Site Speed: ${siteSpeedDisplayMs}`);
+        lines.push(`- Page Score: ${pageScore !== null ? pageScore : 'N/A'}`);
+        lines.push(`- Referring Domains: ${typeof referringDomains !== 'undefined' ? referringDomains : 'N/A'}`);
+        if (typeof totalBacklinks !== 'undefined') lines.push(`- Total Backlinks: ${totalBacklinks}`);
+        lines.push(`- SSL: ${ssl}`);
+        lines.push(`- Schema: ${hasSchema}`);
+        lines.push(`- Keywords Position 1: ${kwPos1}`);
+        lines.push(`- Keywords Position 2-3: ${kwPos2to3}`);
+        lines.push(`- Keywords Position 4-10: ${kwPos4to10}`);
+        lines.push('');
+        lines.push('GOOGLE BUSINESS PROFILE (Quick View):');
+        lines.push(`- Primary Category: ${gbpPrimary || 'N/A'}`);
+        lines.push(`- Secondary Categories: ${gbpSecondary || 'N/A'}`);
+        lines.push(`- Description: ${gbpDesc || 'N/A'}`);
+        lines.push(`- Review Score: ${gbpScore || 'N/A'} | Reviews: ${gbpCount || 'N/A'}`);
+        if (crawlPages.length) {
+            lines.push('');
+            lines.push('CLIENT WEBPAGES:');
+            lines.push(crawlPages.map(p => `- ${p}`).join('\n'));
+        }
+        lines.push('');
+        lines.push('COMPETITOR PROFILES (On-Page + GBP + Authority):');
+        competitorsTseo.forEach((comp, idx) => {
+            const name = comp?.clinicName || comp?.name || `Competitor ${idx+1}`;
+            const compPerf = findPerfFor(name);
+            const compGbp = findGbpFor(name) || {};
+            const compRD = isFinite(Number(compPerf['Referring Domains'] ?? compPerf.referringDomains)) ? Number(compPerf['Referring Domains'] ?? compPerf.referringDomains) : 'N/A';
+            const compBL = isFinite(Number(compPerf['Total Backlinks'] ?? compPerf.totalBacklinks)) ? Number(compPerf['Total Backlinks'] ?? compPerf.totalBacklinks) : 'N/A';
+            const cPrim = (compGbp?.primaryCategory || pickCaseInsensitiveER(compGbp, 'Primary Category') || 'N/A').toString();
+            const cSec = (compGbp?.secondaryCategories || pickCaseInsensitiveER(compGbp, 'Secondary Categories') || 'N/A').toString();
+            const cDesc = (compGbp?.description || pickCaseInsensitiveER(compGbp, 'Description') || 'N/A').toString();
+            const cScore = (compGbp?.reviewScore || pickCaseInsensitiveER(compGbp, 'Review Score') || 'N/A').toString();
+            const cCount = (compGbp?.reviewCount || pickCaseInsensitiveER(compGbp, 'Review Count') || 'N/A').toString();
+            lines.push(`- ${name}:`);
+            lines.push(`  - Title: ${comp?.title || 'N/A'}`);
+            lines.push(`  - Meta: ${comp?.description || 'N/A'}`);
+            lines.push(`  - H1: ${comp?.h1 || 'N/A'}`);
+            lines.push(`  - Referring Domains: ${compRD} | Total Backlinks: ${compBL}`);
+            lines.push(`  - GBP: Primary=${cPrim}; Secondary=${cSec}; Reviews=${cScore} (${cCount})`);
+        });
+        lines.push('');
+        lines.push('OPERATING PLAN:');
+        lines.push('1) First Action (High-Impact): Close the most critical gap (authority, GBP completeness, or on-page targeting). Provide exact edits (title/H1/meta), GBP category additions, or 10 backlink targets to pursue now.');
+        lines.push('2) Next 30 Days: Short weekly plan to improve rankings for 3–5 priority services.');
+        lines.push('3) Minimal Questions (≤3): CMS/platform, internal dev resources, current backlink partners.');
+
+        let output = lines.join('\n');
+        output = formatISOToUSInTextCA(output);
+        return output;
+    };
+
+    const handleCopyImplementationPromptCompetitor = async () => {
+        if (isCopyingCompetitor) return;
+        try {
+            setIsCopyingCompetitor(true);
+            setPromptCopyStateCompetitor('');
+            if (cachedCompetitorPrompt) {
+                await navigator.clipboard.writeText(cachedCompetitorPrompt);
+                setPromptCopyStateCompetitor('ok');
+                return;
+            }
+            const prompt = await buildCompetitorImplementationPrompt();
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const workbookId = params.get('workbookId') || '';
+                const cacheKey = `impl_prompt_competitor_${workbookId}`;
+                const payload = { prompt, aiText: String(currentContent || ''), ts: Date.now() };
+                sessionStorage.setItem(cacheKey, JSON.stringify(payload));
+                setCachedCompetitorPrompt(prompt);
+            } catch {}
+            await navigator.clipboard.writeText(prompt);
+            setPromptCopyStateCompetitor('ok');
+        } catch (e) {
+            setPromptCopyStateCompetitor('err');
+        } finally {
+            setTimeout(() => { setPromptCopyStateCompetitor(''); setIsCopyingCompetitor(false); }, 20000);
+        }
+    };
+
+    useEffect(() => {
+        try {
+            if (activeTab !== 'competitor') return;
+            const params = new URLSearchParams(window.location.search);
+            const workbookId = params.get('workbookId') || '';
+            const cacheKey = `impl_prompt_competitor_${workbookId}`;
+            const raw = sessionStorage.getItem(cacheKey);
+            if (raw) {
+                try {
+                    const parsed = JSON.parse(raw);
+                    const isFresh = parsed && parsed.aiText === String(currentContent || '') && (Date.now() - (parsed.ts || 0) < 10 * 60 * 1000);
+                    if (isFresh && parsed.prompt) {
+                        setCachedCompetitorPrompt(parsed.prompt);
+                        return;
+                    }
+                } catch {}
+            }
+            const build = async () => {
+                try {
+                    const prompt = await buildCompetitorImplementationPrompt();
+                    const payload = { prompt, aiText: String(currentContent || ''), ts: Date.now() };
+                    sessionStorage.setItem(cacheKey, JSON.stringify(payload));
+                    setCachedCompetitorPrompt(prompt);
+                } catch {}
+            };
+            if ('requestIdleCallback' in window) {
+                window.requestIdleCallback(() => { build(); }, { timeout: 3000 });
+            } else {
+                setTimeout(build, 2500);
+            }
+        } catch {}
+    }, [activeTab, currentContent]);
+
     return (
         <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-300 bg-white dark:bg-gray-800 border-0">
             {/* Modern Tab Headers */}
@@ -3664,6 +3869,35 @@ const DualReports = ({ competitorText, errorText }) => {
                                 className="prose prose-sm max-w-none leading-relaxed select-text cursor-text dual-reports-text"
                                 dangerouslySetInnerHTML={{ __html: formattedContent }}
                             />
+                            {activeTab === 'competitor' && (
+                                <>
+                                    <div className="mt-2 flex items-center justify-end space-x-3">
+                                        <button
+                                            onClick={handleCopyImplementationPromptCompetitor}
+                                            className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md disabled:opacity-60"
+                                            title="Copy implementation prompt"
+                                            disabled={isCopyingCompetitor}
+                                        >
+                                            Implement Recommendations Myself
+                                        </button>
+                                        <button
+                                            onClick={() => window.open('https://www.skool.com/forever-booked/classroom/a23620ff?md=00953c20f4574ccdb6d5edfe0a0298ed', '_blank')}
+                                            className="px-4 py-2 rounded-lg font-semibold text-white"
+                                            style={{ backgroundColor: '#F8857E' }}
+                                            title="Request paid implementation"
+                                        >
+                                            Request Forever Booked Implement (Paid SEO)
+                                        </button>
+                                    </div>
+                                    {!!promptCopyStateCompetitor && (
+                                        <div className={`mt-1 text-right text-sm ${promptCopyStateCompetitor==='ok'?'text-green-600':'text-red-600'}`}>
+                                            {promptCopyStateCompetitor==='ok' 
+                                                ? 'Prompt copied! Open your favourite AI model and paste it into the chat to get started.' 
+                                                : 'Failed to build or copy the prompt. Please try again in a moment.'}
+                                        </div>
+                                    )}
+                                </>
+                            )}
                             {activeTab === 'error' && (
                                 <>
                                     <div className="mt-2 flex items-center justify-end space-x-3">
