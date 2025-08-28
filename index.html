@@ -2078,6 +2078,9 @@ const KeywordsReport = ({ reportText }) => {
 const GBPReportSection = ({ reportText }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [copySuccess, setCopySuccess] = useState('');
+    const [isCopying, setIsCopying] = useState(false);
+    const [promptCopyState, setPromptCopyState] = useState('');
+    const [cachedPrompt, setCachedPrompt] = useState('');
 
     // Icons
     const ChevronDown = createIcon(<polyline points="6 9 12 15 18 9" />);
@@ -2210,6 +2213,268 @@ const GBPReportSection = ({ reportText }) => {
     // Check if this is just placeholder text
     const isPlaceholderOnly = !reportText || reportText.trim() === '' || reportText === 'Google Business Profile analysis will appear here once generated.';
 
+    // ---------- GBP Implementation Prompt Builder ----------
+    const formatISOToUSInTextGBP = (text) => {
+        try {
+            return String(text || '').replace(/\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z\b/g, (m) => {
+                const d = new Date(m);
+                if (isNaN(d.getTime())) return m;
+                return d.toLocaleString('en-US', {
+                    year: 'numeric', month: 'short', day: '2-digit',
+                    hour: 'numeric', minute: '2-digit'
+                });
+            });
+        } catch { return text; }
+    };
+
+    const readSessionJsonGBP = (key) => {
+        try {
+            const raw = sessionStorage.getItem(key);
+            return raw ? JSON.parse(raw) : null;
+        } catch { return null; }
+    };
+    const fetchSectionsGBP = (workbookId, sections) => new Promise((resolve) => {
+        const base = 'https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec';
+        const url = `${base}?workbookId=${workbookId}&sections=${encodeURIComponent(sections)}`;
+        fetchWithCorsWorkaround(url, (err, data) => {
+            resolve(err ? null : data);
+        });
+    });
+    const toArrayGBP = (v) => Array.isArray(v) ? v : (v ? [v] : []);
+    const pickCaseInsensitiveGBP = (obj, keyLike) => {
+        if (!obj) return undefined;
+        const entries = Object.entries(obj);
+        const found = entries.find(([k]) => k.toLowerCase() === keyLike.toLowerCase());
+        if (found) return found[1];
+        const fuzzy = entries.find(([k]) => k.toLowerCase().includes(keyLike.toLowerCase()));
+        return fuzzy ? fuzzy[1] : undefined;
+    };
+
+    const buildGbpImplementationPrompt = async () => {
+        const params = new URLSearchParams(window.location.search);
+        const workbookId = params.get('workbookId') || '';
+
+        const dashCache = readSessionJsonGBP(`dashboard_data_${workbookId}`);
+        let overviewData = dashCache?.overviewData || [];
+
+        // Try cached websiteStats
+        const base = 'https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec';
+        const wsUrl = `${base}?workbookId=${workbookId}&sections=websiteStats`;
+        const wsCache = readSessionJsonGBP(`seo_data_${wsUrl}`);
+        let websiteStats = wsCache?.websiteStats || null;
+        let gbpInsights = null;
+        let keywordsSummary = null;
+        let keywordsTable = null;
+
+        if (!websiteStats || !overviewData) {
+            const data = await fetchSectionsGBP(workbookId, 'websiteStats,dashboard,gbpInsights,keywordsSummary,keywordsTable');
+            if (data) {
+                websiteStats = websiteStats || data.websiteStats || data?.websiteStats;
+                if ((!overviewData || overviewData.length === 0) && data.dashboard?.overviewData) overviewData = data.dashboard.overviewData;
+                if (data.gbpInsights) gbpInsights = data.gbpInsights;
+                if (data.keywordsSummary) keywordsSummary = data.keywordsSummary;
+                if (data.keywordsTable) keywordsTable = data.keywordsTable;
+            }
+        }
+        if (!gbpInsights) {
+            const g = await fetchSectionsGBP(workbookId, 'gbpInsights');
+            if (g && g.gbpInsights) gbpInsights = g.gbpInsights;
+        }
+
+        // Determine client context
+        const health = websiteStats?.healthData || {};
+        const tseo = toArrayGBP(websiteStats?.technicalSeoData || []);
+        const perf = toArrayGBP(websiteStats?.competitorPerfData || []).find(x => x?.isClient) || {};
+        const siteSpeedMs = Number(health?.siteSpeed) || 0;
+        const siteSpeedDisplayMs = isFinite(siteSpeedMs) && siteSpeedMs > 0 ? `${Math.round(siteSpeedMs)} ms` : 'N/A';
+        const pageScore = isFinite(Number(health?.pageScore)) ? Number(health.pageScore) : null;
+        const referringDomains = isFinite(Number(perf['Referring Domains'])) ? Number(perf['Referring Domains']) : undefined;
+        const totalBacklinks = isFinite(Number(perf['Total Backlinks'])) ? Number(perf['Total Backlinks']) : undefined;
+
+        const tseoClient = tseo.find(s => (s?.isClient || (s?.clinicName || s?.name || '').toLowerCase().includes('client')) ) || tseo[0] || {};
+        const titleTag = tseoClient?.title || '';
+        const metaDescription = tseoClient?.description || '';
+        const h1 = tseoClient?.h1 || '';
+        const website = tseoClient?.website || '';
+        const clinicName = tseoClient?.clinicName || 'Client';
+
+        // Keyword positions
+        let pos1 = keywordsSummary?.['Position 1'] ?? keywordsSummary?.['Keywords Position 1'] ?? keywordsSummary?.pos1 ?? null;
+        let pos23 = keywordsSummary?.['Position 2-3'] ?? keywordsSummary?.['Keywords Position 2-3'] ?? keywordsSummary?.pos23 ?? null;
+        let pos410 = keywordsSummary?.['Position 4-10'] ?? keywordsSummary?.['Keywords Position 4-10'] ?? keywordsSummary?.pos410 ?? null;
+        if ((pos1 == null && pos23 == null && pos410 == null) && keywordsTable) {
+            const siteKey = Object.keys(keywordsTable)[0];
+            const rows = (keywordsTable[siteKey] || []).filter(r => Number(r?.rank_now) > 0);
+            let c1 = 0, c23 = 0, c410c = 0;
+            for (const r of rows) {
+                const rank = Number(r.rank_now);
+                if (!isFinite(rank)) continue;
+                if (rank === 1) c1++;
+                else if (rank >= 2 && rank <= 3) c23++;
+                else if (rank >= 4 && rank <= 10) c410c++;
+            }
+            pos1 = c1; pos23 = c23; pos410 = c410c;
+        }
+
+        // GBP client record
+        let gbpRecord = null;
+        if (Array.isArray(gbpInsights)) {
+            gbpRecord = gbpInsights.find(r => {
+                const at = String(pickCaseInsensitiveGBP(r, 'Account Type') || pickCaseInsensitiveGBP(r, 'AccountType') || pickCaseInsensitiveGBP(r, 'Type') || '').toLowerCase();
+                return at.includes('client');
+            }) || gbpInsights[0] || null;
+        } else if (gbpInsights && typeof gbpInsights === 'object') {
+            gbpRecord = gbpInsights;
+        }
+
+        const gbpClaimed = (pickCaseInsensitiveGBP(gbpRecord, 'Claimed') ?? '').toString();
+        const gbpPrimary = (gbpRecord?.primaryCategory || pickCaseInsensitiveGBP(gbpRecord, 'Primary Categorie') || pickCaseInsensitiveGBP(gbpRecord, 'Primary Category') || '').toString();
+        const gbpSecondary = (gbpRecord?.secondaryCategories || pickCaseInsensitiveGBP(gbpRecord, 'Secondary Categories') || '').toString();
+        const gbpHours = (pickCaseInsensitiveGBP(gbpRecord, 'Opening Hours') ?? '').toString();
+        const gbpLogo = (pickCaseInsensitiveGBP(gbpRecord, 'Logo') ?? '').toString();
+        const gbpAttributes = (pickCaseInsensitiveGBP(gbpRecord, 'Attributes') || pickCaseInsensitiveGBP(gbpRecord, 'Attributes (e.g 7/7)') || '').toString();
+        const gbpQACount = (gbpRecord?.qaCount || pickCaseInsensitiveGBP(gbpRecord, 'Q&A Count') || pickCaseInsensitiveGBP(gbpRecord, 'Questions & Answers Count') || '').toString();
+        const gbpTopics = (pickCaseInsensitiveGBP(gbpRecord, 'Place Topics Count') || '').toString();
+        const gbpReviewScore = (gbpRecord?.reviewScore || pickCaseInsensitiveGBP(gbpRecord, 'Review Score') || '').toString();
+        const gbpReviewCount = (gbpRecord?.reviewCount || pickCaseInsensitiveGBP(gbpRecord, 'Review Count') || '').toString();
+        const gbpDescription = (gbpRecord?.description || pickCaseInsensitiveGBP(gbpRecord, 'Description') || '').toString();
+
+        // Client website pages
+        const crawlPages = toArrayGBP(health?.checksAggregate?.pagesList || health?.pagesList || health?.topPages || [])
+            .map(p => (typeof p === 'string' ? p : (p?.url || p?.path || '')))
+            .filter(Boolean)
+            .slice(0, 60);
+
+        const lines = [];
+        lines.push('ROLE: You are a senior MedSpa Local SEO strategist focused on Google Business Profile (GBP) performance.');
+        lines.push('CONTEXT: The client has generated a GBP report. Use the data below to optimize visibility in local search and align the website with GBP.');
+        lines.push('GOAL: Improve local pack rankings and conversions by fixing GBP configuration, strengthening local signals, and mapping categories to relevant pages.');
+        lines.push('WORKING MODE:');
+        lines.push('- Provide the first actionable step immediately, click-by-click, with exact URLs and fields to update.');
+        lines.push('- If needed, perform light independent research (e.g., find official pages for category/attribute definitions or submission portals).');
+        lines.push('- Keep outputs concise and operational; include suggested text for categories, description, services, and photos/Q&A.');
+        lines.push('- After the first step, ask only 1–3 essential questions to tailor follow-ups.');
+        lines.push('');
+        lines.push('CLIENT PROFILE:');
+        lines.push(`- Clinic Name: ${clinicName}`);
+        lines.push(`- Website: ${website || 'N/A'}`);
+        lines.push('');
+        lines.push('CORE ON-PAGE / TECHNICAL SNAPSHOT:');
+        if (titleTag) lines.push(`- Title Tag: ${titleTag}`);
+        if (metaDescription) lines.push(`- Meta Description: ${metaDescription}`);
+        if (h1) lines.push(`- H1: ${h1}`);
+        lines.push(`- Site Speed: ${siteSpeedDisplayMs}`);
+        if (pageScore !== null) lines.push(`- Page Score: ${pageScore}`);
+        if (typeof referringDomains !== 'undefined') lines.push(`- Referring Domains: ${referringDomains}`);
+        if (typeof totalBacklinks !== 'undefined') lines.push(`- Total Backlinks: ${totalBacklinks}`);
+        lines.push(`- SSL: ${ (health?.ssl === true || health?.ssl === 'true' || health?.ssl === 'Yes') ? 'Yes' : (health?.ssl === false ? 'No' : 'Unknown') }`);
+        lines.push(`- Schema: ${ (health?.hasSchema === true || health?.hasSchema === 'true' || health?.hasSchema === 'Yes') ? 'Yes' : (health?.hasSchema === false ? 'No' : (health?.hasSchemaErrors ? 'Has errors' : 'Unknown')) }`);
+        if (pos1 != null || pos23 != null || pos410 != null) {
+            lines.push(`- Keywords Position 1: ${pos1 ?? 'N/A'}`);
+            lines.push(`- Keywords Position 2-3: ${pos23 ?? 'N/A'}`);
+            lines.push(`- Keywords Position 4-10: ${pos410 ?? 'N/A'}`);
+        }
+        lines.push('');
+        lines.push('GOOGLE BUSINESS PROFILE INSIGHTS:');
+        lines.push(`- Claimed: ${gbpClaimed || 'N/A'}`);
+        lines.push(`- Primary Category: ${gbpPrimary || 'N/A'}`);
+        lines.push(`- Secondary Categories: ${gbpSecondary || 'N/A'}`);
+        if (gbpHours) lines.push(`- Opening Hours: ${gbpHours}`);
+        if (gbpLogo) lines.push(`- Logo: ${gbpLogo}`);
+        if (gbpAttributes) lines.push(`- Attributes: ${gbpAttributes}`);
+        lines.push(`- Q&A Count: ${gbpQACount || 'N/A'}`);
+        lines.push(`- Place Topics Count: ${gbpTopics || 'N/A'}`);
+        lines.push(`- Review Score: ${gbpReviewScore || 'N/A'}`);
+        lines.push(`- Review Count: ${gbpReviewCount || 'N/A'}`);
+        lines.push(`- Description: ${gbpDescription || 'N/A'}`);
+        if (crawlPages.length) {
+            lines.push('');
+            lines.push('CLIENT WEBSITE PAGES:');
+            lines.push(crawlPages.map(p => `- ${p}`).join('\n'));
+        }
+        lines.push('');
+        lines.push('GBP AI REPORT (Client):');
+        lines.push(String(reportText || '').trim() || 'N/A');
+        lines.push('');
+        lines.push('--- End of report ---');
+        lines.push('');
+        lines.push('OPERATING PLAN (follow in this order):');
+        lines.push('1) Analysis + Plan: In 5 bullets, summarize the most impactful GBP improvements (categories, description, services, photos, hours, attributes, Q&A).');
+        lines.push('2) First Action (Click-by-click): Give explicit steps to implement now. Prefer the highest-impact gap:');
+        lines.push('   - Go to https://business.google.com/ and sign in to your profile.');
+        lines.push('   - Edit profile > Business category: set Primary Category (exact string) and add Secondary Categories. Save.');
+        lines.push('   - Edit profile > Business information > About: update the Description with the suggested text. Save.');
+        lines.push('   - If relevant, update Opening Hours, add Photos, and answer Q&A.');
+        lines.push('3) Minimal Questions (≤3): Ask essentials to tailor next steps (primary service areas/neighborhoods, brand voice, key flagship services).');
+        lines.push('4) Category-to-Page Mapping: Map each GBP category/service to the best matching website page (or propose a new page) and note content gaps.');
+        lines.push('5) Enhancement Checklist: Photos (before/after, team, interior), services list, UTM tracking on profile links, and local citations to reinforce categories.');
+        lines.push('6) Measurement Plan: define success (local pack rank on priority terms, calls/directions, views) and how to verify weekly in GBP Insights.');
+
+        let output = lines.join('\n');
+        output = formatISOToUSInTextGBP(output);
+        return output;
+    };
+
+    const handleCopyImplementationPromptGBP = async () => {
+        if (isCopying) return;
+        try {
+            setIsCopying(true);
+            setPromptCopyState('');
+            if (cachedPrompt) {
+                await navigator.clipboard.writeText(cachedPrompt);
+                setPromptCopyState('ok');
+                return;
+            }
+            const prompt = await buildGbpImplementationPrompt();
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const workbookId = params.get('workbookId') || '';
+                const cacheKey = `impl_prompt_gbp_${workbookId}`;
+                const payload = { prompt, aiText: String(reportText || ''), ts: Date.now() };
+                sessionStorage.setItem(cacheKey, JSON.stringify(payload));
+                setCachedPrompt(prompt);
+            } catch {}
+            await navigator.clipboard.writeText(prompt);
+            setPromptCopyState('ok');
+        } catch (e) {
+            setPromptCopyState('err');
+        } finally {
+            setTimeout(() => { setPromptCopyState(''); setIsCopying(false); }, 20000);
+        }
+    };
+
+    useEffect(() => {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const workbookId = params.get('workbookId') || '';
+            const cacheKey = `impl_prompt_gbp_${workbookId}`;
+            const raw = sessionStorage.getItem(cacheKey);
+            if (raw) {
+                try {
+                    const parsed = JSON.parse(raw);
+                    const isFresh = parsed && parsed.aiText === String(reportText || '') && (Date.now() - (parsed.ts || 0) < 10 * 60 * 1000);
+                    if (isFresh && parsed.prompt) {
+                        setCachedPrompt(parsed.prompt);
+                        return;
+                    }
+                } catch {}
+            }
+            const build = async () => {
+                try {
+                    const prompt = await buildGbpImplementationPrompt();
+                    const payload = { prompt, aiText: String(reportText || ''), ts: Date.now() };
+                    sessionStorage.setItem(cacheKey, JSON.stringify(payload));
+                    setCachedPrompt(prompt);
+                } catch {}
+            };
+            if ('requestIdleCallback' in window) {
+                window.requestIdleCallback(() => { build(); }, { timeout: 3000 });
+            } else {
+                setTimeout(build, 2500);
+            }
+        } catch {}
+    }, [reportText]);
+
     return (
         <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-300 bg-white dark:bg-gray-800" style={{border: 'none', outline: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)'}}>
             {/* Single Tab Header */}
@@ -2308,6 +2573,32 @@ const GBPReportSection = ({ reportText }) => {
                                 className="prose prose-base max-w-none leading-relaxed select-text cursor-text dual-reports-text prose-p:my-5 prose-h1:mt-7 prose-h1:mb-5 prose-h2:mt-6 prose-h2:mb-4 prose-h3:mt-5 prose-h3:mb-3 prose-ul:my-3 prose-ol:my-3"
                                 dangerouslySetInnerHTML={{ __html: formattedContent }}
                             />
+                            {/* Action Buttons - above Show Less, bottom-right inside report */}
+                            <div className="mt-2 flex items-center justify-end space-x-3">
+                                <button
+                                    onClick={handleCopyImplementationPromptGBP}
+                                    className="px-4 py-2 rounded-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md disabled:opacity-60"
+                                    title="Copy implementation prompt"
+                                    disabled={isCopying}
+                                >
+                                    Implement Recommendations Myself
+                                </button>
+                                <button
+                                    onClick={() => window.open('https://www.skool.com/forever-booked/classroom/a23620ff?md=00953c20f4574ccdb6d5edfe0a0298ed', '_blank')}
+                                    className="px-4 py-2 rounded-lg font-semibold text-white"
+                                    style={{ backgroundColor: '#F8857E' }}
+                                    title="Request paid implementation"
+                                >
+                                    Request Forever Booked Implement (Paid SEO)
+                                </button>
+                            </div>
+                            {!!promptCopyState && (
+                                <div className={`mt-1 text-right text-sm ${promptCopyState==='ok'?'text-green-600':'text-red-600'}`}>
+                                    {promptCopyState==='ok' 
+                                        ? 'Prompt copied! Open your favourite AI model and paste it into the chat to get started.' 
+                                        : 'Failed to build or copy the prompt. Please try again in a moment.'}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
