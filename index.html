@@ -2332,20 +2332,20 @@ const GBPReportSection = ({ reportText }) => {
             gbpRecord = gbpInsights;
         }
 
-        const gbpClaimed = (pickCaseInsensitiveGBP(gbpRecord, 'Claimed') ?? '').toString();
+        const gbpClaimed = (gbpRecord?.claimed ?? pickCaseInsensitiveGBP(gbpRecord, 'Claimed') ?? '').toString();
         const gbpPrimary = (gbpRecord?.primaryCategory || pickCaseInsensitiveGBP(gbpRecord, 'Primary Categorie') || pickCaseInsensitiveGBP(gbpRecord, 'Primary Category') || '').toString();
         const gbpSecondary = (gbpRecord?.secondaryCategories || pickCaseInsensitiveGBP(gbpRecord, 'Secondary Categories') || '').toString();
-        const gbpHours = (pickCaseInsensitiveGBP(gbpRecord, 'Opening Hours') ?? '').toString();
-        const gbpLogo = (pickCaseInsensitiveGBP(gbpRecord, 'Logo') ?? '').toString();
-        const gbpAttributes = (pickCaseInsensitiveGBP(gbpRecord, 'Attributes') || pickCaseInsensitiveGBP(gbpRecord, 'Attributes (e.g 7/7)') || '').toString();
-        const gbpQACount = (gbpRecord?.qaCount || pickCaseInsensitiveGBP(gbpRecord, 'Q&A Count') || pickCaseInsensitiveGBP(gbpRecord, 'Questions & Answers Count') || '').toString();
-        const gbpTopics = (pickCaseInsensitiveGBP(gbpRecord, 'Place Topics Count') || '').toString();
-        const gbpReviewScore = (gbpRecord?.reviewScore || pickCaseInsensitiveGBP(gbpRecord, 'Review Score') || '').toString();
-        const gbpReviewCount = (gbpRecord?.reviewCount || pickCaseInsensitiveGBP(gbpRecord, 'Review Count') || '').toString();
-        const gbpDescription = (gbpRecord?.description || pickCaseInsensitiveGBP(gbpRecord, 'Description') || '').toString();
-        const gbpTotalPhotos = (pickCaseInsensitiveGBP(gbpRecord, 'Total Photos') || pickCaseInsensitiveGBP(gbpRecord, 'Photo Count') || pickCaseInsensitiveGBP(gbpRecord, 'Photos') || '').toString();
-        const gbpBookOnline = (pickCaseInsensitiveGBP(gbpRecord, 'Book Online') || '').toString();
-        const gbpWebsiteGBP = (pickCaseInsensitiveGBP(gbpRecord, 'GBP Website') || pickCaseInsensitiveGBP(gbpRecord, 'Website (GBP)') || pickCaseInsensitiveGBP(gbpRecord, 'GBP Link') || '').toString();
+        const gbpHours = (gbpRecord?.openingHours ?? pickCaseInsensitiveGBP(gbpRecord, 'Opening Hours') ?? '').toString();
+        const gbpLogo = (gbpRecord?.logo ?? pickCaseInsensitiveGBP(gbpRecord, 'Logo') ?? '').toString();
+        const gbpAttributes = (gbpRecord?.attributes ?? pickCaseInsensitiveGBP(gbpRecord, 'Attributes') ?? pickCaseInsensitiveGBP(gbpRecord, 'Attributes (e.g 7/7)') ?? '').toString();
+        const gbpQACount = (gbpRecord?.qaCount ?? pickCaseInsensitiveGBP(gbpRecord, 'Q&A Count') ?? pickCaseInsensitiveGBP(gbpRecord, 'Questions & Answers Count') ?? '').toString();
+        const gbpTopics = (gbpRecord?.placeTopicsCount ?? pickCaseInsensitiveGBP(gbpRecord, 'Place Topics Count') ?? '').toString();
+        const gbpReviewScore = (gbpRecord?.reviewScore ?? pickCaseInsensitiveGBP(gbpRecord, 'Review Score') ?? '').toString();
+        const gbpReviewCount = (gbpRecord?.reviewCount ?? pickCaseInsensitiveGBP(gbpRecord, 'Review Count') ?? '').toString();
+        const gbpDescription = (gbpRecord?.description ?? pickCaseInsensitiveGBP(gbpRecord, 'Description') ?? '').toString();
+        const gbpTotalPhotos = (gbpRecord?.totalPhotos ?? pickCaseInsensitiveGBP(gbpRecord, 'Total Photos') ?? pickCaseInsensitiveGBP(gbpRecord, 'Photo Count') ?? pickCaseInsensitiveGBP(gbpRecord, 'Photos') ?? '').toString();
+        const gbpBookOnline = (gbpRecord?.bookOnline ?? pickCaseInsensitiveGBP(gbpRecord, 'Book Online') ?? '').toString();
+        const gbpWebsiteGBP = (gbpRecord?.gbpWebsite ?? pickCaseInsensitiveGBP(gbpRecord, 'GBP Website') ?? pickCaseInsensitiveGBP(gbpRecord, 'Website (GBP)') ?? pickCaseInsensitiveGBP(gbpRecord, 'GBP Link') ?? '').toString();
 
         // Client website pages
         const crawlPages = toArrayGBP(health?.checksAggregate?.pagesList || health?.pagesList || health?.topPages || [])
