@@ -3165,6 +3165,9 @@ const DualReports = ({ competitorText, errorText }) => {
     const [activeTab, setActiveTab] = useState('competitor');
     const [isExpanded, setIsExpanded] = useState(false);
     const [copySuccess, setCopySuccess] = useState('');
+    const [isCopyingError, setIsCopyingError] = useState(false);
+    const [promptCopyStateError, setPromptCopyStateError] = useState('');
+    const [cachedErrorPrompt, setCachedErrorPrompt] = useState('');
 
 
     const tabs = [
