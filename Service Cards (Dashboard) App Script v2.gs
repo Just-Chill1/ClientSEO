@@ -352,49 +352,28 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
   console.log(`Target column header: "${headers[locationColumnIndex]}"`);
   console.log(`Looking for location: "${locationFilterValue}"`);
   
-  if (allData.length === 0) {
-    console.error(`ERROR: No data rows found in sheet after removing header!`);
-    return { topServices: [], newServices: [] };
-  }
-
-  // For City route, optionally enforce state match using secondaryToken
-  let data = allData;
-  if (sheetName === 'City (US & CA)') {
-    const cityCol = 2 - 1 + 1; // we will use row[2] below; keeping log simple
-    const stateColIndex = 3; // State column is index 3 (0-based)
-    const cityFilter = String(locationFilterValue || '').trim().toLowerCase();
-    const secondary = secondaryToken ? String(secondaryToken).trim().toLowerCase() : '';
-
-    data = allData.filter(function(row){
-      var cityVal = (row[2] || '').toString().trim().toLowerCase();
-      if (!cityVal) return false;
-      if (cityVal !== cityFilter) return false;
-      if (!secondary) return true; // no state constraint provided
-      var stateVal = (row[stateColIndex] || '').toString().trim().toLowerCase();
-      if (!stateVal) return true; // allow if state missing
-      // Accept either abbr or full name containment in either direction for robustness
-      return stateVal === secondary || stateVal.indexOf(secondary) !== -1 || secondary.indexOf(stateVal) !== -1;
-    });
+  // Enhanced sample row logging
+  if (allData.length > 0) {
+    console.log(`\n=== DATA SAMPLE ANALYSIS ===`);
+    for (let i = 0; i < Math.min(3, allData.length); i++) {
+      const row = allData[i];
+      console.log(`Row ${i}:`);
+      console.log(`  Full row:`, row);
+      console.log(`  Service: "${row[0]}"`);
+      console.log(`  Keyword: "${row[1]}"`);
+      console.log(`  City (col 2): "${row[2]}"`);
+      console.log(`  State (col 3): "${row[3]}"`);  
+      console.log(`  Country (col 4): "${row[4]}"`);
+      console.log(`  Target column value: "${row[locationColumnIndex]}"`);
+      console.log(`---`);
+    }
+    
+    // Check if the target column has any data at all
+    const targetColumnValues = allData.map(row => row[locationColumnIndex]).filter(val => val && val.toString().trim());
+    console.log(`Target column has ${targetColumnValues.length} non-empty values out of ${allData.length} total rows`);
+    console.log(`First 10 target column values:`, targetColumnValues.slice(0, 10));
   } else {
-    // Existing filtering for Country/State paths
-    data = allData.filter(function(row){
-      const rowLocation = row[locationColumnIndex];
-      if (!rowLocation) return false;
-      const rowLocationStr = rowLocation.toString().trim().toLowerCase();
-      const filterValueStr = locationFilterValue.trim().toLowerCase();
-      if (rowLocationStr === filterValueStr) return true;
-      if (sheetName === 'State & Province') {
-        if (rowLocationStr.indexOf(filterValueStr) !== -1 || filterValueStr.indexOf(rowLocationStr) !== -1) return true;
-        const cleanRow = rowLocationStr.replace(/\b(state|province)\b/g, '').trim();
-        const cleanFilter = filterValueStr.replace(/\b(state|province)\b/g, '').trim();
-        if (cleanRow === cleanFilter) return true;
-      }
-      return false;
-    });
-  }
-
-  if (data.length === 0) {
-    console.warn('No matching rows after initial filtering for', sheetName, 'with location:', locationFilterValue, 'and secondaryToken:', secondaryToken);
+    console.error(`ERROR: No data rows found in sheet after removing header!`);
     return { topServices: [], newServices: [] };
   }
 
@@ -406,27 +385,304 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
     }
     return acc;
   }, []);
+
+  // Sort by date to find the latest two months
   monthColumns.sort(function(a, b) { return b.date - a.date; });
 
-  // Compute aggregates (unchanged)
+  // Before filtering, let's count how many rows match our target location
+  const locationCounts = {};
+  const rawLocationSamples = []; // Collect raw samples for debugging
+  
+  allData.forEach((row, index) => {
+    const loc = row[locationColumnIndex];
+    if (loc) {
+      const locStr = loc.toString().trim().toLowerCase();
+      locationCounts[locStr] = (locationCounts[locStr] || 0) + 1;
+      
+      // Collect first 20 raw samples for debugging
+      if (rawLocationSamples.length < 20) {
+        rawLocationSamples.push({
+          rowIndex: index,
+          rawValue: loc,
+          stringValue: loc.toString(),
+          trimmedValue: loc.toString().trim(),
+          lowercaseValue: locStr
+        });
+      }
+    }
+  });
+  
+  // Enhanced debugging for states
+  if (sheetName === 'State & Province') {
+    console.log(`\n=== RAW STATE DATA SAMPLES ===`);
+    rawLocationSamples.forEach((sample, idx) => {
+      console.log(`Sample ${idx + 1}: Raw="${sample.rawValue}" | String="${sample.stringValue}" | Trimmed="${sample.trimmedValue}" | Lowercase="${sample.lowercaseValue}"`);
+    });
+  }
+  
+  console.log(`\n=== LOCATION MATCHING ANALYSIS ===`);
+  console.log(`Location counts for column ${locationColumnIndex}:`, locationCounts);
+  console.log(`Looking for "${locationFilterValue.toLowerCase()}" - found ${locationCounts[locationFilterValue.toLowerCase()] || 0} matches`);
+  
+  // Show all unique location values for comparison
+  const uniqueLocations = [...new Set(Object.keys(locationCounts))].sort();
+  console.log(`All unique locations in data (${uniqueLocations.length} total):`, uniqueLocations);
+  
+  // Try to find close matches to help debug
+  const targetLower = locationFilterValue.toLowerCase();
+  const closeMatches = uniqueLocations.filter(loc => 
+    loc.includes(targetLower) || targetLower.includes(loc) ||
+    loc.startsWith(targetLower) || targetLower.startsWith(loc)
+  );
+  console.log(`Close matches to "${targetLower}":`, closeMatches);
+  
+  // For states, show more detailed analysis
+  if (sheetName === 'State & Province') {
+    console.log(`\n=== STATE MATCHING ANALYSIS ===`);
+    console.log(`Target state: "${targetLower}"`);
+    console.log(`Total unique states found: ${uniqueLocations.length}`);
+    console.log(`First 10 unique states:`, uniqueLocations.slice(0, 10));
+    console.log(`States containing "${targetLower}":`, uniqueLocations.filter(s => s.includes(targetLower)));
+    console.log(`States that "${targetLower}" contains:`, uniqueLocations.filter(s => targetLower.includes(s)));
+    
+    // Check for common state abbreviations
+    const stateAbbrevMap = {'arkansas': 'ar', 'delaware': 'de', 'alabama': 'al', 'nebraska': 'ne'};
+    const abbrev = stateAbbrevMap[targetLower];
+    if (abbrev) {
+      console.log(`Looking for abbreviation "${abbrev}":`, uniqueLocations.filter(s => s === abbrev));
+    }
+  }
+  
+  console.log(`\n=== STARTING FIRST-PASS FILTERING ===`);
+  
+  // Filter rows for the selected location
+  let data = allData.filter(row => {
+      const rowLocation = row[locationColumnIndex];
+      if (!rowLocation) return false;
+      
+      const rowLocationStr = rowLocation.toString().trim().toLowerCase();
+      const filterValueStr = locationFilterValue.trim().toLowerCase();
+      
+      // Enhanced debugging for state filtering
+      if (sheetName === 'State & Province') {
+          const rowIndex = allData.indexOf(row);
+          // Log first 10 comparisons and any that are close matches
+          if (rowIndex < 10 || rowLocationStr.includes(filterValueStr) || filterValueStr.includes(rowLocationStr)) {
+              console.log(`Row ${rowIndex}: "${rowLocationStr}" vs "${filterValueStr}" | Exact: ${rowLocationStr === filterValueStr} | Contains: ${rowLocationStr.includes(filterValueStr)} | Service: "${row[0]}"`);
+          }
+      }
+      
+      // First try exact match
+      if (rowLocationStr === filterValueStr) return true;
+      
+      // For states, also try partial matching (in case of abbreviations or slight differences)
+      if (sheetName === 'State & Province') {
+          // Check if either contains the other (for cases like "NY" vs "New York")
+          if (rowLocationStr.includes(filterValueStr) || filterValueStr.includes(rowLocationStr)) {
+              return true;
+          }
+          // Also check without common state suffixes/prefixes
+          const cleanRow = rowLocationStr.replace(/\b(state|province)\b/g, '').trim();
+          const cleanFilter = filterValueStr.replace(/\b(state|province)\b/g, '').trim();
+          if (cleanRow === cleanFilter) return true;
+          
+          // Additional check for common state abbreviations
+          const stateAbbreviations = {
+              'alabama': 'al', 'alaska': 'ak', 'arizona': 'az', 'arkansas': 'ar', 'california': 'ca',
+              'colorado': 'co', 'connecticut': 'ct', 'delaware': 'de', 'florida': 'fl', 'georgia': 'ga',
+              'hawaii': 'hi', 'idaho': 'id', 'illinois': 'il', 'indiana': 'in', 'iowa': 'ia',
+              'kansas': 'ks', 'kentucky': 'ky', 'louisiana': 'la', 'maine': 'me', 'maryland': 'md',
+              'massachusetts': 'ma', 'michigan': 'mi', 'minnesota': 'mn', 'mississippi': 'ms',
+              'missouri': 'mo', 'montana': 'mt', 'nebraska': 'ne', 'nevada': 'nv', 'new hampshire': 'nh',
+              'new jersey': 'nj', 'new mexico': 'nm', 'new york': 'ny', 'north carolina': 'nc',
+              'north dakota': 'nd', 'ohio': 'oh', 'oklahoma': 'ok', 'oregon': 'or', 'pennsylvania': 'pa',
+              'rhode island': 'ri', 'south carolina': 'sc', 'south dakota': 'sd', 'tennessee': 'tn',
+              'texas': 'tx', 'utah': 'ut', 'vermont': 'vt', 'virginia': 'va', 'washington': 'wa',
+              'west virginia': 'wv', 'wisconsin': 'wi', 'wyoming': 'wy'
+          };
+          
+          // Check if one is the abbreviation of the other
+          if (stateAbbreviations[rowLocationStr] === filterValueStr || 
+              stateAbbreviations[filterValueStr] === rowLocationStr) {
+              return true;
+          }
+          
+          // Try reverse lookup - if filter is full name, check if row is abbreviation
+          for (const [fullName, abbrev] of Object.entries(stateAbbreviations)) {
+              if (fullName === filterValueStr && abbrev === rowLocationStr) {
+                  return true;
+              }
+              if (fullName === rowLocationStr && abbrev === filterValueStr) {
+                  return true;
+              }
+          }
+      }
+      
+      return false;
+  });
+
+  // For City sheet, if a secondaryToken (state/province) was provided, enforce it
+  if (sheetName === 'City (US & CA)' && secondaryToken) {
+    const st = String(secondaryToken).trim().toLowerCase();
+    const stateIdx = 3; // State column
+    data = data.filter(function(row){
+      const sv = (row[stateIdx] || '').toString().trim().toLowerCase();
+      if (!sv) return true; // be permissive if state missing
+      return sv === st || sv.indexOf(st) !== -1 || st.indexOf(sv) !== -1;
+    });
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* 🔄  SECOND-PASS MATCHING – handle tricky edge-cases                 */
+  /* ------------------------------------------------------------------ */
+  if (data.length === 0 && sheetName === 'State & Province') {
+    // Occasionally the state value in the spreadsheet may contain extra whitespace,
+    // punctuation (e.g. "Alabama (USA)"), or different capitalisation. If the first
+    // pass returns nothing, make a more permissive pass that strips all
+    // non-alphabetic characters before comparison.
+
+    const sanitize = s => s.toString().replace(/[^a-z]/gi, '').toLowerCase();
+    const target = sanitize(locationFilterValue);
+
+    data = allData.filter(row => {
+      const loc = row[locationColumnIndex];
+      if (!loc) return false;
+      return sanitize(loc) === target;
+    });
+
+    console.log(`Second-pass state matching found ${data.length} rows for "${locationFilterValue}" after sanitisation.`);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* 🔄  THIRD-PASS MATCHING – very aggressive matching                  */
+  /* ------------------------------------------------------------------ */
+  if (data.length === 0 && sheetName === 'State & Province') {
+    console.log(`Attempting third-pass matching for "${locationFilterValue}"`);
+    
+    // Collect all unique state values to understand what's actually in the data
+    const uniqueStates = [...new Set(allData.map(row => row[locationColumnIndex]).filter(val => val && val.toString().trim()))];
+    console.log(`Unique states in data (first 50):`, uniqueStates.slice(0, 50));
+    
+    // More aggressive matching - try contains, starts with, ends with
+    const filterLower = locationFilterValue.toLowerCase().trim();
+    
+    data = allData.filter(row => {
+      const loc = row[locationColumnIndex];
+      if (!loc) return false;
+      
+      const locLower = loc.toString().toLowerCase().trim();
+      
+      // Try various matching strategies
+      if (locLower.includes(filterLower) || filterLower.includes(locLower)) return true;
+      if (locLower.startsWith(filterLower) || filterLower.startsWith(locLower)) return true;
+      if (locLower.endsWith(filterLower) || filterLower.endsWith(locLower)) return true;
+      
+      // Try removing common words and punctuation
+      const cleanLoc = locLower.replace(/[^\w\s]/g, '').replace(/\b(state|province|of|the)\b/g, '').trim();
+      const cleanFilter = filterLower.replace(/[^\w\s]/g, '').replace(/\b(state|province|of|the)\b/g, '').trim();
+      
+      if (cleanLoc === cleanFilter) return true;
+      if (cleanLoc.includes(cleanFilter) || cleanFilter.includes(cleanLoc)) return true;
+      
+      return false;
+    });
+
+    console.log(`Third-pass state matching found ${data.length} rows for "${locationFilterValue}"`);
+    
+    // If still no matches, log some examples of what we're comparing
+    if (data.length === 0 && uniqueStates.length > 0) {
+      console.log(`Still no matches found. Comparing "${filterLower}" against samples:`, uniqueStates.slice(0, 10));
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
+  
+  console.log(`\n=== FINAL FILTERING RESULTS ===`);
+  console.log(`After all filtering passes: Found ${data.length} matching rows for location "${locationFilterValue}"`);
+  
+  if (data.length > 0) {
+    console.log(`✅ SUCCESS: Found matching data!`);
+    console.log(`Sample of matched rows (first 3):`);
+    for (let i = 0; i < Math.min(3, data.length); i++) {
+      const row = data[i];
+      console.log(`  Row ${i}: Service="${row[0]}", Location="${row[locationColumnIndex]}"`);
+    }
+  }
+  
+  if (data.length === 0) {
+    // Enhanced debugging: Log more sample values and show unique values
+    const sampleValues = allData.slice(0, 10).map(row => row[locationColumnIndex]).filter(val => val);
+    const uniqueValues = [...new Set(allData.map(row => row[locationColumnIndex]).filter(val => val))].slice(0, 50);
+    console.log(`No matching data found. Sample values in column ${locationColumnIndex}:`, sampleValues);
+    console.log(`All unique values in column ${locationColumnIndex}:`, uniqueValues);
+    console.log(`Looking for exact match: "${locationFilterValue.trim().toLowerCase()}"`);
+    console.log(`Sheet name: "${sheetName}", Column index: ${locationColumnIndex}`);
+    console.log(`Total rows in sheet: ${allData.length}`);
+    
+    // Additional debugging for headers
+    console.log(`Headers:`, headers);
+    console.log(`Header at column ${locationColumnIndex}:`, headers[locationColumnIndex]);
+    
+    // If this is a state request, also show some sample full rows to understand data structure
+    if (sheetName === 'State & Province' && allData.length > 0) {
+      console.log('Sample rows from State & Province sheet:');
+      for (let i = 0; i < Math.min(3, allData.length); i++) {
+        const row = allData[i];
+        console.log(`Row ${i}: [${row.slice(0, 8).map(cell => `"${cell}"`).join(', ')}...]`);
+      }
+    }
+    
+    return { topServices: [], newServices: [] };
+  }
+
+  // Find the last two months that actually contain volume data
+  let currentMonth = null;
+  let previousMonth = null;
+  for (const monthCol of monthColumns) {
+      const hasVolume = data.some(row => {
+          const vol = row[monthCol.index];
+          // Check for non-empty, non-dash, and numeric values
+          return vol !== '' && vol !== '-' && !isNaN(parseInt(vol, 10));
+      });
+
+      if (hasVolume) {
+          if (!currentMonth) {
+              currentMonth = monthCol;
+          } else {
+              previousMonth = monthCol;
+              break; // We have the two most recent months with data
+          }
+      }
+  }
+
+  // Get indices of other required columns
   const serviceCol = headers.indexOf('Service');
   const keywordCol = headers.indexOf('Keyword');
   const compCol = headers.indexOf('Competition Index');
   const cpcCol = headers.indexOf('CPC');
 
-  if (serviceCol === -1 || keywordCol === -1 || monthColumns.length === 0) {
-    console.error('Essential columns (Service, Keyword, Months) not found');
+  // Log column indices for debugging
+  console.log(`Column indices: Service=${serviceCol}, Keyword=${keywordCol}, Competition=${compCol}, CPC=${cpcCol}`);
+  console.log(`Current month: ${currentMonth ? currentMonth.header : 'None'}, Previous month: ${previousMonth ? previousMonth.header : 'None'}`);
+
+  // Exit if essential columns are not found
+  if (serviceCol === -1 || keywordCol === -1 || !currentMonth) {
+    console.error('Essential columns (Service, Keyword) or current month data not found for location: ' + locationFilterValue);
+    console.error(`Headers found: ${headers}`);
     return { topServices: [], newServices: [] };
   }
 
-  const currentMonth = monthColumns[0];
-  const previousMonth = monthColumns.length > 1 ? monthColumns[1] : null;
+  // Warn if optional columns are missing but continue processing
+  if (compCol === -1) console.warn('Competition Index column not found - will use 0 for competition values');
+  if (cpcCol === -1) console.warn('CPC column not found - will use 0 for CPC values');
 
   const aggregatedData = {};
-  data.forEach(function(row){
+
+  data.forEach(row => {
     const serviceName = row[serviceCol];
     const keyword = row[keywordCol];
-    if (!serviceName || !keyword) return;
+    if (!serviceName || !keyword) return; // Skip empty rows
+
     if (!aggregatedData[serviceName]) {
       aggregatedData[serviceName] = {
         name: serviceName,
@@ -438,13 +694,27 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
         keywordCount: 0
       };
     }
+
     const service = aggregatedData[serviceName];
+    
     const currentVol = parseInt(row[currentMonth.index], 10) || 0;
     const prevVol = previousMonth ? (parseInt(row[previousMonth.index], 10) || 0) : 0;
-    let keywordTrend = 0; if (currentVol > prevVol) keywordTrend = 1; else if (currentVol < prevVol) keywordTrend = -1;
-    service.keywords.push({ name: keyword, volume: currentVol, trend: keywordTrend });
+    
+    let keywordTrend = 0;
+    if (currentVol > prevVol) keywordTrend = 1;
+    else if (currentVol < prevVol) keywordTrend = -1;
+
+    // Add keyword-level data
+    service.keywords.push({
+      name: keyword,
+      volume: currentVol,
+      trend: keywordTrend
+    });
+    
+    // Update service-level aggregates - handle missing columns safely
     const competition = (compCol !== -1 && row[compCol] !== undefined) ? parseFloat(row[compCol]) : 0;
     const cpc = (cpcCol !== -1 && row[cpcCol] !== undefined) ? parseFloat(row[cpcCol]) : 0;
+    
     if(!isNaN(competition) && competition > 0) service.totalCompetition += competition;
     if(!isNaN(cpc) && cpc > 0) service.totalCpc += cpc;
     service.totalCurrentVolume += currentVol;
@@ -453,10 +723,17 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
   });
 
   const allServices = Object.values(aggregatedData);
-  const allServicesTotalVolume = allServices.reduce(function(sum, s){ return sum + s.totalCurrentVolume; }, 0);
-  const formattedServices = allServices.map(function(service){
-    const numKeywords = service.keywordCount; if (numKeywords === 0) return null;
-    let serviceTrend = 0; if (service.totalCurrentVolume > service.totalPreviousVolume) serviceTrend = 1; else if (service.totalCurrentVolume < service.totalPreviousVolume) serviceTrend = -1;
+  const allServicesTotalVolume = allServices.reduce((sum, s) => sum + s.totalCurrentVolume, 0);
+
+  // Convert the aggregated object into the final array format
+  const formattedServices = allServices.map(service => {
+    const numKeywords = service.keywordCount;
+    if (numKeywords === 0) return null;
+
+    let serviceTrend = 0;
+    if (service.totalCurrentVolume > service.totalPreviousVolume) serviceTrend = 1;
+    else if (service.totalCurrentVolume < service.totalPreviousVolume) serviceTrend = -1;
+
     return {
       name: service.name,
       totalVolume: service.totalCurrentVolume,
@@ -464,19 +741,24 @@ function aggregateServiceData(sheet, locationColumnIndex, locationFilterValue, s
       avgCompetition: (service.totalCompetition / numKeywords).toFixed(2),
       avgCpc: (service.totalCpc / numKeywords).toFixed(2),
       trend: serviceTrend,
-      keywords: service.keywords.sort(function(a,b){ return b.volume - a.volume; })
+      keywords: service.keywords.sort((a, b) => b.volume - a.volume) // Sort keywords by volume
     };
-  }).filter(function(s){ return s !== null && s.totalVolume > 0; });
+  }).filter(s => s !== null && s.totalVolume > 0); // Filter out services with no volume
 
   const topServices = formattedServices
-      .filter(function(s){ return NORMAL_SERVICES.indexOf(s.name) !== -1; })
-      .sort(function(a,b){ return b.totalVolume - a.totalVolume; });
+      .filter(s => NORMAL_SERVICES.includes(s.name))
+      .sort((a, b) => b.totalVolume - a.totalVolume);
 
   const newServices = formattedServices
-      .filter(function(s){ return NEW_SERVICES.indexOf(s.name) !== -1; })
-      .sort(function(a,b){ return b.totalVolume - a.totalVolume; });
-  
-  return { topServices: topServices, newServices: newServices };
+      .filter(s => NEW_SERVICES.includes(s.name))
+      .sort((a, b) => b.totalVolume - a.totalVolume);
+      
+  console.log(`\n=== FUNCTION RETURN ===`);
+  console.log(`Returning ${topServices.length} top services and ${newServices.length} new services`);
+  console.log(`Top services:`, topServices.map(s => `${s.name} (${s.totalVolume})`));
+  console.log(`New services:`, newServices.map(s => `${s.name} (${s.totalVolume})`));
+      
+  return { topServices, newServices };
 }
 
 // --- DEPRECATED ---
