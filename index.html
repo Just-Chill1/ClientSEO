@@ -3585,6 +3585,17 @@ const DualReports = ({ competitorText, errorText }) => {
         const websiteStats = data?.websiteStats || {};
         const gbpInsights = data?.gbpInsights || null;
         const health = websiteStats?.healthData || {};
+        // On-Page Insights: AI Notes (CP)
+        let aiNotesText = '';
+        try {
+            const rawAiNotes = health?.aiNotes;
+            if (rawAiNotes !== null && rawAiNotes !== undefined) {
+                const cleaned = String(rawAiNotes).trim();
+                if (cleaned && !['true', 'false'].includes(cleaned.toLowerCase())) {
+                    aiNotesText = cleaned;
+                }
+            }
+        } catch {}
         const tseo = Array.isArray(websiteStats?.technicalSeoData) ? websiteStats.technicalSeoData : [];
         const perfAll = Array.isArray(websiteStats?.competitorPerfData) ? websiteStats.competitorPerfData : [];
 
@@ -3675,6 +3686,12 @@ const DualReports = ({ competitorText, errorText }) => {
             lines.push('');
             lines.push('CLIENT WEBPAGES:');
             lines.push(crawlPages.map(p => `- ${p}`).join('\n'));
+        }
+        // Include On-Page Insights AI Notes for added context
+        if (aiNotesText) {
+            lines.push('');
+            lines.push('ON-PAGE INSIGHTS - AI NOTES:');
+            lines.push(aiNotesText);
         }
         lines.push('');
         lines.push('COMPETITOR PROFILES (On-Page + GBP + Authority):');
