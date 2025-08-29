@@ -5631,10 +5631,24 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                  { id: 'Saskatchewan', name: 'Saskatchewan', flag: '🇨🇦', category: '🇨🇦 Provinces' },
                  { id: 'Yukon', name: 'Yukon', flag: '🇨🇦', category: '🇨🇦 Provinces' }
              ],
-            cities: [
-                { id: 'Lakeland, FL', name: 'Lakeland, FL', flag: '🇺🇸', category: 'Cities' }
-            ]
+            cities: []
         };
+
+        // Load city list from backend once (memoized by simple flag)
+        const [citiesLoaded, setCitiesLoaded] = useState(false);
+        useEffect(() => {
+            if (citiesLoaded) return;
+            const url = 'https://script.google.com/macros/s/AKfycbys_HQL8HQdyL_-DoS0Aakvj-IzDWWW5HtNJDiFhbUwgCuKEYJ7N6iZGC-F62I7uZlV/exec?action=listCities';
+            fetchWithCorsWorkaround(url, (err, payload) => {
+                if (err) { console.error('City list fetch error:', err); return; }
+                if (payload && Array.isArray(payload.cities)) {
+                    // Map to display objects and limit to reasonable chunk (list is large); search will still work client-side
+                    const mapped = payload.cities.map(c => ({ id: c.id, name: c.id, flag: c.country === 'Canada' ? '🇨🇦' : '🇺🇸', category: 'Cities' }));
+                    locations.cities.push(...mapped);
+                    setCitiesLoaded(true);
+                }
+            });
+        }, [citiesLoaded]);
 
         // Flatten all locations for searching
         const allLocations = [
