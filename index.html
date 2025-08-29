@@ -3351,6 +3351,56 @@ const DualReports = ({ competitorText, errorText }) => {
     };
 
     const formattedContent = parseMarkdownToHtml(String(currentContent || ''));
+    // Error tab: use Keywords markdown rendering and sizing for consistency
+    const escapeHtmlKW_ER = (str) => String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    const applyInlineMarkdownKW_ER = (str) => {
+        let s = str;
+        s = s.replace(/\u00A0/g, ' ').replace(/[\u200B-\u200D\uFEFF]/g, '');
+        s = s.replace(/\*\*([\s\S]+?)\*\*/g, '<strong class="font-bold">$1</strong>');
+        s = s.replace(/__([\s\S]+?)__/g, '<strong class="font-bold">$1</strong>');
+        s = s.replace(/(^|[^*])\*(?!\*)([^*]+)\*(?!\*)/g, '$1<em>$2</em>');
+        s = s.replace(/_([^_]+)_/g, '<em>$1</em>');
+        s = s.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" class="text-blue-600 underline">$1<\/a>');
+        return s;
+    };
+    const parseMarkdownToHtmlKW_ER = (markdown) => {
+        const lines = escapeHtmlKW_ER(markdown).replace(/\r\n?/g, '\n').split('\n');
+        const html = []; let inUl = false, inOl = false, blankStreak = 0, inTable = false; let tableRows = [];
+        const closeLists = () => { if (inUl) { html.push('<\/ul>'); inUl = false; } if (inOl) { html.push('<\/ol>'); inOl = false; } };
+        const flushTable = () => {
+            if (!inTable || tableRows.length === 0) return;
+            let headerCells = null;
+            if (tableRows.length >= 2 && tableRows[1].every(cell => /^:?-{3,}:?$/.test(cell))) { headerCells = tableRows[0]; tableRows = tableRows.slice(2); }
+            const thead = headerCells ? '<thead><tr>' + headerCells.map((c) => `<th class=\"border border-gray-200 px-3 py-2 font-semibold bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100\">${applyInlineMarkdownKW_ER(c)}</th>`).join('') + '</tr></thead>' : '';
+            const tbody = '<tbody>' + tableRows.map(row => ('<tr>' + row.map((c,i) => `<td class=\"border border-gray-200 px-3 py-2 ${i===0?'font-medium':''} whitespace-nowrap\">${applyInlineMarkdownKW_ER(c)}</td>`).join('') + '</tr>')).join('') + '</tbody>';
+            html.push(`<div class=\"my-4\"><div class=\"max-w-full overflow-x-auto\"><table class=\"table-auto w-auto text-sm border border-gray-200 rounded-lg border-collapse\">${thead}${tbody}</table></div></div>`);
+            inTable = false; tableRows = [];
+        };
+        lines.forEach(raw => {
+            const line = raw.replace(/\s+$/, '').replace(/^\s+/, '');
+            if (!line) { blankStreak++; closeLists(); flushTable(); return; }
+            if (blankStreak > 0) { html.push(`<div class=\"${blankStreak >= 2 ? 'my-8' : 'my-5'}\"></div>`); blankStreak = 0; }
+            if (/^---+$/.test(line)) { closeLists(); flushTable(); html.push('<hr class=\"my-8 border-t border-gray-200\" />'); return; }
+            if (/^####\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h4 class=\"mt-4 mb-2 font-semibold text-lg leading-tight\">${applyInlineMarkdownKW_ER(line.replace(/^####\s+/, ''))}</h4>`); return; }
+            if (/^###\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h3 class=\"mt-5 mb-3 font-semibold text-xl leading-tight\">${applyInlineMarkdownKW_ER(line.replace(/^###\s+/, ''))}</h3>`); return; }
+            if (/^##\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h2 class=\"mt-6 mb-4 font-semibold text-2xl leading-tight\">${applyInlineMarkdownKW_ER(line.replace(/^##\s+/, ''))}</h2>`); return; }
+            if (/^#\s+/.test(line)) { closeLists(); flushTable(); html.push(`<h1 class=\"mt-7 mb-5 font-bold text-4xl leading-tight\">${applyInlineMarkdownKW_ER(line.replace(/^#\s+/, ''))}</h1>`); return; }
+            if (/^\|.*\|$/.test(line)) { const cells = line.replace(/^\|/, '').replace(/\|$/, '').split('|').map(c => c.trim()); if (!inTable) { inTable = true; tableRows = []; } tableRows.push(cells); return; }
+            flushTable();
+            if (/^\d+\.\s+/.test(line)) { if (!inOl) { closeLists(); html.push('<ol class=\"list-decimal pl-5 my-2 space-y-1.5\">'); inOl = true; } html.push(`<li>${applyInlineMarkdownKW_ER(line.replace(/^\d+\.\s+/, ''))}</li>`); return; }
+            if (/^(?:-|\u2022|\u2013)\s+/.test(line)) { if (!inUl) { closeLists(); html.push('<ul class=\"list-disc pl-5 my-2 space-y-1.5\">'); inUl = true; } html.push(`<li>${applyInlineMarkdownKW_ER(line.replace(/^(?:-|\u2022|\u2013)\s+/, ''))}</li>`); return; }
+            closeLists(); html.push(`<p class=\"my-5\">${applyInlineMarkdownKW_ER(line)}</p>`);
+        });
+        closeLists(); flushTable();
+        let result = html.join('\n');
+        result = result.replace(/(<p[^>]*>[^<:]*:[^<]*<\/p>)\s*(<div class=\"my-5\"><\/div>)/g, '$1');
+        return result;
+    };
+    const formattedContentErrorKW = parseMarkdownToHtmlKW_ER(String(currentContent || ''));
+    const isPlaceholderOnlyError = (!currentContent || currentContent.trim() === '' || currentContent === 'Error Report will appear here once generated in Website Crawl Errors (J2).');
 
     // ---------- Error Report Implementation Prompt (only for error tab) ----------
     const formatISOToUSInTextER = (text) => {
@@ -3865,11 +3915,15 @@ const DualReports = ({ competitorText, errorText }) => {
                             <div className="relative">
                                 {/* Text content */}
                                 <div 
-                                    className="prose prose-base max-w-none leading-relaxed overflow-hidden select-text cursor-text dual-reports-text prose-p:my-5 prose-h1:mt-7 prose-h1:mb-5 prose-h2:mt-6 prose-h2:mb-4 prose-h3:mt-5 prose-h3:mb-3 prose-ul:my-3 prose-ol:my-3"
-                                    style={{ maxHeight: '120px' }}
-                                    dangerouslySetInnerHTML={{ __html: formattedContent }}
+                                    className={activeTab === 'error' 
+                                        ? "prose prose-sm max-w-none leading-relaxed overflow-hidden select-text cursor-text dual-reports-text prose-p:my-3 prose-h1:mt-6 prose-h1:mb-3 prose-h2:mt-5 prose-h2:mb-2.5 prose-h3:mt-4 prose-h3:mb-2 prose-ul:my-2 prose-ol:my-2"
+                                        : "prose prose-base max-w-none leading-relaxed overflow-hidden select-text cursor-text dual-reports-text prose-p:my-5 prose-h1:mt-7 prose-h1:mb-5 prose-h2:mt-6 prose-h2:mb-4 prose-h3:mt-5 prose-h3:mb-3 prose-ul:my-3 prose-ol:my-3"}
+                                    style={activeTab === 'error' ? { maxHeight: '160px' } : { maxHeight: '120px' }}
+                                    dangerouslySetInnerHTML={{ __html: activeTab === 'error' ? formattedContentErrorKW : formattedContent }}
                                 />
-                                <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none dual-reports-fade-light"></div>
+                                {(activeTab === 'error' ? !isPlaceholderOnlyError : true) && (
+                                    <div className="absolute bottom-0 left-0 right-0 h-8 pointer-events-none dual-reports-fade-light"></div>
+                                )}
                             </div>
                             
                             {/* Clickable area to expand */}
@@ -3887,8 +3941,10 @@ const DualReports = ({ competitorText, errorText }) => {
                         <div className="space-y-2">
                             {/* Text content */}
                             <div 
-                                className="prose prose-sm max-w-none leading-relaxed select-text cursor-text dual-reports-text"
-                                dangerouslySetInnerHTML={{ __html: formattedContent }}
+                                className={activeTab === 'error' 
+                                    ? "prose prose-sm max-w-none leading-relaxed select-text cursor-text dual-reports-text prose-p:my-3 prose-h1:mt-6 prose-h1:mb-3 prose-h2:mt-5 prose-h2:mb-2.5 prose-h3:mt-4 prose-h3:mb-2 prose-ul:my-2 prose-ol:my-2"
+                                    : "prose prose-sm max-w-none leading-relaxed select-text cursor-text dual-reports-text"}
+                                dangerouslySetInnerHTML={{ __html: activeTab === 'error' ? formattedContentErrorKW : formattedContent }}
                             />
                             {activeTab === 'competitor' && (
                                 <>
