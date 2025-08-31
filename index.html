@@ -2082,7 +2082,6 @@ const KeywordsReport = ({ reportText }) => {
         </div>
     );
 };
-
 /* GBP Report Component (Dashboard) */
 const GBPReportSection = ({ reportText }) => {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -2621,7 +2620,6 @@ const GBPReportSection = ({ reportText }) => {
         </div>
     );
 };
-
 /* Single Backlinks Report Component */
 const BacklinksReport = ({ reportText }) => {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -3163,7 +3161,6 @@ const BacklinksReport = ({ reportText }) => {
         </div>
     );
 };
-
 /* Dual Report Section (Competitor Analysis + Error Report) */
 const DualReports = ({ competitorText, errorText }) => {
     const [activeTab, setActiveTab] = useState('competitor');
@@ -3834,7 +3831,6 @@ const DualReports = ({ competitorText, errorText }) => {
             }
         } catch {}
     }, [activeTab, currentContent]);
-
     return (
         <div className="rounded-2xl shadow-lg overflow-hidden transition-all duration-300 bg-white dark:bg-gray-800 border-0">
             {/* Modern Tab Headers */}
@@ -5283,7 +5279,8 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                                             const label = part.substring(0, lastSpaceIndex).trim();
                                             const percentage = part.substring(lastSpaceIndex + 1).trim();
                                             if (label && percentage) {
-                                                parsedItems.push(`${label}: ${percentage}%`);
+                                                const cleanLabel = label.replace(/:+\s*$/, '').trim();
+                                                parsedItems.push(`${cleanLabel}: ${percentage}%`);
                                             }
                                         }
                                     }
