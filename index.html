@@ -4251,10 +4251,14 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
                                         name="Signed Sentiment" 
                                         domain={[50, 100]}
                                         ticks={[50, 60, 70, 80, 90, 100]}
+                                        tickCount={6}
+                                        interval={0}
                                         tickFormatter={(value) => `${value}`}
                                         axisLine={false}
                                         tickLine={false}
                                         tick={{ fontSize: 12, fill: 'var(--chart-text)', fontWeight: 'normal' }}
+                                        allowDataOverflow={false}
+                                        scale="linear"
                                     />
                                 <Tooltip content={<CustomTooltip />} />
                                 <Scatter 
