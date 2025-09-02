@@ -202,8 +202,12 @@ function getWebsiteStats(spreadsheet) {
         }
     };
 
+    // NEW: Get broken links details for tooltip
+    const brokenLinksDetails = getBrokenLinksDetails(spreadsheet);
+
     return {
         healthData: healthData,
+        brokenLinksDetails: brokenLinksDetails,
         competitorPerfData: onPageInsights.map(d => ({
             name: d.name,
             'Site Speed (s)': d.siteSpeed,
@@ -1175,6 +1179,48 @@ function getWebsiteCrawlPagesAggregate(spreadsheet) {
 	}
 
 	return { totalPassed, totalChecks, perCheck, pagesList };
+}
+
+// NEW: Get broken links details from Website Crawl Pages
+function getBrokenLinksDetails(spreadsheet) {
+    const sheetName = 'Website Crawl Pages';
+    const sheet = spreadsheet.getSheetByName(sheetName);
+    if (!sheet || sheet.getLastRow() < 2) {
+        return [];
+    }
+    
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim().toLowerCase());
+    const values = sheet.getDataRange().getValues().slice(1);
+    
+    // Find the columns we need
+    const urlIdx = headers.indexOf('url');
+    const isBrokenIdx = headers.indexOf('is_broken');
+    const statusCodeIdx = headers.indexOf('status_code');
+    
+    if (urlIdx === -1 || isBrokenIdx === -1) {
+        console.log('Required columns not found for broken links');
+        return [];
+    }
+    
+    const brokenLinks = [];
+    
+    values.forEach((row, index) => {
+        const url = row[urlIdx];
+        const isBroken = row[isBrokenIdx];
+        const statusCode = statusCodeIdx >= 0 ? row[statusCodeIdx] : '';
+        
+        // Check if this page has broken links (is_broken = true)
+        if (isBroken === true || String(isBroken).toLowerCase() === 'true') {
+            brokenLinks.push({
+                url: url || '',
+                statusCode: statusCode || 'Unknown',
+                page: url || `Page ${index + 1}`
+            });
+        }
+    });
+    
+    console.log(`Found ${brokenLinks.length} broken links`);
+    return brokenLinks.slice(0, 10); // Limit to first 10 to avoid huge tooltips
 }
 
 // Helper function to format website URL into a display name
