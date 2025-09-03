@@ -8737,6 +8737,7 @@ const HelpLibrary = () => {
     );
     const ArrowLeft = createIcon(<path d="M19 12H6m6-7-7 7 7 7" />);
     const ChevronRight = createIcon(<polyline points="9 18 15 12 9 6" />);
+    const TrendingUp = createIcon(<polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />);
 
     // Guide categories and cards
     const guideCategories = [
@@ -8765,6 +8766,20 @@ const HelpLibrary = () => {
                     description: "Understand all the metrics, charts, and insights on your main dashboard",
                     icon: <BarChart3 className="w-6 h-6" />,
                     category: "Dashboard"
+                }
+            ]
+        },
+        {
+            title: "Technical Analysis",
+            description: "Website performance and technical SEO insights",
+            icon: <TrendingUp className="w-8 h-8" />,
+            guides: [
+                {
+                    id: "website-stats",
+                    title: "Website Stats Guide",
+                    description: "Complete breakdown of website health, performance metrics, and technical SEO analysis",
+                    icon: <TrendingUp className="w-6 h-6" />,
+                    category: "Technical"
                 }
             ]
         }
@@ -8920,6 +8935,11 @@ const GuideContent = ({ guideId, onBack }) => {
                     {
                         title: "Welcome to Your Competitor Analysis Tool",
                         content: `Your Competitor Analysis Tool is a comprehensive platform designed to help you monitor, analyze, and improve your medical spa's online presence against your competitors. This guide will walk you through the essential features and help you get started.`
+                    },
+                    {
+                        title: "Getting Started Video Tutorial",
+                        content: `Watch this comprehensive walkthrough to get familiar with your dashboard and its key features:`,
+                        video: "https://www.youtube.com/embed/YOUR_VIDEO_ID_HERE"
                     },
                     {
                         title: "How It Works",
@@ -9106,6 +9126,127 @@ const GuideContent = ({ guideId, onBack }) => {
                     }
                 ]
             }
+        },
+        'website-stats': {
+            title: "Website Stats Complete Guide",
+            category: "Technical",
+            readTime: "12 min read",
+            content: {
+                sections: [
+                    {
+                        title: "Website Stats Overview",
+                        content: `The Website Stats section provides a comprehensive technical analysis of your website's performance, health, and SEO optimization. This is where you can monitor your site's technical foundation and identify areas for improvement to enhance your search engine visibility.`
+                    },
+                    {
+                        title: "Overall Page Score Gauge",
+                        content: `The centerpiece of your Website Stats is the large circular gauge showing your overall website health score:`,
+                        list: [
+                            "**Score Range** - Rated from 0-100, with higher scores indicating better website health",
+                            "**Color Coding** - Green (excellent), yellow (good), red (needs improvement)",
+                            "**Real-time Updates** - Refreshes when you run website scans to show current performance",
+                            "**Composite Metric** - Combines multiple technical factors into one easy-to-understand score"
+                        ]
+                    },
+                    {
+                        title: "Key Health Metrics Cards",
+                        content: `Three essential metrics displayed prominently below the main gauge:`,
+                        list: [
+                            "**Site Speed** - How fast your website loads (measured in seconds). Target: under 3 seconds for good performance",
+                            "**SSL Certificate** - Shows whether your site has proper HTTPS encryption (essential for Google rankings)",
+                            "**Checks Passed** - Percentage of technical SEO checks your website passes (higher is better)"
+                        ]
+                    },
+                    {
+                        title: "Speed Performance Details",
+                        content: `Detailed breakdown of various loading metrics to help identify specific performance bottlenecks:`,
+                        list: [
+                            "**Time to Interactive** - How long before users can interact with your page",
+                            "**DOM Complete** - Time for the page structure to fully load",
+                            "**Largest Contentful Paint** - When the main content becomes visible",
+                            "**First Input Delay** - Responsiveness to user interactions",
+                            "**Connection & Download Times** - Network performance metrics",
+                            "**TTFB (Time to First Byte)** - Server response speed"
+                        ]
+                    },
+                    {
+                        title: "Technical SEO Checks",
+                        content: `Comprehensive analysis of technical SEO elements organized by category:`,
+                        list: [
+                            "**HTTPS & Security** - SSL certificates, secure connections, and security protocols",
+                            "**HTML Structure** - Proper DOCTYPE, meta tags, heading structure (H1, H2, etc.)",
+                            "**Content Optimization** - Content length, readability, keyword optimization",
+                            "**Performance** - Page size, loading times, render-blocking resources",
+                            "**Accessibility** - Image alt tags, proper markup for screen readers",
+                            "**SEO Fundamentals** - Meta descriptions, title tags, canonical URLs"
+                        ]
+                    },
+                    {
+                        title: "Issues to Review Section",
+                        content: `Two categories of issues that need attention:`,
+                        list: [
+                            "**Errors (Red)** - Critical issues that can significantly impact SEO and user experience",
+                            "**Warnings (Yellow)** - Important improvements that should be addressed for optimal performance",
+                            "**Detailed Descriptions** - Each issue includes specific information about what needs to be fixed",
+                            "**Priority Guidance** - Focus on errors first, then address warnings for maximum impact"
+                        ]
+                    },
+                    {
+                        title: "Broken Links Card",
+                        content: `Monitors and reports broken internal and external links:`,
+                        list: [
+                            "**Link Health Status** - Shows 'All Good' or number of broken links found",
+                            "**Hover Details** - Hover over issue count to see specific broken URLs and status codes",
+                            "**Impact on SEO** - Broken links hurt user experience and search engine rankings",
+                            "**Regular Monitoring** - Check regularly as links can break over time"
+                        ]
+                    },
+                    {
+                        title: "AI Website Analysis Report",
+                        content: `AI-generated comprehensive analysis of your website's technical performance:`,
+                        list: [
+                            "**Intelligent Insights** - AI analyzes all technical data to provide actionable recommendations",
+                            "**Priority Recommendations** - Suggestions ranked by potential impact on performance",
+                            "**Implementation Guidance** - Specific steps to address identified issues",
+                            "**Show More Option** - Click to view the complete detailed AI analysis",
+                            "**Copy Prompts** - Use 'Implement Recommendations Myself' to get AI assistance with fixes"
+                        ]
+                    },
+                    {
+                        title: "Competitor Performance Comparison",
+                        content: `Compare your website's technical performance against competitors:`,
+                        list: [
+                            "**Site Speed Comparison** - See how your loading times compare to competitors",
+                            "**Backlink Profiles** - Compare referring domains and total backlinks",
+                            "**Traffic Estimates** - Estimated monthly traffic for you vs competitors",
+                            "**Technical Health** - Overall website health scores across all analyzed sites",
+                            "**Competitive Advantage** - Identify where you're ahead and where you need improvement"
+                        ]
+                    },
+                    {
+                        title: "Refresh & Update System",
+                        content: `Keep your website analysis current with the refresh functionality:`,
+                        list: [
+                            "**Manual Refresh** - Click the refresh button to trigger new website scans",
+                            "**Automated Webhooks** - Connects to Forever Booked's scanning systems for fresh data",
+                            "**Progress Tracking** - Real-time updates during scan process",
+                            "**Data Validation** - Ensures accuracy of all technical metrics",
+                            "**Historical Tracking** - Monitor improvements over time"
+                        ]
+                    },
+                    {
+                        title: "Using Website Stats Strategically",
+                        content: `Maximize the value of your technical analysis:`,
+                        list: [
+                            "**Prioritize Critical Issues** - Fix errors before warnings for maximum SEO impact",
+                            "**Monitor Speed Regularly** - Page speed is a crucial Google ranking factor",
+                            "**Track Competitor Gaps** - Identify technical advantages you can exploit",
+                            "**Implement AI Recommendations** - Use the detailed AI analysis for systematic improvements",
+                            "**Monthly Health Checks** - Regular monitoring prevents technical debt accumulation",
+                            "**Professional Support** - Use 'Request Forever Booked Implement' for complex technical fixes"
+                        ]
+                    }
+                ]
+            }
         }
     };
 
@@ -9166,6 +9307,20 @@ const GuideContent = ({ guideId, onBack }) => {
                             <p className="mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
                                 {section.content}
                             </p>
+                            {section.video && (
+                                <div className="mb-6">
+                                    <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                                        <iframe
+                                            src={section.video}
+                                            className="absolute top-0 left-0 w-full h-full rounded-lg"
+                                            frameBorder="0"
+                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                            allowFullScreen
+                                            title={`${section.title} Video`}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                             {section.list && (
                                 <ul className="space-y-2 mb-4">
                                     {section.list.map((item, itemIndex) => (
