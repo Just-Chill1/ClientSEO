@@ -8939,7 +8939,7 @@ const GuideContent = ({ guideId, onBack }) => {
                     {
                         title: "Getting Started Video Tutorial",
                         content: `Watch this comprehensive walkthrough to get familiar with your dashboard and its key features:`,
-                        video: "https://drive.google.com/file/d/YOUR_GOOGLE_DRIVE_FILE_ID/view"
+                        video: "https://www.loom.com/share/YOUR_LOOM_VIDEO_ID"
                     },
                     {
                         title: "How It Works",
@@ -9311,6 +9311,30 @@ const GuideContent = ({ guideId, onBack }) => {
                                 <div className="mb-6">
                                     {(() => {
                                         const videoUrl = section.video;
+                                        
+                                        // Check if it's a Loom video
+                                        if (videoUrl.includes('loom.com')) {
+                                            // Handle both share and embed URLs
+                                            let embedUrl = videoUrl;
+                                            if (videoUrl.includes('/share/')) {
+                                                // Convert share URL to embed URL
+                                                embedUrl = videoUrl.replace('/share/', '/embed/');
+                                            }
+                                            // Remove any query parameters for cleaner embed
+                                            embedUrl = embedUrl.split('?')[0];
+                                            
+                                            return (
+                                                <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                                                    <iframe
+                                                        src={embedUrl}
+                                                        className="absolute top-0 left-0 w-full h-full rounded-lg"
+                                                        frameBorder="0"
+                                                        allowFullScreen
+                                                        title={`${section.title} Video`}
+                                                    />
+                                                </div>
+                                            );
+                                        }
                                         
                                         // Check if it's a Google Drive link
                                         if (videoUrl.includes('drive.google.com')) {
