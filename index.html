@@ -8939,7 +8939,7 @@ const GuideContent = ({ guideId, onBack }) => {
                     {
                         title: "Getting Started Video Tutorial",
                         content: `Watch this comprehensive walkthrough to get familiar with your dashboard and its key features:`,
-                        video: "https://www.youtube.com/embed/YOUR_VIDEO_ID_HERE"
+                        video: "https://drive.google.com/file/d/YOUR_GOOGLE_DRIVE_FILE_ID/view"
                     },
                     {
                         title: "How It Works",
@@ -9309,16 +9309,59 @@ const GuideContent = ({ guideId, onBack }) => {
                             </p>
                             {section.video && (
                                 <div className="mb-6">
-                                    <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-                                        <iframe
-                                            src={section.video}
-                                            className="absolute top-0 left-0 w-full h-full rounded-lg"
-                                            frameBorder="0"
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                            allowFullScreen
-                                            title={`${section.title} Video`}
-                                        />
-                                    </div>
+                                    {(() => {
+                                        const videoUrl = section.video;
+                                        
+                                        // Check if it's a Google Drive link
+                                        if (videoUrl.includes('drive.google.com')) {
+                                            // Extract file ID from Google Drive URL
+                                            const fileId = videoUrl.match(/[-\w]{25,}/);
+                                            if (fileId) {
+                                                const embedUrl = `https://drive.google.com/file/d/${fileId[0]}/preview`;
+                                                return (
+                                                    <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                                                        <iframe
+                                                            src={embedUrl}
+                                                            className="absolute top-0 left-0 w-full h-full rounded-lg"
+                                                            frameBorder="0"
+                                                            allowFullScreen
+                                                            title={`${section.title} Video`}
+                                                        />
+                                                    </div>
+                                                );
+                                            }
+                                        }
+                                        
+                                        // Check if it's a direct video file (MP4, etc.)
+                                        if (videoUrl.match(/\.(mp4|webm|ogg)(\?.*)?$/i)) {
+                                            return (
+                                                <div className="relative w-full">
+                                                    <video
+                                                        controls
+                                                        className="w-full h-auto rounded-lg"
+                                                        style={{ maxHeight: '400px' }}
+                                                    >
+                                                        <source src={videoUrl} type="video/mp4" />
+                                                        Your browser does not support the video tag.
+                                                    </video>
+                                                </div>
+                                            );
+                                        }
+                                        
+                                        // Default iframe for YouTube, Vimeo, etc.
+                                        return (
+                                            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                                                <iframe
+                                                    src={videoUrl}
+                                                    className="absolute top-0 left-0 w-full h-full rounded-lg"
+                                                    frameBorder="0"
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                                    allowFullScreen
+                                                    title={`${section.title} Video`}
+                                                />
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                             )}
                             {section.list && (
