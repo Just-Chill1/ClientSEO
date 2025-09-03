@@ -8692,6 +8692,457 @@ const Backlinks = ({ webhooks }) => {
         </PageContent>
     );
 };
+const HelpLibrary = () => {
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedGuide, setSelectedGuide] = useState(null);
+
+    // Check URL parameters for guide routing
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const guide = urlParams.get('guide');
+        if (guide) {
+            setSelectedGuide(guide);
+        }
+    }, []);
+
+    // Update URL when guide is selected
+    const openGuide = (guideId) => {
+        setSelectedGuide(guideId);
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('guide', guideId);
+        window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
+    };
+
+    // Close guide and return to help library
+    const closeGuide = () => {
+        setSelectedGuide(null);
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.delete('guide');
+        window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
+    };
+
+    // Help Library Icons
+    const BookOpen = createIcon(<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />);
+    const BarChart3 = createIcon(
+        <>
+            <path d="M3 3v18h18" />
+            <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3" />
+        </>
+    );
+    const Search = createIcon(
+        <>
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.35-4.35" />
+        </>
+    );
+    const ArrowLeft = createIcon(<path d="M19 12H6m6-7-7 7 7 7" />);
+
+    // Guide categories and cards
+    const guideCategories = [
+        {
+            title: "Getting Started",
+            description: "Essential guides to get you up and running quickly",
+            icon: <BookOpen className="w-8 h-8" />,
+            guides: [
+                {
+                    id: "getting-started",
+                    title: "Getting Started",
+                    description: "Learn the basics of navigating and using your SEO dashboard effectively",
+                    icon: <BookOpen className="w-6 h-6" />,
+                    category: "Essentials"
+                }
+            ]
+        },
+        {
+            title: "Dashboard Features",
+            description: "Deep dive into dashboard components and analytics",
+            icon: <BarChart3 className="w-8 h-8" />,
+            guides: [
+                {
+                    id: "dashboard",
+                    title: "Dashboard Overview",
+                    description: "Understand all the metrics, charts, and insights on your main dashboard",
+                    icon: <BarChart3 className="w-6 h-6" />,
+                    category: "Dashboard"
+                }
+            ]
+        }
+    ];
+
+    // Filter guides based on search query
+    const filteredGuides = searchQuery.trim() === '' 
+        ? guideCategories
+        : guideCategories.map(category => ({
+            ...category,
+            guides: category.guides.filter(guide => 
+                guide.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                guide.description.toLowerCase().includes(searchQuery.toLowerCase())
+            )
+        })).filter(category => category.guides.length > 0);
+
+    // If a guide is selected, show the guide content
+    if (selectedGuide) {
+        return <GuideContent guideId={selectedGuide} onBack={closeGuide} />;
+    }
+
+    return (
+        <PageContent>
+            <div className="max-w-6xl mx-auto">
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
+                        Help Library
+                    </h1>
+                    <p className="text-lg" style={{ color: 'var(--text-secondary)' }}>
+                        Find guides, tutorials, and answers to help you make the most of your SEO dashboard
+                    </p>
+                </div>
+
+                {/* Search Bar */}
+                <div className="relative mb-8 max-w-2xl mx-auto">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search className="w-5 h-5" style={{ color: 'var(--text-secondary)' }} />
+                    </div>
+                    <input
+                        type="text"
+                        placeholder="Search for anything"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-xl leading-5 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                        style={{
+                            backgroundColor: 'var(--card-bg)',
+                            color: 'var(--text-primary)',
+                            borderColor: 'var(--card-border)'
+                        }}
+                    />
+                </div>
+
+                {/* Guide Categories */}
+                <div className="space-y-8">
+                    {filteredGuides.map((category, categoryIndex) => (
+                        <div key={categoryIndex}>
+                            {/* Category Header */}
+                            <div className="flex items-center mb-6">
+                                <div className="flex items-center space-x-3">
+                                    <div 
+                                        className="p-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 text-white"
+                                    >
+                                        {category.icon}
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                                            {category.title}
+                                        </h2>
+                                        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                                            {category.description}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Guide Cards */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {category.guides.map((guide) => (
+                                    <div
+                                        key={guide.id}
+                                        onClick={() => openGuide(guide.id)}
+                                        className="group cursor-pointer rounded-xl p-6 border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:border-blue-200"
+                                        style={{
+                                            backgroundColor: 'var(--card-bg)',
+                                            borderColor: 'var(--card-border)',
+                                            boxShadow: 'var(--card-shadow)'
+                                        }}
+                                    >
+                                        <div className="flex items-start space-x-4">
+                                            <div className="flex-shrink-0">
+                                                <div 
+                                                    className="p-3 rounded-lg bg-gradient-to-r from-blue-100 to-blue-200 text-blue-600 group-hover:from-blue-500 group-hover:to-blue-600 group-hover:text-white transition-all duration-300"
+                                                >
+                                                    {guide.icon}
+                                                </div>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <h3 className="text-lg font-semibold group-hover:text-blue-600 transition-colors duration-200" style={{ color: 'var(--text-primary)' }}>
+                                                        {guide.title}
+                                                    </h3>
+                                                    <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-600" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}>
+                                                        {guide.category}
+                                                    </span>
+                                                </div>
+                                                <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                                                    {guide.description}
+                                                </p>
+                                                <div className="mt-4 flex items-center text-sm font-medium text-blue-600 group-hover:text-blue-700">
+                                                    <span>Read guide</span>
+                                                    <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-200" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* No Results */}
+                {filteredGuides.length === 0 && searchQuery.trim() !== '' && (
+                    <div className="text-center py-12">
+                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center" style={{ backgroundColor: 'var(--bg-secondary)' }}>
+                            <Search className="w-8 h-8" style={{ color: 'var(--text-secondary)' }} />
+                        </div>
+                        <h3 className="text-lg font-medium mb-2" style={{ color: 'var(--text-primary)' }}>
+                            No guides found
+                        </h3>
+                        <p style={{ color: 'var(--text-secondary)' }}>
+                            Try searching with different keywords or browse our categories above.
+                        </p>
+                    </div>
+                )}
+            </div>
+        </PageContent>
+    );
+};
+
+const GuideContent = ({ guideId, onBack }) => {
+    const ArrowLeft = createIcon(<path d="M19 12H6m6-7-7 7 7 7" />);
+    
+    // Guide content data
+    const guideData = {
+        'getting-started': {
+            title: "Getting Started with Your SEO Dashboard",
+            category: "Essentials",
+            readTime: "5 min read",
+            content: {
+                sections: [
+                    {
+                        title: "Welcome to Your SEO Dashboard",
+                        content: `Your SEO dashboard is a comprehensive tool designed to help you monitor, analyze, and improve your medical spa's online presence. This guide will walk you through the essential features and help you get started.`
+                    },
+                    {
+                        title: "Dashboard Overview",
+                        content: `The main dashboard provides a bird's-eye view of your SEO performance with key metrics including:`,
+                        list: [
+                            "GBP (Google Business Profile) insights and performance metrics",
+                            "AI-powered SWOT analysis of your online presence",
+                            "Competitor overview and comparison data",
+                            "Service performance by search volume",
+                            "AI sentiment analysis across different platforms"
+                        ]
+                    },
+                    {
+                        title: "Navigation",
+                        content: `Use the top navigation to access different sections:`,
+                        list: [
+                            "**Dashboard** - Overview of all your key metrics",
+                            "**Website Stats** - Technical SEO analysis and website health",
+                            "**Keywords** - Keyword rankings and performance tracking",
+                            "**Backlinks** - Backlink profile and link building insights",
+                            "**Geogrid Maps** - Local search visibility mapping",
+                            "**Tools** - Additional SEO tools and utilities"
+                        ]
+                    },
+                    {
+                        title: "Key Metrics to Monitor",
+                        content: `Focus on these important metrics for your medical spa:`,
+                        list: [
+                            "**Google Business Profile Score** - Your local presence strength",
+                            "**Website Health Score** - Technical SEO performance",
+                            "**Keyword Rankings** - How you rank for important search terms",
+                            "**Competitor Analysis** - How you compare to local competitors",
+                            "**AI Sentiment** - How AI platforms perceive your business"
+                        ]
+                    },
+                    {
+                        title: "Getting the Most Value",
+                        content: `To maximize the value of your dashboard:`,
+                        list: [
+                            "Check your dashboard weekly to monitor trends",
+                            "Pay attention to the AI-generated insights and recommendations",
+                            "Use competitor data to identify opportunities",
+                            "Monitor your website health score and address issues promptly",
+                            "Track keyword performance to optimize your content strategy"
+                        ]
+                    }
+                ]
+            }
+        },
+        'dashboard': {
+            title: "Dashboard Overview",
+            category: "Dashboard",
+            readTime: "8 min read",
+            content: {
+                sections: [
+                    {
+                        title: "Dashboard Components",
+                        content: `Your dashboard is organized into several key sections, each providing valuable insights into different aspects of your SEO performance.`
+                    },
+                    {
+                        title: "GBP Insights Section",
+                        content: `The Google Business Profile section shows:`,
+                        list: [
+                            "**Profile completeness score** - How well your GBP is optimized",
+                            "**Review metrics** - Star rating, review count, and recent reviews",
+                            "**Photo performance** - Number of photos and engagement",
+                            "**Q&A activity** - Customer questions and your responses",
+                            "**AI-generated SWOT analysis** - Strengths, weaknesses, opportunities, and threats"
+                        ]
+                    },
+                    {
+                        title: "Competitor Overview",
+                        content: `The competitor section displays:`,
+                        list: [
+                            "**Competitor rankings** - How you stack up against local competitors",
+                            "**Website performance** - Site speed, backlinks, and traffic estimates",
+                            "**Social media presence** - Links to competitor social profiles",
+                            "**Advertising activity** - Google Ads and Facebook Ads detection",
+                            "**Review comparison** - How your reviews compare to competitors"
+                        ]
+                    },
+                    {
+                        title: "Service Performance Cards",
+                        content: `Two key service sections show:`,
+                        list: [
+                            "**Top Services by Search Volume** - Most popular established services",
+                            "**New Services by Search Volume** - Emerging opportunities",
+                            "**Search volume data** - Monthly search estimates for each service",
+                            "**Trend indicators** - Whether services are growing or declining"
+                        ]
+                    },
+                    {
+                        title: "AI Visibility vs Sentiment Chart",
+                        content: `This advanced chart shows how different AI platforms (ChatGPT, Gemini, Perplexity) perceive your business:`,
+                        list: [
+                            "**X-axis (Visibility)** - How often your business appears in AI responses",
+                            "**Y-axis (Sentiment)** - How positively AI platforms describe your business",
+                            "**Bubble size** - Represents share of voice/frequency of mentions",
+                            "**Bubble opacity** - Indicates confidence level of the data",
+                            "**Color coding** - Blue for your business, other colors for competitors"
+                        ]
+                    },
+                    {
+                        title: "AI Perception Bar Chart",
+                        content: `Shows comparative AI sentiment scores across platforms:`,
+                        list: [
+                            "**Platform comparison** - ChatGPT vs Gemini vs Perplexity scores",
+                            "**Competitor benchmarking** - How your AI presence compares to competitors",
+                            "**Average scores** - Overall AI perception rating",
+                            "**Data availability indicators** - Which platforms have data for each business"
+                        ]
+                    },
+                    {
+                        title: "Using Dashboard Data for Strategy",
+                        content: `Leverage your dashboard insights to:`,
+                        list: [
+                            "**Identify content opportunities** - Services with high search volume but low ranking",
+                            "**Monitor competitor activities** - Track when competitors launch new campaigns",
+                            "**Optimize AI presence** - Improve how AI platforms describe your business",
+                            "**Track local SEO progress** - Monitor improvements in local search visibility",
+                            "**Plan marketing campaigns** - Use search volume data to prioritize services"
+                        ]
+                    }
+                ]
+            }
+        }
+    };
+
+    const currentGuide = guideData[guideId];
+
+    if (!currentGuide) {
+        return (
+            <PageContent>
+                <div className="text-center py-12">
+                    <h2 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Guide not found</h2>
+                    <button 
+                        onClick={onBack}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                        Back to Help Library
+                    </button>
+                </div>
+            </PageContent>
+        );
+    }
+
+    return (
+        <PageContent>
+            <div className="max-w-4xl mx-auto">
+                {/* Back Button */}
+                <div className="mb-6">
+                    <button
+                        onClick={onBack}
+                        className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors group"
+                    >
+                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-200" />
+                        <span>Back to Help Library</span>
+                    </button>
+                </div>
+
+                {/* Guide Header */}
+                <div className="mb-8">
+                    <div className="flex items-center space-x-3 mb-4">
+                        <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800" style={{ backgroundColor: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
+                            {currentGuide.category}
+                        </span>
+                        <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                            {currentGuide.readTime}
+                        </span>
+                    </div>
+                    <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                        {currentGuide.title}
+                    </h1>
+                </div>
+
+                {/* Guide Content */}
+                <div className="prose prose-lg max-w-none" style={{ color: 'var(--text-primary)' }}>
+                    {currentGuide.content.sections.map((section, index) => (
+                        <div key={index} className="mb-8">
+                            <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+                                {section.title}
+                            </h2>
+                            <p className="mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                                {section.content}
+                            </p>
+                            {section.list && (
+                                <ul className="space-y-2 mb-4">
+                                    {section.list.map((item, itemIndex) => (
+                                        <li key={itemIndex} className="flex items-start space-x-3">
+                                            <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0"></div>
+                                            <span 
+                                                className="leading-relaxed"
+                                                style={{ color: 'var(--text-secondary)' }}
+                                                dangerouslySetInnerHTML={{
+                                                    __html: item.replace(/\*\*(.*?)\*\*/g, '<strong style="color: var(--text-primary)">$1</strong>')
+                                                }}
+                                            />
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    ))}
+                </div>
+
+                {/* Navigation Footer */}
+                <div className="mt-12 pt-8 border-t" style={{ borderColor: 'var(--card-border)' }}>
+                    <div className="text-center">
+                        <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
+                            Was this guide helpful?
+                        </p>
+                        <button
+                            onClick={onBack}
+                            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            Back to Help Library
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </PageContent>
+    );
+};
+
 const ToolsPage     = () => <PageContent><h2 className="text-center text-gray-500">Tools – coming soon</h2></PageContent>;
 const GeogridMaps = () => {
     const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, LabelList } = window.Recharts;
@@ -11115,7 +11566,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
 /* HEADER                                                             */
 /* ------------------------------------------------------------------ */
 const Header = ({active,setActive,theme,onThemeToggle}) => {
-  const tabs=['Dashboard','Website Stats','Keywords','Backlinks','Geogrid Maps','Tools'];
+  const tabs=['Dashboard','Website Stats','Keywords','Backlinks','Geogrid Maps','Tools','Help Library'];
   return (
     <header className="sticky top-0 z-20" style={{ backgroundColor: 'var(--header-bg)', boxShadow: 'var(--header-shadow)' }}>
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -11167,7 +11618,7 @@ const App = () => {
   const getInitialTab = () => {
     const urlParams = new URLSearchParams(location.search);
     const tabFromUrl = urlParams.get('tab');
-    const validTabs = ['Dashboard', 'Website Stats', 'Geogrid Maps', 'Keywords', 'Backlinks', 'Tools'];
+    const validTabs = ['Dashboard', 'Website Stats', 'Geogrid Maps', 'Keywords', 'Backlinks', 'Tools', 'Help Library'];
     return validTabs.includes(tabFromUrl) ? tabFromUrl : 'Dashboard';
   };
 
@@ -11310,6 +11761,12 @@ const App = () => {
         break;
       case 'Backlinks':
         body = <Backlinks webhooks={data?.webhooks} />;
+        break;
+      case 'Help Library':
+        body = <HelpLibrary />;
+        break;
+      case 'Tools':
+        body = <ToolsPage />;
         break;
       default:
         body = <ToolsPage />;
