@@ -8759,6 +8759,12 @@ const HelpLibrary = () => {
     const ArrowLeft = createIcon(<path d="M19 12H6m6-7-7 7 7 7" />);
     const ChevronRight = createIcon(<polyline points="9 18 15 12 9 6" />);
     const TrendingUp = createIcon(<polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />);
+    const MapPin = createIcon(
+        <>
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" />
+        </>
+    );
 
     // Guide categories and cards
     const guideCategories = [
@@ -8808,6 +8814,13 @@ const HelpLibrary = () => {
                     description: "Master backlink analysis, link building strategies, and competitive link intelligence",
                     icon: <Link2 className="w-6 h-6" />,
                     category: "Backlinks"
+                },
+                {
+                    id: "geogrid-maps",
+                    title: "Geogrid Maps",
+                    description: "Master local search visibility, geographic ranking analysis, and location-based SEO strategy",
+                    icon: <MapPin className="w-6 h-6" />,
+                    category: "Local SEO"
                 }
             ]
         }
@@ -8954,7 +8967,7 @@ const GuideContent = ({ guideId, onBack }) => {
     const ArrowRight = createIcon(<path d="M5 12h14m-7-7 7 7-7 7" />);
     
     // Define guide progression order
-    const guideProgression = ['dashboard', 'website-stats', 'keywords', 'backlinks'];
+    const guideProgression = ['dashboard', 'website-stats', 'keywords', 'backlinks', 'geogrid-maps'];
     const currentIndex = guideProgression.indexOf(guideId);
     const nextGuideId = currentIndex >= 0 && currentIndex < guideProgression.length - 1 
         ? guideProgression[currentIndex + 1] 
@@ -8969,7 +8982,8 @@ const GuideContent = ({ guideId, onBack }) => {
             'dashboard': { title: 'Dashboard', category: 'Dashboard' },
             'website-stats': { title: 'Website Stats', category: 'Technical' },
             'keywords': { title: 'Keywords', category: 'Keywords' },
-            'backlinks': { title: 'Backlinks', category: 'Backlinks' }
+            'backlinks': { title: 'Backlinks', category: 'Backlinks' },
+            'geogrid-maps': { title: 'Geogrid Maps', category: 'Local SEO' }
         };
         return guideInfo[id] || null;
     };
@@ -9655,6 +9669,188 @@ const GuideContent = ({ guideId, onBack }) => {
                             "**PR and Outreach Strategy** - Targeting high-authority domains for maximum impact",
                             "**ROI Measurement** - Calculating the value of link building investments",
                             "**Professional Implementation** - Leveraging Forever Booked's expertise for advanced link building campaigns"
+                        ]
+                    }
+                ]
+            }
+        },
+        'geogrid-maps': {
+            title: "Geogrid Maps Complete Guide",
+            category: "Local SEO",
+            readTime: "16 min read",
+            content: {
+                sections: [
+                    {
+                        title: "Geogrid Maps Overview",
+                        content: `The Geogrid Maps section is your comprehensive local search visibility command center. This powerful tool shows you exactly where your medical spa ranks in local search results across different geographic locations, giving you unprecedented insight into your local SEO performance and competitive positioning.`
+                    },
+                    {
+                        title: "Interactive Map Features",
+                        content: `Your geogrid maps are fully interactive, providing detailed geographic analysis:`,
+                        list: [
+                            "**Click and Drag Navigation** - Move around the map to explore different areas and neighborhoods",
+                            "**Zoom Controls** - Zoom in for street-level detail or zoom out for broader market overview",
+                            "**Street View Toggle** - Switch between street view for detailed location context",
+                            "**Satellite View Toggle** - Use satellite imagery to understand geographic and demographic context",
+                            "**Clickable Data Points** - Click on any location pin to see detailed ranking information",
+                            "**Competitor Overlay** - View your rankings alongside up to 4 competitors simultaneously",
+                            "**Color-Coded Results** - Instant visual feedback on performance across different locations"
+                        ]
+                    },
+                    {
+                        title: "Understanding Average Geogrid Scores",
+                        content: `Your Average Geogrid Score is a critical metric that summarizes your local search performance:`,
+                        list: [
+                            "**Score Range** - Scores typically range from 0-100, with higher scores indicating better local visibility",
+                            "**Calculation Method** - Average of all individual location rankings across your geographic market",
+                            "**Weighted by Population** - Locations with higher population density may carry more weight",
+                            "**Real-Time Updates** - Scores refresh regularly to reflect current search result positions",
+                            "**Competitor Benchmarking** - Compare your average score against local competitors",
+                            "**Trend Analysis** - Track how your average score changes over time",
+                            "**Market Context** - Understand what constitutes a good score in your specific market"
+                        ]
+                    },
+                    {
+                        title: "Top 5 Rankings Explained",
+                        content: `The \"Rankings in Top 5\" metric shows your local search dominance:`,
+                        list: [
+                            "**Definition** - Number of geographic locations where you rank in positions 1-5 for target keywords",
+                            "**High-Value Positions** - Top 5 rankings typically receive 70%+ of all clicks",
+                            "**Market Coverage** - Higher numbers indicate broader geographic market coverage",
+                            "**Competitive Analysis** - Compare your top 5 coverage against competitors",
+                            "**Growth Tracking** - Monitor how your top 5 presence expands over time",
+                            "**Revenue Impact** - Top 5 rankings directly correlate with increased appointment bookings",
+                            "**Strategic Priority** - Focus efforts on converting positions 6-10 into top 5 rankings"
+                        ]
+                    },
+                    {
+                        title: "Monthly Data Analysis",
+                        content: `Toggle between months to understand your local SEO trends and seasonal patterns:`,
+                        list: [
+                            "**Historical Performance** - Review up to 12 months of geogrid ranking data",
+                            "**Seasonal Trends** - Identify patterns related to aesthetic treatment seasons",
+                            "**Progress Tracking** - Measure the impact of your local SEO efforts over time",
+                            "**Competitor Movement** - Track how competitor rankings change month by month",
+                            "**Algorithm Updates** - Identify ranking changes that correlate with Google updates",
+                            "**Campaign Results** - Measure the geographic impact of marketing campaigns",
+                            "**Strategic Planning** - Use historical data to plan future local SEO strategies"
+                        ]
+                    },
+                    {
+                        title: "Geographic Market Analysis",
+                        content: `Understanding the geographic distribution of your local search performance:`,
+                        list: [
+                            "**Coverage Areas** - Identify neighborhoods and areas where you rank well",
+                            "**Coverage Gaps** - Spot geographic areas where competitors outrank you",
+                            "**Population Density Impact** - Understand how population affects ranking difficulty",
+                            "**Distance Factors** - Analyze how proximity to your location affects rankings",
+                            "**Neighborhood Targeting** - Identify specific areas for focused local SEO efforts",
+                            "**Market Expansion** - Use data to guide decisions about opening new locations",
+                            "**Service Area Optimization** - Align your service areas with your ranking strengths"
+                        ]
+                    },
+                    {
+                        title: "Competitive Intelligence",
+                        content: `Leverage geogrid data for comprehensive competitive analysis:`,
+                        list: [
+                            "**Market Share Analysis** - Understand your share of local search visibility",
+                            "**Competitor Strengths** - Identify where competitors have geographic advantages",
+                            "**Opportunity Identification** - Find areas where competitors are weak",
+                            "**Ranking Gaps** - Discover locations where you can overtake competitors",
+                            "**Market Dynamics** - Understand how the competitive landscape changes over time",
+                            "**Strategic Positioning** - Position your business in underserved geographic areas",
+                            "**Competitive Benchmarking** - Set realistic goals based on competitor performance"
+                        ]
+                    },
+                    {
+                        title: "Local SEO Strategy Development",
+                        content: `Use geogrid insights to develop targeted local SEO strategies:`,
+                        list: [
+                            "**Priority Area Identification** - Focus efforts on high-opportunity geographic areas",
+                            "**Content Localization** - Create location-specific content for underperforming areas",
+                            "**Local Citation Building** - Build citations in directories relevant to weak geographic areas",
+                            "**Google Business Profile Optimization** - Optimize for keywords that improve geogrid performance",
+                            "**Local Link Building** - Acquire links from businesses in target geographic areas",
+                            "**Review Generation** - Encourage reviews from customers in specific neighborhoods",
+                            "**Local Advertising Alignment** - Align paid advertising with organic ranking strengths"
+                        ]
+                    },
+                    {
+                        title: "Improving Your Geogrid Rankings",
+                        content: `Actionable strategies to boost your local search visibility:`,
+                        list: [
+                            "**Google Business Profile Completeness** - Ensure 100% profile completion with accurate information",
+                            "**Consistent NAP Data** - Maintain identical Name, Address, Phone across all online platforms",
+                            "**Location-Specific Landing Pages** - Create pages targeting specific neighborhoods and areas",
+                            "**Local Keyword Optimization** - Include neighborhood and area names in your content",
+                            "**Customer Review Management** - Generate reviews mentioning specific locations and services",
+                            "**Local Event Participation** - Engage with community events in target geographic areas",
+                            "**Proximity Optimization** - Ensure Google understands your exact business location and service areas"
+                        ]
+                    },
+                    {
+                        title: "Technical Local SEO Factors",
+                        content: `Technical elements that impact your geogrid performance:`,
+                        list: [
+                            "**Schema Markup** - Implement LocalBusiness schema with precise location data",
+                            "**Mobile Optimization** - Ensure excellent mobile experience for local searchers",
+                            "**Site Speed** - Fast loading times are crucial for local search rankings",
+                            "**Local Structured Data** - Include address, phone, hours, and service area markup",
+                            "**Location Pages** - Create dedicated pages for each service area or neighborhood",
+                            "**Internal Linking** - Link between location pages and service pages strategically",
+                            "**URL Structure** - Use location-based URLs for geographic targeting"
+                        ]
+                    },
+                    {
+                        title: "Content Strategy for Local SEO",
+                        content: `Content approaches that improve geogrid rankings:`,
+                        list: [
+                            "**Neighborhood Guides** - Create content about local areas and attractions",
+                            "**Local Treatment Trends** - Write about aesthetic trends specific to your market",
+                            "**Community Involvement** - Showcase participation in local events and causes",
+                            "**Local Testimonials** - Feature reviews and stories from specific neighborhoods",
+                            "**Area-Specific Services** - Highlight services popular in different geographic areas",
+                            "**Local Partnerships** - Content featuring collaborations with local businesses",
+                            "**Geographic Landing Pages** - Dedicated pages for each target area with unique content"
+                        ]
+                    },
+                    {
+                        title: "Monitoring and Maintenance",
+                        content: `Ongoing management for sustained geogrid performance:`,
+                        list: [
+                            "**Weekly Monitoring** - Regular check-ins on ranking changes and competitor movement",
+                            "**Monthly Analysis** - Deep dive into trends and performance patterns",
+                            "**Quarterly Strategy Review** - Adjust local SEO strategy based on geogrid insights",
+                            "**Citation Auditing** - Regular cleanup of incorrect or inconsistent business listings",
+                            "**Review Response Management** - Respond to reviews mentioning specific locations",
+                            "**Competitor Tracking** - Monitor new competitors entering your geographic market",
+                            "**Algorithm Update Response** - Adjust strategy when Google updates affect local results"
+                        ]
+                    },
+                    {
+                        title: "Advanced Geogrid Strategies",
+                        content: `Sophisticated approaches for market domination:`,
+                        list: [
+                            "**Micro-Location Targeting** - Target specific intersections and landmarks",
+                            "**Seasonal Geographic Optimization** - Adjust strategy based on seasonal search patterns",
+                            "**Multi-Location Coordination** - Coordinate multiple locations to avoid keyword cannibalization",
+                            "**Local Search Ad Integration** - Align paid search geography with organic strengths",
+                            "**Voice Search Optimization** - Optimize for \"near me\" voice searches",
+                            "**Local Inventory Integration** - Show location-specific service availability",
+                            "**Geographic A/B Testing** - Test different approaches in different areas"
+                        ]
+                    },
+                    {
+                        title: "Using Geogrid Data Strategically",
+                        content: `Maximizing business value from your local search intelligence:`,
+                        list: [
+                            "**Market Expansion Planning** - Use ranking data to guide new location decisions",
+                            "**Marketing Budget Allocation** - Invest more in areas with strong organic presence",
+                            "**Service Area Definition** - Define service areas based on ranking strength",
+                            "**Competitive Positioning** - Position against competitors in your strongest areas",
+                            "**Customer Acquisition Strategy** - Focus acquisition efforts in high-ranking neighborhoods",
+                            "**ROI Measurement** - Calculate the revenue impact of improved geogrid performance",
+                            "**Professional Implementation** - Leverage Forever Booked's local SEO expertise for advanced geogrid optimization strategies"
                         ]
                     }
                 ]
