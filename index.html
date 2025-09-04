@@ -8780,6 +8780,13 @@ const HelpLibrary = () => {
                     description: "Master keyword tracking, ranking analysis, and competitive keyword research",
                     icon: <Search className="w-6 h-6" />,
                     category: "Keywords"
+                },
+                {
+                    id: "backlinks",
+                    title: "Backlinks Guide",
+                    description: "Master backlink analysis, link building strategies, and competitive link intelligence",
+                    icon: <Link2 className="w-6 h-6" />,
+                    category: "Backlinks"
                 }
             ]
         }
@@ -8923,6 +8930,36 @@ const HelpLibrary = () => {
 
 const GuideContent = ({ guideId, onBack }) => {
     const ArrowLeft = createIcon(<path d="M19 12H6m6-7-7 7 7 7" />);
+    const ArrowRight = createIcon(<path d="M5 12h14m-7-7 7 7-7 7" />);
+    
+    // Define guide progression order
+    const guideProgression = ['dashboard', 'website-stats', 'keywords', 'backlinks'];
+    const currentIndex = guideProgression.indexOf(guideId);
+    const nextGuideId = currentIndex >= 0 && currentIndex < guideProgression.length - 1 
+        ? guideProgression[currentIndex + 1] 
+        : null;
+    
+    // Get next guide info
+    const getNextGuideInfo = (nextId) => {
+        const guideInfo = {
+            'website-stats': { title: 'Website Stats Guide', category: 'Technical' },
+            'keywords': { title: 'Keywords Guide', category: 'Keywords' },
+            'backlinks': { title: 'Backlinks Guide', category: 'Backlinks' }
+        };
+        return guideInfo[nextId] || null;
+    };
+    
+    const nextGuideInfo = nextGuideId ? getNextGuideInfo(nextGuideId) : null;
+    
+    // Navigate to next guide
+    const goToNextGuide = () => {
+        if (nextGuideId) {
+            const urlParams = new URLSearchParams(window.location.search);
+            urlParams.set('guide', nextGuideId);
+            window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
+            window.location.reload(); // Simple way to trigger re-render
+        }
+    };
     
     // Guide content data
     const guideData = {
@@ -9405,6 +9442,181 @@ const GuideContent = ({ guideId, onBack }) => {
                     }
                 ]
             }
+        },
+        'backlinks': {
+            title: "Backlinks Complete Guide",
+            category: "Backlinks",
+            readTime: "18 min read",
+            content: {
+                sections: [
+                    {
+                        title: "Backlinks Section Overview",
+                        content: `The Backlinks section is your comprehensive link intelligence center, providing detailed analysis of your backlink profile and competitive link landscape. Understanding your backlinks is crucial for SEO success, as quality backlinks are one of Google's most important ranking factors for medical spa websites.`
+                    },
+                    {
+                        title: "Backlinks Summary Dashboard",
+                        content: `The top section provides essential metrics about your overall backlink health:`,
+                        list: [
+                            "**Total Backlinks** - Complete count of all links pointing to your website",
+                            "**Total Dofollow Links** - Links that pass SEO authority (most valuable for rankings)",
+                            "**Total Nofollow Links** - Links that don't pass authority but still provide traffic and credibility",
+                            "**New Links This Period** - Recently acquired backlinks showing growth momentum",
+                            "**Lost Links This Period** - Links that were removed or became inactive",
+                            "**Average Spam Score** - Quality indicator of your link profile (lower is better)",
+                            "**Top Referring Domains** - Number of unique websites linking to you"
+                        ]
+                    },
+                    {
+                        title: "Link Quality & Authority Metrics",
+                        content: `Understanding the quality and value of your backlink portfolio:`,
+                        list: [
+                            "**Domain Authority** - Strength of websites linking to you (higher is better)",
+                            "**Page Authority** - Strength of specific pages linking to you",
+                            "**Link Context** - How relevant the linking content is to your medical spa services",
+                            "**Anchor Text Distribution** - The words used in links pointing to your site",
+                            "**Link Placement** - Whether links are in content, sidebars, footers, or navigation",
+                            "**Geographic Relevance** - Local websites and directories linking to your business"
+                        ]
+                    },
+                    {
+                        title: "Competitive Backlink Analysis",
+                        content: `Compare your link profile against up to 4 local competitors:`,
+                        list: [
+                            "**Link Gap Analysis** - Domains linking to competitors but not to you",
+                            "**Competitive Benchmarking** - How your metrics compare to market leaders",
+                            "**Shared Link Opportunities** - Websites that link to multiple competitors",
+                            "**Competitor Link Strategies** - Understanding how competitors acquire links",
+                            "**Market Share Analysis** - Your portion of total backlinks in your market",
+                            "**Quality Comparison** - Average domain authority of competitor vs your links"
+                        ]
+                    },
+                    {
+                        title: "Link Types & Categories",
+                        content: `Different types of backlinks and their strategic value for medical spas:`,
+                        list: [
+                            "**Editorial Links** - Natural mentions in articles and blog posts (highest value)",
+                            "**Directory Links** - Medical spa directories and local business listings",
+                            "**Resource Page Links** - Links from 'best of' lists and resource compilations",
+                            "**Guest Post Links** - Links from content you've contributed to other sites",
+                            "**Social Media Links** - Links from social platforms (usually nofollow)",
+                            "**Review Platform Links** - Links from Yelp, Google Reviews, and medical review sites",
+                            "**Partnership Links** - Links from business partners, suppliers, and associations"
+                        ]
+                    },
+                    {
+                        title: "AI Backlinks Analysis Report",
+                        content: `Intelligent insights and strategic recommendations for your link profile:`,
+                        list: [
+                            "**Link Profile Health Assessment** - Overall quality and risk evaluation",
+                            "**Growth Opportunities** - Specific link building opportunities identified by AI",
+                            "**Risk Analysis** - Potentially harmful links that could hurt rankings",
+                            "**Competitive Gaps** - High-value link opportunities your competitors have",
+                            "**Content Recommendations** - Content ideas that could attract natural links",
+                            "**Outreach Strategies** - Personalized approaches for link acquisition"
+                        ]
+                    },
+                    {
+                        title: "Detailed Backlinks Table",
+                        content: `Comprehensive breakdown of every backlink with actionable intelligence:`,
+                        list: [
+                            "**Source Domain** - The website linking to you with authority metrics",
+                            "**Linking Page** - Specific page containing your link",
+                            "**Target Page** - Which of your pages is being linked to",
+                            "**Anchor Text** - The clickable text used for your link",
+                            "**Link Type** - Dofollow vs nofollow classification",
+                            "**Discovery Date** - When the link was first detected",
+                            "**Link Status** - Active, lost, or newly discovered",
+                            "**Spam Score** - Quality assessment of the linking domain"
+                        ]
+                    },
+                    {
+                        title: "Link Building Opportunities",
+                        content: `Strategic approaches to acquire high-quality backlinks for medical spas:`,
+                        list: [
+                            "**Local Business Partnerships** - Cross-promotion with complementary businesses",
+                            "**Medical Directory Submissions** - Industry-specific directory listings",
+                            "**Content Marketing** - Creating linkable assets like treatment guides and research",
+                            "**Digital PR** - Newsworthy announcements and expert commentary",
+                            "**Resource Page Outreach** - Getting listed on relevant resource compilations",
+                            "**Broken Link Building** - Replacing broken links with your content",
+                            "**Community Involvement** - Links from local organizations and events"
+                        ]
+                    },
+                    {
+                        title: "Link Risk Management",
+                        content: `Protecting your website from harmful or low-quality backlinks:`,
+                        list: [
+                            "**Toxic Link Identification** - Spotting potentially harmful backlinks",
+                            "**Spam Score Monitoring** - Regular assessment of link quality",
+                            "**Disavow File Management** - Telling Google to ignore bad links",
+                            "**Link Removal Strategies** - How to get harmful links removed",
+                            "**Penalty Prevention** - Avoiding Google penalties from bad links",
+                            "**Recovery Tactics** - Recovering from link-based penalties"
+                        ]
+                    },
+                    {
+                        title: "Local Link Building for Medical Spas",
+                        content: `Specialized strategies for building local authority and relevance:`,
+                        list: [
+                            "**Local Chamber of Commerce** - Business association memberships and links",
+                            "**Healthcare Directories** - Medical and wellness directory submissions",
+                            "**Local News Coverage** - Getting featured in local media outlets",
+                            "**Community Event Sponsorship** - Links from event websites and coverage",
+                            "**Professional Associations** - Medical and aesthetic industry organizations",
+                            "**Local Blogger Outreach** - Partnerships with local lifestyle and wellness bloggers"
+                        ]
+                    },
+                    {
+                        title: "Content-Driven Link Acquisition",
+                        content: `Creating content that naturally attracts high-quality backlinks:`,
+                        list: [
+                            "**Treatment Guides** - Comprehensive guides to popular procedures",
+                            "**Before/After Galleries** - Visual content that others want to reference",
+                            "**Research and Studies** - Original research in aesthetics and wellness",
+                            "**Expert Commentary** - Thought leadership on industry trends",
+                            "**Infographics** - Visual content about treatments, recovery, and results",
+                            "**Video Content** - Educational videos that others embed or reference"
+                        ]
+                    },
+                    {
+                        title: "Backlink Monitoring & Maintenance",
+                        content: `Ongoing management of your link profile for sustained SEO success:`,
+                        list: [
+                            "**Regular Audits** - Monthly review of new and lost links",
+                            "**Competitor Monitoring** - Tracking competitor link acquisition strategies",
+                            "**Link Health Checks** - Ensuring your best links remain active",
+                            "**Anchor Text Optimization** - Maintaining natural anchor text distribution",
+                            "**Relationship Management** - Nurturing relationships with key linking domains",
+                            "**Performance Tracking** - Measuring the SEO impact of link building efforts"
+                        ]
+                    },
+                    {
+                        title: "Advanced Link Intelligence",
+                        content: `Sophisticated strategies for competitive link intelligence and market domination:`,
+                        list: [
+                            "**Link Intersection Analysis** - Finding domains that link to multiple competitors",
+                            "**Temporal Link Analysis** - Understanding seasonal link building patterns",
+                            "**Content Gap Identification** - Topics that attract links but you haven't covered",
+                            "**Link Velocity Monitoring** - Tracking the rate of link acquisition",
+                            "**Authority Flow Mapping** - Understanding how authority passes through link networks",
+                            "**Strategic Link Prioritization** - Focusing efforts on highest-impact opportunities"
+                        ]
+                    },
+                    {
+                        title: "Using Backlinks Data Strategically",
+                        content: `Maximizing the business value of your backlink intelligence:`,
+                        list: [
+                            "**SEO Strategy Development** - Using link data to guide overall SEO approach",
+                            "**Competitive Positioning** - Identifying and exploiting competitor weaknesses",
+                            "**Content Planning** - Creating content based on successful competitor link magnets",
+                            "**Partnership Development** - Identifying potential business partnerships through shared links",
+                            "**PR and Outreach Strategy** - Targeting high-authority domains for maximum impact",
+                            "**ROI Measurement** - Calculating the value of link building investments",
+                            "**Professional Implementation** - Leveraging Forever Booked's expertise for advanced link building campaigns"
+                        ]
+                    }
+                ]
+            }
         }
     };
 
@@ -9569,15 +9781,41 @@ const GuideContent = ({ guideId, onBack }) => {
                 {/* Navigation Footer */}
                 <div className="mt-12 pt-8 border-t" style={{ borderColor: 'var(--card-border)' }}>
                     <div className="text-center">
-                        <p className="mb-4" style={{ color: 'var(--text-secondary)' }}>
+                        <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>
                             Was this guide helpful?
                         </p>
-                        <button
-                            onClick={onBack}
-                            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                            Back to Help Library
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                            <button
+                                onClick={onBack}
+                                className="flex items-center space-x-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                                style={{
+                                    backgroundColor: 'var(--bg-secondary)',
+                                    color: 'var(--text-primary)'
+                                }}
+                            >
+                                <ArrowLeft className="w-4 h-4" />
+                                <span>Back to Help Library</span>
+                            </button>
+                            
+                            {nextGuideInfo && (
+                                <button
+                                    onClick={goToNextGuide}
+                                    className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors group"
+                                >
+                                    <div className="flex flex-col items-start">
+                                        <span className="text-sm">Next Guide:</span>
+                                        <span className="font-medium">{nextGuideInfo.title}</span>
+                                    </div>
+                                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
+                                </button>
+                            )}
+                        </div>
+                        
+                        {!nextGuideInfo && (
+                            <p className="mt-4 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                                🎉 You've completed all available guides! Check back for more content.
+                            </p>
+                        )}
                     </div>
                 </div>
             </div>
