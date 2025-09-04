@@ -8756,8 +8756,8 @@ const HelpLibrary = () => {
             ]
         },
         {
-            title: "Dashboard Features",
-            description: "Deep dive into dashboard components and analytics",
+            title: "App Sections",
+            description: "Comprehensive guides for each tab in your competitor analysis tool",
             icon: <BarChart3 className="w-8 h-8" />,
             guides: [
                 {
@@ -8766,20 +8766,20 @@ const HelpLibrary = () => {
                     description: "Understand all the metrics, charts, and insights on your main dashboard",
                     icon: <BarChart3 className="w-6 h-6" />,
                     category: "Dashboard"
-                }
-            ]
-        },
-        {
-            title: "Technical Analysis",
-            description: "Website performance and technical SEO insights",
-            icon: <TrendingUp className="w-8 h-8" />,
-            guides: [
+                },
                 {
                     id: "website-stats",
                     title: "Website Stats Guide",
                     description: "Complete breakdown of website health, performance metrics, and technical SEO analysis",
                     icon: <TrendingUp className="w-6 h-6" />,
                     category: "Technical"
+                },
+                {
+                    id: "keywords",
+                    title: "Keywords Guide",
+                    description: "Master keyword tracking, ranking analysis, and competitive keyword research",
+                    icon: <Search className="w-6 h-6" />,
+                    category: "Keywords"
                 }
             ]
         }
@@ -9243,6 +9243,164 @@ const GuideContent = ({ guideId, onBack }) => {
                             "**Implement AI Recommendations** - Use the detailed AI analysis for systematic improvements",
                             "**Monthly Health Checks** - Regular monitoring prevents technical debt accumulation",
                             "**Professional Support** - Use 'Request Forever Booked Implement' for complex technical fixes"
+                        ]
+                    }
+                ]
+            }
+        },
+        'keywords': {
+            title: "Keywords Complete Guide",
+            category: "Keywords",
+            readTime: "15 min read",
+            content: {
+                sections: [
+                    {
+                        title: "Keywords Section Overview",
+                        content: `The Keywords section is your command center for tracking search engine rankings, analyzing keyword performance, and monitoring your competitive position. This comprehensive tool helps you understand how well your medical spa ranks for important search terms compared to your competitors.`
+                    },
+                    {
+                        title: "Keywords Summary Dashboard",
+                        content: `The top section provides a high-level overview of your keyword performance:`,
+                        list: [
+                            "**Total Keywords Tracked** - The complete number of keywords being monitored for your business",
+                            "**Position 1 Rankings** - How many keywords you rank #1 for (the ultimate goal)",
+                            "**Top 3 Rankings (Positions 2-3)** - Keywords where you're highly visible but have room to improve",
+                            "**Page 1 Rankings (Positions 4-10)** - Keywords with good visibility that need optimization",
+                            "**Page 2 Rankings (Positions 11-20)** - Keywords that need significant improvement",
+                            "**Keyword Movement** - Tracks which keywords are moving up, down, or are newly ranked"
+                        ]
+                    },
+                    {
+                        title: "Keyword Movement Indicators",
+                        content: `Understanding how your keywords are performing over time:`,
+                        list: [
+                            "**New Keywords** - Terms you've started ranking for (great for content strategy validation)",
+                            "**Improved Rankings** - Keywords moving up in search results (shows SEO progress)",
+                            "**Declined Rankings** - Keywords losing position (need immediate attention)",
+                            "**Lost Keywords** - Terms you no longer rank for (requires investigation and action)",
+                            "**Movement Trends** - Overall direction of your keyword portfolio"
+                        ]
+                    },
+                    {
+                        title: "Traffic Value Metrics",
+                        content: `Financial impact and potential of your keyword rankings:`,
+                        list: [
+                            "**Estimated Traffic Value (ETV)** - Dollar value of organic traffic you're receiving",
+                            "**Estimated Paid Cost** - What you'd pay for the same traffic through Google Ads",
+                            "**ROI Calculation** - Compare organic value vs potential advertising costs",
+                            "**Growth Opportunities** - Identify high-value keywords to prioritize",
+                            "**Budget Planning** - Use data to inform paid advertising decisions"
+                        ]
+                    },
+                    {
+                        title: "AI Keywords Analysis Report",
+                        content: `Intelligent insights and recommendations based on your keyword data:`,
+                        list: [
+                            "**Performance Analysis** - AI evaluation of your overall keyword strategy",
+                            "**Opportunity Identification** - Keywords with high potential for improvement",
+                            "**Competitive Gaps** - Terms where competitors are outperforming you",
+                            "**Content Recommendations** - Suggested content topics based on keyword data",
+                            "**Priority Actions** - Ranked list of keywords to focus on first",
+                            "**Implementation Guidance** - Specific steps to improve keyword rankings"
+                        ]
+                    },
+                    {
+                        title: "Detailed Keywords Table",
+                        content: `Comprehensive breakdown of every tracked keyword with actionable data:`,
+                        list: [
+                            "**Current Rank** - Your current position in search results",
+                            "**Previous Rank** - Last month's position for comparison",
+                            "**Rank Change** - Visual indicators showing improvement or decline",
+                            "**Search Volume** - Monthly searches for each keyword",
+                            "**Competition Level** - How difficult it is to rank for this keyword",
+                            "**Cost Per Click (CPC)** - What advertisers pay for this keyword",
+                            "**Keyword Difficulty** - SEO difficulty score for ranking improvements",
+                            "**Search Intent** - Whether users are looking to buy, learn, or find locations"
+                        ]
+                    },
+                    {
+                        title: "Competitor Keywords Analysis",
+                        content: `Compare your keyword performance against up to 4 local competitors:`,
+                        list: [
+                            "**Head-to-Head Rankings** - See where you and competitors rank for the same terms",
+                            "**Competitive Gaps** - Keywords where competitors rank but you don't",
+                            "**Opportunity Keywords** - Terms where you could outrank weaker competitors",
+                            "**Market Share Analysis** - Your visibility compared to the competitive landscape",
+                            "**Competitor Strategies** - Understand what keywords competitors are targeting",
+                            "**Benchmark Performance** - Track your progress relative to market leaders"
+                        ]
+                    },
+                    {
+                        title: "Keyword Categories & Intent",
+                        content: `Understanding different types of keywords and their strategic value:`,
+                        list: [
+                            "**Service Keywords** - Terms related to your treatments (botox, fillers, laser)",
+                            "**Location Keywords** - Geographic terms (medspa near me, [city] medical spa)",
+                            "**Commercial Intent** - Buying-focused terms (best medspa, medspa prices)",
+                            "**Informational Intent** - Educational searches (botox benefits, laser hair removal)",
+                            "**Brand Keywords** - Terms including your business name",
+                            "**Long-tail Keywords** - Specific, lower-competition phrases with high conversion potential"
+                        ]
+                    },
+                    {
+                        title: "Keyword Research & Expansion",
+                        content: `Growing your keyword portfolio strategically:`,
+                        list: [
+                            "**Gap Analysis** - Find keywords your competitors rank for but you don't",
+                            "**Related Keywords** - Discover variations and synonyms of your main terms",
+                            "**Local Modifiers** - Add location-specific terms to capture local searches",
+                            "**Service Variations** - Different ways people search for your treatments",
+                            "**Question Keywords** - FAQ-style searches that indicate high buyer intent",
+                            "**Seasonal Keywords** - Terms that peak during specific times of year"
+                        ]
+                    },
+                    {
+                        title: "Ranking Factors & Optimization",
+                        content: `Key elements that influence your keyword rankings:`,
+                        list: [
+                            "**On-Page SEO** - Title tags, meta descriptions, header tags, and content optimization",
+                            "**Content Quality** - Comprehensive, valuable content that matches search intent",
+                            "**Local SEO** - Google Business Profile optimization and local citations",
+                            "**Technical SEO** - Site speed, mobile-friendliness, and crawlability",
+                            "**Backlink Profile** - Quality and quantity of websites linking to your pages",
+                            "**User Experience** - Bounce rate, time on page, and engagement metrics"
+                        ]
+                    },
+                    {
+                        title: "Monthly Keyword Tracking",
+                        content: `Using historical data to measure progress and plan strategy:`,
+                        list: [
+                            "**Trend Analysis** - Track ranking improvements and declines over time",
+                            "**Seasonal Patterns** - Identify when certain keywords perform better",
+                            "**Algorithm Impact** - Understand how Google updates affect your rankings",
+                            "**Campaign Effectiveness** - Measure the impact of your SEO efforts",
+                            "**Competitive Monitoring** - Track how competitors' keyword strategies evolve",
+                            "**ROI Measurement** - Calculate the value of your keyword improvements"
+                        ]
+                    },
+                    {
+                        title: "Implementation Strategies",
+                        content: `Actionable approaches to improve your keyword rankings:`,
+                        list: [
+                            "**Content Creation** - Develop pages targeting specific keyword clusters",
+                            "**Content Optimization** - Improve existing pages for better keyword performance",
+                            "**Local SEO Focus** - Optimize for location-based searches in your area",
+                            "**Competitor Analysis** - Study top-ranking competitors' content and strategies",
+                            "**Link Building** - Acquire quality backlinks to boost keyword authority",
+                            "**Technical Improvements** - Fix site issues that may be hurting rankings"
+                        ]
+                    },
+                    {
+                        title: "Using Keywords Data Strategically",
+                        content: `Maximize the value of your keyword intelligence for business growth:`,
+                        list: [
+                            "**Content Planning** - Use keyword data to guide blog topics and page creation",
+                            "**PPC Campaign Optimization** - Identify high-value organic keywords for paid campaigns",
+                            "**Service Expansion** - Discover new treatment opportunities based on search demand",
+                            "**Local Market Analysis** - Understand what services are most searched in your area",
+                            "**Competitive Positioning** - Find gaps where you can outperform competitors",
+                            "**Business Intelligence** - Use search trends to inform business decisions",
+                            "**Professional Support** - Leverage Forever Booked's expertise for advanced keyword strategies"
                         ]
                     }
                 ]
