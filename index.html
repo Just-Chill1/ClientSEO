@@ -9801,26 +9801,22 @@ const GuideContent = ({ guideId, onBack }) => {
                         </p>
                         
                         {/* Three-button navigation layout */}
-                        <div className="flex flex-col lg:flex-row gap-4 justify-between items-center max-w-4xl mx-auto">
+                        <div className="flex flex-col lg:flex-row gap-4 justify-center items-center max-w-5xl mx-auto">
                             {/* Previous Guide - Left */}
-                            <div className="flex-1 flex justify-start">
+                            <div className="flex justify-start lg:flex-1">
                                 {prevGuideInfo ? (
                                     <button
                                         onClick={goToPrevGuide}
-                                        className="flex items-center space-x-3 px-5 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-all duration-200 group"
-                                        style={{
-                                            backgroundColor: 'var(--bg-secondary)',
-                                            color: 'var(--text-primary)'
-                                        }}
+                                        className="flex items-center space-x-3 px-6 py-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all duration-200 group min-w-[200px] shadow-md hover:shadow-lg"
                                     >
-                                        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform duration-200" />
-                                        <div className="text-left">
-                                            <div className="text-xs opacity-70">Previous Guide</div>
-                                            <div className="font-medium">{prevGuideInfo.title}</div>
+                                        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-200 flex-shrink-0" />
+                                        <div className="text-left flex-1">
+                                            <div className="text-xs opacity-90 font-medium">Previous</div>
+                                            <div className="font-semibold text-sm leading-tight">{prevGuideInfo.title}</div>
                                         </div>
                                     </button>
                                 ) : (
-                                    <div className="w-full"></div>
+                                    <div className="min-w-[200px]"></div>
                                 )}
                             </div>
                             
@@ -9828,32 +9824,34 @@ const GuideContent = ({ guideId, onBack }) => {
                             <div className="flex-shrink-0">
                                 <button
                                     onClick={onBack}
-                                    className="flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                                    className="flex items-center space-x-2 px-6 py-4 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200 font-semibold shadow-md hover:shadow-lg"
                                 >
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v0M8 5a2 2 0 000 4h8a2 2 0 000-4M8 5v0" />
+                                    <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0l-4-4m4 4l-4 4" />
                                     </svg>
-                                    <span>Back to Help Library</span>
+                                    <span className="text-sm">Help Library</span>
                                 </button>
                             </div>
                             
                             {/* Next Guide - Right */}
-                            <div className="flex-1 flex justify-end">
+                            <div className="flex justify-end lg:flex-1">
                                 {nextGuideInfo ? (
                                     <button
                                         onClick={goToNextGuide}
-                                        className="flex items-center space-x-3 px-5 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 group"
+                                        className="flex items-center space-x-3 px-6 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 group min-w-[200px] shadow-md hover:shadow-lg"
                                     >
-                                        <div className="text-right">
-                                            <div className="text-xs opacity-90">Next Guide</div>
-                                            <div className="font-medium">{nextGuideInfo.title}</div>
+                                        <div className="text-right flex-1">
+                                            <div className="text-xs opacity-90 font-medium">Next</div>
+                                            <div className="font-semibold text-sm leading-tight">{nextGuideInfo.title}</div>
                                         </div>
-                                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
+                                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200 flex-shrink-0" />
                                     </button>
                                 ) : (
-                                    <div className="w-full flex justify-end">
-                                        <div className="text-sm px-4 py-3" style={{ color: 'var(--text-secondary)' }}>
+                                    <div className="min-w-[200px] flex justify-end">
+                                        <div className="text-sm px-4 py-3 bg-green-100 text-green-800 rounded-lg font-medium" style={{ 
+                                            backgroundColor: 'var(--success-bg, #dcfce7)', 
+                                            color: 'var(--success-text, #166534)' 
+                                        }}>
                                             🎉 All guides complete!
                                         </div>
                                     </div>
@@ -12320,11 +12318,12 @@ const Header = ({active,setActive,theme,onThemeToggle}) => {
                 {tabs.map(t=>(
                   <button key={t}
                           onClick={()=>{
-                            // If clicking Help Library, clear any guide parameters
+                            // If clicking Help Library, clear any guide parameters and reload
                             if (t === 'Help Library') {
                               const urlParams = new URLSearchParams(window.location.search);
                               urlParams.delete('guide');
                               window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
+                              window.location.reload(); // Force reload to exit guide view
                             }
                             setActive(t);
                           }}
