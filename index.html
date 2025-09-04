@@ -8702,7 +8702,20 @@ const HelpLibrary = () => {
         const guide = urlParams.get('guide');
         if (guide) {
             setSelectedGuide(guide);
+        } else {
+            setSelectedGuide(null);
         }
+    }, []);
+
+    // Listen for help library reset events
+    useEffect(() => {
+        const handleReset = () => {
+            setSelectedGuide(null);
+            setSearchQuery('');
+        };
+        
+        window.addEventListener('help-library-reset', handleReset);
+        return () => window.removeEventListener('help-library-reset', handleReset);
     }, []);
 
     // Update URL when guide is selected
@@ -12318,12 +12331,19 @@ const Header = ({active,setActive,theme,onThemeToggle}) => {
                 {tabs.map(t=>(
                   <button key={t}
                           onClick={()=>{
-                            // If clicking Help Library, clear any guide parameters and reload
+                            // If clicking Help Library, clear any guide parameters
                             if (t === 'Help Library') {
                               const urlParams = new URLSearchParams(window.location.search);
                               urlParams.delete('guide');
                               window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
-                              window.location.reload(); // Force reload to exit guide view
+                              // Set the active tab first, then trigger a small delay to ensure state updates
+                              setActive(t);
+                              // Use a small timeout to ensure the component re-renders properly
+                              setTimeout(() => {
+                                // This will trigger the HelpLibrary component to reset its internal state
+                                window.dispatchEvent(new Event('help-library-reset'));
+                              }, 10);
+                              return; // Don't call setActive again below
                             }
                             setActive(t);
                           }}
