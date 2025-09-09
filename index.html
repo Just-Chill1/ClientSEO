@@ -6093,6 +6093,28 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
         const [expandedService, setExpandedService] = useState(null);
         const [showAll, setShowAll] = useState(false);
 
+        // Clear potentially corrupted service cache on mount
+        useEffect(() => {
+            const clearServiceCache = () => {
+                const keys = Object.keys(sessionStorage);
+                const serviceKeys = keys.filter(key => key.startsWith('services_') || key.startsWith('seo_data_'));
+                serviceKeys.forEach(key => {
+                    if (key.includes('AKfycbys_HQL8HQdyL_-DoS0Aakvj-IzDWWW5HtNJDiFhbUwgCuKEYJ7N6iZGC-F62I7uZlV')) {
+                        console.log('[ServiceList] Clearing potentially corrupted cache:', key);
+                        sessionStorage.removeItem(key);
+                    }
+                });
+            };
+            
+            // Clear cache once on component mount to fix any corruption from performance updates
+            const hasCleared = sessionStorage.getItem('service_cache_cleared_v2');
+            if (!hasCleared) {
+                clearServiceCache();
+                sessionStorage.setItem('service_cache_cleared_v2', 'true');
+                console.log('[ServiceList] Cleared service cache after performance update');
+            }
+        }, []);
+
         useEffect(() => {
             const cacheKey = `services_${selectedLocation}_${dataSet}`;
             const cachedData = sessionStorage.getItem(cacheKey);
@@ -6100,12 +6122,15 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
             if (cachedData) {
                 try {
                     const parsed = JSON.parse(cachedData);
+                    console.log('[ServiceList] Using cached data:', { selectedLocation, dataSet, dataLength: parsed?.length });
                     setServiceData(parsed);
                     setLoading(false);
                     setError(null);
                     return;
                 } catch (e) {
                     // Invalid cache, continue with fresh fetch
+                    console.warn('[ServiceList] Invalid cache, clearing:', e);
+                    sessionStorage.removeItem(cacheKey);
                 }
             }
 
@@ -6162,16 +6187,30 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                     }
                 }
 
+                console.log('[ServiceList] API Response:', { 
+                    selectedLocation, 
+                    dataSet, 
+                    hasTopServices: !!data.topServices, 
+                    hasNewServices: !!data.newServices,
+                    topServicesLength: data.topServices?.length,
+                    newServicesLength: data.newServices?.length,
+                    fullData: data
+                });
+
                 const services = dataSet === 'topServices' ? data.topServices : data.newServices;
-                if (services) {
+                if (services && services.length > 0) {
                     // Calculate total volume for percentage
                     const totalVolume = services.reduce((sum, service) => sum + service.totalVolume, 0);
                     const servicesWithPercentage = services.map(service => ({
                         ...service,
                         volumePercentage: totalVolume > 0 ? ((service.totalVolume / totalVolume) * 100).toFixed(1) : 0
                     }));
+                    console.log('[ServiceList] Setting service data:', { selectedLocation, dataSet, count: servicesWithPercentage.length });
                     sessionStorage.setItem(cacheKey, JSON.stringify(servicesWithPercentage));
                     setServiceData(servicesWithPercentage);
+                } else {
+                    console.warn('[ServiceList] No services found:', { selectedLocation, dataSet, services });
+                    setServiceData([]);
                 }
                 setLoading(false);
             });
