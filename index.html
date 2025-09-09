@@ -10249,10 +10249,10 @@ const GuideContent = ({ guideId, onBack }) => {
 };
 
 const ToolsPage     = () => <PageContent><h2 className="text-center text-gray-500">Tools – coming soon</h2></PageContent>;
-const GeogridMaps = () => {
+const GeogridMaps = ({ data }) => {
     const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, LabelList } = window.Recharts;
-    const [geogridData, setGeogridData] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [geogridData, setGeogridData] = useState(data || null);
+    const [loading, setLoading] = useState(!data);
     const [error, setError] = useState(null);
 
     // Dynamically pick up to 6 relevant keywords based on patterns
@@ -10283,7 +10283,21 @@ const GeogridMaps = () => {
         return 'bg-red-500';
     };
 
+    // Update geogrid data when prop changes
     useEffect(() => {
+        if (data && data !== geogridData) {
+            setGeogridData(data);
+            setLoading(false);
+            setError(null);
+        }
+    }, [data, geogridData]);
+
+    useEffect(() => {
+        // Only fetch data if not provided via props
+        if (data) {
+            return;
+        }
+
         const params = new URLSearchParams(window.location.search);
         const workbookId = params.get('workbookId');
         if (!workbookId) {
@@ -10480,7 +10494,7 @@ const GeogridMaps = () => {
                 setLoading(false);
             }
         });
-    }, []);
+    }, [data]);
 
     if (loading) {
         return (
@@ -12800,6 +12814,13 @@ const App = () => {
         }
         if (gg && gg.geogridData) {
           setData(prev => ({ ...(prev || {}), geogridData: gg.geogridData }));
+          // Cache geogrid data for both dashboard and full geogrid pages
+          try {
+            sessionStorage.setItem(`geogrid_${workbookId}`, JSON.stringify(gg.geogridData));
+            sessionStorage.setItem(`full_geogrid_${workbookId}`, JSON.stringify(gg.geogridData));
+          } catch (e) {
+            console.warn('Failed to cache geogrid data:', e);
+          }
         }
         if (kw && kw.keywordsSummary && kw.keywordsTable) {
           const kwPayload = {
