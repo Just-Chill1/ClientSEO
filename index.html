@@ -1078,9 +1078,13 @@
     [data-theme="dark"] .ai-bubble-tooltip .space-y-3 > div * { background: transparent !important; }
   </style>
 
-  <!-- Preconnect to CDNs for faster loading -->
+  <!-- Enhanced preconnect to CDNs and APIs for faster loading -->
   <link rel="preconnect" href="https://unpkg.com" crossorigin>
+  <link rel="preconnect" href="https://script.google.com" crossorigin>
   <link rel="dns-prefetch" href="https://unpkg.com">
+  <link rel="dns-prefetch" href="https://script.google.com">
+  <link rel="prefetch" href="https://unpkg.com/react@18/umd/react.production.min.js">
+  <link rel="prefetch" href="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js">
   
   <!-- React / Babel / Recharts with optimized loading -->
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -1107,37 +1111,188 @@
 /* ------------------------------------------------------------------ */
 /* shared helpers / icons / generic components                        */
 /* ------------------------------------------------------------------ */
-const {useState, useEffect, useRef, useMemo} = React;
 
-// --- Helper function to fetch data with CORS workaround and caching ---
+// Optimized Skeleton Loading Component
+const DashboardSkeleton = memo(() => {
+    return (
+        <PageContent>
+            <div className="grid grid-cols-12 gap-6">
+                {/* Geogrid Section Skeleton - Left side large map */}
+                <Card className="col-span-12 lg:col-span-8">
+                    <div className="animate-pulse">
+                        <div className="flex justify-between items-center mb-4">
+                            <div className="h-6 bg-gray-200 rounded w-48"></div>
+                            <div className="h-8 bg-gray-200 rounded w-24"></div>
+                        </div>
+                        <div className="h-[400px] bg-gray-200 rounded-lg mb-4"></div>
+                        <div className="grid grid-cols-4 gap-4">
+                            {[...Array(4)].map((_, i) => (
+                                <div key={i} className="text-center">
+                                    <div className="h-8 bg-gray-200 rounded mb-2"></div>
+                                    <div className="h-4 bg-gray-100 rounded"></div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </Card>
+
+                {/* Census Info Skeleton - Right side */}
+                <Card className="col-span-12 lg:col-span-4">
+                    <div className="animate-pulse">
+                        <div className="h-6 bg-gray-200 rounded w-32 mb-4"></div>
+                        <div className="space-y-4">
+                            {[...Array(6)].map((_, i) => (
+                                <div key={i} className="flex justify-between items-center">
+                                    <div className="h-4 bg-gray-200 rounded w-24"></div>
+                                    <div className="h-4 bg-gray-100 rounded w-16"></div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </Card>
+
+                {/* Service Cards Skeleton */}
+                {[...Array(2)].map((_, i) => (
+                    <Card key={i} className="col-span-12 md:col-span-6">
+                        <div className="animate-pulse">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="h-6 bg-gray-200 rounded w-48"></div>
+                                <div className="h-8 bg-gray-200 rounded w-20"></div>
+                            </div>
+                            <div className="space-y-3">
+                                {[...Array(5)].map((_, j) => (
+                                    <div key={j} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                        <div className="h-4 bg-gray-200 rounded w-32"></div>
+                                        <div className="h-4 bg-gray-100 rounded w-16"></div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </Card>
+                ))}
+
+                {/* AI Sentiment Bubble Chart Skeleton */}
+                <Card className="col-span-12 md:col-span-7">
+                    <div className="animate-pulse">
+                        <div className="flex justify-between items-center mb-4">
+                            <div className="h-6 bg-gray-200 rounded w-56"></div>
+                            <div className="flex space-x-2">
+                                {[...Array(3)].map((_, i) => (
+                                    <div key={i} className="h-8 bg-gray-200 rounded w-20"></div>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="h-[300px] bg-gray-200 rounded-lg"></div>
+                    </div>
+                </Card>
+
+                {/* Right Column - AI Bar Chart + Mini Stats */}
+                <div className="col-span-12 md:col-span-5 flex flex-col space-y-4">
+                    {/* AI Bar Chart Skeleton */}
+                    <Card className="flex-1">
+                        <div className="animate-pulse">
+                            <div className="h-6 bg-gray-200 rounded w-40 mb-4"></div>
+                            <div className="h-[180px] bg-gray-200 rounded-lg"></div>
+                        </div>
+                    </Card>
+                    
+                    {/* Mini Stats Grid */}
+                    <div className="grid grid-cols-2 gap-4">
+                        {[...Array(4)].map((_, i) => (
+                            <Card key={i} className="p-4">
+                                <div className="animate-pulse text-center">
+                                    <div className="h-8 bg-gray-200 rounded w-12 mx-auto mb-2"></div>
+                                    <div className="h-3 bg-gray-100 rounded w-16 mx-auto"></div>
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Overview Table Skeleton */}
+                <Card className="col-span-12">
+                    <div className="animate-pulse">
+                        <div className="flex justify-between items-center mb-4">
+                            <div className="h-6 bg-gray-200 rounded w-40"></div>
+                            <div className="h-8 bg-gray-200 rounded w-24"></div>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <div className="min-w-full">
+                                {/* Table Header */}
+                                <div className="grid grid-cols-6 gap-4 p-4 border-b">
+                                    {[...Array(6)].map((_, i) => (
+                                        <div key={i} className="h-4 bg-gray-200 rounded"></div>
+                                    ))}
+                                </div>
+                                {/* Table Rows */}
+                                {[...Array(5)].map((_, i) => (
+                                    <div key={i} className="grid grid-cols-6 gap-4 p-4 border-b">
+                                        {[...Array(6)].map((_, j) => (
+                                            <div key={j} className="h-4 bg-gray-100 rounded"></div>
+                                        ))}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </Card>
+            </div>
+        </PageContent>
+    );
+});
+const {useState, useEffect, useRef, useMemo, useCallback, memo} = React;
+
+// --- Enhanced Helper function with improved caching and performance ---
 const fetchWithCorsWorkaround = (url, callback) => {
-    // Check cache first (5 minute cache)
-    const cacheKey = `seo_data_${url}`;
+    // Check cache first (10 minute cache for better performance)
+    const cacheKey = `seo_data_${btoa(url).slice(0, 32)}`; // Shorter cache keys
     const cached = sessionStorage.getItem(cacheKey);
     if (cached) {
-        const { data, timestamp } = JSON.parse(cached);
-        if (Date.now() - timestamp < 5 * 60 * 1000) { // 5 minutes
-            console.log('📦 Using cached data');
-            callback(null, data);
-            return;
+        try {
+            const { data, timestamp } = JSON.parse(cached);
+            if (Date.now() - timestamp < 10 * 60 * 1000) { // Extended to 10 minutes
+                console.log('📦 Using cached data for:', url.slice(0, 50) + '...');
+                // Use setTimeout to avoid blocking UI
+                setTimeout(() => callback(null, data), 0);
+                return;
+            }
+        } catch (e) {
+            // Clear corrupted cache
+            sessionStorage.removeItem(cacheKey);
         }
     }
     
-    // Try regular fetch first
+    // Try regular fetch with timeout and better error handling
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+    
     fetch(url, {
         method: 'GET',
-        mode: 'cors'
+        mode: 'cors',
+        signal: controller.signal,
+        headers: {
+            'Cache-Control': 'max-age=300' // 5 minute browser cache
+        }
     })
-    .then(response => response.json())
+    .then(response => {
+        clearTimeout(timeoutId);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+    })
     .then(data => {
-        // Cache the response
-        sessionStorage.setItem(cacheKey, JSON.stringify({
-            data,
-            timestamp: Date.now()
-        }));
+        // Cache the response with compression check
+        try {
+            const cacheData = JSON.stringify({ data, timestamp: Date.now() });
+            if (cacheData.length < 5 * 1024 * 1024) { // Only cache if < 5MB
+                sessionStorage.setItem(cacheKey, cacheData);
+            }
+        } catch (e) {
+            console.warn('Cache storage failed:', e);
+        }
         callback(null, data);
     })
     .catch(err => {
+        clearTimeout(timeoutId);
         console.log('Regular fetch failed, trying JSONP-style request...');
         // Fallback to JSONP-style request
         const script = document.createElement('script');
@@ -4016,7 +4171,7 @@ const DualReports = ({ competitorText, errorText }) => {
     );
 };
 // --- AI Sentiment Components ---
-const AISentimentBubbleChart = ({ data, loading, error }) => {
+const AISentimentBubbleChart = memo(({ data, loading, error }) => {
     const { ResponsiveContainer, ScatterChart, CartesianGrid, XAxis, YAxis, Tooltip, Cell, Scatter } = window.Recharts;
     const [selectedPlatform, setSelectedPlatform] = useState('chatGpt');
     
@@ -4370,9 +4525,9 @@ const AISentimentBubbleChart = ({ data, loading, error }) => {
         </div>
         </Card>
     );
-};
+});
 
-const AISentimentBarChart = ({ data, loading, error }) => {
+const AISentimentBarChart = memo(({ data, loading, error }) => {
     const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } = window.Recharts;
     
     // Debug logging
@@ -4608,7 +4763,7 @@ const AISentimentBarChart = ({ data, loading, error }) => {
             {/* Mini Stat Cards removed – now independent cards */}
         </Card>
     );
-};
+});
 const Dashboard = ({ setActiveTab, webhooks, setData }) => {
     const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell, PieChart, Pie, Legend, ScatterChart, Scatter } = window.Recharts;
     
@@ -4692,7 +4847,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
     };
 
     // --- Sub-components for Dashboard ---
-    const GeogridSection = React.memo(({ setActiveTab }) => {
+    const GeogridSection = memo(({ setActiveTab }) => {
         const [geogridData, setGeogridData] = useState(null);
         const [loading, setLoading] = useState(true);
         const [error, setError] = useState(null);
@@ -5236,7 +5391,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
         );
     });
 
-    const CensusInfo = ({ censusData, loading, error }) => {
+    const CensusInfo = memo(({ censusData, loading, error }) => {
         if (loading) {
             return <Card className="col-span-12 lg:col-span-4 h-full flex items-center justify-center"><p className="text-gray-500">Loading Census data...</p></Card>;
         }
@@ -5325,8 +5480,8 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                 </div>
             </Card>
         );
-    };
-    const OverviewTable = ({ overviewData, loading, error, onRefresh, isRefreshing, refreshProgress, refreshMessage }) => {
+    });
+    const OverviewTable = memo(({ overviewData, loading, error, onRefresh, isRefreshing, refreshProgress, refreshMessage }) => {
         if (loading) {
             return <Card className="col-span-12 overflow-x-auto flex items-center justify-center"><p className="text-gray-500">Loading Overview data...</p></Card>;
         }
@@ -5549,10 +5704,10 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                 </table>
             </Card>
         );
-    };
+    });
     
     // Modern Location Selector Component
-    const LocationSelector = ({ value, onChange }) => {
+    const LocationSelector = memo(({ value, onChange }) => {
         const [isOpen, setIsOpen] = useState(false);
         const [searchTerm, setSearchTerm] = useState('');
         const [focusedIndex, setFocusedIndex] = useState(-1);
@@ -5930,8 +6085,9 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                 )}
             </div>
         );
-    };
-    const ServiceList = ({ title, dataSet, tooltipText }) => {
+    });
+    
+    const ServiceList = memo(({ title, dataSet, tooltipText }) => {
         const [serviceData, setServiceData] = useState(null);
         const [loading, setLoading] = useState(true);
         const [error, setError] = useState(null);
@@ -6255,7 +6411,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                 </div>
             </div>
         );
-    };
+    });
     
     const [dashboardData, setDashboardData] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -12614,14 +12770,14 @@ const App = () => {
   }, [tab]);
 
   // Handle theme changes and persist to localStorage
-  const handleThemeToggle = (isDay) => {
+  const handleThemeToggle = useCallback((isDay) => {
     const newTheme = isDay ? 'light' : 'dark';
     setTheme(newTheme);
     localStorage.setItem('medSpaTheme', newTheme);
     
     // Apply theme to document root
     document.documentElement.setAttribute('data-theme', newTheme);
-  };
+  }, []);
 
   // Apply theme on mount and when theme changes
   useEffect(() => {
@@ -12633,7 +12789,7 @@ const App = () => {
     if (!id) { setErr('Add ?workbookId=YOUR_ID to the URL'); setLoad(false); return; }
 
     // Helper to prefetch remaining sections in the background after dashboard loads
-    const prefetchRemainingSections = (workbookId) => {
+    const prefetchRemainingSections = useCallback((workbookId) => {
       const base = 'https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec';
       const fetchJson = (sections) => fetch(`${base}?workbookId=${workbookId}&sections=${encodeURIComponent(sections)}`)
         .then(r => r.json())
@@ -12668,7 +12824,7 @@ const App = () => {
           sessionStorage.setItem(`backlinks_${workbookId}`, JSON.stringify(blPayload));
         }
       });
-    };
+    }, []);
 
     // First load only dashboard + webhooks to reduce payload, then prefetch the rest
     fetchWithCorsWorkaround(`https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${id}&sections=${encodeURIComponent('dashboard,webhooks')}`, (err, j) => {
@@ -12694,11 +12850,7 @@ const App = () => {
   /* routing */
   let body;
   if (load) {
-    body = (
-      <PageContent>
-        <div className="p-8 text-center text-gray-500">Loading data…</div>
-      </PageContent>
-    );
+    body = <DashboardSkeleton />;
   } else if (err) {
     body = (
       <PageContent>
@@ -12753,7 +12905,7 @@ const App = () => {
 /* Optimized App Initialization                                       */
 /* ------------------------------------------------------------------ */
 
-// Simple app initialization with performance tracking
+// Enhanced app initialization with comprehensive performance tracking
 const initializeApp = () => {
   const requiredGlobals = ['React', 'ReactDOM', 'Recharts'];
   const allLoaded = requiredGlobals.every(global => window[global]);
@@ -12763,20 +12915,52 @@ const initializeApp = () => {
     console.log('✅ All dependencies loaded, mounting React app...');
     console.log(`⚡ Total load time: ${loadTime.toFixed(2)}ms`);
     
+    // Performance monitoring
+    if ('performance' in window) {
+      const perfData = performance.getEntriesByType('navigation')[0];
+      if (perfData) {
+        console.log('📊 Performance Metrics:', {
+          'DNS Lookup': `${(perfData.domainLookupEnd - perfData.domainLookupStart).toFixed(2)}ms`,
+          'TCP Connection': `${(perfData.connectEnd - perfData.connectStart).toFixed(2)}ms`,
+          'Request': `${(perfData.responseStart - perfData.requestStart).toFixed(2)}ms`,
+          'Response': `${(perfData.responseEnd - perfData.responseStart).toFixed(2)}ms`,
+          'DOM Processing': `${(perfData.domContentLoadedEventEnd - perfData.responseEnd).toFixed(2)}ms`,
+          'Total Load': `${perfData.loadEventEnd.toFixed(2)}ms`
+        });
+      }
+    }
+    
     // Update progress
     const progressEl = document.getElementById('load-progress');
     if (progressEl) progressEl.textContent = 'Starting application...';
     
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    // Use concurrent mode for better performance
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+    
+    // Clear initial loader after a short delay to ensure smooth transition
+    setTimeout(() => {
+      const loaderContainer = document.querySelector('.loader-container');
+      if (loaderContainer) {
+        loaderContainer.style.opacity = '0';
+        setTimeout(() => loaderContainer.remove(), 300);
+      }
+    }, 100);
   } else {
     const missing = requiredGlobals.filter(g => !window[g]);
     console.log('⏳ Waiting for dependencies...', missing);
     
-    // Update progress
+    // Update progress with more specific info
     const progressEl = document.getElementById('load-progress');
-    if (progressEl) progressEl.textContent = `Loading ${missing.join(', ')}...`;
+    if (progressEl) {
+      const loadingMsg = missing.length === 1 ? 
+        `Loading ${missing[0]}...` : 
+        `Loading ${missing.length} components...`;
+      progressEl.textContent = loadingMsg;
+    }
     
-    setTimeout(initializeApp, 100);
+    // Use requestAnimationFrame for better performance
+    requestAnimationFrame(() => setTimeout(initializeApp, 50));
   }
 };
 
