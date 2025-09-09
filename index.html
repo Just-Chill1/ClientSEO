@@ -6139,7 +6139,35 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
             setError(null);
             
             console.log('[ServiceList] Fetching services:', { selectedLocation, dataSet, scriptUrl });
-            fetchWithCorsWorkaround(scriptUrl, (err, data) => {
+            
+            // Temporarily bypass fetchWithCorsWorkaround to test if caching is the issue
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+            
+            console.log('[ServiceList] Making direct fetch call to bypass cache...');
+            fetch(scriptUrl, {
+                method: 'GET',
+                mode: 'cors',
+                signal: controller.signal
+            })
+            .then(response => {
+                clearTimeout(timeoutId);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.json();
+            })
+            .then(data => {
+                console.log('[ServiceList] Direct fetch successful:', data);
+                // Handle response same as fetchWithCorsWorkaround callback
+                handleServiceResponse(null, data);
+            })
+            .catch(err => {
+                clearTimeout(timeoutId);
+                console.error('[ServiceList] Direct fetch error:', err);
+                handleServiceResponse(err, null);
+            });
+            
+            // Extract the response handling logic into a function
+            function handleServiceResponse(err, data) {
                 if (err) {
                     console.error("ServiceList Fetch Error:", err);
                     setError(err.message);
@@ -6194,8 +6222,23 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                     hasNewServices: !!data.newServices,
                     topServicesLength: data.topServices?.length,
                     newServicesLength: data.newServices?.length,
+                    hasDebugInfo: !!data._debug,
                     fullData: data
                 });
+
+                // Log debug information from the Service Cards script
+                if (data._debug) {
+                    console.log('[ServiceList] Service Cards Debug Info:', {
+                        requestLocation: data._debug.requestLocation,
+                        selectedSheet: data._debug.selectedSheet,
+                        sheetRows: data._debug.sheetRows,
+                        dataRowsFound: data._debug.dataRowsFound,
+                        availableSheets: data._debug.availableSheets,
+                        hasSheet: data._debug.hasSheet,
+                        targetColumn: data._debug.targetColumn,
+                        targetColumnHeader: data._debug.targetColumnHeader
+                    });
+                }
 
                 const services = dataSet === 'topServices' ? data.topServices : data.newServices;
                 if (services && services.length > 0) {
@@ -6213,7 +6256,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                     setServiceData([]);
                 }
                 setLoading(false);
-            });
+            }
         }, [selectedLocation, dataSet]);
 
         if (loading) {
