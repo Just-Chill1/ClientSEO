@@ -1263,17 +1263,14 @@ const fetchWithCorsWorkaround = (url, callback) => {
         }
     }
     
-    // Try regular fetch with timeout and better error handling
+    // Try regular fetch with basic timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
     
     fetch(url, {
         method: 'GET',
         mode: 'cors',
-        signal: controller.signal,
-        headers: {
-            'Cache-Control': 'max-age=300' // 5 minute browser cache
-        }
+        signal: controller.signal
     })
     .then(response => {
         clearTimeout(timeoutId);
@@ -1281,14 +1278,14 @@ const fetchWithCorsWorkaround = (url, callback) => {
         return response.json();
     })
     .then(data => {
-        // Cache the response with compression check
+        // Cache the response
         try {
-            const cacheData = JSON.stringify({ data, timestamp: Date.now() });
-            if (cacheData.length < 5 * 1024 * 1024) { // Only cache if < 5MB
-                sessionStorage.setItem(cacheKey, cacheData);
-            }
+        sessionStorage.setItem(cacheKey, JSON.stringify({
+            data,
+            timestamp: Date.now()
+        }));
         } catch (e) {
-            console.warn('Cache storage failed:', e);
+            // Ignore cache storage errors
         }
         callback(null, data);
     })
@@ -12785,12 +12782,8 @@ const App = () => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
 
-  useEffect(() => {
-    const id = new URLSearchParams(location.search).get('workbookId');
-    if (!id) { setErr('Add ?workbookId=YOUR_ID to the URL'); setLoad(false); return; }
-
     // Helper to prefetch remaining sections in the background after dashboard loads
-    const prefetchRemainingSections = useCallback((workbookId) => {
+  const prefetchRemainingSections = useCallback((workbookId) => {
       const base = 'https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec';
       const fetchJson = (sections) => fetch(`${base}?workbookId=${workbookId}&sections=${encodeURIComponent(sections)}`)
         .then(r => r.json())
@@ -12825,7 +12818,11 @@ const App = () => {
           sessionStorage.setItem(`backlinks_${workbookId}`, JSON.stringify(blPayload));
         }
       });
-    }, []);
+  }, [setData]);
+
+  useEffect(() => {
+    const id = new URLSearchParams(location.search).get('workbookId');
+    if (!id) { setErr('Add ?workbookId=YOUR_ID to the URL'); setLoad(false); return; }
 
     // First load only dashboard + webhooks to reduce payload, then prefetch the rest
     fetchWithCorsWorkaround(`https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${id}&sections=${encodeURIComponent('dashboard,webhooks')}`, (err, j) => {
@@ -12846,7 +12843,7 @@ const App = () => {
       // Kick off background prefetch for other sections so tabs are ready
       prefetchRemainingSections(id);
     });
-  }, []);
+  }, [prefetchRemainingSections]);
 
   /* routing */
   let body;
@@ -12916,18 +12913,15 @@ const initializeApp = () => {
     console.log('✅ All dependencies loaded, mounting React app...');
     console.log(`⚡ Total load time: ${loadTime.toFixed(2)}ms`);
     
-    // Performance monitoring
-    if ('performance' in window) {
-      const perfData = performance.getEntriesByType('navigation')[0];
-      if (perfData) {
-        console.log('📊 Performance Metrics:', {
-          'DNS Lookup': `${(perfData.domainLookupEnd - perfData.domainLookupStart).toFixed(2)}ms`,
-          'TCP Connection': `${(perfData.connectEnd - perfData.connectStart).toFixed(2)}ms`,
-          'Request': `${(perfData.responseStart - perfData.requestStart).toFixed(2)}ms`,
-          'Response': `${(perfData.responseEnd - perfData.responseStart).toFixed(2)}ms`,
-          'DOM Processing': `${(perfData.domContentLoadedEventEnd - perfData.responseEnd).toFixed(2)}ms`,
-          'Total Load': `${perfData.loadEventEnd.toFixed(2)}ms`
-        });
+    // Basic performance monitoring
+    if ('performance' in window && performance.getEntriesByType) {
+      try {
+        const perfData = performance.getEntriesByType('navigation')[0];
+        if (perfData && perfData.loadEventEnd) {
+          console.log('📊 Load Time:', `${perfData.loadEventEnd.toFixed(2)}ms`);
+        }
+      } catch (e) {
+        // Ignore performance monitoring errors
       }
     }
     
