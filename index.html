@@ -1113,7 +1113,7 @@
 /* ------------------------------------------------------------------ */
 
 // Optimized Skeleton Loading Component
-const DashboardSkeleton = memo(() => {
+const DashboardSkeleton = React.memo(() => {
     return (
         <PageContent>
             <div className="grid grid-cols-12 gap-6">
@@ -1240,7 +1240,8 @@ const DashboardSkeleton = memo(() => {
         </PageContent>
     );
 });
-const {useState, useEffect, useRef, useMemo, useCallback, memo} = React;
+const {useState, useEffect, useRef, useMemo, useCallback} = React;
+// React.memo will be used directly
 
 // --- Enhanced Helper function with improved caching and performance ---
 const fetchWithCorsWorkaround = (url, callback) => {
@@ -1249,12 +1250,12 @@ const fetchWithCorsWorkaround = (url, callback) => {
     const cached = sessionStorage.getItem(cacheKey);
     if (cached) {
         try {
-            const { data, timestamp } = JSON.parse(cached);
+        const { data, timestamp } = JSON.parse(cached);
             if (Date.now() - timestamp < 10 * 60 * 1000) { // Extended to 10 minutes
                 console.log('📦 Using cached data for:', url.slice(0, 50) + '...');
                 // Use setTimeout to avoid blocking UI
                 setTimeout(() => callback(null, data), 0);
-                return;
+            return;
             }
         } catch (e) {
             // Clear corrupted cache
@@ -4171,7 +4172,7 @@ const DualReports = ({ competitorText, errorText }) => {
     );
 };
 // --- AI Sentiment Components ---
-const AISentimentBubbleChart = memo(({ data, loading, error }) => {
+const AISentimentBubbleChart = React.memo(({ data, loading, error }) => {
     const { ResponsiveContainer, ScatterChart, CartesianGrid, XAxis, YAxis, Tooltip, Cell, Scatter } = window.Recharts;
     const [selectedPlatform, setSelectedPlatform] = useState('chatGpt');
     
@@ -4527,7 +4528,7 @@ const AISentimentBubbleChart = memo(({ data, loading, error }) => {
     );
 });
 
-const AISentimentBarChart = memo(({ data, loading, error }) => {
+const AISentimentBarChart = React.memo(({ data, loading, error }) => {
     const { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } = window.Recharts;
     
     // Debug logging
@@ -4847,7 +4848,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
     };
 
     // --- Sub-components for Dashboard ---
-    const GeogridSection = memo(({ setActiveTab }) => {
+    const GeogridSection = React.memo(({ setActiveTab }) => {
         const [geogridData, setGeogridData] = useState(null);
         const [loading, setLoading] = useState(true);
         const [error, setError] = useState(null);
@@ -5391,7 +5392,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
         );
     });
 
-    const CensusInfo = memo(({ censusData, loading, error }) => {
+    const CensusInfo = React.memo(({ censusData, loading, error }) => {
         if (loading) {
             return <Card className="col-span-12 lg:col-span-4 h-full flex items-center justify-center"><p className="text-gray-500">Loading Census data...</p></Card>;
         }
@@ -5481,7 +5482,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
             </Card>
         );
     });
-    const OverviewTable = memo(({ overviewData, loading, error, onRefresh, isRefreshing, refreshProgress, refreshMessage }) => {
+    const OverviewTable = React.memo(({ overviewData, loading, error, onRefresh, isRefreshing, refreshProgress, refreshMessage }) => {
         if (loading) {
             return <Card className="col-span-12 overflow-x-auto flex items-center justify-center"><p className="text-gray-500">Loading Overview data...</p></Card>;
         }
@@ -5707,7 +5708,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
     });
     
     // Modern Location Selector Component
-    const LocationSelector = memo(({ value, onChange }) => {
+    const LocationSelector = React.memo(({ value, onChange }) => {
         const [isOpen, setIsOpen] = useState(false);
         const [searchTerm, setSearchTerm] = useState('');
         const [focusedIndex, setFocusedIndex] = useState(-1);
@@ -6087,7 +6088,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
         );
     });
     
-    const ServiceList = memo(({ title, dataSet, tooltipText }) => {
+    const ServiceList = React.memo(({ title, dataSet, tooltipText }) => {
         const [serviceData, setServiceData] = useState(null);
         const [loading, setLoading] = useState(true);
         const [error, setError] = useState(null);
