@@ -164,7 +164,7 @@ function getWebsiteStats(spreadsheet) {
     const crawlSummary = getWebsiteCrawlSummary(spreadsheet);
     // NEW: Aggregate checks across all client pages
     const checksAggregate = getWebsiteCrawlPagesAggregate(spreadsheet);
-    // NEW: Read AI error report text from Website Crawl Errors (J2)
+    // NEW: Read AI error report text from Website Crawl Summary (AK2)
     const errorReport = getWebsiteErrorReport(spreadsheet);
     
 
@@ -633,17 +633,17 @@ function getWebsiteErrors(spreadsheet) {
     return { errors, warnings };
 }
 
-// Read AI error report text from Website Crawl Errors → header 'ai_error_report' (cell J2)
+// Read AI error report text from Website Crawl Summary → header 'ai_error_report' (row 2, column AK)
 function getWebsiteErrorReport(spreadsheet) {
-    const sheet = spreadsheet.getSheetByName('Website Crawl Errors');
+    const sheet = spreadsheet.getSheetByName('Website Crawl Summary');
     if (!sheet || sheet.getLastRow() < 2) return '';
     try {
         // Prefer locating by header name for robustness
         const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim().toLowerCase());
         let colIndex = headers.indexOf('ai_error_report');
         if (colIndex === -1) {
-            // Fallback to J (10th column, 1-based) → index 9
-            colIndex = 9;
+            // Fallback to AK (37th column, 1-based) → index 36
+            colIndex = 36;
         }
         const value = sheet.getRange(2, colIndex + 1).getValue();
         return typeof value === 'string' ? value.trim() : String(value || '').trim();
