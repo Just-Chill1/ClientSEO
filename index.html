@@ -3550,7 +3550,7 @@ const DualReports = ({ competitorText, errorText }) => {
         return result;
     };
     const formattedContentErrorKW = parseMarkdownToHtmlKW_ER(String(currentContent || ''));
-    const isPlaceholderOnlyError = (!currentContent || currentContent.trim() === '' || currentContent === 'Error Report will appear here once generated in Website Crawl Errors (J2).');
+    const isPlaceholderOnlyError = (!currentContent || currentContent.trim() === '' || currentContent === 'Error Report will appear here once generated in Website Crawl Summary (AK2).');
 
     // ---------- Error Report Implementation Prompt (only for error tab) ----------
     const formatISOToUSInTextER = (text) => {
@@ -12644,7 +12644,7 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             <div className="mb-8">
                 <DualReports 
                     competitorText={aiReport || 'Competitor Analysis will appear when generated.'}
-                    errorText={healthData?.errorReport || 'Error Report will appear here once generated in Website Crawl Errors (J2).'}
+                    errorText={healthData?.errorReport || 'Error Report will appear here once generated in Website Crawl Summary (AK2).'}
                 />
             </div>
 
