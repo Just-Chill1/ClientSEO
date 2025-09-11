@@ -116,13 +116,33 @@ function doGet(e) {
       };
     }
 
+    // Support for JSONP callback (for iframe cross-origin requests)
+    const callback = e.parameter.callback;
+    if (callback) {
+      const jsonpResponse = `${callback}(${JSON.stringify(data)});`;
+      return ContentService
+        .createTextOutput(jsonpResponse)
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    
     return ContentService
       .createTextOutput(JSON.stringify(data, null, 2))
       .setMimeType(ContentService.MimeType.JSON);
       
   } catch (error) {
+    const errorData = { error: error.message, stack: error.stack };
+    
+    // Support for JSONP callback even for errors
+    const callback = e.parameter.callback;
+    if (callback) {
+      const jsonpResponse = `${callback}(${JSON.stringify(errorData)});`;
+      return ContentService
+        .createTextOutput(jsonpResponse)
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    
     return ContentService
-      .createTextOutput(JSON.stringify({ error: error.message, stack: error.stack }))
+      .createTextOutput(JSON.stringify(errorData))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
