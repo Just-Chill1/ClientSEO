@@ -1259,7 +1259,7 @@ const getIframeAdjustedCacheTime = () => {
 };
 
 // --- Enhanced Helper function with improved caching and iframe support ---
-const fetchWithCorsWorkaround = (url, callback) => {
+const fetchWithCorsWorkaround = (url, callback, retryCount = 0) => {
     // Check cache first (iframe-adjusted cache time)
     const cacheKey = `seo_data_${btoa(url).slice(0, 32)}`; // Shorter cache keys
     const cached = sessionStorage.getItem(cacheKey);
@@ -1330,13 +1330,25 @@ const fetchWithCorsWorkaround = (url, callback) => {
         const callbackName = 'jsonpCallback_' + Math.random().toString(36).substr(2, 9);
         let hasResponded = false;
         
+        console.log(`🔄 Attempting JSONP request with callback: ${callbackName}`);
+        
         // Set a timeout for JSONP requests
         const jsonpTimeout = setTimeout(() => {
             if (!hasResponded) {
                 hasResponded = true;
-                console.error('JSONP request timed out');
+                console.error('❌ JSONP request timed out after 30s');
                 cleanup();
-                callback(new Error('Request timed out'), null);
+                
+                // Retry logic for timeout
+                if (retryCount < 2) {
+                    const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s
+                    console.log(`🔄 Retrying after timeout in ${delay}ms (attempt ${retryCount + 1}/2)`);
+                    setTimeout(() => {
+                        fetchWithCorsWorkaround(url, callback, retryCount + 1);
+                    }, delay);
+                } else {
+                    callback(new Error('Request timed out after retries'), null);
+                }
             }
         }, 30000);
         
@@ -1345,6 +1357,12 @@ const fetchWithCorsWorkaround = (url, callback) => {
             hasResponded = true;
             clearTimeout(jsonpTimeout);
             
+            console.log('✅ JSONP response received:', { 
+                hasError: !!data.error, 
+                dataKeys: Object.keys(data || {}),
+                callbackName 
+            });
+            
             // Cache the response
             try {
                 sessionStorage.setItem(cacheKey, JSON.stringify({
@@ -1352,20 +1370,59 @@ const fetchWithCorsWorkaround = (url, callback) => {
                     timestamp: Date.now()
                 }));
             } catch (e) {
-                // Ignore cache storage errors
+                console.warn('Cache storage failed:', e);
             }
             
             callback(null, data);
             cleanup();
         };
         
-        script.onerror = () => {
+        script.onerror = (event) => {
             if (hasResponded) return;
             hasResponded = true;
             clearTimeout(jsonpTimeout);
-            console.error('JSONP request failed');
+            console.error('❌ JSONP script failed to load:', {
+                url: script.src,
+                callbackName,
+                event,
+                retryCount
+            });
             cleanup();
-            callback(new Error('Failed to load data'), null);
+            
+            // Retry logic with exponential backoff (max 2 retries)
+            if (retryCount < 2) {
+                const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s
+                console.log(`🔄 Retrying JSONP request in ${delay}ms (attempt ${retryCount + 1}/2)`);
+                setTimeout(() => {
+                    fetchWithCorsWorkaround(url, callback, retryCount + 1);
+                }, delay);
+            } else {
+                callback(new Error('Failed to load data after retries'), null);
+            }
+        };
+        
+        script.onload = () => {
+            console.log('📜 JSONP script loaded successfully');
+            // Give a brief moment for callback to execute
+            setTimeout(() => {
+                if (!hasResponded) {
+                    hasResponded = true;
+                    clearTimeout(jsonpTimeout);
+                    console.error('❌ JSONP script loaded but callback never executed');
+                    cleanup();
+                    
+                    // Retry logic for callback not executed
+                    if (retryCount < 2) {
+                        const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s
+                        console.log(`🔄 Retrying after callback failure in ${delay}ms (attempt ${retryCount + 1}/2)`);
+                        setTimeout(() => {
+                            fetchWithCorsWorkaround(url, callback, retryCount + 1);
+                        }, delay);
+                    } else {
+                        callback(new Error('Callback not executed after retries'), null);
+                    }
+                }
+            }, 1000);
         };
         
         function cleanup() {
@@ -1375,12 +1432,14 @@ const fetchWithCorsWorkaround = (url, callback) => {
                 }
                 delete window[callbackName];
             } catch (e) {
-                // Ignore cleanup errors
+                console.warn('Cleanup error:', e);
             }
         }
         
         const separator = url.includes('?') ? '&' : '?';
-        script.src = `${url}${separator}callback=${callbackName}`;
+        const finalUrl = `${url}${separator}callback=${callbackName}`;
+        console.log('🚀 Loading JSONP script:', finalUrl);
+        script.src = finalUrl;
         document.head.appendChild(script);
     }
 };
