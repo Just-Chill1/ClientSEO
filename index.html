@@ -1243,15 +1243,30 @@ const DashboardSkeleton = React.memo(() => {
 const {useState, useEffect, useRef, useMemo, useCallback} = React;
 // React.memo will be used directly
 
-// --- Enhanced Helper function with improved caching and performance ---
+// --- Iframe detection and session management ---
+const isRunningInIframe = () => {
+    try {
+        return window.self !== window.top;
+    } catch (e) {
+        // If we can't access window.top due to cross-origin, we're likely in an iframe
+        return true;
+    }
+};
+
+const getIframeAdjustedCacheTime = () => {
+    // Shorter cache time in iframe to handle session timeouts better
+    return isRunningInIframe() ? 5 * 60 * 1000 : 10 * 60 * 1000; // 5min vs 10min
+};
+
+// --- Enhanced Helper function with improved caching and iframe support ---
 const fetchWithCorsWorkaround = (url, callback) => {
-    // Check cache first (10 minute cache for better performance)
+    // Check cache first (iframe-adjusted cache time)
     const cacheKey = `seo_data_${btoa(url).slice(0, 32)}`; // Shorter cache keys
     const cached = sessionStorage.getItem(cacheKey);
     if (cached) {
         try {
         const { data, timestamp } = JSON.parse(cached);
-            if (Date.now() - timestamp < 10 * 60 * 1000) { // Extended to 10 minutes
+            if (Date.now() - timestamp < getIframeAdjustedCacheTime()) {
                 console.log('📦 Using cached data for:', url.slice(0, 50) + '...');
                 // Use setTimeout to avoid blocking UI
                 setTimeout(() => callback(null, data), 0);
@@ -1263,14 +1278,29 @@ const fetchWithCorsWorkaround = (url, callback) => {
         }
     }
     
-    // Try regular fetch with basic timeout
+    // Detect if we're in an iframe
+    const isInIframe = isRunningInIframe();
+    
+    // For iframe contexts, use JSONP first as it's more reliable
+    if (isInIframe) {
+        console.log('🖼️ Iframe detected, using JSONP for:', url.slice(0, 50) + '...');
+        tryJsonpRequest();
+        return;
+    }
+    
+    // Try regular fetch with extended timeout for iframe contexts
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
+    const timeoutId = setTimeout(() => controller.abort(), isInIframe ? 30000 : 15000);
     
     fetch(url, {
         method: 'GET',
         mode: 'cors',
-        signal: controller.signal
+        credentials: 'omit', // Avoid cookie issues in iframe
+        signal: controller.signal,
+        headers: {
+            'Accept': 'application/json, text/plain, */*',
+            'Cache-Control': 'no-cache'
+        }
     })
     .then(response => {
         clearTimeout(timeoutId);
@@ -1292,27 +1322,67 @@ const fetchWithCorsWorkaround = (url, callback) => {
     .catch(err => {
         clearTimeout(timeoutId);
         console.log('Regular fetch failed, trying JSONP-style request...');
-        // Fallback to JSONP-style request
+        tryJsonpRequest();
+    });
+    
+    function tryJsonpRequest() {
         const script = document.createElement('script');
         const callbackName = 'jsonpCallback_' + Math.random().toString(36).substr(2, 9);
+        let hasResponded = false;
+        
+        // Set a timeout for JSONP requests
+        const jsonpTimeout = setTimeout(() => {
+            if (!hasResponded) {
+                hasResponded = true;
+                console.error('JSONP request timed out');
+                cleanup();
+                callback(new Error('Request timed out'), null);
+            }
+        }, 30000);
+        
         window[callbackName] = (data) => {
+            if (hasResponded) return;
+            hasResponded = true;
+            clearTimeout(jsonpTimeout);
+            
             // Cache the response
-            sessionStorage.setItem(cacheKey, JSON.stringify({
-                data,
-                timestamp: Date.now()
-            }));
+            try {
+                sessionStorage.setItem(cacheKey, JSON.stringify({
+                    data,
+                    timestamp: Date.now()
+                }));
+            } catch (e) {
+                // Ignore cache storage errors
+            }
+            
             callback(null, data);
-            document.head.removeChild(script);
-            delete window[callbackName];
+            cleanup();
         };
-        script.src = `${url}&callback=${callbackName}`;
+        
         script.onerror = () => {
+            if (hasResponded) return;
+            hasResponded = true;
+            clearTimeout(jsonpTimeout);
+            console.error('JSONP request failed');
+            cleanup();
             callback(new Error('Failed to load data'), null);
-            document.head.removeChild(script);
-            delete window[callbackName];
         };
+        
+        function cleanup() {
+            try {
+                if (script.parentNode) {
+                    document.head.removeChild(script);
+                }
+                delete window[callbackName];
+            } catch (e) {
+                // Ignore cleanup errors
+            }
+        }
+        
+        const separator = url.includes('?') ? '&' : '?';
+        script.src = `${url}${separator}callback=${callbackName}`;
         document.head.appendChild(script);
-    });
+    }
 };
 
     // --- Map URL Processing for Better Centering ---
