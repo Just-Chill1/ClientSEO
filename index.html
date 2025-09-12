@@ -1258,6 +1258,59 @@ const getIframeAdjustedCacheTime = () => {
     return isRunningInIframe() ? 5 * 60 * 1000 : 10 * 60 * 1000; // 5min vs 10min
 };
 
+// --- Google Apps Script Test Function (for debugging) ---
+window.testGoogleAppsScript = (workbookId) => {
+    const testUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId || '1bDx2KvIbM_fnLWZODBtiNGeJRSC777_QmqoHdblCYqk'}&sections=dashboard`;
+    
+    console.log('🧪 Testing Google Apps Script directly...');
+    console.log('📍 Test URL:', testUrl);
+    
+    // Test 1: Try a simple JSONP request
+    const script = document.createElement('script');
+    const callbackName = 'testCallback_' + Date.now();
+    
+    window[callbackName] = (data) => {
+        console.log('✅ JSONP Test Success! Data received:', data);
+        document.head.removeChild(script);
+        delete window[callbackName];
+    };
+    
+    script.onerror = (e) => {
+        console.error('❌ JSONP Test Failed:', e);
+        document.head.removeChild(script);
+        delete window[callbackName];
+    };
+    
+    script.src = `${testUrl}&callback=${callbackName}`;
+    document.head.appendChild(script);
+    
+    // Test 2: Try opening the URL directly
+    console.log('🔗 Try opening this URL directly in a new tab to test:', testUrl);
+    
+    return testUrl;
+};
+
+// --- Check if Google Apps Script needs redeployment ---
+window.checkScriptDeployment = () => {
+    console.log('🔧 Google Apps Script Deployment Checklist:');
+    console.log('');
+    console.log('1. ✅ JSONP support has been added to your Google Apps Script');
+    console.log('2. 🔄 You need to REDEPLOY the Google Apps Script after making changes');
+    console.log('3. 📋 Steps to redeploy:');
+    console.log('   a) Open Google Apps Script editor');
+    console.log('   b) Click "Deploy" > "New deployment"');
+    console.log('   c) Choose "Web app" type');
+    console.log('   d) Set "Execute as" to "Me"');
+    console.log('   e) Set "Who has access" to "Anyone"');
+    console.log('   f) Click "Deploy"');
+    console.log('   g) Copy the new Web app URL if it changed');
+    console.log('');
+    console.log('4. 🧪 Test the deployment:');
+    console.log('   Run: testGoogleAppsScript() in the console');
+    console.log('');
+    console.log('❗ IMPORTANT: Google Apps Script changes require redeployment to take effect!');
+};
+
 // --- Enhanced Helper function with improved caching and iframe support ---
 const fetchWithCorsWorkaround = (url, callback, retryCount = 0) => {
     // Check cache first (iframe-adjusted cache time)
@@ -1439,8 +1492,19 @@ const fetchWithCorsWorkaround = (url, callback, retryCount = 0) => {
         const separator = url.includes('?') ? '&' : '?';
         const finalUrl = `${url}${separator}callback=${callbackName}`;
         console.log('🚀 Loading JSONP script:', finalUrl);
+        
+        // Add additional debugging
+        script.onabort = () => console.error('❌ JSONP script was aborted');
+        script.oncancel = () => console.error('❌ JSONP script was cancelled');
+        
         script.src = finalUrl;
         document.head.appendChild(script);
+        
+        // Test if we can at least reach the script URL directly
+        console.log('🔍 Testing script URL accessibility...');
+        fetch(finalUrl.split('&callback=')[0], { method: 'HEAD', mode: 'no-cors' })
+            .then(() => console.log('✅ Script URL is reachable'))
+            .catch(e => console.error('❌ Script URL not reachable:', e));
     }
 };
 
