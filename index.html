@@ -1368,9 +1368,10 @@ const fetchWithCorsWorkaround = (url, callback, retryCount = 0) => {
     
     // Detect if we're in an iframe
     const isInIframe = isRunningInIframe();
-    
-    // For iframe contexts, use JSONP first as it's more reliable
-    if (isInIframe) {
+
+    // If calling Google Apps Script web app, prefer JSONP immediately to avoid CORS entirely
+    const isGoogleAppsScript = /https?:\/\/script\.google\.com\/macros\//i.test(url);
+    if (isInIframe || isGoogleAppsScript) {
         console.log('🖼️ Iframe detected, using JSONP for:', url.slice(0, 50) + '...');
         tryJsonpRequest();
         return;
@@ -1384,11 +1385,9 @@ const fetchWithCorsWorkaround = (url, callback, retryCount = 0) => {
         method: 'GET',
         mode: 'cors',
         credentials: 'omit', // Avoid cookie issues in iframe
-        signal: controller.signal,
-        headers: {
-            'Accept': 'application/json, text/plain, */*',
-            'Cache-Control': 'no-cache'
-        }
+        signal: controller.signal
+        // IMPORTANT: Do not set non-simple headers here (like Cache-Control),
+        // as that would trigger a CORS preflight which Apps Script does not allow.
     })
     .then(response => {
         clearTimeout(timeoutId);
@@ -1535,11 +1534,7 @@ const fetchWithCorsWorkaround = (url, callback, retryCount = 0) => {
         script.src = finalUrl;
         document.head.appendChild(script);
         
-        // Test if we can at least reach the script URL directly
-        console.log('🔍 Testing script URL accessibility...');
-        fetch(finalUrl.split('&callback=')[0], { method: 'HEAD', mode: 'no-cors' })
-            .then(() => console.log('✅ Script URL is reachable'))
-            .catch(e => console.error('❌ Script URL not reachable:', e));
+        // Removed HEAD probe which could show misleading 403s and isn't needed
     }
 };
 

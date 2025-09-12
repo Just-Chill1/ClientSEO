@@ -44,6 +44,19 @@ var DEBUG = false;
 
 function log(){ if (DEBUG) console.log.apply(console, arguments); }
 
+// Safely stringify JSON for JSONP responses by escaping Unicode separators
+// that can break external script parsing in some browsers.
+function jsonpSafeStringify(obj) {
+  try {
+    var json = JSON.stringify(obj);
+    // Escape U+2028 and U+2029 which are valid in JSON but break JS parsing
+    json = json.replace(/\u2028/g, '\\u2028').replace(/\u2029/g, '\\u2029');
+    return json;
+  } catch (e) {
+    return '{"error":"Failed to serialize JSONP payload"}';
+  }
+}
+
 function doGet(e) {
   try {
     // Read the workbookId from the URL parameter sent by the React app
@@ -119,7 +132,7 @@ function doGet(e) {
     // Support for JSONP callback (for iframe cross-origin requests)
     const callback = e.parameter.callback;
     if (callback) {
-      const jsonpResponse = `${callback}(${JSON.stringify(data)});`;
+      const jsonpResponse = `${callback}(${jsonpSafeStringify(data)});`;
       return ContentService
         .createTextOutput(jsonpResponse)
         .setMimeType(ContentService.MimeType.JAVASCRIPT);
@@ -135,7 +148,7 @@ function doGet(e) {
     // Support for JSONP callback even for errors
     const callback = e.parameter.callback;
     if (callback) {
-      const jsonpResponse = `${callback}(${JSON.stringify(errorData)});`;
+      const jsonpResponse = `${callback}(${jsonpSafeStringify(errorData)});`;
       return ContentService
         .createTextOutput(jsonpResponse)
         .setMimeType(ContentService.MimeType.JAVASCRIPT);
