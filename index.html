@@ -1366,15 +1366,10 @@ const fetchWithCorsWorkaround = (url, callback, retryCount = 0) => {
         }
     }
     
-    // Detect if we're in an iframe
+    // Detect if we're in an iframe (informational only; do not force JSONP up-front)
     const isInIframe = isRunningInIframe();
-
-    // If calling Google Apps Script web app, prefer JSONP immediately to avoid CORS entirely
-    const isGoogleAppsScript = /https?:\/\/script\.google\.com\/macros\//i.test(url);
-    if (isInIframe || isGoogleAppsScript) {
-        console.log('🖼️ Iframe detected, using JSONP for:', url.slice(0, 50) + '...');
-        tryJsonpRequest();
-        return;
+    if (isInIframe) {
+        console.log('🖼️ Iframe context detected (will fallback to JSONP only if needed):', url.slice(0, 50) + '...');
     }
     
     // Try regular fetch with extended timeout for iframe contexts
@@ -1484,7 +1479,8 @@ const fetchWithCorsWorkaround = (url, callback, retryCount = 0) => {
                     fetchWithCorsWorkaround(url, callback, retryCount + 1);
                 }, delay);
             } else {
-                callback(new Error('Failed to load data after retries'), null);
+                console.log('🌐 Falling back to CORS mirror fetch...');
+                tryMirrorRequest();
             }
         };
         
@@ -1506,7 +1502,8 @@ const fetchWithCorsWorkaround = (url, callback, retryCount = 0) => {
                             fetchWithCorsWorkaround(url, callback, retryCount + 1);
                         }, delay);
                     } else {
-                        callback(new Error('Callback not executed after retries'), null);
+                        console.log('🌐 Falling back to CORS mirror fetch...');
+                        tryMirrorRequest();
                     }
                 }
             }, 1000);
@@ -1535,6 +1532,49 @@ const fetchWithCorsWorkaround = (url, callback, retryCount = 0) => {
         document.head.appendChild(script);
         
         // Removed HEAD probe which could show misleading 403s and isn't needed
+    }
+
+    // Last-resort fallback: use public CORS mirrors to fetch JSON and parse
+    function tryMirrorRequest() {
+        try {
+            const mirrors = [
+                (u) => `https://r.jina.ai/${u}`,
+                (u) => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`
+            ];
+            let attempted = 0;
+            const tryNext = () => {
+                if (attempted >= mirrors.length) {
+                    callback(new Error('Failed to load data after retries'), null);
+                    return;
+                }
+                const mirrorUrl = mirrors[attempted](url);
+                attempted++;
+                console.log('🛰️ Mirror attempt:', mirrorUrl);
+                fetch(mirrorUrl, { method: 'GET', credentials: 'omit' })
+                    .then(r => r.text())
+                    .then(text => {
+                        try {
+                            const data = JSON.parse(text);
+                            // Cache
+                            try {
+                                sessionStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: Date.now() }));
+                            } catch (e) {}
+                            console.log('✅ Mirror fetch succeeded');
+                            callback(null, data);
+                        } catch (e) {
+                            console.error('❌ Mirror returned non-JSON, trying next...', e);
+                            tryNext();
+                        }
+                    })
+                    .catch(e => {
+                        console.error('❌ Mirror fetch failed, trying next...', e);
+                        tryNext();
+                    });
+            };
+            tryNext();
+        } catch (e) {
+            callback(new Error('Mirror fallback failed'), null);
+        }
     }
 };
 
