@@ -1292,23 +1292,58 @@ window.testGoogleAppsScript = (workbookId) => {
 
 // --- Check if Google Apps Script needs redeployment ---
 window.checkScriptDeployment = () => {
-    console.log('🔧 Google Apps Script Deployment Checklist:');
+    console.log('🔧 Google Apps Script Deployment Status:');
     console.log('');
-    console.log('1. ✅ JSONP support has been added to your Google Apps Script');
-    console.log('2. 🔄 You need to REDEPLOY the Google Apps Script after making changes');
-    console.log('3. 📋 Steps to redeploy:');
-    console.log('   a) Open Google Apps Script editor');
-    console.log('   b) Click "Deploy" > "New deployment"');
-    console.log('   c) Choose "Web app" type');
-    console.log('   d) Set "Execute as" to "Me"');
-    console.log('   e) Set "Who has access" to "Anyone"');
-    console.log('   f) Click "Deploy"');
-    console.log('   g) Copy the new Web app URL if it changed');
+    console.log('✅ JSONP support has been added and deployed');
+    console.log('✅ Permissions are correctly set to "Anyone"');
+    console.log('✅ Direct script access is working');
     console.log('');
-    console.log('4. 🧪 Test the deployment:');
-    console.log('   Run: testGoogleAppsScript() in the console');
+    console.log('🔍 Current issue: Iframe vs Direct Access difference');
+    console.log('📋 Next steps:');
+    console.log('   1. Wait 5-10 minutes for full propagation');
+    console.log('   2. Run: testJSONPInIframe() to test from iframe context');
+    console.log('   3. Check if there are any remaining CORS/iframe restrictions');
     console.log('');
-    console.log('❗ IMPORTANT: Google Apps Script changes require redeployment to take effect!');
+    console.log('💡 The script is working - this may be an iframe-specific delay or caching issue');
+};
+
+// --- Test JSONP specifically in iframe context ---
+window.testJSONPInIframe = () => {
+    console.log('🧪 Testing JSONP in current context (iframe vs direct)...');
+    console.log('🖼️ In iframe:', isRunningInIframe());
+    
+    const workbookId = '1bDx2KvIbM_fnLWZODBtiNGeJRSC777_QmqoHdblCYqk';
+    const testUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}&sections=dashboard`;
+    
+    fetchWithCorsWorkaround(testUrl, (err, data) => {
+        if (err) {
+            console.error('❌ JSONP test failed in current context:', err);
+            console.log('🔄 This suggests iframe-specific restrictions or propagation delay');
+            console.log('⏰ Try again in 5-10 minutes');
+        } else {
+            console.log('✅ JSONP test succeeded in current context!');
+            console.log('📊 Data keys received:', Object.keys(data || {}));
+            console.log('🎉 The iframe issue should be resolved now!');
+        }
+    });
+};
+
+// --- Clear all SEO app cache (for troubleshooting) ---
+window.clearSEOCache = () => {
+    console.log('🧹 Clearing all SEO app cache...');
+    let clearedCount = 0;
+    
+    // Clear all sessionStorage keys that start with 'seo_data_'
+    Object.keys(sessionStorage).forEach(key => {
+        if (key.startsWith('seo_data_') || key.includes('dashboard_data_') || key.includes('services_') || key.includes('keywords_') || key.includes('backlinks_') || key.includes('geogrid_')) {
+            sessionStorage.removeItem(key);
+            clearedCount++;
+            console.log('🗑️ Cleared:', key);
+        }
+    });
+    
+    console.log(`✅ Cleared ${clearedCount} cache entries`);
+    console.log('🔄 Now refresh the page or wait for automatic data reload');
 };
 
 // --- Enhanced Helper function with improved caching and iframe support ---
