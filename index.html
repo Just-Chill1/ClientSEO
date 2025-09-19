@@ -1346,6 +1346,34 @@ window.clearSEOCache = () => {
     console.log('🔄 Now refresh the page or wait for automatic data reload');
 };
 
+// --- Debug function for error report ---
+window.debugErrorReport = (workbookId) => {
+    console.log('🔍 Debugging Error Report for workbook:', workbookId || 'current');
+    const currentWorkbookId = workbookId || getWorkbookId();
+    const testUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${currentWorkbookId}&sections=websiteStats`;
+    
+    fetchWithCorsWorkaround(testUrl, (err, data) => {
+        if (err) {
+            console.error('❌ Failed to fetch data:', err);
+            return;
+        }
+        
+        console.log('📊 Full website stats data:', data);
+        console.log('🏥 Health data:', data.websiteStats?.healthData);
+        console.log('📝 Error report field:', data.websiteStats?.healthData?.errorReport);
+        console.log('📝 Error report type:', typeof data.websiteStats?.healthData?.errorReport);
+        console.log('📝 Error report length:', data.websiteStats?.healthData?.errorReport ? data.websiteStats?.healthData?.errorReport.length : 0);
+        console.log('📝 Error report content preview:', data.websiteStats?.healthData?.errorReport ? data.websiteStats?.healthData?.errorReport.substring(0, 200) : 'N/A');
+        
+        if (data.websiteStats?.healthData?.errorReport && data.websiteStats?.healthData?.errorReport.trim() !== '') {
+            console.log('✅ Error report found in data!');
+        } else {
+            console.log('❌ No error report found in data');
+            console.log('🔍 Available healthData keys:', Object.keys(data.websiteStats?.healthData || {}));
+        }
+    });
+};
+
 // --- Enhanced Helper function with improved caching and iframe support ---
 const fetchWithCorsWorkaround = (url, callback, retryCount = 0) => {
     // Check cache first (iframe-adjusted cache time)
@@ -1447,10 +1475,10 @@ const fetchWithCorsWorkaround = (url, callback, retryCount = 0) => {
             
             // Cache the response
             try {
-                sessionStorage.setItem(cacheKey, JSON.stringify({
-                    data,
-                    timestamp: Date.now()
-                }));
+            sessionStorage.setItem(cacheKey, JSON.stringify({
+                data,
+                timestamp: Date.now()
+            }));
             } catch (e) {
                 console.warn('Cache storage failed:', e);
             }
@@ -1512,9 +1540,9 @@ const fetchWithCorsWorkaround = (url, callback, retryCount = 0) => {
         function cleanup() {
             try {
                 if (script.parentNode) {
-                    document.head.removeChild(script);
+            document.head.removeChild(script);
                 }
-                delete window[callbackName];
+            delete window[callbackName];
             } catch (e) {
                 console.warn('Cleanup error:', e);
             }
@@ -12910,6 +12938,17 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
 
             {/* Dual Reports: Competitor Analysis + Error Report */}
             <div className="mb-8">
+                {/* DEBUG: Log error report data */}
+                {(() => {
+                    console.log('🔍 Website Stats - Error Report Debug:', {
+                        healthData: healthData,
+                        errorReport: healthData?.errorReport,
+                        errorReportType: typeof healthData?.errorReport,
+                        errorReportLength: healthData?.errorReport ? healthData.errorReport.length : 0,
+                        errorReportPreview: healthData?.errorReport ? healthData.errorReport.substring(0, 100) : 'N/A'
+                    });
+                    return null;
+                })()}
                 <DualReports 
                     competitorText={aiReport || 'Competitor Analysis will appear when generated.'}
                     errorText={healthData?.errorReport || 'Error Report will appear here once generated in Website Crawl Summary (AK2).'}
