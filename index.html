@@ -11771,8 +11771,8 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
 
     const hasDataChanged = (oldData, newData) => {
         // Primary check: Has the AI error report been generated? This indicates completion
-        const oldErrorReport = oldData.websiteStats?.errorReport;
-        const newErrorReport = newData.websiteStats?.errorReport;
+        const oldErrorReport = oldData.websiteStats?.healthData?.errorReport;
+        const newErrorReport = newData.websiteStats?.healthData?.errorReport;
         
         // Check if AI error report has meaningful content (not just empty/placeholder)
         const hasAiErrorReport = newErrorReport && 
@@ -11847,6 +11847,37 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
     } catch (error) {
         console.error('Error processing AI Notes:', error);
     }
+
+    // If the error report is empty, bypass cache and re-fetch websiteStats once
+    const refetchAttemptedRef = useRef(false);
+    useEffect(() => {
+        try {
+            const currentError = String(healthData?.errorReport ?? '').trim();
+            if (refetchAttemptedRef.current) return;
+            if (currentError === '') {
+                refetchAttemptedRef.current = true;
+                const params = new URLSearchParams(window.location.search);
+                const workbookId = params.get('workbookId') || '';
+                if (!workbookId) return;
+                const base = 'https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec';
+                const wsUrlFresh = `${base}?workbookId=${workbookId}&sections=websiteStats&_=fresh_${Date.now()}`;
+                console.log('🔄 Error report empty - fetching fresh websiteStats...', wsUrlFresh);
+                fetchWithCorsWorkaround(wsUrlFresh, (err, resp) => {
+                    if (err) {
+                        console.log('❌ Fresh websiteStats fetch failed:', err);
+                        return;
+                    }
+                    const newReport = String(resp?.websiteStats?.healthData?.errorReport ?? '').trim();
+                    if (newReport) {
+                        console.log('✅ Fresh error report received, updating state');
+                        setData(prev => ({ ...prev, websiteStats: resp.websiteStats }));
+                    } else {
+                        console.log('ℹ️ Fresh fetch returned empty error report as well');
+                    }
+                });
+            }
+        } catch {}
+    }, [healthData?.errorReport, setData]);
 
     // Enhanced competitor data processing - ALL data is in milliseconds, convert to seconds
     const competitorPerfData = (rawCompetitorPerfData || []).map(comp => {
