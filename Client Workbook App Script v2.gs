@@ -671,17 +671,71 @@ function getWebsiteErrorReport(spreadsheet) {
     const sheet = spreadsheet.getSheetByName('Website Crawl Summary');
     if (!sheet || sheet.getLastRow() < 2) return '';
     try {
-        // Prefer locating by header name for robustness
-        const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim().toLowerCase());
-        let colIndex = headers.indexOf('ai_error_report');
-        if (colIndex === -1) {
-            // Fallback to AK (37th column, 1-based) → index 36
-            colIndex = 36;
+        const lastCol = sheet.getLastColumn();
+
+        // 1) Direct AK2 (DisplayValue first)
+        try {
+            const akDisplay = sheet.getRange('AK2').getDisplayValue();
+            if (akDisplay && String(akDisplay).trim() !== '') {
+                return String(akDisplay).trim();
+            }
+            const akRich = sheet.getRange('AK2').getRichTextValue();
+            const akRichText = akRich ? akRich.getText() : '';
+            if (akRichText && String(akRichText).trim() !== '') {
+                return String(akRichText).trim();
+            }
+            const akRaw = sheet.getRange('AK2').getValue();
+            if (akRaw && String(akRaw).trim() !== '') {
+                return String(akRaw).trim();
+            }
+        } catch (_) {}
+
+        // 2) Header-based lookup for 'ai_error_report' and common variants
+        const headers = sheet
+            .getRange(1, 1, 1, lastCol)
+            .getValues()[0]
+            .map(h => String(h).trim().toLowerCase());
+
+        const candidates = [
+            'ai_error_report',
+            'ai error report',
+            'ai-error-report',
+            'error_report_ai',
+            'ai report (errors)'
+        ];
+        let idx = headers.indexOf('ai_error_report');
+        if (idx === -1) {
+            idx = headers.findIndex(h => candidates.includes(h));
         }
-        const value = sheet.getRange(2, colIndex + 1).getValue();
-        return typeof value === 'string' ? value.trim() : String(value || '').trim();
+        if (idx !== -1) {
+            const col = idx + 1; // 1-based
+            const disp = sheet.getRange(2, col).getDisplayValue();
+            if (disp && String(disp).trim() !== '') return String(disp).trim();
+
+            const rt = sheet.getRange(2, col).getRichTextValue();
+            const rtt = rt ? rt.getText() : '';
+            if (rtt && String(rtt).trim() !== '') return String(rtt).trim();
+
+            const raw = sheet.getRange(2, col).getValue();
+            if (raw && String(raw).trim() !== '') return String(raw).trim();
+        }
+
+        // 3) Fallback to numeric AK column (AK = 37)
+        if (lastCol >= 37) {
+            const dispAK = sheet.getRange(2, 37).getDisplayValue();
+            if (dispAK && String(dispAK).trim() !== '') return String(dispAK).trim();
+
+            const rtAK = sheet.getRange(2, 37).getRichTextValue();
+            const rttAK = rtAK ? rtAK.getText() : '';
+            if (rttAK && String(rttAK).trim() !== '') return String(rttAK).trim();
+
+            const rawAK = sheet.getRange(2, 37).getValue();
+            if (rawAK && String(rawAK).trim() !== '') return String(rawAK).trim();
+        }
+
+        return '';
     } catch (e) {
-        console.log('Error reading AI error report:', e.message);
+        console.log('Error reading AI error report:', e && e.message ? e.message : e);
         return '';
     }
 }
