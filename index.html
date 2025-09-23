@@ -7263,36 +7263,7 @@ const Keywords = ({ summary, table, webhooks, setData }) => {
         };
     }, []);
 
-    // One-time fresh fetch when error report is empty (placed early to keep hook order stable)
-    const refetchAttemptedRef = useRef(false);
-    useEffect(() => {
-        try {
-            const currentError = String((data?.healthData?.errorReport) ?? '').trim();
-            if (refetchAttemptedRef.current) return;
-            if (currentError === '') {
-                refetchAttemptedRef.current = true;
-                const params = new URLSearchParams(window.location.search);
-                const workbookId = params.get('workbookId') || '';
-                if (!workbookId) return;
-                const base = 'https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec';
-                const wsUrlFresh = `${base}?workbookId=${workbookId}&sections=websiteStats&_=fresh_${Date.now()}`;
-                console.log('🔄 Error report empty - fetching fresh websiteStats...', wsUrlFresh);
-                fetchWithCorsWorkaround(wsUrlFresh, (err, resp) => {
-                    if (err) {
-                        console.log('❌ Fresh websiteStats fetch failed:', err);
-                        return;
-                    }
-                    const newReport = String(resp?.websiteStats?.healthData?.errorReport ?? '').trim();
-                    if (newReport) {
-                        console.log('✅ Fresh error report received, updating state');
-                        setData(prev => ({ ...prev, websiteStats: resp.websiteStats }));
-                    } else {
-                        console.log('ℹ️ Fresh fetch returned empty error report as well');
-                    }
-                });
-            }
-        } catch {}
-    }, [data?.healthData?.errorReport, setData]);
+    // Note: removed a one-time fetch that referenced an out-of-scope `data` variable to prevent runtime errors
 
     // Refresh functionality
     const triggerRefresh = async () => {
