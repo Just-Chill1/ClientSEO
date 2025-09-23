@@ -638,17 +638,44 @@ function getWebsiteErrorReport(spreadsheet) {
     const sheet = spreadsheet.getSheetByName('Website Crawl Summary');
     if (!sheet || sheet.getLastRow() < 2) return '';
     try {
-        // Prefer locating by header name for robustness
-        const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim().toLowerCase());
-        let colIndex = headers.indexOf('ai_error_report');
-        if (colIndex === -1) {
-            // Fallback to AK (37th column, 1-based) → index 36
-            colIndex = 36;
+        // Read headers as display values and normalize for robust matching
+        const headersDisplay = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0] || [];
+        const normalize = s => String(s || '')
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, '_')      // spaces -> underscore
+            .replace(/-+/g, '_')        // hyphens -> underscore
+            .replace(/[^a-z0-9_]/g, ''); // strip other punctuation
+        const normalized = headersDisplay.map(h => normalize(h));
+
+        const preferredCandidates = [
+            'ai_error_report',
+            'aierrorreport',
+            'ai_errorreport',
+            'ai_error_reports'
+        ];
+
+        let colIndex = -1;
+        // Try exact matches against normalized headers
+        for (let i = 0; i < preferredCandidates.length; i++) {
+            const idx = normalized.indexOf(preferredCandidates[i]);
+            if (idx !== -1) { colIndex = idx; break; }
         }
-        const value = sheet.getRange(2, colIndex + 1).getValue();
+
+        // Heuristic fallback: find a header that mentions error+report (and preferably ai)
+        if (colIndex === -1) {
+            const heuristicIdx = normalized.findIndex(h => h.includes('error') && h.includes('report'));
+            if (heuristicIdx !== -1) colIndex = heuristicIdx;
+        }
+
+        // Legacy fallback to fixed AK (37th column, 0-based index = 36)
+        if (colIndex === -1) colIndex = 36;
+
+        // Read as display value to preserve plaintext; trim safely
+        const value = sheet.getRange(2, colIndex + 1).getDisplayValue();
         return typeof value === 'string' ? value.trim() : String(value || '').trim();
     } catch (e) {
-        console.log('Error reading AI error report:', e.message);
+        console.log('Error reading AI error report:', e && e.message ? e.message : e);
         return '';
     }
 }
