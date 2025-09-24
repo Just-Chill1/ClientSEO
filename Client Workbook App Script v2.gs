@@ -635,7 +635,21 @@ function getWebsiteErrors(spreadsheet) {
 
 // Read AI error report text from Website Crawl Summary → header 'ai_error_report' (row 2, column AK)
 function getWebsiteErrorReport(spreadsheet) {
-    const sheet = spreadsheet.getSheetByName('Website Crawl Summary');
+    let sheet = spreadsheet.getSheetByName('Website Crawl Summary');
+    // Fuzzy fallback: try to find a similarly named sheet if exact not found
+    if (!sheet) {
+        try {
+            const sheets = spreadsheet.getSheets();
+            const norm = (s) => String(s || '').trim().toLowerCase().replace(/\s+/g, '_');
+            const target = 'website_crawl_summary';
+            sheet = sheets.find(sh => norm(sh.getName()) === target)
+                 || sheets.find(sh => {
+                        const n = norm(sh.getName());
+                        return n.includes('crawl') && n.includes('summary');
+                    })
+                 || null;
+        } catch (ignored) {}
+    }
     if (!sheet || sheet.getLastRow() < 2) return '';
     try {
         // Read headers as display values and normalize for robust matching
