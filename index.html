@@ -11588,6 +11588,37 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
     const pollIntervalRef = useRef(null);
     const refreshStartTimeRef = useRef(null);
 
+    // One-time fresh fetch for Error Report if empty (bypass caches)
+    const erRefetchAttemptedRef = useRef(false);
+    useEffect(() => {
+        try {
+            if (erRefetchAttemptedRef.current) return;
+            const currentErrorReport = String(data?.healthData?.errorReport ?? '').trim();
+            if (currentErrorReport) return; // already has content
+
+            const params = new URLSearchParams(window.location.search);
+            const workbookId = params.get('workbookId') || '';
+            if (!workbookId) return;
+
+            erRefetchAttemptedRef.current = true;
+            const base = 'https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec';
+            const wsUrlFresh = `${base}?workbookId=${workbookId}&sections=websiteStats&cacheBust=1&_ts=${Date.now()}`;
+            fetchWithCorsWorkaround(wsUrlFresh, (err, resp) => {
+                if (err) {
+                    console.log('❌ Error Report fresh fetch failed:', err);
+                    return;
+                }
+                const newText = String(resp?.websiteStats?.healthData?.errorReport ?? '').trim();
+                if (newText) {
+                    console.log('✅ Error Report fetched fresh, updating state');
+                    setData(prev => ({ ...(prev || {}), websiteStats: resp.websiteStats }));
+                } else {
+                    console.log('ℹ️ Error Report still empty after fresh fetch');
+                }
+            });
+        } catch {}
+    }, [data?.healthData?.errorReport, setData]);
+
     // Cleanup polling on unmount
     useEffect(() => {
         return () => {
