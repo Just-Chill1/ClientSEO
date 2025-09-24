@@ -672,8 +672,45 @@ function getWebsiteErrorReport(spreadsheet) {
         if (colIndex === -1) colIndex = 36;
 
         // Read as display value to preserve plaintext; trim safely
-        const value = sheet.getRange(2, colIndex + 1).getDisplayValue();
-        return typeof value === 'string' ? value.trim() : String(value || '').trim();
+        let value = sheet.getRange(2, colIndex + 1).getDisplayValue();
+        value = typeof value === 'string' ? value.trim() : String(value || '').trim();
+
+        // Secondary hard fallback: explicitly try AK2 if within bounds and current value is empty
+        if (!value) {
+            try {
+                const akCol = 37; // AK (1-based)
+                if (sheet.getLastColumn() >= akCol) {
+                    let alt = sheet.getRange(2, akCol).getDisplayValue();
+                    alt = typeof alt === 'string' ? alt.trim() : String(alt || '').trim();
+                    if (alt) value = alt;
+                }
+            } catch (e2) {}
+        }
+
+        // Tertiary fallback: use getValue (in case of non-displayable rich text)
+        if (!value) {
+            try {
+                let raw = sheet.getRange(2, colIndex + 1).getValue();
+                raw = typeof raw === 'string' ? raw.trim() : String(raw || '').trim();
+                if (raw) value = raw;
+            } catch (e3) {}
+        }
+
+        // Quaternary fallback: scan downwards from row 2 to find first non-empty cell in the target column
+        if (!value) {
+            try {
+                const lastRow = sheet.getLastRow();
+                if (lastRow > 2) {
+                    const columnValues = sheet.getRange(2, colIndex + 1, lastRow - 1, 1).getDisplayValues();
+                    for (let i = 0; i < columnValues.length; i++) {
+                        const v = String(columnValues[i][0] || '').trim();
+                        if (v) { value = v; break; }
+                    }
+                }
+            } catch (e4) {}
+        }
+
+        return value;
     } catch (e) {
         console.log('Error reading AI error report:', e && e.message ? e.message : e);
         return '';
