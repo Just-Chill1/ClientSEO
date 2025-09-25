@@ -635,11 +635,25 @@ function getWebsiteErrors(spreadsheet) {
 
 // Read AI error report text from Website Crawl Summary → header 'ai_error_report' (row 2, column AK)
 function getWebsiteErrorReport(spreadsheet) {
+    console.log('🔍 Starting getWebsiteErrorReport...');
+    console.log('Spreadsheet ID:', spreadsheet.getId());
+    console.log('Spreadsheet Name:', spreadsheet.getName());
     let sheet = spreadsheet.getSheetByName('Website Crawl Summary');
+    console.log('Initial sheet lookup:', sheet ? 'Found' : 'Not found');
+    if (sheet) {
+        console.log('Sheet details:', {
+            name: sheet.getName(),
+            lastRow: sheet.getLastRow(),
+            lastColumn: sheet.getLastColumn()
+        });
+
+    }
+
     // Fuzzy fallback: try to find a similarly named sheet if exact not found
     if (!sheet) {
         try {
             const sheets = spreadsheet.getSheets();
+            console.log('Available sheets:', sheets.map(s => s.getName()));
             const norm = (s) => String(s || '').trim().toLowerCase().replace(/\s+/g, '_');
             const target = 'website_crawl_summary';
             sheet = sheets.find(sh => norm(sh.getName()) === target)
@@ -648,9 +662,16 @@ function getWebsiteErrorReport(spreadsheet) {
                         return n.includes('crawl') && n.includes('summary');
                     })
                  || null;
-        } catch (ignored) {}
+            if (sheet) console.log('Found sheet via fuzzy match:', sheet.getName());
+        } catch (e) {
+            console.log('Error in fuzzy sheet lookup:', e.message);
+        }
     }
-    if (!sheet || sheet.getLastRow() < 2) return '';
+
+    if (!sheet || sheet.getLastRow() < 2) {
+        console.log('No valid sheet found or empty sheet');
+        return '';
+    }
     try {
         // Read headers as display values and normalize for robust matching
         const headersDisplay = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0] || [];
