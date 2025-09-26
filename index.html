@@ -13016,11 +13016,24 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                     }
                                     
                                     console.log('🔧 DEBUG FETCH RESULT:', result);
+                                    console.log('🔧 AVAILABLE SECTIONS:', Object.keys(result || {}));
+                                    
+                                    if (result.websiteStats) {
+                                        console.log('✅ websiteStats section found:', result.websiteStats);
+                                        if (result.websiteStats._errorReportDebug) {
+                                            console.log('🔧 WEBSITE STATS DEBUG INFO:', result.websiteStats._errorReportDebug);
+                                        }
+                                        if (result.websiteStats.healthData?.errorReport) {
+                                            console.log('✅ Error report found in websiteStats:', result.websiteStats.healthData.errorReport.substring(0, 200) + '...');
+                                        } else {
+                                            console.log('❌ No error report in websiteStats.healthData');
+                                        }
+                                    } else {
+                                        console.log('❌ websiteStats section missing from response');
+                                    }
+                                    
                                     if (result._errorReportDebug) {
                                         console.log('🔧 APPS SCRIPT DEBUG INFO:', result._errorReportDebug);
-                                    }
-                                    if (result.websiteStats?._errorReportDebug) {
-                                        console.log('🔧 WEBSITE STATS DEBUG INFO:', result.websiteStats._errorReportDebug);
                                     }
                                     if (result.websiteStats?.healthData?.errorReport) {
                                         console.log('✅ Found error report in debug fetch!');
