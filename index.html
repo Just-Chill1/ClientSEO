@@ -12974,6 +12974,24 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
             {/* Dual Reports: Competitor Analysis + Error Report */}
             <div className="mb-8">
                 {/* DEBUG: Log error report data */}
+                {(() => {
+                    console.log('🔍 Website Stats - Error Report Debug:', {
+                        healthData: healthData,
+                        errorReport: healthData?.errorReport,
+                        errorReportType: typeof healthData?.errorReport,
+                        errorReportLength: healthData?.errorReport ? healthData.errorReport.length : 0,
+                        errorReportPreview: healthData?.errorReport ? healthData.errorReport.substring(0, 100) : 'N/A'
+                    });
+                    
+                    // NEW: Log detailed debug info from Apps Script
+                    if (data._errorReportDebug) {
+                        console.log('🔍 DETAILED ERROR REPORT DEBUG:', data._errorReportDebug);
+                        if (data._errorReportDebug.detailedDebug) {
+                            console.log('🔍 SHEET DEBUG INFO:', data._errorReportDebug.detailedDebug);
+                        }
+                    }
+                    return null;
+                })()}
                 <DualReports 
                     competitorText={aiReport || 'Competitor Analysis will appear when generated.'}
                     errorText={healthData?.errorReport || 'Error Report will appear here once generated in Website Crawl Summary (AK2).'}
