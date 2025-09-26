@@ -13008,27 +13008,29 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                 
                                 console.log('🔧 Manual debug fetch URL:', debugUrl);
                                 
-                                fetch(debugUrl, {
-                                    method: 'GET',
-                                    headers: {
-                                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                                        'Pragma': 'no-cache'
+                                fetchWithCorsWorkaround(debugUrl, (error, result) => {
+                                    if (error) {
+                                        console.error('🔧 Debug fetch error:', error);
+                                        return;
                                     }
-                                })
-                                .then(response => response.json())
-                                .then(result => {
+                                    
                                     console.log('🔧 DEBUG FETCH RESULT:', result);
                                     if (result._errorReportDebug) {
                                         console.log('🔧 APPS SCRIPT DEBUG INFO:', result._errorReportDebug);
                                     }
+                                    if (result.websiteStats?._errorReportDebug) {
+                                        console.log('🔧 WEBSITE STATS DEBUG INFO:', result.websiteStats._errorReportDebug);
+                                    }
                                     if (result.websiteStats?.healthData?.errorReport) {
+                                        console.log('✅ Found error report in debug fetch!');
                                         setData(prev => ({
                                             ...prev,
                                             websiteStats: result.websiteStats
                                         }));
+                                    } else {
+                                        console.log('❌ Error report still empty in debug fetch');
                                     }
-                                })
-                                .catch(error => console.error('🔧 Debug fetch error:', error));
+                                });
                             }}
                             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                         >
