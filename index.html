@@ -12992,6 +12992,50 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                     }
                     return null;
                 })()}
+                
+                {/* TEMPORARY DEBUG: Manual refresh button for Error Report */}
+                {!healthData?.errorReport && (
+                    <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p className="text-yellow-800 mb-2">Error Report not loading. Debug tools:</p>
+                        <button 
+                            onClick={() => {
+                                const params = new URLSearchParams(window.location.search);
+                                const workbookId = params.get('workbookId');
+                                if (!workbookId) return;
+                                
+                                const timestamp = Date.now();
+                                const debugUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}&sections=websiteStats&debug=1&t=${timestamp}`;
+                                
+                                console.log('🔧 Manual debug fetch URL:', debugUrl);
+                                
+                                fetch(debugUrl, {
+                                    method: 'GET',
+                                    headers: {
+                                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                                        'Pragma': 'no-cache'
+                                    }
+                                })
+                                .then(response => response.json())
+                                .then(result => {
+                                    console.log('🔧 DEBUG FETCH RESULT:', result);
+                                    if (result._errorReportDebug) {
+                                        console.log('🔧 APPS SCRIPT DEBUG INFO:', result._errorReportDebug);
+                                    }
+                                    if (result.websiteStats?.healthData?.errorReport) {
+                                        setData(prev => ({
+                                            ...prev,
+                                            websiteStats: result.websiteStats
+                                        }));
+                                    }
+                                })
+                                .catch(error => console.error('🔧 Debug fetch error:', error));
+                            }}
+                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                        >
+                            Force Debug Refresh
+                        </button>
+                    </div>
+                )}
                 <DualReports 
                     competitorText={aiReport || 'Competitor Analysis will appear when generated.'}
                     errorText={healthData?.errorReport || 'Error Report will appear here once generated in Website Crawl Summary (AK2).'}
