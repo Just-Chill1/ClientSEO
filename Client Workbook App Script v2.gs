@@ -657,6 +657,21 @@ function getWebsiteErrorReport(spreadsheet) {
     console.log('Spreadsheet Name:', spreadsheet.getName());
     let sheet = spreadsheet.getSheetByName('Website Crawl Summary');
     console.log('Initial sheet lookup:', sheet ? 'Found' : 'Not found');
+    
+    // DIRECT: Try to get sheet by index if name lookup fails
+    if (!sheet) {
+        try {
+            const sheets = spreadsheet.getSheets();
+            // Look for a sheet that contains "crawl" and "summary" in the name
+            sheet = sheets.find(s => {
+                const name = s.getName().toLowerCase();
+                return name.includes('crawl') && name.includes('summary');
+            });
+            if (sheet) console.log('Found sheet by content match:', sheet.getName());
+        } catch (e) {
+            console.log('Error in direct sheet lookup:', e.message);
+        }
+    }
     if (sheet) {
         console.log('Sheet details:', {
             name: sheet.getName(),
@@ -741,12 +756,25 @@ function getWebsiteErrorReport(spreadsheet) {
             if (heuristicIdx !== -1) colIndex = heuristicIdx;
         }
 
-        // Legacy fallback to fixed AK (37th column, 0-based index = 36)
-        if (colIndex === -1) colIndex = 36;
+        // DIRECT: Force AK column (37th column, 0-based index = 36) - temporary fix
+        colIndex = 36; // Always use AK column directly
 
-        // Read as display value to preserve plaintext; trim safely
-        let value = sheet.getRange(2, colIndex + 1).getDisplayValue();
-        value = typeof value === 'string' ? value.trim() : String(value || '').trim();
+        // DIRECT READ: Bypass all logic and read AK2 directly
+        let value = '';
+        try {
+            // Try multiple read methods for AK2
+            const akRange = sheet.getRange('AK2');
+            value = akRange.getDisplayValue();
+            if (!value) value = akRange.getValue();
+            if (!value) value = String(akRange.getFormula() || '');
+            value = typeof value === 'string' ? value.trim() : String(value || '').trim();
+            console.log('Direct AK2 read result:', value ? `Found ${value.length} chars` : 'Empty');
+        } catch (directError) {
+            console.log('Direct AK2 read failed:', directError.message);
+            // Fallback to original method
+            value = sheet.getRange(2, colIndex + 1).getDisplayValue();
+            value = typeof value === 'string' ? value.trim() : String(value || '').trim();
+        }
 
         // Secondary hard fallback: explicitly try AK2 if within bounds and current value is empty
         if (!value) {
