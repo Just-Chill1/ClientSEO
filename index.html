@@ -12982,6 +12982,14 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                         errorReportLength: healthData?.errorReport ? healthData.errorReport.length : 0,
                         errorReportPreview: healthData?.errorReport ? healthData.errorReport.substring(0, 100) : 'N/A'
                     });
+                    
+                    // NEW: Log detailed debug info from Apps Script
+                    if (data._errorReportDebug) {
+                        console.log('🔍 DETAILED ERROR REPORT DEBUG:', data._errorReportDebug);
+                        if (data._errorReportDebug.detailedDebug) {
+                            console.log('🔍 SHEET DEBUG INFO:', data._errorReportDebug.detailedDebug);
+                        }
+                    }
                     return null;
                 })()}
                 <DualReports 

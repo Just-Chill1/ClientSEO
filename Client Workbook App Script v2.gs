@@ -165,7 +165,12 @@ function getWebsiteStats(spreadsheet) {
     // NEW: Aggregate checks across all client pages
     const checksAggregate = getWebsiteCrawlPagesAggregate(spreadsheet);
     // NEW: Read AI error report text from Website Crawl Summary (AK2)
-    const errorReport = getWebsiteErrorReport(spreadsheet);
+    console.log('🔍 About to call getWebsiteErrorReport...');
+    const errorReportResult = getWebsiteErrorReport(spreadsheet);
+    const errorReport = errorReportResult.value;
+    console.log('🎯 Final error report result:', errorReport);
+    console.log('🎯 Error report length:', errorReport ? errorReport.length : 'null/undefined');
+    console.log('🎯 Error report type:', typeof errorReport);
     
 
 
@@ -204,10 +209,22 @@ function getWebsiteStats(spreadsheet) {
 
     // NEW: Get broken links details for tooltip
     const brokenLinksDetails = getBrokenLinksDetails(spreadsheet);
+    
+    console.log('🎯 Final healthData.errorReport before return:', healthData.errorReport);
+    console.log('🎯 Final healthData.errorReport type before return:', typeof healthData.errorReport);
 
     return {
         healthData: healthData,
         brokenLinksDetails: brokenLinksDetails,
+        // DEBUG: Add error report debugging info
+        _errorReportDebug: {
+            errorReportValue: errorReport,
+            errorReportType: typeof errorReport,
+            errorReportLength: errorReport ? errorReport.length : 0,
+            spreadsheetId: spreadsheet.getId(),
+            spreadsheetName: spreadsheet.getName(),
+            detailedDebug: errorReportResult.debug
+        },
         competitorPerfData: onPageInsights.map(d => ({
             name: d.name,
             'Site Speed (s)': d.siteSpeed,
@@ -670,18 +687,39 @@ function getWebsiteErrorReport(spreadsheet) {
 
     if (!sheet || sheet.getLastRow() < 2) {
         console.log('No valid sheet found or empty sheet');
-        return '';
+        return {
+            value: '',
+            debug: {
+                sheetFound: !!sheet,
+                sheetName: sheet ? sheet.getName() : 'N/A',
+                lastRow: sheet ? sheet.getLastRow() : 0,
+                lastColumn: sheet ? sheet.getLastColumn() : 0,
+                error: 'No valid sheet found or empty sheet'
+            }
+        };
     }
     try {
-        // Read headers as display values and normalize for robust matching
-        const headersDisplay = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0] || [];
+        // Read headers and row 2 for debugging
+        const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0];
+        const row2 = sheet.getRange(2, 1, 1, sheet.getLastColumn()).getDisplayValues()[0];
+        
+        // Log specific column data
+        console.log('Column data:', {
+            'AJ header (36)': headers[35] || 'N/A',
+            'AK header (37)': headers[36] || 'N/A',
+            'AL header (38)': headers[37] || 'N/A',
+            'AK2 value': row2[36] || 'empty',
+            'All headers': headers
+        });
+
+        // Normalize headers for matching
         const normalize = s => String(s || '')
             .trim()
             .toLowerCase()
             .replace(/\s+/g, '_')      // spaces -> underscore
             .replace(/-+/g, '_')        // hyphens -> underscore
             .replace(/[^a-z0-9_]/g, ''); // strip other punctuation
-        const normalized = headersDisplay.map(h => normalize(h));
+        const normalized = headers.map(h => normalize(h));
 
         const preferredCandidates = [
             'ai_error_report',
@@ -745,10 +783,33 @@ function getWebsiteErrorReport(spreadsheet) {
             } catch (e4) {}
         }
 
-        return value;
+        // Return both value and debug info
+        return {
+            value: value,
+            debug: {
+                sheetFound: !!sheet,
+                sheetName: sheet ? sheet.getName() : 'N/A',
+                lastRow: sheet ? sheet.getLastRow() : 0,
+                lastColumn: sheet ? sheet.getLastColumn() : 0,
+                headers: headers,
+                row2Data: row2,
+                normalizedHeaders: normalized,
+                colIndexUsed: colIndex,
+                headerAtColIndex: headers[colIndex] || 'N/A',
+                akHeader: headers[36] || 'N/A',
+                akValue: row2[36] || 'empty',
+                finalValue: value,
+                valueLength: value ? value.length : 0
+            }
+        };
     } catch (e) {
         console.log('Error reading AI error report:', e && e.message ? e.message : e);
-        return '';
+        return {
+            value: '',
+            debug: {
+                error: e && e.message ? e.message : String(e)
+            }
+        };
     }
 }
 
