@@ -13004,7 +13004,8 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
                                 if (!workbookId) return;
                                 
                                 const timestamp = Date.now();
-                                const debugUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}&sections=websiteStats&debug=1&t=${timestamp}`;
+                                // Try without sections parameter to get all data
+                                const debugUrl = `https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec?workbookId=${workbookId}&cacheBust=1&debug=1&t=${timestamp}`;
                                 
                                 console.log('🔧 Manual debug fetch URL:', debugUrl);
                                 
