@@ -165,12 +165,9 @@ function getWebsiteStats(spreadsheet) {
     // NEW: Aggregate checks across all client pages
     const checksAggregate = getWebsiteCrawlPagesAggregate(spreadsheet);
     // NEW: Read AI error report text from Website Crawl Summary (AK2)
-    console.log('🔍 About to call getWebsiteErrorReport...');
-    const errorReportResult = getWebsiteErrorReport(spreadsheet);
-    const errorReport = errorReportResult.value;
-    console.log('🎯 Final error report result:', errorReport);
-    console.log('🎯 Error report length:', errorReport ? errorReport.length : 'null/undefined');
-    console.log('🎯 Error report type:', typeof errorReport);
+    console.log('📊 [WEBSITE STATS] About to call getWebsiteErrorReport...');
+    const errorReport = getWebsiteErrorReport(spreadsheet);
+    console.log('📊 [WEBSITE STATS] Error report retrieved:', errorReport ? `${errorReport.length} characters` : 'Empty or null');
     
 
 
@@ -209,22 +206,10 @@ function getWebsiteStats(spreadsheet) {
 
     // NEW: Get broken links details for tooltip
     const brokenLinksDetails = getBrokenLinksDetails(spreadsheet);
-    
-    console.log('🎯 Final healthData.errorReport before return:', healthData.errorReport);
-    console.log('🎯 Final healthData.errorReport type before return:', typeof healthData.errorReport);
 
     return {
         healthData: healthData,
         brokenLinksDetails: brokenLinksDetails,
-        // DEBUG: Add error report debugging info
-        _errorReportDebug: {
-            errorReportValue: errorReport,
-            errorReportType: typeof errorReport,
-            errorReportLength: errorReport ? errorReport.length : 0,
-            spreadsheetId: spreadsheet.getId(),
-            spreadsheetName: spreadsheet.getName(),
-            detailedDebug: errorReportResult.debug
-        },
         competitorPerfData: onPageInsights.map(d => ({
             name: d.name,
             'Site Speed (s)': d.siteSpeed,
@@ -650,194 +635,53 @@ function getWebsiteErrors(spreadsheet) {
     return { errors, warnings };
 }
 
-// Read AI error report text from Website Crawl Summary → header 'ai_error_report' (row 2, column AK)
+// Read AI error report text from Website Crawl Summary → column AK, row 2
 function getWebsiteErrorReport(spreadsheet) {
-    console.log('🔍 Starting getWebsiteErrorReport...');
-    console.log('Spreadsheet ID:', spreadsheet.getId());
-    console.log('Spreadsheet Name:', spreadsheet.getName());
-    let sheet = spreadsheet.getSheetByName('Website Crawl Summary');
-    console.log('Initial sheet lookup:', sheet ? 'Found' : 'Not found');
+    console.log('🔍 [ERROR REPORT] Starting getWebsiteErrorReport...');
+    console.log('🔍 [ERROR REPORT] Spreadsheet ID:', spreadsheet.getId());
+    console.log('🔍 [ERROR REPORT] Spreadsheet Name:', spreadsheet.getName());
     
-    // DIRECT: Try to get sheet by index if name lookup fails
+    let sheet = spreadsheet.getSheetByName('Website Crawl Summary');
+    console.log('🔍 [ERROR REPORT] Sheet lookup result:', sheet ? 'Found' : 'Not found');
+    
     if (!sheet) {
-        try {
-            const sheets = spreadsheet.getSheets();
-            // Look for a sheet that contains "crawl" and "summary" in the name
-            sheet = sheets.find(s => {
-                const name = s.getName().toLowerCase();
-                return name.includes('crawl') && name.includes('summary');
-            });
-            if (sheet) console.log('Found sheet by content match:', sheet.getName());
-        } catch (e) {
-            console.log('Error in direct sheet lookup:', e.message);
-        }
+        console.log('❌ [ERROR REPORT] Sheet "Website Crawl Summary" not found');
+        return '';
     }
-    if (sheet) {
-        console.log('Sheet details:', {
-            name: sheet.getName(),
-            lastRow: sheet.getLastRow(),
-            lastColumn: sheet.getLastColumn()
-        });
-
+    
+    console.log('✅ [ERROR REPORT] Sheet details:', {
+        name: sheet.getName(),
+        lastRow: sheet.getLastRow(),
+        lastColumn: sheet.getLastColumn()
+    });
+    
+    if (sheet.getLastRow() < 2) {
+        console.log('❌ [ERROR REPORT] Sheet has no data (less than 2 rows)');
+        return '';
     }
-
-    // Fuzzy fallback: try to find a similarly named sheet if exact not found
-    if (!sheet) {
-        try {
-            const sheets = spreadsheet.getSheets();
-            console.log('Available sheets:', sheets.map(s => s.getName()));
-            const norm = (s) => String(s || '').trim().toLowerCase().replace(/\s+/g, '_');
-            const target = 'website_crawl_summary';
-            sheet = sheets.find(sh => norm(sh.getName()) === target)
-                 || sheets.find(sh => {
-                        const n = norm(sh.getName());
-                        return n.includes('crawl') && n.includes('summary');
-                    })
-                 || null;
-            if (sheet) console.log('Found sheet via fuzzy match:', sheet.getName());
-        } catch (e) {
-            console.log('Error in fuzzy sheet lookup:', e.message);
-        }
-    }
-
-    if (!sheet || sheet.getLastRow() < 2) {
-        console.log('No valid sheet found or empty sheet');
-        return {
-            value: '',
-            debug: {
-                sheetFound: !!sheet,
-                sheetName: sheet ? sheet.getName() : 'N/A',
-                lastRow: sheet ? sheet.getLastRow() : 0,
-                lastColumn: sheet ? sheet.getLastColumn() : 0,
-                error: 'No valid sheet found or empty sheet'
-            }
-        };
-    }
+    
     try {
-        // Read headers and row 2 for debugging
-        const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getDisplayValues()[0];
-        const row2 = sheet.getRange(2, 1, 1, sheet.getLastColumn()).getDisplayValues()[0];
+        // DIRECT READ from AK2 (column 37, index 36)
+        const akCell = sheet.getRange('AK2');
+        let value = akCell.getDisplayValue();
         
-        // Log specific column data
-        console.log('Column data:', {
-            'AJ header (36)': headers[35] || 'N/A',
-            'AK header (37)': headers[36] || 'N/A',
-            'AL header (38)': headers[37] || 'N/A',
-            'AK2 value': row2[36] || 'empty',
-            'All headers': headers
-        });
-
-        // Normalize headers for matching
-        const normalize = s => String(s || '')
-            .trim()
-            .toLowerCase()
-            .replace(/\s+/g, '_')      // spaces -> underscore
-            .replace(/-+/g, '_')        // hyphens -> underscore
-            .replace(/[^a-z0-9_]/g, ''); // strip other punctuation
-        const normalized = headers.map(h => normalize(h));
-
-        const preferredCandidates = [
-            'ai_error_report',
-            'aierrorreport',
-            'ai_errorreport',
-            'ai_error_reports'
-        ];
-
-        let colIndex = -1;
-        // Try exact matches against normalized headers
-        for (let i = 0; i < preferredCandidates.length; i++) {
-            const idx = normalized.indexOf(preferredCandidates[i]);
-            if (idx !== -1) { colIndex = idx; break; }
-        }
-
-        // Heuristic fallback: find a header that mentions error+report (and preferably ai)
-        if (colIndex === -1) {
-            const heuristicIdx = normalized.findIndex(h => h.includes('error') && h.includes('report'));
-            if (heuristicIdx !== -1) colIndex = heuristicIdx;
-        }
-
-        // DIRECT: Force AK column (37th column, 0-based index = 36) - temporary fix
-        colIndex = 36; // Always use AK column directly
-
-        // DIRECT READ: Bypass all logic and read AK2 directly
-        let value = '';
-        try {
-            // Try multiple read methods for AK2
-            const akRange = sheet.getRange('AK2');
-            value = akRange.getDisplayValue();
-            if (!value) value = akRange.getValue();
-            if (!value) value = String(akRange.getFormula() || '');
-            value = typeof value === 'string' ? value.trim() : String(value || '').trim();
-            console.log('Direct AK2 read result:', value ? `Found ${value.length} chars` : 'Empty');
-        } catch (directError) {
-            console.log('Direct AK2 read failed:', directError.message);
-            // Fallback to original method
-            value = sheet.getRange(2, colIndex + 1).getDisplayValue();
-            value = typeof value === 'string' ? value.trim() : String(value || '').trim();
-        }
-
-        // Secondary hard fallback: explicitly try AK2 if within bounds and current value is empty
+        console.log('🔍 [ERROR REPORT] AK2 value:', value ? `Found ${value.length} characters` : 'Empty or null');
+        console.log('🔍 [ERROR REPORT] AK2 preview:', value ? value.substring(0, 100) + '...' : 'N/A');
+        
+        // Fallback: try getValue() if displayValue is empty
         if (!value) {
-            try {
-                const akCol = 37; // AK (1-based)
-                if (sheet.getLastColumn() >= akCol) {
-                    let alt = sheet.getRange(2, akCol).getDisplayValue();
-                    alt = typeof alt === 'string' ? alt.trim() : String(alt || '').trim();
-                    if (alt) value = alt;
-                }
-            } catch (e2) {}
+            value = akCell.getValue();
+            console.log('🔍 [ERROR REPORT] Fallback getValue():', value ? `Found ${String(value).length} characters` : 'Empty or null');
         }
-
-        // Tertiary fallback: use getValue (in case of non-displayable rich text)
-        if (!value) {
-            try {
-                let raw = sheet.getRange(2, colIndex + 1).getValue();
-                raw = typeof raw === 'string' ? raw.trim() : String(raw || '').trim();
-                if (raw) value = raw;
-            } catch (e3) {}
-        }
-
-        // Quaternary fallback: scan downwards from row 2 to find first non-empty cell in the target column
-        if (!value) {
-            try {
-                const lastRow = sheet.getLastRow();
-                if (lastRow > 2) {
-                    const columnValues = sheet.getRange(2, colIndex + 1, lastRow - 1, 1).getDisplayValues();
-                    for (let i = 0; i < columnValues.length; i++) {
-                        const v = String(columnValues[i][0] || '').trim();
-                        if (v) { value = v; break; }
-                    }
-                }
-            } catch (e4) {}
-        }
-
-        // Return both value and debug info
-        return {
-            value: value,
-            debug: {
-                sheetFound: !!sheet,
-                sheetName: sheet ? sheet.getName() : 'N/A',
-                lastRow: sheet ? sheet.getLastRow() : 0,
-                lastColumn: sheet ? sheet.getLastColumn() : 0,
-                headers: headers,
-                row2Data: row2,
-                normalizedHeaders: normalized,
-                colIndexUsed: colIndex,
-                headerAtColIndex: headers[colIndex] || 'N/A',
-                akHeader: headers[36] || 'N/A',
-                akValue: row2[36] || 'empty',
-                finalValue: value,
-                valueLength: value ? value.length : 0
-            }
-        };
+        
+        // Clean and return
+        const result = typeof value === 'string' ? value.trim() : String(value || '').trim();
+        console.log('✅ [ERROR REPORT] Final result:', result ? `${result.length} characters` : 'Empty string');
+        
+        return result;
     } catch (e) {
-        console.log('Error reading AI error report:', e && e.message ? e.message : e);
-        return {
-            value: '',
-            debug: {
-                error: e && e.message ? e.message : String(e)
-            }
-        };
+        console.log('❌ [ERROR REPORT] Error reading AK2:', e.message);
+        return '';
     }
 }
 
