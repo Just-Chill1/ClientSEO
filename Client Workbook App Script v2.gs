@@ -206,6 +206,19 @@ function getWebsiteStats(spreadsheet) {
 
     // NEW: Get broken links details for tooltip
     const brokenLinksDetails = getBrokenLinksDetails(spreadsheet);
+    
+    // DEBUG: Log final healthData before return
+    console.log('═══════════════════════════════════════════════════');
+    console.log('📊 [WEBSITE STATS] FINAL DATA BEFORE RETURN');
+    console.log('═══════════════════════════════════════════════════');
+    console.log('🏥 healthData.errorReport:', healthData.errorReport);
+    console.log('📏 errorReport length:', healthData.errorReport ? healthData.errorReport.length : 0);
+    console.log('📊 errorReport type:', typeof healthData.errorReport);
+    if (healthData.errorReport) {
+        console.log('📄 First 200 chars:', healthData.errorReport.substring(0, 200));
+    }
+    console.log('🔑 All healthData keys:', Object.keys(healthData));
+    console.log('═══════════════════════════════════════════════════');
 
     return {
         healthData: healthData,
