@@ -11832,6 +11832,22 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
 
     const { healthData, competitorPerfData: rawCompetitorPerfData, technicalSeoData, brokenLinksDetails } = data;
     
+    // DEBUG: Log incoming data structure
+    console.log('═══════════════════════════════════════════════════');
+    console.log('🔍 [FRONTEND] DATA EXTRACTION - WebsiteStats Component');
+    console.log('═══════════════════════════════════════════════════');
+    console.log('📦 Raw data prop received:', data);
+    console.log('🏥 Extracted healthData:', healthData);
+    console.log('📝 healthData.errorReport:', healthData?.errorReport);
+    console.log('📊 Type of errorReport:', typeof healthData?.errorReport);
+    console.log('📏 Length of errorReport:', healthData?.errorReport ? healthData.errorReport.length : 0);
+    if (healthData?.errorReport) {
+        console.log('📄 First 200 chars of errorReport:', healthData.errorReport.substring(0, 200));
+    } else {
+        console.log('❌ errorReport is:', healthData?.errorReport);
+    }
+    console.log('═══════════════════════════════════════════════════');
+    
     // AI Report handling
     let aiReport = null;
     try {
@@ -12938,15 +12954,32 @@ const WebsiteStats = ({ data, webhooks, setData }) => {
 
             {/* Dual Reports: Competitor Analysis + Error Report */}
             <div className="mb-8">
-                {/* DEBUG: Log error report data */}
+                {/* DEBUG: Enhanced error report logging */}
                 {(() => {
-                    console.log('🔍 Website Stats - Error Report Debug:', {
-                        healthData: healthData,
-                        errorReport: healthData?.errorReport,
-                        errorReportType: typeof healthData?.errorReport,
-                        errorReportLength: healthData?.errorReport ? healthData.errorReport.length : 0,
-                        errorReportPreview: healthData?.errorReport ? healthData.errorReport.substring(0, 100) : 'N/A'
-                    });
+                    console.log('═══════════════════════════════════════════════════');
+                    console.log('🔍 [FRONTEND] ERROR REPORT DEBUG - WebsiteStats Component');
+                    console.log('═══════════════════════════════════════════════════');
+                    console.log('📦 Full data prop:', data);
+                    console.log('🏥 healthData object:', healthData);
+                    console.log('📝 errorReport value:', healthData?.errorReport);
+                    console.log('📝 errorReport type:', typeof healthData?.errorReport);
+                    console.log('📝 errorReport length:', healthData?.errorReport ? healthData.errorReport.length : 0);
+                    console.log('📝 errorReport preview:', healthData?.errorReport ? healthData.errorReport.substring(0, 200) + '...' : 'EMPTY OR NULL');
+                    console.log('🔑 All healthData keys:', Object.keys(healthData || {}));
+                    console.log('🔑 All data keys:', Object.keys(data || {}));
+                    
+                    // Check if error report exists but is empty/whitespace
+                    if (healthData?.errorReport !== undefined && healthData?.errorReport !== null) {
+                        const trimmed = String(healthData.errorReport).trim();
+                        if (trimmed === '') {
+                            console.log('⚠️ ERROR REPORT EXISTS but is EMPTY or WHITESPACE ONLY');
+                        } else {
+                            console.log('✅ ERROR REPORT HAS CONTENT:', trimmed.length, 'characters');
+                        }
+                    } else {
+                        console.log('❌ ERROR REPORT is UNDEFINED or NULL');
+                    }
+                    console.log('═══════════════════════════════════════════════════');
                     return null;
                 })()}
                 <DualReports 
