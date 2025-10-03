@@ -2706,8 +2706,11 @@ const GBPReportSection = ({ reportText }) => {
         const params = new URLSearchParams(window.location.search);
         const workbookId = params.get('workbookId') || '';
 
+        console.log('🔍 [GBP PROMPT] Starting buildGbpImplementationPrompt...');
+
         const dashCache = readSessionJsonGBP(`dashboard_data_${workbookId}`);
         let overviewData = dashCache?.overviewData || [];
+        console.log('🔍 [GBP PROMPT] Dashboard cache:', dashCache ? 'Found' : 'Not found');
 
         // Try cached websiteStats
         const base = 'https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec';
@@ -2718,25 +2721,38 @@ const GBPReportSection = ({ reportText }) => {
         let keywordsSummary = null;
         let keywordsTable = null;
 
+        console.log('🔍 [GBP PROMPT] WebsiteStats from cache:', websiteStats ? 'Found' : 'Not found');
+
         if (!websiteStats || !overviewData) {
+            console.log('🔍 [GBP PROMPT] Fetching fresh data from Apps Script...');
             const data = await fetchSectionsGBP(workbookId, 'websiteStats,dashboard,gbpInsights,keywordsSummary,keywordsTable');
+            console.log('🔍 [GBP PROMPT] Fetch result:', data ? Object.keys(data) : 'No data');
             if (data) {
                 websiteStats = websiteStats || data.websiteStats || data?.websiteStats;
                 if ((!overviewData || overviewData.length === 0) && data.dashboard?.overviewData) overviewData = data.dashboard.overviewData;
                 if (data.gbpInsights) gbpInsights = data.gbpInsights;
                 if (data.keywordsSummary) keywordsSummary = data.keywordsSummary;
                 if (data.keywordsTable) keywordsTable = data.keywordsTable;
+                console.log('🔍 [GBP PROMPT] After fetch - websiteStats:', websiteStats ? 'Has data' : 'Still null');
+                console.log('🔍 [GBP PROMPT] After fetch - gbpInsights:', gbpInsights ? 'Has data' : 'Still null');
             }
         }
         if (!gbpInsights) {
+            console.log('🔍 [GBP PROMPT] Fetching GBP insights separately...');
             const g = await fetchSectionsGBP(workbookId, 'gbpInsights');
             if (g && g.gbpInsights) gbpInsights = g.gbpInsights;
+            console.log('🔍 [GBP PROMPT] GBP insights fetch result:', gbpInsights ? 'Found' : 'Not found');
         }
 
         // Determine client context
         const health = websiteStats?.healthData || {};
         const tseo = toArrayGBP(websiteStats?.technicalSeoData || []);
         const perf = toArrayGBP(websiteStats?.competitorPerfData || []).find(x => x?.isClient) || {};
+        
+        console.log('🔍 [GBP PROMPT] health object:', health);
+        console.log('🔍 [GBP PROMPT] tseo array:', tseo);
+        console.log('🔍 [GBP PROMPT] perf object:', perf);
+        
         const siteSpeedMs = Number(health?.siteSpeed) || 0;
         const siteSpeedDisplayMs = isFinite(siteSpeedMs) && siteSpeedMs > 0 ? `${Math.round(siteSpeedMs)} ms` : 'N/A';
         const pageScore = isFinite(Number(health?.pageScore)) ? Number(health.pageScore) : null;
@@ -2749,6 +2765,10 @@ const GBPReportSection = ({ reportText }) => {
         const h1 = tseoClient?.h1 || '';
         const website = tseoClient?.website || '';
         const clinicName = tseoClient?.clinicName || 'Client';
+        
+        console.log('🔍 [GBP PROMPT] Extracted values - clinicName:', clinicName, 'website:', website);
+        console.log('🔍 [GBP PROMPT] Extracted values - titleTag:', titleTag, 'h1:', h1);
+        console.log('🔍 [GBP PROMPT] Extracted values - siteSpeed:', siteSpeedDisplayMs, 'pageScore:', pageScore);
 
         // Keyword positions
         let pos1 = keywordsSummary?.['Position 1'] ?? keywordsSummary?.['Keywords Position 1'] ?? keywordsSummary?.pos1 ?? null;
@@ -2770,6 +2790,9 @@ const GBPReportSection = ({ reportText }) => {
 
         // GBP client record
         let gbpRecord = null;
+        console.log('🔍 [GBP PROMPT] gbpInsights type:', Array.isArray(gbpInsights) ? 'Array' : typeof gbpInsights);
+        console.log('🔍 [GBP PROMPT] gbpInsights:', gbpInsights);
+        
         if (Array.isArray(gbpInsights)) {
             gbpRecord = gbpInsights.find(r => {
                 const at = String(pickCaseInsensitiveGBP(r, 'Account Type') || pickCaseInsensitiveGBP(r, 'AccountType') || pickCaseInsensitiveGBP(r, 'Type') || '').toLowerCase();
@@ -2778,6 +2801,9 @@ const GBPReportSection = ({ reportText }) => {
         } else if (gbpInsights && typeof gbpInsights === 'object') {
             gbpRecord = gbpInsights;
         }
+        
+        console.log('🔍 [GBP PROMPT] gbpRecord found:', gbpRecord ? 'Yes' : 'No');
+        console.log('🔍 [GBP PROMPT] gbpRecord:', gbpRecord);
 
         const gbpClaimed = (gbpRecord?.claimed ?? pickCaseInsensitiveGBP(gbpRecord, 'Claimed') ?? '').toString();
         const gbpPrimary = (gbpRecord?.primaryCategory || pickCaseInsensitiveGBP(gbpRecord, 'Primary Categorie') || pickCaseInsensitiveGBP(gbpRecord, 'Primary Category') || '').toString();
@@ -2793,6 +2819,12 @@ const GBPReportSection = ({ reportText }) => {
         const gbpTotalPhotos = (gbpRecord?.totalPhotos ?? pickCaseInsensitiveGBP(gbpRecord, 'Total Photos') ?? pickCaseInsensitiveGBP(gbpRecord, 'Photo Count') ?? pickCaseInsensitiveGBP(gbpRecord, 'Photos') ?? '').toString();
         const gbpBookOnline = (gbpRecord?.bookOnline ?? pickCaseInsensitiveGBP(gbpRecord, 'Book Online') ?? '').toString();
         const gbpWebsiteGBP = (gbpRecord?.gbpWebsite ?? pickCaseInsensitiveGBP(gbpRecord, 'GBP Website') ?? pickCaseInsensitiveGBP(gbpRecord, 'Website (GBP)') ?? pickCaseInsensitiveGBP(gbpRecord, 'GBP Link') ?? '').toString();
+        
+        console.log('🔍 [GBP PROMPT] Extracted GBP values:');
+        console.log('  - Primary:', gbpPrimary);
+        console.log('  - Review Score:', gbpReviewScore);
+        console.log('  - Review Count:', gbpReviewCount);
+        console.log('  - Total Photos:', gbpTotalPhotos);
 
         // Client website pages
         const crawlPages = toArrayGBP(health?.checksAggregate?.pagesList || health?.pagesList || health?.topPages || [])

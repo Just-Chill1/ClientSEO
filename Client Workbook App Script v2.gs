@@ -40,7 +40,7 @@
  */
 
 // Toggle verbose logging globally (set to false in production)
-var DEBUG = false;
+var DEBUG = true;  // TEMPORARY: Enable for error report debugging
 
 function log(){ if (DEBUG) console.log.apply(console, arguments); }
 
