@@ -2725,30 +2725,44 @@ const GBPReportSection = ({ reportText }) => {
 
         if (!websiteStats || !overviewData) {
             console.log('🔍 [GBP PROMPT] Fetching fresh data from Apps Script...');
-            const data = await fetchSectionsGBP(workbookId, 'websiteStats,dashboard,gbpInsights,keywordsSummary,keywordsTable');
-            console.log('🔍 [GBP PROMPT] Fetch result type:', Array.isArray(data) ? 'Array' : typeof data);
-            console.log('🔍 [GBP PROMPT] Fetch result:', data);
-            console.log('🔍 [GBP PROMPT] Fetch result keys:', data ? (Array.isArray(data) ? data.length : Object.keys(data)) : 'No data');
-            if (data) {
-                // Check if data has the expected structure
-                console.log('🔍 [GBP PROMPT] data.websiteStats:', data.websiteStats);
-                console.log('🔍 [GBP PROMPT] data.gbpInsights:', data.gbpInsights);
-                console.log('🔍 [GBP PROMPT] data.dashboard:', data.dashboard);
-                
-                websiteStats = websiteStats || data.websiteStats || data?.websiteStats;
-                if ((!overviewData || overviewData.length === 0) && data.dashboard?.overviewData) overviewData = data.dashboard.overviewData;
-                if (data.gbpInsights) gbpInsights = data.gbpInsights;
-                if (data.keywordsSummary) keywordsSummary = data.keywordsSummary;
-                if (data.keywordsTable) keywordsTable = data.keywordsTable;
-                console.log('🔍 [GBP PROMPT] After fetch - websiteStats:', websiteStats ? 'Has data' : 'Still null');
-                console.log('🔍 [GBP PROMPT] After fetch - gbpInsights:', gbpInsights ? 'Has data' : 'Still null');
+            // Use direct fetch to bypass cache wrapper - same as App component does
+            try {
+                const fetchUrl = `${base}?workbookId=${workbookId}&sections=${encodeURIComponent('websiteStats,dashboard,gbpInsights,keywordsSummary,keywordsTable')}`;
+                console.log('🔍 [GBP PROMPT] Fetch URL:', fetchUrl);
+                const response = await fetch(fetchUrl);
+                const data = await response.json();
+                console.log('🔍 [GBP PROMPT] Fetch result type:', Array.isArray(data) ? 'Array' : typeof data);
+                console.log('🔍 [GBP PROMPT] Fetch result:', data);
+                console.log('🔍 [GBP PROMPT] Fetch result keys:', data ? (Array.isArray(data) ? data.length : Object.keys(data)) : 'No data');
+                if (data) {
+                    // Check if data has the expected structure
+                    console.log('🔍 [GBP PROMPT] data.websiteStats:', data.websiteStats ? 'Found' : 'Not found');
+                    console.log('🔍 [GBP PROMPT] data.gbpInsights:', data.gbpInsights ? 'Found' : 'Not found');
+                    console.log('🔍 [GBP PROMPT] data.dashboard:', data.dashboard ? 'Found' : 'Not found');
+                    
+                    websiteStats = websiteStats || data.websiteStats || data?.websiteStats;
+                    if ((!overviewData || overviewData.length === 0) && data.dashboard?.overviewData) overviewData = data.dashboard.overviewData;
+                    if (data.gbpInsights) gbpInsights = data.gbpInsights;
+                    if (data.keywordsSummary) keywordsSummary = data.keywordsSummary;
+                    if (data.keywordsTable) keywordsTable = data.keywordsTable;
+                    console.log('🔍 [GBP PROMPT] After fetch - websiteStats:', websiteStats ? 'Has data' : 'Still null');
+                    console.log('🔍 [GBP PROMPT] After fetch - gbpInsights:', gbpInsights ? 'Has data' : 'Still null');
+                }
+            } catch (error) {
+                console.error('🔍 [GBP PROMPT] Fetch error:', error);
             }
         }
         if (!gbpInsights) {
             console.log('🔍 [GBP PROMPT] Fetching GBP insights separately...');
-            const g = await fetchSectionsGBP(workbookId, 'gbpInsights');
-            if (g && g.gbpInsights) gbpInsights = g.gbpInsights;
-            console.log('🔍 [GBP PROMPT] GBP insights fetch result:', gbpInsights ? 'Found' : 'Not found');
+            try {
+                const fetchUrl = `${base}?workbookId=${workbookId}&sections=${encodeURIComponent('gbpInsights')}`;
+                const response = await fetch(fetchUrl);
+                const g = await response.json();
+                if (g && g.gbpInsights) gbpInsights = g.gbpInsights;
+                console.log('🔍 [GBP PROMPT] GBP insights fetch result:', gbpInsights ? 'Found' : 'Not found');
+            } catch (error) {
+                console.error('🔍 [GBP PROMPT] GBP insights fetch error:', error);
+            }
         }
 
         // Determine client context
