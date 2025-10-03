@@ -3240,22 +3240,34 @@ const BacklinksReport = ({ reportText }) => {
         const wsCache = readSessionJsonBL(`seo_data_${wsUrl}`);
         if (wsCache?.websiteStats) websiteStats = wsCache.websiteStats;
 
-        // Fetch missing in one shot
+        // Fetch missing in one shot - use direct fetch to bypass cache
         if (!websiteStats || !overviewData || Object.keys(backlinksTable).length === 0) {
-            const data = await fetchSectionsBL(workbookId, 'websiteStats,backlinksSummary,backlinksTable,dashboard,gbpInsights,keywordsSummary,keywordsTable');
-            if (data) {
-                websiteStats = websiteStats || data.websiteStats || data?.websiteStats;
-                backlinksSummary = Object.keys(backlinksSummary).length ? backlinksSummary : (data.backlinksSummary || {});
-                backlinksTable = Object.keys(backlinksTable).length ? backlinksTable : (data.backlinksTable || {});
-                if ((!overviewData || overviewData.length === 0) && data.dashboard?.overviewData) overviewData = data.dashboard.overviewData;
-                if (!keywordsSummary && data.keywordsSummary) keywordsSummary = data.keywordsSummary;
-                if (data.keywordsTable) keywordsTableForFallback = data.keywordsTable;
-                if (data.gbpInsights) gbpInsights = data.gbpInsights;
+            try {
+                const fetchUrl = `${base}?workbookId=${workbookId}&sections=${encodeURIComponent('websiteStats,backlinksSummary,backlinksTable,dashboard,gbpInsights,keywordsSummary,keywordsTable')}`;
+                const response = await fetch(fetchUrl);
+                const data = await response.json();
+                if (data) {
+                    websiteStats = websiteStats || data.websiteStats || data?.websiteStats;
+                    backlinksSummary = Object.keys(backlinksSummary).length ? backlinksSummary : (data.backlinksSummary || {});
+                    backlinksTable = Object.keys(backlinksTable).length ? backlinksTable : (data.backlinksTable || {});
+                    if ((!overviewData || overviewData.length === 0) && data.dashboard?.overviewData) overviewData = data.dashboard.overviewData;
+                    if (!keywordsSummary && data.keywordsSummary) keywordsSummary = data.keywordsSummary;
+                    if (data.keywordsTable) keywordsTableForFallback = data.keywordsTable;
+                    if (data.gbpInsights) gbpInsights = data.gbpInsights;
+                }
+            } catch (error) {
+                console.error('🔍 [BACKLINKS PROMPT] Fetch error:', error);
             }
         }
         if (!gbpInsights) {
-            const gbpData = await fetchSectionsBL(workbookId, 'gbpInsights');
-            if (gbpData && gbpData.gbpInsights) gbpInsights = gbpData.gbpInsights;
+            try {
+                const fetchUrl = `${base}?workbookId=${workbookId}&sections=${encodeURIComponent('gbpInsights')}`;
+                const response = await fetch(fetchUrl);
+                const gbpData = await response.json();
+                if (gbpData && gbpData.gbpInsights) gbpInsights = gbpData.gbpInsights;
+            } catch (error) {
+                console.error('🔍 [BACKLINKS PROMPT] GBP fetch error:', error);
+            }
         }
 
         // Identify client site (first key)
