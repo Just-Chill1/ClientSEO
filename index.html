@@ -4125,11 +4125,24 @@ const DualReports = ({ competitorText, errorText }) => {
         const params = new URLSearchParams(window.location.search);
         const workbookId = params.get('workbookId') || '';
 
-        const data = await fetchSectionsER(workbookId, 'websiteStats,gbpInsights,dashboard');
-        const websiteStats = data?.websiteStats || {};
-        const gbpInsights = data?.gbpInsights || null;
+        // Use direct fetch to bypass cache - same as GBP prompt
+        const base = 'https://script.google.com/macros/s/AKfycbxfOMp8d_eCVH4lFD0PNuFU1wH-gyWOwRt2EuME7GQJ4U73ZwpPDciohDH3C566YLWq/exec';
+        let websiteStats = null;
+        let gbpInsights = null;
+        
+        try {
+            const fetchUrl = `${base}?workbookId=${workbookId}&sections=${encodeURIComponent('websiteStats,gbpInsights,dashboard')}`;
+            const response = await fetch(fetchUrl);
+            const data = await response.json();
+            websiteStats = data?.websiteStats || {};
+            gbpInsights = data?.gbpInsights || null;
+        } catch (error) {
+            console.error('🔍 [COMPETITOR PROMPT] Fetch error:', error);
+        }
+
         const health = websiteStats?.healthData || {};
-        // On-Page Insights: AI Notes (CP)
+        
+        // Extract AI Notes (Competitor Analysis Report)
         let aiNotesText = '';
         try {
             const rawAiNotes = health?.aiNotes;
@@ -4140,6 +4153,7 @@ const DualReports = ({ competitorText, errorText }) => {
                 }
             }
         } catch {}
+        
         const tseo = Array.isArray(websiteStats?.technicalSeoData) ? websiteStats.technicalSeoData : [];
         const perfAll = Array.isArray(websiteStats?.competitorPerfData) ? websiteStats.competitorPerfData : [];
 
@@ -4184,7 +4198,7 @@ const DualReports = ({ competitorText, errorText }) => {
         const crawlPages = (Array.isArray(health?.checksAggregate?.pagesList) ? health.checksAggregate.pagesList : (health?.pagesList || health?.topPages || []))
             .map(p => (typeof p === 'string' ? p : (p?.url || p?.path || '')))
             .filter(Boolean)
-            .slice(0, 80);
+            .slice(0, 60);
 
         const competitorsTseo = tseo.filter(s => !(s?.isClient) && !String(s?.clinicName || s?.name || '').toLowerCase().includes('client')).slice(0, 4);
         const findPerfFor = (name) => {
@@ -4199,46 +4213,47 @@ const DualReports = ({ competitorText, errorText }) => {
         };
 
         const lines = [];
-        lines.push('ROLE: You are a senior MedSpa SEO strategist.');
-        lines.push('CONTEXT: Analyze the client vs top competitors using on-page, technical, GBP, and authority data.');
-        lines.push('GOAL: Provide focused, actionable steps to close competitive gaps and grow qualified traffic.');
+        lines.push('ROLE: You are a senior MedSpa SEO strategist and competitive intelligence analyst.');
+        lines.push('CONTEXT: The client has generated a competitive analysis report comparing their website performance against top local competitors. Use the data below to identify critical gaps and implement tactical improvements.');
+        lines.push('GOAL: Close competitive gaps in on-page optimization, technical SEO, authority building, and local visibility to outrank competitors for high-value service pages and local queries.');
+        lines.push('WORKING MODE:');
+        lines.push('- Provide the first actionable step immediately, click-by-click, with exact URLs, copy suggestions, and implementation guidance.');
+        lines.push('- If needed, perform light independent research (e.g., find competitor backlink sources, identify local citation opportunities, or review top-ranking competitor pages).');
+        lines.push('- Keep outputs concise and operational; include exact title/H1/meta copy, suggested page structure, internal linking strategy, and priority backlink targets.');
+        lines.push('- After the first step, ask only 1–3 essential questions to tailor follow-ups (e.g., CMS platform, existing partnerships for backlinks, budget for citations).');
         lines.push('');
         lines.push('CLIENT PROFILE:');
         lines.push(`- Clinic Name: ${clientName}`);
         lines.push(`- Website: ${clientWebsite || 'N/A'}`);
         lines.push('');
         lines.push('CORE ON-PAGE / TECHNICAL SNAPSHOT:');
-        lines.push(`- Title Tag: ${titleTag || 'N/A'}`);
-        lines.push(`- Meta Description: ${metaDescription || 'N/A'}`);
-        lines.push(`- H1: ${h1 || 'N/A'}`);
+        if (titleTag) lines.push(`- Title Tag: ${titleTag}`);
+        if (metaDescription) lines.push(`- Meta Description: ${metaDescription}`);
+        if (h1) lines.push(`- H1: ${h1}`);
         lines.push(`- Site Speed: ${siteSpeedDisplayMs}`);
-        lines.push(`- Page Score: ${pageScore !== null ? pageScore : 'N/A'}`);
+        if (pageScore !== null) lines.push(`- Page Score: ${pageScore}`);
         lines.push(`- Referring Domains: ${typeof referringDomains !== 'undefined' ? referringDomains : 'N/A'}`);
         if (typeof totalBacklinks !== 'undefined') lines.push(`- Total Backlinks: ${totalBacklinks}`);
         lines.push(`- SSL: ${ssl}`);
         lines.push(`- Schema: ${hasSchema}`);
-        lines.push(`- Keywords Position 1: ${kwPos1}`);
-        lines.push(`- Keywords Position 2-3: ${kwPos2to3}`);
-        lines.push(`- Keywords Position 4-10: ${kwPos4to10}`);
+        if (kwPos1 || kwPos2to3 || kwPos4to10) {
+            lines.push(`- Keywords Position 1: ${kwPos1}`);
+            lines.push(`- Keywords Position 2-3: ${kwPos2to3}`);
+            lines.push(`- Keywords Position 4-10: ${kwPos4to10}`);
+        }
         lines.push('');
-        lines.push('GOOGLE BUSINESS PROFILE (Quick View):');
+        lines.push('GOOGLE BUSINESS PROFILE SNAPSHOT:');
         lines.push(`- Primary Category: ${gbpPrimary || 'N/A'}`);
         lines.push(`- Secondary Categories: ${gbpSecondary || 'N/A'}`);
         lines.push(`- Description: ${gbpDesc || 'N/A'}`);
-        lines.push(`- Review Score: ${gbpScore || 'N/A'} | Reviews: ${gbpCount || 'N/A'}`);
+        lines.push(`- Review Score: ${gbpScore || 'N/A'} | Total Reviews: ${gbpCount || 'N/A'}`);
         if (crawlPages.length) {
             lines.push('');
-            lines.push('CLIENT WEBPAGES:');
+            lines.push('CLIENT WEBSITE PAGES:');
             lines.push(crawlPages.map(p => `- ${p}`).join('\n'));
         }
-        // Include On-Page Insights AI Notes for added context
-        if (aiNotesText) {
-            lines.push('');
-            lines.push('ON-PAGE INSIGHTS - AI NOTES:');
-            lines.push(aiNotesText);
-        }
         lines.push('');
-        lines.push('COMPETITOR PROFILES (On-Page + GBP + Authority):');
+        lines.push('COMPETITOR PROFILES (On-Page + Authority + GBP):');
         competitorsTseo.forEach((comp, idx) => {
             const name = comp?.clinicName || comp?.name || `Competitor ${idx+1}`;
             const compPerf = findPerfFor(name);
@@ -4247,21 +4262,32 @@ const DualReports = ({ competitorText, errorText }) => {
             const compBL = isFinite(Number(compPerf['Total Backlinks'] ?? compPerf.totalBacklinks)) ? Number(compPerf['Total Backlinks'] ?? compPerf.totalBacklinks) : 'N/A';
             const cPrim = (compGbp?.primaryCategory || pickCaseInsensitiveER(compGbp, 'Primary Category') || 'N/A').toString();
             const cSec = (compGbp?.secondaryCategories || pickCaseInsensitiveER(compGbp, 'Secondary Categories') || 'N/A').toString();
-            const cDesc = (compGbp?.description || pickCaseInsensitiveER(compGbp, 'Description') || 'N/A').toString();
             const cScore = (compGbp?.reviewScore || pickCaseInsensitiveER(compGbp, 'Review Score') || 'N/A').toString();
             const cCount = (compGbp?.reviewCount || pickCaseInsensitiveER(compGbp, 'Review Count') || 'N/A').toString();
-            lines.push(`- ${name}:`);
+            lines.push(`- ${name} (${comp?.website || 'N/A'}):`);
             lines.push(`  - Title: ${comp?.title || 'N/A'}`);
-            lines.push(`  - Meta: ${comp?.description || 'N/A'}`);
+            lines.push(`  - Meta Description: ${comp?.description || 'N/A'}`);
             lines.push(`  - H1: ${comp?.h1 || 'N/A'}`);
-            lines.push(`  - Referring Domains: ${compRD} | Total Backlinks: ${compBL}`);
-            lines.push(`  - GBP: Primary=${cPrim}; Secondary=${cSec}; Reviews=${cScore} (${cCount})`);
+            lines.push(`  - Authority: ${compRD} Referring Domains | ${compBL} Total Backlinks`);
+            lines.push(`  - GBP: ${cPrim} (Primary); ${cSec} (Secondary); ${cScore} stars (${cCount} reviews)`);
         });
         lines.push('');
-        lines.push('OPERATING PLAN:');
-        lines.push('1) First Action (High-Impact): Close the most critical gap (authority, GBP completeness, or on-page targeting). Provide exact edits (title/H1/meta), GBP category additions, or 10 backlink targets to pursue now.');
-        lines.push('2) Next 30 Days: Short weekly plan to improve rankings for 3–5 priority services.');
-        lines.push('3) Minimal Questions (≤3): CMS/platform, internal dev resources, current backlink partners.');
+        lines.push('COMPETITIVE ANALYSIS REPORT:');
+        lines.push(aiNotesText || 'Report data not available.');
+        lines.push('');
+        lines.push('IMPLEMENTATION FRAMEWORK:');
+        lines.push('1) Immediate First Action (Week 1): Based on the report above, identify the single highest-impact gap (authority, on-page targeting, or GBP completeness). Provide exact implementation steps:');
+        lines.push('   - If authority gap: List 10 specific backlink targets (competitor sources, local directories, industry publications) with outreach templates.');
+        lines.push('   - If on-page gap: Provide exact title tag, H1, and meta description for 2–3 priority pages, plus internal linking strategy.');
+        lines.push('   - If GBP gap: Specify exact category additions, suggested description (750+ chars), and 5 new photos to upload.');
+        lines.push('2) 30-Day Competitive Closure Plan: Break down weekly actions to systematically close gaps identified in the report. Include:');
+        lines.push('   - Week 1: [First action from above]');
+        lines.push('   - Week 2: [Second priority - e.g., on-page optimization for next service page]');
+        lines.push('   - Week 3: [Third priority - e.g., citation building or content expansion]');
+        lines.push('   - Week 4: [Measurement and iteration based on rank movement]');
+        lines.push('3) Competitor Monitoring: Set up weekly checks for competitor backlink gains, GBP updates, and new content. Provide exact tools/methods to use.');
+        lines.push('4) Success Metrics: Define specific KPIs to track weekly (e.g., "Referring domains from 4 → 15 in 90 days," "Semaglutide page from position 6 → position 3," "GBP local pack visibility from 20% → 60%").');
+        lines.push('5) Essential Questions (≤3): After reviewing the above, ask only the most critical questions needed to tailor implementation (e.g., CMS platform, existing local partnerships, content creation capacity).');
 
         let output = lines.join('\n');
         output = formatISOToUSInTextCA(output);
