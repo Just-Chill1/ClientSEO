@@ -2051,25 +2051,37 @@ const KeywordsReport = ({ reportText }) => {
             const wsCache = readSessionJson(`seo_data_${wsUrl}`);
             if (wsCache?.websiteStats) websiteStats = wsCache.websiteStats;
 
-            // Fetch missing pieces in one shot
+            // Fetch missing pieces in one shot - use direct fetch to bypass cache
             if (!websiteStats || !overviewData || Object.keys(keywordsTable).length === 0) {
-                const data = await fetchSections(workbookId, 'websiteStats,keywordsSummary,keywordsTable,dashboard,gbpInsights');
-                if (data) {
-                    websiteStats = websiteStats || data.websiteStats || data?.websiteStats;
-                    keywordsSummary = Object.keys(keywordsSummary).length ? keywordsSummary : (data.keywordsSummary || {});
-                    keywordsTable = Object.keys(keywordsTable).length ? keywordsTable : (data.keywordsTable || {});
-                    if ((!overviewData || overviewData.length === 0) && data.dashboard?.overviewData) {
-                        overviewData = data.dashboard.overviewData;
+                try {
+                    const fetchUrl = `${base}?workbookId=${workbookId}&sections=${encodeURIComponent('websiteStats,keywordsSummary,keywordsTable,dashboard,gbpInsights')}`;
+                    const response = await fetch(fetchUrl);
+                    const data = await response.json();
+                    if (data) {
+                        websiteStats = websiteStats || data.websiteStats || data?.websiteStats;
+                        keywordsSummary = Object.keys(keywordsSummary).length ? keywordsSummary : (data.keywordsSummary || {});
+                        keywordsTable = Object.keys(keywordsTable).length ? keywordsTable : (data.keywordsTable || {});
+                        if ((!overviewData || overviewData.length === 0) && data.dashboard?.overviewData) {
+                            overviewData = data.dashboard.overviewData;
+                        }
+                        if (data.gbpInsights) {
+                            gbpInsights = data.gbpInsights;
+                        }
                     }
-                    if (data.gbpInsights) {
-                        gbpInsights = data.gbpInsights;
-                    }
+                } catch (error) {
+                    console.error('🔍 [KEYWORDS PROMPT] Fetch error:', error);
                 }
             }
             // If still missing, try a direct gbpInsights fetch
             if (!gbpInsights) {
-                const gbpData = await fetchSections(workbookId, 'gbpInsights');
-                if (gbpData && gbpData.gbpInsights) gbpInsights = gbpData.gbpInsights;
+                try {
+                    const fetchUrl = `${base}?workbookId=${workbookId}&sections=${encodeURIComponent('gbpInsights')}`;
+                    const response = await fetch(fetchUrl);
+                    const gbpData = await response.json();
+                    if (gbpData && gbpData.gbpInsights) gbpInsights = gbpData.gbpInsights;
+                } catch (error) {
+                    console.error('🔍 [KEYWORDS PROMPT] GBP fetch error:', error);
+                }
             }
 
             // Identify client site (first key used throughout UI)
