@@ -650,7 +650,7 @@ function getWebsiteErrors(spreadsheet) {
 
 // Read AI error report text from Website Crawl Summary → column AK, row 2
 function getWebsiteErrorReport(spreadsheet) {
-    console.log('🔍 [ERROR REPORT] Starting getWebsiteErrorReport...');
+    console.log('🔍 [ERROR REPORT] Starting getWebsiteErrorReport... VERSION 2.0');
     console.log('🔍 [ERROR REPORT] Spreadsheet ID:', spreadsheet.getId());
     console.log('🔍 [ERROR REPORT] Spreadsheet Name:', spreadsheet.getName());
     

@@ -2855,6 +2855,10 @@ const GBPReportSection = ({ reportText }) => {
         
         console.log('🔍 [GBP PROMPT] Extracted GBP values:');
         console.log('  - Primary:', gbpPrimary);
+        console.log('  - Claimed:', gbpClaimed);
+        console.log('  - Opening Hours:', gbpHours);
+        console.log('  - GBP Website:', gbpWebsiteGBP);
+        console.log('  - Place Topics:', gbpTopics);
         console.log('  - Review Score:', gbpReviewScore);
         console.log('  - Review Count:', gbpReviewCount);
         console.log('  - Total Photos:', gbpTotalPhotos);
@@ -2889,11 +2893,9 @@ const GBPReportSection = ({ reportText }) => {
         if (typeof totalBacklinks !== 'undefined') lines.push(`- Total Backlinks: ${totalBacklinks}`);
         lines.push(`- SSL: ${ (health?.ssl === true || health?.ssl === 'true' || health?.ssl === 'Yes') ? 'Yes' : (health?.ssl === false ? 'No' : 'Unknown') }`);
         lines.push(`- Schema: ${ (health?.hasSchema === true || health?.hasSchema === 'true' || health?.hasSchema === 'Yes') ? 'Yes' : (health?.hasSchema === false ? 'No' : (health?.hasSchemaErrors ? 'Has errors' : 'Unknown')) }`);
-        if (pos1 != null || pos23 != null || pos410 != null) {
-            lines.push(`- Keywords Position 1: ${pos1 ?? 'N/A'}`);
-            lines.push(`- Keywords Position 2-3: ${pos23 ?? 'N/A'}`);
-            lines.push(`- Keywords Position 4-10: ${pos410 ?? 'N/A'}`);
-        }
+        lines.push(`- Keywords Position 1: ${(pos1 !== null && pos1 !== undefined) ? pos1 : 'N/A'}`);
+        lines.push(`- Keywords Position 2-3: ${(pos23 !== null && pos23 !== undefined) ? pos23 : 'N/A'}`);
+        lines.push(`- Keywords Position 4-10: ${(pos410 !== null && pos410 !== undefined) ? pos410 : 'N/A'}`);
         lines.push('');
         lines.push('GOOGLE BUSINESS PROFILE INSIGHTS:');
         lines.push(`- Total Photos: ${gbpTotalPhotos || 'N/A'}`);
@@ -2910,6 +2912,7 @@ const GBPReportSection = ({ reportText }) => {
         lines.push(`- Review Score: ${gbpReviewScore || 'N/A'}`);
         lines.push(`- Review Count: ${gbpReviewCount || 'N/A'}`);
         lines.push(`- Description: ${gbpDescription || 'N/A'}`);
+
         if (crawlPages.length) {
             lines.push('');
             lines.push('CLIENT WEBSITE PAGES:');
