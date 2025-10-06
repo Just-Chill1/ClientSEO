@@ -2057,16 +2057,16 @@ const KeywordsReport = ({ reportText }) => {
                     const fetchUrl = `${base}?workbookId=${workbookId}&sections=${encodeURIComponent('websiteStats,keywordsSummary,keywordsTable,dashboard,gbpInsights')}`;
                     const response = await fetch(fetchUrl);
                     const data = await response.json();
-                    if (data) {
-                        websiteStats = websiteStats || data.websiteStats || data?.websiteStats;
-                        keywordsSummary = Object.keys(keywordsSummary).length ? keywordsSummary : (data.keywordsSummary || {});
-                        keywordsTable = Object.keys(keywordsTable).length ? keywordsTable : (data.keywordsTable || {});
-                        if ((!overviewData || overviewData.length === 0) && data.dashboard?.overviewData) {
-                            overviewData = data.dashboard.overviewData;
-                        }
-                        if (data.gbpInsights) {
-                            gbpInsights = data.gbpInsights;
-                        }
+                if (data) {
+                    websiteStats = websiteStats || data.websiteStats || data?.websiteStats;
+                    keywordsSummary = Object.keys(keywordsSummary).length ? keywordsSummary : (data.keywordsSummary || {});
+                    keywordsTable = Object.keys(keywordsTable).length ? keywordsTable : (data.keywordsTable || {});
+                    if ((!overviewData || overviewData.length === 0) && data.dashboard?.overviewData) {
+                        overviewData = data.dashboard.overviewData;
+                    }
+                    if (data.gbpInsights) {
+                        gbpInsights = data.gbpInsights;
+                    }
                     }
                 } catch (error) {
                     console.error('🔍 [KEYWORDS PROMPT] Fetch error:', error);
@@ -2078,7 +2078,7 @@ const KeywordsReport = ({ reportText }) => {
                     const fetchUrl = `${base}?workbookId=${workbookId}&sections=${encodeURIComponent('gbpInsights')}`;
                     const response = await fetch(fetchUrl);
                     const gbpData = await response.json();
-                    if (gbpData && gbpData.gbpInsights) gbpInsights = gbpData.gbpInsights;
+                if (gbpData && gbpData.gbpInsights) gbpInsights = gbpData.gbpInsights;
                 } catch (error) {
                     console.error('🔍 [KEYWORDS PROMPT] GBP fetch error:', error);
                 }
@@ -2746,17 +2746,17 @@ const GBPReportSection = ({ reportText }) => {
                 console.log('🔍 [GBP PROMPT] Fetch result type:', Array.isArray(data) ? 'Array' : typeof data);
                 console.log('🔍 [GBP PROMPT] Fetch result:', data);
                 console.log('🔍 [GBP PROMPT] Fetch result keys:', data ? (Array.isArray(data) ? data.length : Object.keys(data)) : 'No data');
-                if (data) {
+            if (data) {
                     // Check if data has the expected structure
                     console.log('🔍 [GBP PROMPT] data.websiteStats:', data.websiteStats ? 'Found' : 'Not found');
                     console.log('🔍 [GBP PROMPT] data.gbpInsights:', data.gbpInsights ? 'Found' : 'Not found');
                     console.log('🔍 [GBP PROMPT] data.dashboard:', data.dashboard ? 'Found' : 'Not found');
                     
-                    websiteStats = websiteStats || data.websiteStats || data?.websiteStats;
-                    if ((!overviewData || overviewData.length === 0) && data.dashboard?.overviewData) overviewData = data.dashboard.overviewData;
-                    if (data.gbpInsights) gbpInsights = data.gbpInsights;
-                    if (data.keywordsSummary) keywordsSummary = data.keywordsSummary;
-                    if (data.keywordsTable) keywordsTable = data.keywordsTable;
+                websiteStats = websiteStats || data.websiteStats || data?.websiteStats;
+                if ((!overviewData || overviewData.length === 0) && data.dashboard?.overviewData) overviewData = data.dashboard.overviewData;
+                if (data.gbpInsights) gbpInsights = data.gbpInsights;
+                if (data.keywordsSummary) keywordsSummary = data.keywordsSummary;
+                if (data.keywordsTable) keywordsTable = data.keywordsTable;
                     console.log('🔍 [GBP PROMPT] After fetch - websiteStats:', websiteStats ? 'Has data' : 'Still null');
                     console.log('🔍 [GBP PROMPT] After fetch - gbpInsights:', gbpInsights ? 'Has data' : 'Still null');
                 }
@@ -2770,7 +2770,7 @@ const GBPReportSection = ({ reportText }) => {
                 const fetchUrl = `${base}?workbookId=${workbookId}&sections=${encodeURIComponent('gbpInsights')}`;
                 const response = await fetch(fetchUrl);
                 const g = await response.json();
-                if (g && g.gbpInsights) gbpInsights = g.gbpInsights;
+            if (g && g.gbpInsights) gbpInsights = g.gbpInsights;
                 console.log('🔍 [GBP PROMPT] GBP insights fetch result:', gbpInsights ? 'Found' : 'Not found');
             } catch (error) {
                 console.error('🔍 [GBP PROMPT] GBP insights fetch error:', error);
@@ -3249,14 +3249,14 @@ const BacklinksReport = ({ reportText }) => {
                 const fetchUrl = `${base}?workbookId=${workbookId}&sections=${encodeURIComponent('websiteStats,backlinksSummary,backlinksTable,dashboard,gbpInsights,keywordsSummary,keywordsTable')}`;
                 const response = await fetch(fetchUrl);
                 const data = await response.json();
-                if (data) {
-                    websiteStats = websiteStats || data.websiteStats || data?.websiteStats;
-                    backlinksSummary = Object.keys(backlinksSummary).length ? backlinksSummary : (data.backlinksSummary || {});
-                    backlinksTable = Object.keys(backlinksTable).length ? backlinksTable : (data.backlinksTable || {});
-                    if ((!overviewData || overviewData.length === 0) && data.dashboard?.overviewData) overviewData = data.dashboard.overviewData;
-                    if (!keywordsSummary && data.keywordsSummary) keywordsSummary = data.keywordsSummary;
-                    if (data.keywordsTable) keywordsTableForFallback = data.keywordsTable;
-                    if (data.gbpInsights) gbpInsights = data.gbpInsights;
+            if (data) {
+                websiteStats = websiteStats || data.websiteStats || data?.websiteStats;
+                backlinksSummary = Object.keys(backlinksSummary).length ? backlinksSummary : (data.backlinksSummary || {});
+                backlinksTable = Object.keys(backlinksTable).length ? backlinksTable : (data.backlinksTable || {});
+                if ((!overviewData || overviewData.length === 0) && data.dashboard?.overviewData) overviewData = data.dashboard.overviewData;
+                if (!keywordsSummary && data.keywordsSummary) keywordsSummary = data.keywordsSummary;
+                if (data.keywordsTable) keywordsTableForFallback = data.keywordsTable;
+                if (data.gbpInsights) gbpInsights = data.gbpInsights;
                 }
             } catch (error) {
                 console.error('🔍 [BACKLINKS PROMPT] Fetch error:', error);
@@ -3267,7 +3267,7 @@ const BacklinksReport = ({ reportText }) => {
                 const fetchUrl = `${base}?workbookId=${workbookId}&sections=${encodeURIComponent('gbpInsights')}`;
                 const response = await fetch(fetchUrl);
                 const gbpData = await response.json();
-                if (gbpData && gbpData.gbpInsights) gbpInsights = gbpData.gbpInsights;
+            if (gbpData && gbpData.gbpInsights) gbpInsights = gbpData.gbpInsights;
             } catch (error) {
                 console.error('🔍 [BACKLINKS PROMPT] GBP fetch error:', error);
             }
@@ -4264,9 +4264,9 @@ const DualReports = ({ competitorText, errorText }) => {
         lines.push(`- SSL: ${ssl}`);
         lines.push(`- Schema: ${hasSchema}`);
         if (kwPos1 || kwPos2to3 || kwPos4to10) {
-            lines.push(`- Keywords Position 1: ${kwPos1}`);
-            lines.push(`- Keywords Position 2-3: ${kwPos2to3}`);
-            lines.push(`- Keywords Position 4-10: ${kwPos4to10}`);
+        lines.push(`- Keywords Position 1: ${kwPos1}`);
+        lines.push(`- Keywords Position 2-3: ${kwPos2to3}`);
+        lines.push(`- Keywords Position 4-10: ${kwPos4to10}`);
         }
         lines.push('');
         lines.push('GOOGLE BUSINESS PROFILE SNAPSHOT:');
@@ -4279,7 +4279,7 @@ const DualReports = ({ competitorText, errorText }) => {
             lines.push('CLIENT WEBSITE PAGES:');
             lines.push(crawlPages.map(p => `- ${p}`).join('\n'));
         }
-        lines.push('');
+            lines.push('');
         lines.push('COMPETITOR PROFILES (On-Page + Authority + GBP):');
         competitorsTseo.forEach((comp, idx) => {
             const name = comp?.clinicName || comp?.name || `Competitor ${idx+1}`;
@@ -9707,13 +9707,17 @@ const GuideContent = ({ guideId, onBack }) => {
             category: "Dashboard",
             readTime: "8 min read",
             content: {
+                intro: `Your Dashboard is the command center for your competitive SEO analysis. It brings together Google Business Profile insights, geogrid rankings, demographic data, AI visibility metrics, and service performance—all in one place. This guide will help you understand each component and how to leverage the data for strategic decisions.`,
+                videoUrl: "https://www.loom.com/embed/727b1904c42343ef9148d69b8a08e1d7",
+                videoTitle: "Dashboard Walkthrough & Training",
                 sections: [
                     {
-                        title: "Dashboard Components",
-                        content: `Your dashboard is organized into several key sections, each providing valuable insights into different aspects of your competitive performance and local market analysis.`
+                        title: "📊 Dashboard Components",
+                        content: `Your dashboard is organized into several key sections, each providing valuable insights into different aspects of your competitive performance and local market analysis.`,
+                        highlight: true
                     },
                     {
-                        title: "'Medspa Near Me' Geogrid Map",
+                        title: "🗺️ 'Medspa Near Me' Geogrid Map",
                         content: `This section shows your ranking performance versus competitors for the critical keyword 'Medspa Near Me':`,
                         list: [
                             "**Geogrid visualization** - Map showing your search visibility across different locations",
@@ -9723,7 +9727,7 @@ const GuideContent = ({ guideId, onBack }) => {
                         ]
                     },
                     {
-                        title: "Census Data Section",
+                        title: "👥 Census Data Section",
                         content: `Essential demographic information about your town and city to inform your marketing strategy:`,
                         list: [
                             "**Population** - Helpful when setting radius for advertising campaigns",
@@ -9733,7 +9737,7 @@ const GuideContent = ({ guideId, onBack }) => {
                         ]
                     },
                     {
-                        title: "Google Business Profile Report",
+                        title: "📍 Google Business Profile Report",
                         content: `Comprehensive analysis of your Google Business Profile with actionable recommendations:`,
                         list: [
                             "**Detailed GBP analysis** - In-depth review of your profile completeness and optimization",
@@ -9741,10 +9745,11 @@ const GuideContent = ({ guideId, onBack }) => {
                             "**'Show More' option** - Click to view the complete detailed report",
                             "**Implementation options** - Choose to implement recommendations yourself or request Forever Booked's help",
                             "**50% discount offer** - Special pricing for upgrading to the paid SEO package"
-                        ]
+                        ],
+                        highlight: true
                     },
                     {
-                        title: "GBP Insights Section",
+                        title: "⭐ GBP Insights Section",
                         content: `The Google Business Profile section shows:`,
                         list: [
                             "**Profile completeness score** - How well your GBP is optimized",
@@ -9755,10 +9760,10 @@ const GuideContent = ({ guideId, onBack }) => {
                         ]
                     },
                     {
-                        title: "Competitor Overview",
-                        content: `The competitor section displays:`,
+                        title: "🏆 Competitor Overview",
+                        content: `Monitor how you stack up against local competitors with this comprehensive comparison table:`,
                         list: [
-                            "**Competitor rankings** - How you stack up against local competitors",
+                            "**Competitor rankings** - Side-by-side performance metrics for up to 4 competitors",
                             "**Website performance** - Site speed, backlinks, and traffic estimates",
                             "**Social media presence** - Links to competitor social profiles",
                             "**Advertising activity** - Google Ads and Facebook Ads detection",
@@ -9766,55 +9771,59 @@ const GuideContent = ({ guideId, onBack }) => {
                         ]
                     },
                     {
-                        title: "Service Performance Cards",
-                        content: `Two key service sections show:`,
+                        title: "💎 Service Performance Cards",
+                        content: `Two key service sections help you identify market opportunities:`,
                         list: [
-                            "**Top Services by Search Volume** - Most popular established services",
-                            "**New Services by Search Volume** - Emerging opportunities",
+                            "**Top Services by Search Volume** - Most popular established services in your area",
+                            "**New Services by Search Volume** - Emerging opportunities and trending treatments",
                             "**Search volume data** - Monthly search estimates for each service",
-                            "**Trend indicators** - Whether services are growing or declining"
+                            "**Trend indicators** - Whether services are growing or declining in popularity"
                         ]
                     },
                     {
-                        title: "AI Visibility vs Sentiment Chart",
-                        content: `This advanced chart shows how different AI platforms (ChatGPT, Gemini, Perplexity) perceive your business:`,
+                        title: "🤖 AI Visibility vs Sentiment Chart",
+                        content: `This advanced bubble chart shows how different AI platforms (ChatGPT, Gemini, Perplexity) perceive your business:`,
                         list: [
-                            "**X-axis (Visibility)** - How often your business appears in AI responses",
-                            "**Y-axis (Sentiment)** - How positively AI platforms describe your business",
+                            "**X-axis (Visibility)** - How often your business appears in AI responses (0-100%)",
+                            "**Y-axis (Sentiment)** - How positively AI platforms describe your business (-100 to +100)",
                             "**Bubble size** - Represents share of voice/frequency of mentions",
                             "**Bubble opacity** - Indicates confidence level of the data",
-                            "**Color coding** - Blue for your business, other colors for competitors"
+                            "**Color coding** - Blue for your business, other colors for competitors",
+                            "**Why it matters** - AI search engines are becoming increasingly important for local business discovery"
                         ]
                     },
                     {
-                        title: "AI Perception Bar Chart",
-                        content: `Shows comparative AI sentiment scores across platforms:`,
+                        title: "📊 AI Perception Bar Chart",
+                        content: `Shows comparative AI sentiment scores across platforms in an easy-to-read bar chart format:`,
                         list: [
                             "**Platform comparison** - ChatGPT vs Gemini vs Perplexity scores",
                             "**Competitor benchmarking** - How your AI presence compares to competitors",
-                            "**Average scores** - Overall AI perception rating",
-                            "**Data availability indicators** - Which platforms have data for each business"
+                            "**Average scores** - Overall AI perception rating across all platforms",
+                            "**Data availability indicators** - Which platforms have data for each business",
+                            "**Action items** - Identify which AI platforms need improvement"
                         ]
                     },
                     {
-                        title: "Implementation & Support Options",
+                        title: "🚀 Implementation & Support Options",
                         content: `Every report includes actionable recommendations with flexible implementation options:`,
                         list: [
-                            "**DIY Implementation** - Use the 'Implement Recommendations Myself' button to copy detailed prompts for your favorite AI assistant",
+                            "**DIY Implementation** - Use the 'Implement Recommendations Myself' button to copy detailed prompts for ChatGPT, Claude, or your favorite AI assistant",
                             "**Professional Implementation** - Click 'Request Forever Booked Implement' to upgrade to the paid SEO package with expert implementation",
                             "**Special Offer** - Get 50% off your first month when upgrading to professional implementation",
                             "**Community Support** - Access the exclusive [Forever Booked Skool community](https://www.skool.com/forever-booked/classroom/a23620ff?md=00953c20f4574ccdb6d5edfe0a0298ed) for additional guidance and networking"
-                        ]
+                        ],
+                        highlight: true
                     },
                     {
-                        title: "Using Dashboard Data for Strategy",
-                        content: `Leverage your competitive analysis insights to:`,
+                        title: "💡 Using Dashboard Data for Strategy",
+                        content: `Leverage your competitive analysis insights to make data-driven marketing decisions:`,
                         list: [
-                            "**Target High-Value Services** - Focus on services with high search volume in your area",
+                            "**Target High-Value Services** - Focus marketing budget on services with high search volume in your area",
                             "**Optimize Demographics** - Use census data to tailor your marketing campaigns and ad targeting",
                             "**Monitor Competitive Gaps** - Identify opportunities where competitors are weak",
                             "**Track Monthly Progress** - Compare your performance month-over-month against the same competitors",
-                            "**Improve Local Presence** - Use Geogrid data to strengthen your 'Medspa Near Me' rankings"
+                            "**Improve Local Presence** - Use Geogrid data to strengthen your 'Medspa Near Me' rankings",
+                            "**AI Optimization** - Ensure your business is well-represented in AI search results"
                         ]
                     }
                 ]
@@ -10505,16 +10514,49 @@ const GuideContent = ({ guideId, onBack }) => {
                             {currentGuide.readTime}
                         </span>
                     </div>
-                    <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+                    <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
                         {currentGuide.title}
                     </h1>
+                    
+                    {/* Intro Text */}
+                    {currentGuide.content.intro && (
+                        <p className="text-lg leading-relaxed mb-6" style={{ color: 'var(--text-secondary)' }}>
+                            {currentGuide.content.intro}
+                        </p>
+                    )}
+                    
+                    {/* Video Embed */}
+                    {currentGuide.content.videoUrl && (
+                        <div className="mb-8">
+                            <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 p-6 rounded-xl">
+                                <h3 className="text-lg font-semibold mb-4 flex items-center" style={{ color: 'var(--text-primary)' }}>
+                                    <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" />
+                                    </svg>
+                                    {currentGuide.content.videoTitle || 'Video Tutorial'}
+                                </h3>
+                                <div className="relative w-full rounded-lg overflow-hidden shadow-lg" style={{ paddingBottom: '56.25%' }}>
+                                    <iframe
+                                        src={currentGuide.content.videoUrl}
+                                        className="absolute top-0 left-0 w-full h-full"
+                                        frameBorder="0"
+                                        allowFullScreen
+                                        title={currentGuide.content.videoTitle || currentGuide.title}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Guide Content */}
                 <div className="prose prose-lg max-w-none" style={{ color: 'var(--text-primary)' }}>
                     {currentGuide.content.sections.map((section, index) => (
-                        <div key={index} className="mb-8">
-                            <h2 className="text-xl font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+                        <div 
+                            key={index} 
+                            className={`mb-8 ${section.highlight ? 'bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 p-6 rounded-xl border-l-4 border-blue-500' : ''}`}
+                        >
+                            <h2 className={`text-xl font-semibold mb-4 ${section.highlight ? 'text-blue-600 dark:text-blue-400' : ''}`} style={!section.highlight ? { color: 'var(--text-primary)' } : {}}>
                                 {section.title}
                             </h2>
                             <p className="mb-4 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
