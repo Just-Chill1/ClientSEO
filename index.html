@@ -10118,13 +10118,17 @@ const GuideContent = ({ guideId, onBack }) => {
             category: "Backlinks",
             readTime: "18 min read",
             content: {
+                intro: `Backlinks are the foundation of domain authority and search rankings. This section gives you complete visibility into your link profile, competitive link intelligence, and AI-powered recommendations for strategic link building. Whether you're analyzing link quality, identifying opportunities, or monitoring competitor strategies, this comprehensive guide will help you build a powerful backlink portfolio.`,
+                videoUrl: "https://www.loom.com/embed/5a89f282770b477cad8005b3ebd187b5",
+                videoTitle: "Backlinks Analysis Walkthrough",
                 sections: [
                     {
-                        title: "Backlinks Section Overview",
-                        content: `The Backlinks section is your comprehensive link intelligence center, providing detailed analysis of your backlink profile and competitive link landscape. Understanding your backlinks is crucial for SEO success, as quality backlinks are one of Google's most important ranking factors for medical spa websites.`
+                        title: "🔗 Backlinks Section Overview",
+                        content: `The Backlinks section is your comprehensive link intelligence center, providing detailed analysis of your backlink profile and competitive link landscape. Understanding your backlinks is crucial for SEO success, as quality backlinks are one of Google's most important ranking factors for medical spa websites.`,
+                        highlight: true
                     },
                     {
-                        title: "Backlinks Summary Dashboard",
+                        title: "📊 Backlinks Summary Dashboard",
                         content: `The top section provides essential metrics about your overall backlink health:`,
                         list: [
                             "**Total Backlinks** - Complete count of all links pointing to your website",
@@ -10137,44 +10141,45 @@ const GuideContent = ({ guideId, onBack }) => {
                         ]
                     },
                     {
-                        title: "Link Quality & Authority Metrics",
+                        title: "⭐ Link Quality & Authority Metrics",
                         content: `Understanding the quality and value of your backlink portfolio:`,
                         list: [
-                            "**Domain Authority** - Strength of websites linking to you (higher is better)",
+                            "**Domain Authority** - Strength of websites linking to you (1-100 scale, higher is better)",
                             "**Page Authority** - Strength of specific pages linking to you",
                             "**Link Context** - How relevant the linking content is to your medical spa services",
                             "**Anchor Text Distribution** - The words used in links pointing to your site",
-                            "**Link Placement** - Whether links are in content, sidebars, footers, or navigation",
+                            "**Link Placement** - Whether links are in content (best), sidebars, footers, or navigation",
                             "**Geographic Relevance** - Local websites and directories linking to your business"
                         ]
                     },
                     {
-                        title: "Competitive Backlink Analysis",
-                        content: `Compare your link profile against up to 4 local competitors:`,
+                        title: "🏆 Competitive Backlink Analysis",
+                        content: `Compare your link profile against up to 4 local competitors and identify opportunities:`,
                         list: [
-                            "**Link Gap Analysis** - Domains linking to competitors but not to you",
+                            "**Link Gap Analysis** - Domains linking to competitors but not to you (your biggest opportunities)",
                             "**Competitive Benchmarking** - How your metrics compare to market leaders",
                             "**Shared Link Opportunities** - Websites that link to multiple competitors",
                             "**Competitor Link Strategies** - Understanding how competitors acquire links",
                             "**Market Share Analysis** - Your portion of total backlinks in your market",
                             "**Quality Comparison** - Average domain authority of competitor vs your links"
-                        ]
+                        ],
+                        highlight: true
                     },
                     {
-                        title: "Link Types & Categories",
+                        title: "📁 Link Types & Categories",
                         content: `Different types of backlinks and their strategic value for medical spas:`,
                         list: [
-                            "**Editorial Links** - Natural mentions in articles and blog posts (highest value)",
+                            "**Editorial Links** - Natural mentions in articles and blog posts (highest value for SEO)",
                             "**Directory Links** - Medical spa directories and local business listings",
                             "**Resource Page Links** - Links from 'best of' lists and resource compilations",
                             "**Guest Post Links** - Links from content you've contributed to other sites",
-                            "**Social Media Links** - Links from social platforms (usually nofollow)",
+                            "**Social Media Links** - Links from social platforms (usually nofollow but drive traffic)",
                             "**Review Platform Links** - Links from Yelp, Google Reviews, and medical review sites",
                             "**Partnership Links** - Links from business partners, suppliers, and associations"
                         ]
                     },
                     {
-                        title: "AI Backlinks Analysis Report",
+                        title: "🤖 AI Backlinks Analysis Report",
                         content: `Intelligent insights and strategic recommendations for your link profile:`,
                         list: [
                             "**Link Profile Health Assessment** - Overall quality and risk evaluation",
@@ -10186,38 +10191,39 @@ const GuideContent = ({ guideId, onBack }) => {
                         ]
                     },
                     {
-                        title: "Detailed Backlinks Table",
+                        title: "📋 Detailed Backlinks Table",
                         content: `Comprehensive breakdown of every backlink with actionable intelligence:`,
                         list: [
                             "**Source Domain** - The website linking to you with authority metrics",
                             "**Linking Page** - Specific page containing your link",
                             "**Target Page** - Which of your pages is being linked to",
                             "**Anchor Text** - The clickable text used for your link",
-                            "**Link Type** - Dofollow vs nofollow classification",
+                            "**Link Type** - Dofollow (passes authority) vs nofollow classification",
                             "**Discovery Date** - When the link was first detected",
                             "**Link Status** - Active, lost, or newly discovered",
-                            "**Spam Score** - Quality assessment of the linking domain"
+                            "**Spam Score** - Quality assessment of the linking domain (0-100, lower is better)"
                         ]
                     },
                     {
-                        title: "Link Building Opportunities",
+                        title: "🎯 Link Building Opportunities",
                         content: `Strategic approaches to acquire high-quality backlinks for medical spas:`,
                         list: [
-                            "**Local Business Partnerships** - Cross-promotion with complementary businesses",
+                            "**Local Business Partnerships** - Cross-promotion with complementary businesses (gyms, salons, etc.)",
                             "**Medical Directory Submissions** - Industry-specific directory listings",
                             "**Content Marketing** - Creating linkable assets like treatment guides and research",
                             "**Digital PR** - Newsworthy announcements and expert commentary",
                             "**Resource Page Outreach** - Getting listed on relevant resource compilations",
                             "**Broken Link Building** - Replacing broken links with your content",
                             "**Community Involvement** - Links from local organizations and events"
-                        ]
+                        ],
+                        highlight: true
                     },
                     {
-                        title: "Link Risk Management",
+                        title: "⚠️ Link Risk Management",
                         content: `Protecting your website from harmful or low-quality backlinks:`,
                         list: [
                             "**Toxic Link Identification** - Spotting potentially harmful backlinks",
-                            "**Spam Score Monitoring** - Regular assessment of link quality",
+                            "**Spam Score Monitoring** - Regular assessment of link quality (aim for <5%)",
                             "**Disavow File Management** - Telling Google to ignore bad links",
                             "**Link Removal Strategies** - How to get harmful links removed",
                             "**Penalty Prevention** - Avoiding Google penalties from bad links",
@@ -10225,7 +10231,7 @@ const GuideContent = ({ guideId, onBack }) => {
                         ]
                     },
                     {
-                        title: "Local Link Building for Medical Spas",
+                        title: "📍 Local Link Building for Medical Spas",
                         content: `Specialized strategies for building local authority and relevance:`,
                         list: [
                             "**Local Chamber of Commerce** - Business association memberships and links",
@@ -10237,10 +10243,10 @@ const GuideContent = ({ guideId, onBack }) => {
                         ]
                     },
                     {
-                        title: "Content-Driven Link Acquisition",
+                        title: "✍️ Content-Driven Link Acquisition",
                         content: `Creating content that naturally attracts high-quality backlinks:`,
                         list: [
-                            "**Treatment Guides** - Comprehensive guides to popular procedures",
+                            "**Treatment Guides** - Comprehensive guides to popular procedures (e.g., 'Complete Guide to Botox')",
                             "**Before/After Galleries** - Visual content that others want to reference",
                             "**Research and Studies** - Original research in aesthetics and wellness",
                             "**Expert Commentary** - Thought leadership on industry trends",
@@ -10249,7 +10255,7 @@ const GuideContent = ({ guideId, onBack }) => {
                         ]
                     },
                     {
-                        title: "Backlink Monitoring & Maintenance",
+                        title: "🔍 Backlink Monitoring & Maintenance",
                         content: `Ongoing management of your link profile for sustained SEO success:`,
                         list: [
                             "**Regular Audits** - Monthly review of new and lost links",
