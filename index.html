@@ -9712,48 +9712,79 @@ const GuideContent = ({ guideId, onBack }) => {
                 videoTitle: "Dashboard Walkthrough & Training",
                 sections: [
                     {
-                        title: "📊 Dashboard Components",
-                        content: `Your dashboard is organized into several key sections, each providing valuable insights into different aspects of your competitive performance and local market analysis. Let's walk through each component and what it means for your business.`
+                        title: "📊 Dashboard Components Overview",
+                        content: `Your dashboard brings together multiple data sources to give you a complete picture of your competitive position. Each section serves a specific strategic purpose.`
                     },
                     {
                         title: "🗺️ 'Medspa Near Me' Geogrid Map",
-                        content: `This section shows your ranking performance versus competitors for the critical keyword 'Medspa Near Me'. The interactive map displays your search visibility across different locations, with color-coding to show where you rank well (green) and where you need improvement (red/yellow). Your **Average Geogrid Score** summarizes your overall performance compared to up to 4 local competitors, giving you instant insight into your local search dominance.`
+                        content: `This interactive map shows your ranking performance for the critical keyword 'Medspa Near Me' across different geographic locations.`,
+                        list: [
+                            "**Color-coded results**: Green (top 3), yellow (positions 4-10), red (11+)",
+                            "**Average Geogrid Score**: Your overall performance vs up to 4 competitors",
+                            "**Geographic insights**: See exactly which neighborhoods you dominate and which need work"
+                        ]
                     },
                     {
-                        title: "👥 Census Data Section",
-                        content: `Understanding your local demographics is crucial for smart marketing decisions. The census data shows you population numbers (helpful when setting radius for advertising campaigns), ethnicity distribution (useful for choosing creative assets and imagery), languages spoken (helps decide on multi-language campaigns), and median income (critical for determining whether to launch low, mid, or high-ticket service campaigns). Use this data to ensure your marketing speaks directly to your target audience.`
+                        title: "👥 Census Data for Smart Marketing",
+                        content: `Understanding your local demographics is crucial for targeting the right audience with the right message. This data directly informs your marketing decisions:`,
+                        list: [
+                            "**Population** - Set advertising radius based on market size",
+                            "**Ethnicity Distribution** - Choose imagery and creative assets that resonate",
+                            "**Languages Spoken** - Decide whether multi-language campaigns make sense",
+                            "**Median Income** - Determine whether to focus on low, mid, or high-ticket services"
+                        ]
                     },
                     {
                         title: "📍 Google Business Profile Report",
-                        content: `This is one of the most valuable sections on your dashboard. You'll see a comprehensive AI-generated analysis of your Google Business Profile with specific, actionable recommendations. The report reviews your profile completeness, optimization opportunities, and competitive positioning. Click **"Show More"** to view the complete detailed report, then choose to implement recommendations yourself using our AI prompts or request Forever Booked's professional implementation (with a 50% discount on your first month).`
+                        content: `This AI-generated analysis is one of your most valuable tools. It reviews your GBP completeness, identifies optimization opportunities, and compares you to competitors.
+
+Click **"Show More"** to view the full detailed report with specific recommendations. Then choose your implementation path:`,
+                        list: [
+                            "**Implement Recommendations Myself** - Get a detailed AI prompt for DIY implementation",
+                            "**Request Forever Booked Implement** - Professional service (50% off first month)"
+                        ]
                     },
                     {
-                        title: "⭐ GBP Insights & Competitor Overview",
-                        content: `Below the main report, you'll find detailed GBP metrics including your profile completeness score, review statistics (star rating, review count), photo performance, Q&A activity, and an AI-generated SWOT analysis identifying your strengths, weaknesses, opportunities, and threats.
-
-The Competitor Overview table lets you monitor how you stack up against up to 4 local competitors. See side-by-side comparisons of website performance (site speed, backlinks, traffic estimates), social media presence, advertising activity (Google Ads and Facebook Ads detection), and review comparisons. This intelligence helps you identify competitive gaps and opportunities.`
+                        title: "🏆 Competitor Overview Table",
+                        content: `Monitor how you stack up against up to 4 local competitors in real-time. This side-by-side comparison includes:`,
+                        list: [
+                            "Website performance (site speed, backlinks, traffic estimates)",
+                            "Social media presence and engagement",
+                            "Advertising activity (Google Ads and Facebook Ads)",
+                            "Review scores and counts",
+                            "GBP metrics and completeness"
+                        ]
                     },
                     {
                         title: "💎 Service Performance Cards",
-                        content: `Two service cards show you exactly what people in your area are searching for. **Top Services by Search Volume** displays the most popular established treatments, while **New Services by Search Volume** reveals emerging opportunities and trending procedures. Each service shows monthly search volume estimates and trend indicators, so you know whether demand is growing or declining. Use this data to prioritize which services to promote and which new treatments to consider adding.`
+                        content: `Two critical cards show you what people in your area are actually searching for:
+
+**Top Services** - The most popular established treatments with proven search demand
+**New Services** - Emerging opportunities and trending procedures
+
+Each service displays monthly search volume and trend indicators (growing/declining). Use this intelligence to prioritize your marketing budget and consider adding high-demand services you don't currently offer.`
                     },
                     {
-                        title: "🤖 AI Visibility & Sentiment Analysis",
-                        content: `These charts show how AI platforms like ChatGPT, Gemini, and Perplexity perceive your business—an increasingly important ranking factor. The bubble chart plots **Visibility** (how often your business appears, 0-100%) against **Sentiment** (how positively you're described, -100 to +100), with bubble size representing share of voice. The bar chart breaks down scores by platform, making it easy to see which AI engines need optimization. Blue represents your business, while other colors show competitors.
-
-Why this matters: AI search engines are rapidly becoming a primary way potential clients discover local businesses. Ensuring strong AI visibility and positive sentiment can significantly impact your appointment bookings.`
+                        title: "🤖 AI Visibility & Sentiment",
+                        content: `AI search engines (ChatGPT, Gemini, Perplexity) are becoming a primary way clients discover local businesses. These charts show how AI platforms perceive you:`,
+                        list: [
+                            "**Bubble Chart**: Plots visibility (0-100%) vs sentiment (-100 to +100)",
+                            "**Bar Chart**: Platform-by-platform score breakdown",
+                            "**Color Coding**: Blue for you, other colors for competitors",
+                            "**Bubble Size**: Represents share of voice in AI responses"
+                        ]
                     },
                     {
-                        title: "🚀 Implementation & Support",
-                        content: `Every AI report includes actionable recommendations. You have two implementation options:
-
-**DIY Implementation**: Click "Implement Recommendations Myself" to get a comprehensive, copy-paste-ready prompt you can use with ChatGPT, Claude, or any AI assistant. The prompt includes all your data and step-by-step instructions.
-
-**Professional Implementation**: Click "Request Forever Booked Implement" to upgrade to our paid SEO package where we handle everything for you. Get 50% off your first month when upgrading, plus access to the exclusive Forever Booked Skool community for ongoing support and networking.`
-                    },
-                    {
-                        title: "💡 Strategic Use of Dashboard Data",
-                        content: `The real power comes from combining these insights into a cohesive strategy. Focus your marketing budget on high-volume services identified in the service cards. Use census data to refine your ad targeting—for example, if median income is high, promote premium treatments. Monitor the Geogrid map to identify neighborhoods where you're underperforming, then create location-specific campaigns. Track your AI sentiment monthly and work to improve weak platforms. Compare your progress against competitors month-over-month to ensure you're gaining ground, not losing it.`
+                        title: "💡 Turning Data Into Action",
+                        content: `The real power comes from combining these insights strategically:`,
+                        list: [
+                            "**Budget Allocation** - Focus spend on high-volume services from the service cards",
+                            "**Demographic Targeting** - Use census data to refine ad audiences (e.g., high income = premium treatments)",
+                            "**Geographic Campaigns** - Target underperforming neighborhoods identified in the Geogrid map",
+                            "**AI Optimization** - Improve visibility on platforms where you're weak",
+                            "**Competitive Intelligence** - Study what's working for competitors and adapt",
+                            "**Monthly Tracking** - Compare month-over-month to measure progress"
+                        ]
                     }
                 ]
             }
@@ -9894,56 +9925,114 @@ Why this matters: AI search engines are rapidly becoming a primary way potential
                 videoTitle: "Keywords Analysis Training",
                 sections: [
                     {
-                        title: "🔑 Understanding Keyword Rankings",
-                        content: `The Keywords section is your command center for tracking search engine rankings. Every search on Google is driven by keywords—the words and phrases people type when looking for services like yours. Your ranking position for these keywords directly determines how much organic traffic your website receives. If you rank #1 for "Botox in [your city]," you'll get significantly more appointments than if you rank #15.`
+                        title: "🔑 Why Keyword Rankings Matter",
+                        content: `Every search on Google is driven by keywords—the words and phrases people type when looking for services like yours. Your ranking position directly determines how much organic traffic you receive.
+
+**The ranking difference**: If you rank #1 for "Botox in [your city]," you'll get roughly 30% of all clicks. Rank #15? You're practically invisible—most users never scroll past page 1.`
                     },
                     {
-                        title: "📊 Key Performance Metrics",
-                        content: `At the top, your summary dashboard shows critical metrics. **Total Keywords Tracked** displays all the terms being monitored for your business. **Position 1 Rankings** shows how many #1 rankings you have—the ultimate goal, since position 1 gets roughly 30% of all clicks. **Top 3 Rankings** (positions 2-3) indicate high visibility with room to improve, while **Page 1 Rankings** (positions 4-10) show decent visibility that needs optimization. **Page 2 Rankings** (positions 11-20) need significant improvement—most users never visit page 2.
-
-Track **Keyword Movement** to see which terms are moving up (showing SEO progress), declining (need attention), newly ranked (validating content strategy), or lost (requiring investigation). This movement data is crucial for understanding what's working in your SEO efforts.`
+                        title: "📊 Your Keywords Dashboard",
+                        content: `Your summary dashboard at the top shows your overall keyword health:`,
+                        list: [
+                            "**Total Keywords Tracked** - All terms being monitored",
+                            "**Position 1 Rankings** - Your #1 rankings (the ultimate goal)",
+                            "**Top 3 Rankings** - High visibility with room to improve",
+                            "**Page 1 Rankings** - Decent visibility that needs optimization",
+                            "**Page 2 Rankings** - Need significant improvement"
+                        ]
+                    },
+                    {
+                        title: "📈 Tracking Keyword Movement",
+                        content: `Monitor which keywords are moving up, down, or newly ranked:`,
+                        list: [
+                            "**New Keywords** - Terms you've started ranking for (validates content strategy)",
+                            "**Improved Rankings** - Moving up (shows SEO progress)",
+                            "**Declined Rankings** - Moving down (needs immediate attention)",
+                            "**Lost Keywords** - No longer ranking (requires investigation)"
+                        ]
                     },
                     {
                         title: "💰 Traffic Value & ROI",
-                        content: `Your keyword rankings have real dollar value. The **Estimated Traffic Value (ETV)** shows the dollar value of organic traffic you're receiving—essentially what you'd pay for the same traffic through Google Ads. Compare this to the **Estimated Paid Cost** to calculate your **ROI**. For example, if your organic traffic has an estimated value of $10,000/month, that's $120,000 annually you're NOT spending on paid ads.
+                        content: `Your keyword rankings have real dollar value. The **Estimated Traffic Value (ETV)** shows what you'd pay for the same traffic through Google Ads.
 
-Use this data to identify **Growth Opportunities**—high-value keywords where moving up just a few positions could significantly increase traffic. This information also helps with **Budget Planning**: if a keyword has high CPC and you're ranking well organically, avoid wasting ad spend on it. Conversely, if you rank poorly for a high-value keyword, paid ads might be worthwhile while you work on organic improvements.`
-                    },
-                    {
-                        title: "🤖 AI-Powered Keyword Insights",
-                        content: `The AI Keywords Analysis Report examines your entire keyword portfolio and provides an intelligent **Performance Analysis** of your overall strategy. It identifies specific **Opportunities**—keywords with high potential for improvement based on current position, search volume, and competition. The report reveals **Competitive Gaps** where competitors are significantly outperforming you and suggests **Content Recommendations** for blog topics and page creation based on keyword data. Most importantly, it provides a **Priority Actions** list ranking which keywords to focus on first and specific **Implementation Guidance** for improving rankings.`
-                    },
-                    {
-                        title: "📋 Detailed Keywords Table",
-                        content: `Scroll down to see every tracked keyword in detail. The table shows your **Current Rank** and **Previous Rank** for month-over-month comparison, with visual indicators showing improvement or decline. **Search Volume** displays monthly searches for each term, while **Competition Level** and **Keyword Difficulty** indicate how hard it is to rank. **Cost Per Click (CPC)** shows what advertisers pay for the keyword—higher CPC usually means more commercial intent and value. **Search Intent** categorizes whether users are looking to buy, learn, or find local businesses, helping you match content to user needs.`
-                    },
-                    {
-                        title: "🏆 Competitive Keyword Intelligence",
-                        content: `The competitor analysis section is incredibly powerful. See **Head-to-Head Rankings** comparing where you and up to 4 competitors rank for the same terms. Identify **Competitive Gaps**—keywords where competitors rank on page 1 but you don't. These are your biggest opportunities because the keywords are already proven valuable in your market.
+**Example**: If your organic traffic has an estimated value of $10,000/month, that's $120,000 annually you're NOT spending on paid ads.
 
-Find **Opportunity Keywords** where you could realistically outrank weaker competitors (they're ranking but with low domain authority or poor content). Analyze **Market Share** to understand your overall visibility compared to the competitive landscape. Study **Competitor Strategies** to see what keywords they're targeting, and **Benchmark Your Performance** against market leaders to set realistic goals.`
+Use this data to:`,
+                        list: [
+                            "Identify high-value keywords where moving up a few positions = big traffic gains",
+                            "Avoid wasting ad spend on keywords you already rank well for organically",
+                            "Target paid ads for high-value keywords where you rank poorly organically"
+                        ]
                     },
                     {
-                        title: "🎯 Keyword Types & Strategy",
-                        content: `Not all keywords are created equal. **Service Keywords** relate to your treatments (botox, fillers, laser hair removal) and drive direct bookings. **Location Keywords** include geographic terms like "medspa near me" or "[city] medical spa"—crucial for local visibility. **Commercial Intent Keywords** are buying-focused terms like "best medspa" or "medspa prices," indicating users ready to book. **Informational Keywords** are educational searches like "botox benefits" or "how laser hair removal works"—great for building trust. **Brand Keywords** include your business name, while **Long-tail Keywords** are specific, lower-competition phrases with high conversion potential (e.g., "affordable Botox for forehead wrinkles in [city]").
+                        title: "🤖 AI-Powered Analysis",
+                        content: `The AI Keywords Report provides intelligent insights:`,
+                        list: [
+                            "**Performance Analysis** - Overall strategy evaluation",
+                            "**Opportunity Keywords** - High-potential terms based on position, volume, and competition",
+                            "**Competitive Gaps** - Where competitors significantly outperform you",
+                            "**Content Recommendations** - Blog topics and page ideas based on keyword data",
+                            "**Priority Actions** - Ranked list of which keywords to focus on first"
+                        ]
+                    },
+                    {
+                        title: "📋 Keywords Table Breakdown",
+                        content: `The detailed table shows every tracked keyword with actionable data:`,
+                        list: [
+                            "**Current Rank** - Your position today",
+                            "**Previous Rank** - Last month's position (with visual up/down indicators)",
+                            "**Search Volume** - Monthly searches for the term",
+                            "**Competition Level** - How difficult it is to rank",
+                            "**Cost Per Click (CPC)** - What advertisers pay (higher = more valuable)",
+                            "**Keyword Difficulty** - SEO difficulty score",
+                            "**Search Intent** - Whether users want to buy, learn, or find local businesses"
+                        ]
+                    },
+                    {
+                        title: "🏆 Competitive Analysis",
+                        content: `Compare your performance against up to 4 local competitors to find opportunities:
 
-For strategic growth, run **Gap Analysis** to find keywords competitors rank for but you don't. Discover **Related Keywords** (variations and synonyms), add **Local Modifiers** for geographic targeting, identify **Question Keywords** (FAQ-style searches indicating buyer intent), and watch for **Seasonal Keywords** that peak during specific times (e.g., "CoolSculpting" spikes in spring before summer).`
-                    },
-                    {
-                        title: "📈 What Affects Your Rankings",
-                        content: `Multiple factors determine where you rank. **On-Page SEO** includes title tags, meta descriptions, header tags, and content optimization—the basics must be right. **Content Quality** matters enormously; comprehensive, valuable content that matches search intent ranks better. **Local SEO** through Google Business Profile optimization and local citations is critical for medical spas. **Technical SEO** factors like site speed, mobile-friendliness, and crawlability form the foundation. Your **Backlink Profile** (quality and quantity of sites linking to you) is one of Google's top ranking signals. Finally, **User Experience** metrics like bounce rate, time on page, and engagement tell Google whether your content satisfies users.
+**Head-to-Head Rankings** - See where you and competitors rank for the same terms
 
-To improve rankings, focus on **Content Creation** (develop pages targeting specific keyword clusters), **Content Optimization** (improve existing pages), **Local SEO** (optimize for location-based searches), study top-ranking **Competitor Content**, pursue **Link Building** to boost authority, and fix **Technical Issues** that may be hurting performance.`
-                    },
-                    {
-                        title: "📅 Monthly Tracking & Trends",
-                        content: `Track rankings monthly to identify **Trend Analysis**—which keywords are consistently improving or declining. Look for **Seasonal Patterns** (certain treatments peak at specific times). Understand **Algorithm Impact** by correlating ranking changes with Google updates. Measure **Campaign Effectiveness** to see which SEO efforts are working. Monitor **Competitive Evolution** to see how competitor strategies change over time. Calculate **ROI** by measuring the traffic value of your keyword improvements against the cost of achieving them.`
-                    },
-                    {
-                        title: "💡 Strategic Keyword Use",
-                        content: `Use keyword data to guide **Content Planning**—create blog posts and pages targeting high-opportunity keywords. Optimize **PPC Campaigns** by identifying high-value organic keywords (if you rank poorly organically, those might be good paid targets). Discover **Service Expansion** opportunities based on search demand—if "microneedling" has high search volume in your area but you don't offer it, consider adding it. Understand **Local Market Demand** to align your services with what people are actually searching for.
+**Competitive Gaps** - Keywords where competitors rank on page 1 but you don't. These are proven valuable in your market—your biggest opportunities.
 
-Find **Competitive Gaps** where you can outperform competitors with better content. Use search trend data for **Business Intelligence**—declining search volume for a service might mean it's becoming commoditized. For advanced strategies like keyword clustering, semantic optimization, and sophisticated competitive analysis, consider leveraging Forever Booked's professional keyword strategy services.`
+**Opportunity Keywords** - Terms where you could realistically outrank weaker competitors (they're ranking but with low authority or poor content).`
+                    },
+                    {
+                        title: "🎯 Understanding Keyword Types",
+                        content: `Different keyword types serve different purposes:`,
+                        list: [
+                            "**Service Keywords** - Treatment names (botox, fillers, laser) → drive direct bookings",
+                            "**Location Keywords** - Geographic terms (medspa near me, [city] medical spa) → critical for local visibility",
+                            "**Commercial Intent** - Buying terms (best medspa, medspa prices) → ready to book",
+                            "**Informational** - Educational (botox benefits, how laser works) → build trust",
+                            "**Brand Keywords** - Your business name → protect your brand",
+                            "**Long-tail** - Specific phrases (affordable Botox for forehead wrinkles) → high conversion, low competition"
+                        ]
+                    },
+                    {
+                        title: "📈 Ranking Factors That Matter",
+                        content: `Multiple factors determine your keyword rankings:`,
+                        list: [
+                            "**On-Page SEO** - Title tags, meta descriptions, headers, content optimization",
+                            "**Content Quality** - Comprehensive, valuable content matching search intent",
+                            "**Local SEO** - Google Business Profile optimization, local citations",
+                            "**Technical SEO** - Site speed, mobile-friendliness, crawlability",
+                            "**Backlink Profile** - Quality and quantity of sites linking to you (top Google signal)",
+                            "**User Experience** - Bounce rate, time on page, engagement"
+                        ]
+                    },
+                    {
+                        title: "💡 Turning Keywords Into Strategy",
+                        content: `Use keyword data to drive business decisions:`,
+                        list: [
+                            "**Content Planning** - Create pages targeting high-opportunity keywords",
+                            "**PPC Optimization** - Target paid ads for high-value keywords where you rank poorly organically",
+                            "**Service Expansion** - If 'microneedling' has high volume but you don't offer it, consider adding it",
+                            "**Local Market Understanding** - Align services with actual search demand",
+                            "**Competitive Positioning** - Find gaps where better content can outrank competitors",
+                            "**Business Intelligence** - Declining search volume = service becoming commoditized"
+                        ]
                     }
                 ]
             }
@@ -9958,60 +10047,148 @@ Find **Competitive Gaps** where you can outperform competitors with better conte
                 videoTitle: "Backlinks Analysis Walkthrough",
                 sections: [
                     {
-                        title: "🔗 Understanding Your Backlink Profile",
-                        content: `The Backlinks section is your comprehensive link intelligence center. Backlinks are one of Google's most important ranking factors—essentially votes of confidence from other websites. The more high-quality sites that link to you, the more authority Google assigns to your medical spa website, directly impacting your search rankings and visibility.`
-                    },
-                    {
-                        title: "📊 Key Backlink Metrics",
-                        content: `At the top of the page, you'll see your summary dashboard with critical metrics: **Total Backlinks** (all links pointing to your site), **Dofollow Links** (links that pass SEO authority—the most valuable kind), and **Nofollow Links** (don't pass authority but still drive traffic). Track **New Links This Period** to see growth momentum and **Lost Links** to identify broken relationships. Your **Average Spam Score** indicates overall quality (aim for below 5%), while **Referring Domains** shows how many unique websites link to you.
+                        title: "🔗 Why Backlinks Matter",
+                        content: `Backlinks are one of Google's most important ranking factors—essentially votes of confidence from other websites. The more high-quality sites that link to you, the more authority Google assigns to your medical spa.
 
-The quality of your backlinks matters more than quantity. A single link from a high-authority medical publication is worth far more than dozens of links from low-quality directories. Your **Domain Authority** and **Page Authority** metrics (1-100 scale) measure the strength of sites linking to you, while **Link Context** shows how relevant the linking content is to your services.`
+**Quality > Quantity**: A single link from a high-authority medical publication is worth far more than dozens of links from low-quality directories.`
                     },
                     {
-                        title: "🏆 Competitive Backlink Intelligence",
-                        content: `The competitive analysis section is where the magic happens. **Link Gap Analysis** identifies domains linking to your competitors but not to you—these are your biggest opportunities because they're already linking to similar businesses in your market. See how your metrics stack up against up to 4 local competitors through **Competitive Benchmarking**, identify **Shared Link Opportunities** (sites linking to multiple competitors), and analyze competitor strategies to understand where they're getting links.
+                        title: "📊 Your Backlink Dashboard",
+                        content: `The summary dashboard shows your link profile health:`,
+                        list: [
+                            "**Total Backlinks** - All links pointing to your site",
+                            "**Dofollow Links** - Links that pass SEO authority (most valuable)",
+                            "**Nofollow Links** - Don't pass authority but drive traffic and credibility",
+                            "**New Links This Period** - Shows growth momentum",
+                            "**Lost Links** - Identify broken relationships to repair",
+                            "**Average Spam Score** - Quality indicator (aim for below 5%)",
+                            "**Referring Domains** - Unique websites linking to you"
+                        ]
+                    },
+                    {
+                        title: "⭐ Link Quality Metrics",
+                        content: `Understanding the value of your backlinks:`,
+                        list: [
+                            "**Domain Authority** - Strength of sites linking to you (1-100 scale, higher is better)",
+                            "**Page Authority** - Strength of specific pages with your link",
+                            "**Link Context** - How relevant the linking content is to your services",
+                            "**Anchor Text** - The clickable text used for your link",
+                            "**Link Placement** - Content links (best) vs sidebar/footer links"
+                        ]
+                    },
+                    {
+                        title: "🏆 Competitive Intelligence",
+                        content: `Compare your link profile against up to 4 local competitors to find easy wins:
 
-This intelligence is invaluable for strategic planning. If a competitor has 50 referring domains and you only have 10, you know exactly where to focus your efforts.`
-                    },
-                    {
-                        title: "📁 Link Types & Their Value",
-                        content: `Not all backlinks are created equal. **Editorial Links** from articles and blog posts are the gold standard—they're natural, contextual, and pass maximum authority. **Directory Links** from medical spa and local business directories provide baseline credibility. **Resource Page Links** from "best of" lists signal quality. **Guest Post Links** come from content you contribute to other sites. **Social Media Links** are usually nofollow but drive traffic and brand awareness. **Review Platform Links** from Yelp and Google Reviews boost local SEO, while **Partnership Links** from complementary businesses build local relevance.`
-                    },
-                    {
-                        title: "🤖 AI-Powered Insights",
-                        content: `The AI Backlinks Analysis Report examines your entire link profile and provides a comprehensive **Link Profile Health Assessment**, identifying overall quality and potential risks. It pinpoints specific **Growth Opportunities** (exactly which links to pursue), flags potentially harmful links in the **Risk Analysis**, reveals **Competitive Gaps** (high-value opportunities your competitors have that you're missing), suggests **Content Recommendations** (types of content that attract natural links), and provides personalized **Outreach Strategies** for link acquisition.`
-                    },
-                    {
-                        title: "📋 Detailed Backlinks Table",
-                        content: `Scroll down to see every single backlink broken down in detail. The table shows the **Source Domain** (the website linking to you with authority metrics), **Linking Page** (the specific page containing your link), **Target Page** (which of your pages is being linked to), **Anchor Text** (the clickable text used), **Link Type** (dofollow vs nofollow), **Discovery Date**, **Link Status** (active, lost, or new), and **Spam Score** (0-100, lower is better). Use this table to identify your most valuable links and spot any problematic ones.`
-                    },
-                    {
-                        title: "🎯 Building High-Quality Backlinks",
-                        content: `There are several proven strategies for acquiring quality backlinks specific to medical spas. Start with **Local Business Partnerships**—cross-promote with complementary businesses like gyms, salons, and wellness centers. Submit to **Medical Directory** listings and local business directories. Create **Linkable Content** like comprehensive treatment guides (e.g., "Complete Guide to Botox") that other sites naturally want to reference.
+**Link Gap Analysis** - Domains linking to competitors but not to you. These are your biggest opportunities—they're already linking to similar businesses in your market.
 
-Pursue **Digital PR** opportunities through newsworthy announcements and expert commentary in industry publications. Get listed on **Resource Pages** and "best of" compilations. Try **Broken Link Building** (replacing broken links on other sites with your content) and engage in **Community Involvement** to earn links from local organizations and event websites. The key is diversity—a natural link profile includes links from multiple sources and types.`
+**Example**: If a competitor has 50 referring domains and you only have 10, you know exactly where to focus your efforts.`,
+                        list: [
+                            "**Competitive Benchmarking** - How your metrics compare to market leaders",
+                            "**Shared Link Opportunities** - Sites linking to multiple competitors (easier to approach)",
+                            "**Market Share** - Your portion of total backlinks in your market"
+                        ]
                     },
                     {
-                        title: "⚠️ Managing Link Risks",
-                        content: `Not all backlinks help—some can actually hurt your rankings. Monitor your **Spam Score** regularly (aim to keep it below 5%). Identify **Toxic Links** from spammy or irrelevant sites and use Google's **Disavow File** to tell Google to ignore them. Implement **Link Removal Strategies** by contacting webmasters to remove harmful links. Stay proactive with **Penalty Prevention** by avoiding black-hat link schemes, and have **Recovery Tactics** ready if you ever receive a manual penalty from Google.`
+                        title: "📁 Link Types Ranked by Value",
+                        content: `Not all backlinks are created equal:`,
+                        list: [
+                            "**Editorial Links** - Articles and blog posts (highest value—natural and contextual)",
+                            "**Resource Page Links** - 'Best of' lists (signal quality)",
+                            "**Guest Post Links** - Content you contribute to other sites",
+                            "**Directory Links** - Medical spa and local business listings (baseline credibility)",
+                            "**Partnership Links** - Complementary businesses (build local relevance)",
+                            "**Review Platform Links** - Yelp, Google Reviews (boost local SEO)",
+                            "**Social Media Links** - Usually nofollow but drive traffic and brand awareness"
+                        ]
                     },
                     {
-                        title: "📍 Local Link Building Strategies",
-                        content: `Local backlinks are particularly valuable for medical spas. Join your **Local Chamber of Commerce** for business association links. Get listed in **Healthcare Directories** and medical/wellness-specific listings. Pursue **Local News Coverage** by pitching stories to local media. Sponsor **Community Events** to earn links from event websites and coverage. Join **Professional Associations** in the medical and aesthetic industries. Partner with **Local Bloggers** covering lifestyle and wellness topics in your area.`
+                        title: "🤖 AI-Powered Report",
+                        content: `The AI analysis provides actionable intelligence:`,
+                        list: [
+                            "**Link Profile Health** - Overall quality and risk evaluation",
+                            "**Growth Opportunities** - Exactly which links to pursue",
+                            "**Risk Analysis** - Potentially harmful links that could hurt rankings",
+                            "**Competitive Gaps** - High-value opportunities competitors have that you're missing",
+                            "**Content Recommendations** - Content types that attract natural links",
+                            "**Outreach Strategies** - Personalized approaches for link acquisition"
+                        ]
                     },
                     {
-                        title: "✍️ Content That Attracts Links Naturally",
-                        content: `The best backlinks come naturally from great content. Create comprehensive **Treatment Guides** that become go-to resources. Showcase **Before/After Galleries** that others want to reference. Publish **Original Research** in aesthetics and wellness. Offer **Expert Commentary** on industry trends. Design shareable **Infographics** about treatments and results. Produce **Educational Videos** that other sites embed or link to. The better and more unique your content, the more natural links you'll earn without asking.`
+                        title: "📋 Backlinks Table",
+                        content: `Every backlink broken down in detail:`,
+                        list: [
+                            "**Source Domain** - Website linking to you (with authority metrics)",
+                            "**Linking Page** - Specific page containing your link",
+                            "**Target Page** - Which of your pages is being linked to",
+                            "**Anchor Text** - The clickable text used",
+                            "**Link Type** - Dofollow (passes authority) vs nofollow",
+                            "**Discovery Date** - When the link was first detected",
+                            "**Link Status** - Active, lost, or newly discovered",
+                            "**Spam Score** - Quality assessment (0-100, lower is better)"
+                        ]
                     },
                     {
-                        title: "🔍 Ongoing Link Maintenance",
-                        content: `Link building isn't one-and-done. Conduct **Regular Audits** (monthly reviews of new and lost links) to stay on top of your profile. Track **Competitor Monitoring** to see what strategies are working for them. Run **Link Health Checks** to ensure your best links remain active. Maintain **Natural Anchor Text Distribution** (avoid over-optimization). Nurture **Relationship Management** with key linking domains. Track **Performance Metrics** to measure the SEO and traffic impact of your link building efforts.`
+                        title: "🎯 Link Building Strategies",
+                        content: `Proven approaches for medical spas:`,
+                        list: [
+                            "**Local Partnerships** - Cross-promote with gyms, salons, wellness centers",
+                            "**Medical Directories** - Industry-specific listings (baseline SEO hygiene)",
+                            "**Linkable Content** - Create comprehensive treatment guides others want to reference",
+                            "**Digital PR** - Newsworthy announcements and expert commentary",
+                            "**Resource Pages** - Get listed on 'best of' compilations",
+                            "**Broken Link Building** - Replace broken links on other sites with your content",
+                            "**Community Involvement** - Sponsor local events for links and brand awareness"
+                        ]
                     },
                     {
-                        title: "💡 Strategic Link Building",
-                        content: `Use your backlink data to inform your entire SEO strategy. Run **Link Intersection Analysis** to find domains linking to multiple competitors—these are your easiest targets. Look for **Content Gaps** (topics that attract links but you haven't covered). Monitor **Link Velocity** to ensure natural growth patterns. Identify **Strategic Link Priorities** based on maximum impact. 
-
-Create content based on successful competitor link magnets. Use shared link opportunities to identify potential business partnerships. Target high-authority domains in your outreach strategy for maximum impact. Calculate ROI to justify your link building investments. For advanced campaigns, consider leveraging Forever Booked's expertise for professional implementation and strategy development.`
+                        title: "⚠️ Link Risk Management",
+                        content: `Protect your rankings from harmful backlinks:`,
+                        list: [
+                            "**Monitor Spam Score** - Keep it below 5%",
+                            "**Identify Toxic Links** - Spot spammy or irrelevant sites",
+                            "**Use Disavow File** - Tell Google to ignore bad links",
+                            "**Contact Webmasters** - Request removal of harmful links",
+                            "**Avoid Black-Hat Schemes** - No link farms or paid link networks",
+                            "**Have Recovery Plan** - Ready for potential Google penalties"
+                        ]
+                    },
+                    {
+                        title: "📍 Local Link Building",
+                        content: `Local backlinks are particularly valuable for medical spas:`,
+                        list: [
+                            "**Local Chamber of Commerce** - Business association memberships",
+                            "**Healthcare Directories** - Medical and wellness-specific listings",
+                            "**Local News Coverage** - Pitch stories to local media outlets",
+                            "**Community Event Sponsorship** - Links from event websites",
+                            "**Professional Associations** - Medical and aesthetic industry organizations",
+                            "**Local Blogger Partnerships** - Lifestyle and wellness bloggers in your area"
+                        ]
+                    },
+                    {
+                        title: "✍️ Content That Earns Links",
+                        content: `The best backlinks come naturally from great content:`,
+                        list: [
+                            "**Treatment Guides** - Comprehensive resources (e.g., 'Complete Guide to Botox')",
+                            "**Before/After Galleries** - Visual content others want to reference",
+                            "**Original Research** - Studies in aesthetics and wellness",
+                            "**Expert Commentary** - Thought leadership on industry trends",
+                            "**Infographics** - Shareable visual content about treatments",
+                            "**Educational Videos** - Content other sites embed or link to"
+                        ]
+                    },
+                    {
+                        title: "💡 Strategic Link Intelligence",
+                        content: `Advanced tactics to maximize link building ROI:`,
+                        list: [
+                            "**Link Intersection Analysis** - Find domains linking to multiple competitors (easiest targets)",
+                            "**Content Gaps** - Topics that attract links you haven't covered",
+                            "**Link Velocity** - Monitor growth rate (natural vs spammy patterns)",
+                            "**Anchor Text Distribution** - Maintain natural variation",
+                            "**Link Health Monitoring** - Monthly audits of new and lost links",
+                            "**Competitor Monitoring** - Track what's working for them",
+                            "**ROI Calculation** - Measure impact to justify investments"
+                        ]
                     }
                 ]
             }
@@ -10026,56 +10203,110 @@ Create content based on successful competitor link magnets. Use shared link oppo
                 videoTitle: "Geogrid Maps Training & Analysis",
                 sections: [
                     {
-                        title: "🗺️ Understanding Geogrid Maps",
-                        content: `Geogrid Maps are your comprehensive local search visibility command center. This powerful tool shows you exactly where your medical spa ranks in local search results across different geographic locations. Think of it as a heat map of your local SEO performance—you can see at a glance which neighborhoods love you and which ones need work.`
+                        title: "🗺️ Your Local Search Heat Map",
+                        content: `Geogrid Maps show exactly where your medical spa ranks in local search results across different geographic locations. Think of it as a heat map of your local SEO performance—see at a glance which neighborhoods you dominate and which need work.`
                     },
                     {
-                        title: "🖱️ Using the Interactive Map",
-                        content: `The maps are fully interactive—click and drag to explore different areas and neighborhoods, use zoom controls for street-level detail or broader market overviews, and toggle between street view and satellite imagery for geographic context. Click on any location pin to see detailed ranking information for that specific spot. The maps show your rankings alongside up to 4 competitors simultaneously, with intuitive color-coding: **green** for top 3 rankings, **yellow** for positions 4-10, and **red** for positions 11+. This visual feedback makes it instantly clear where you're dominating and where you need to improve.`
+                        title: "🖱️ Interactive Map Features",
+                        content: `The map is fully interactive with powerful visualization:`,
+                        list: [
+                            "**Click & Drag** - Explore different areas and neighborhoods",
+                            "**Zoom Controls** - Street-level detail or broad market view",
+                            "**Street/Satellite Toggle** - Geographic context",
+                            "**Click Pins** - See detailed ranking for that specific location",
+                            "**Competitor Overlay** - Compare against up to 4 competitors",
+                            "**Color Coding**: Green (top 3), Yellow (4-10), Red (11+)"
+                        ]
                     },
                     {
-                        title: "📊 Key Metrics: Average Geogrid Score",
-                        content: `Your **Average Geogrid Score** is a critical summary metric of your local search performance. Scores typically range from 0-100 (higher is better), calculated by averaging all individual location rankings across your geographic market. Locations with higher population density may carry more weight in the calculation. Scores refresh regularly to reflect current search positions, and you can compare your score against local competitors to understand your market position. A score of **70+ is excellent**, 50-70 is competitive, and below 50 means significant work is needed. Track how your score changes month-over-month to measure the impact of your local SEO efforts.`
-                    },
-                    {
-                        title: "🏆 Why Top 5 Rankings Matter",
-                        content: `The **"Rankings in Top 5"** metric shows how many geographic locations where you rank in positions 1-5 for target keywords. Why does this matter? Top 5 rankings typically receive **70%+ of all clicks**—if you're not in the top 5, you're practically invisible. Higher numbers indicate broader geographic market coverage and directly correlate with increased appointment bookings. Compare your top 5 coverage against competitors to understand your market dominance. Your strategic priority should be converting positions 6-10 into top 5 rankings—these are your easiest wins since you're already close.`
-                    },
-                    {
-                        title: "📅 Tracking Monthly Trends",
-                        content: `Toggle between months to review up to 12 months of geogrid ranking data. This historical view helps you identify **seasonal patterns** (for example, body contouring searches spike in summer), measure the impact of your local SEO efforts, and track how competitor rankings change. You can also identify ranking changes that correlate with Google algorithm updates, measure the geographic impact of specific marketing campaigns, and use historical data to plan future strategies. Month-over-month tracking is essential for understanding what's working and what needs adjustment.`
-                    },
-                    {
-                        title: "🎯 Geographic Opportunities & Gaps",
-                        content: `The map reveals your **Coverage Areas** (neighborhoods where you rank well—your strongholds) and **Coverage Gaps** (areas where competitors outrank you—your opportunities). Understanding population density helps you grasp ranking difficulty, while analyzing distance factors shows how proximity to your physical location affects rankings. Use this intelligence to identify specific neighborhoods for focused local SEO efforts, guide decisions about opening new locations, and align your service areas with your ranking strengths.
+                        title: "📊 Average Geogrid Score",
+                        content: `Your **Average Geogrid Score** summarizes your local search performance (0-100, higher is better).
 
-This geographic analysis is crucial for efficient marketing spend. Why advertise heavily in neighborhoods where you already dominate organically? Instead, focus paid advertising on areas where your organic presence is weak while working to improve your SEO in those zones.`
+**Score Benchmarks**:`,
+                        list: [
+                            "**70+** = Excellent (strong local dominance)",
+                            "**50-70** = Competitive (good but room to grow)",
+                            "**Below 50** = Needs work (significant opportunity)"
+                        ]
+                    },
+                    {
+                        title: "🏆 Top 5 Rankings Metric",
+                        content: `Shows how many locations where you rank positions 1-5 for target keywords.
+
+**Why it matters**: Top 5 rankings receive 70%+ of all clicks. Position #6? You're practically invisible.
+
+**Strategy**: Convert positions 6-10 into top 5 rankings—these are your easiest wins since you're already close.`
+                    },
+                    {
+                        title: "📅 Monthly Tracking",
+                        content: `Toggle between months to review up to 12 months of data:`,
+                        list: [
+                            "**Seasonal Patterns** - Body contouring spikes in summer, anti-aging in fall",
+                            "**SEO Impact** - Measure the effect of your optimization efforts",
+                            "**Competitor Movement** - Track how competitors' rankings change",
+                            "**Algorithm Updates** - Correlate ranking changes with Google updates",
+                            "**Campaign ROI** - Measure geographic impact of marketing campaigns"
+                        ]
+                    },
+                    {
+                        title: "🎯 Finding Opportunities",
+                        content: `The map reveals strategic insights for growth:
+
+**Coverage Areas** - Neighborhoods where you rank well (your strongholds)
+**Coverage Gaps** - Areas where competitors outrank you (your opportunities)
+
+**Smart Marketing**: Why advertise heavily in neighborhoods where you already dominate organically? Instead, focus paid ads on areas where your organic presence is weak.`
                     },
                     {
                         title: "🔍 Competitive Intelligence",
-                        content: `The geogrid data provides powerful competitive insights. Run **Market Share Analysis** to understand your portion of local search visibility compared to competitors. Identify where competitors have geographic advantages and, more importantly, find areas where they're weak—these are your easy wins. Discover specific locations where you can overtake competitors, understand how the competitive landscape shifts over time, and set realistic goals based on actual competitor performance rather than guesswork.`
+                        content: `Use geogrid data for competitive strategy:`,
+                        list: [
+                            "**Market Share** - Your portion of local search visibility",
+                            "**Competitor Strengths** - Where they have geographic advantages",
+                            "**Competitor Weaknesses** - Areas they're weak (your easy wins)",
+                            "**Overtake Opportunities** - Specific locations where you can surpass them",
+                            "**Market Dynamics** - How the competitive landscape shifts over time"
+                        ]
                     },
                     {
-                        title: "🚀 Building Your Local SEO Strategy",
-                        content: `Use your geogrid insights to build a targeted strategy. Start by identifying **Priority Areas**—geographic zones with high opportunity (decent population, weak competitor presence). Create **Location-Specific Content** for underperforming neighborhoods. Build **Local Citations** in directories relevant to weak areas. Optimize your **Google Business Profile** for keywords that improve geogrid performance. Acquire **Local Links** from businesses in target areas. Encourage **Reviews** from customers in specific neighborhoods. Finally, align your **Paid Advertising** with your organic ranking strengths—advertise where you're already strong to dominate, or where you're weak to compensate.`
+                        title: "🚀 Local SEO Action Plan",
+                        content: `Build a targeted strategy from geogrid insights:`,
+                        list: [
+                            "**Identify Priority Areas** - Zones with high opportunity (decent population, weak competition)",
+                            "**Location-Specific Content** - Create pages for underperforming neighborhoods",
+                            "**Local Citations** - Build directory listings relevant to weak areas",
+                            "**GBP Optimization** - Optimize for keywords that improve geogrid scores",
+                            "**Local Link Building** - Acquire links from businesses in target areas",
+                            "**Geographic Reviews** - Encourage reviews mentioning specific neighborhoods",
+                            "**Strategic Ad Spend** - Advertise where you're strong (dominate) or weak (compensate)"
+                        ]
                     },
                     {
-                        title: "📈 Practical Improvement Tactics",
-                        content: `To boost your geogrid rankings, ensure your **Google Business Profile** is 100% complete with accurate information. Maintain **Consistent NAP Data** (Name, Address, Phone) across all online platforms—inconsistencies confuse Google. Create **Location-Specific Landing Pages** targeting specific neighborhoods. Include neighborhood and area names naturally in your content for **Local Keyword Optimization**. Generate reviews mentioning specific locations and services. Participate in local community events, and ensure Google understands your exact business location and service areas through proper **Proximity Signals**.
+                        title: "📈 Ranking Improvement Tactics",
+                        content: `Practical steps to boost geogrid performance:`,
+                        list: [
+                            "**GBP Completion** - Ensure 100% profile completion",
+                            "**NAP Consistency** - Identical Name, Address, Phone everywhere (inconsistencies confuse Google)",
+                            "**Location Landing Pages** - Target specific neighborhoods",
+                            "**Local Keywords** - Include neighborhood names naturally in content",
+                            "**LocalBusiness Schema** - Implement with precise location data",
+                            "**Mobile Optimization** - Critical (80%+ of local searches are mobile)",
+                            "**Fast Site Speed** - Essential for local rankings"
+                        ]
+                    },
+                    {
+                        title: "💡 Strategic Business Impact",
+                        content: `Use geogrid data for major business decisions:
 
-Technical factors matter too: Implement **LocalBusiness Schema** with precise location data, ensure excellent **Mobile Optimization** (80%+ of local searches happen on mobile), maintain fast **Site Speed**, create dedicated **Location Pages** for each service area, and use location-based URL structures like /boston-botox/ for clear geographic targeting.`
-                    },
-                    {
-                        title: "✍️ Content & Monitoring Strategy",
-                        content: `Content is key for local SEO. Create **Neighborhood Guides** about local areas and attractions. Write about aesthetic trends specific to your market. Showcase community involvement and participation in local events. Feature testimonials from specific neighborhoods. Highlight services popular in different geographic areas, and create dedicated geographic landing pages with unique content for each target area.
+**Location Expansion** - If you dominate certain neighborhoods organically, consider physical expansion there
 
-For ongoing success, conduct **Weekly Monitoring** of ranking changes and competitor movement. Run **Monthly Analysis** to deep-dive into trends. Do **Quarterly Strategy Reviews** to adjust based on geogrid insights. Regularly audit citations for accuracy, respond to reviews mentioning locations, track new competitors, and adjust your strategy when Google algorithm updates affect local results.`
-                    },
-                    {
-                        title: "💡 Strategic Business Decisions",
-                        content: `Geogrid data should inform major business decisions. Use ranking data to guide **New Location Decisions**—if you're dominating certain neighborhoods organically, those might be prime areas for physical expansion. Allocate your **Marketing Budget** more efficiently by investing heavily in areas with strong organic presence (maximize ROI) and using paid ads to compensate in weak areas. Define your **Service Areas** based on where you actually rank well. Focus **Customer Acquisition** efforts in high-ranking neighborhoods where people already see you.
+**Budget Allocation** - Invest heavily where you rank well (maximize ROI), use paid ads where you're weak
 
-Calculate the **Revenue Impact** of improved geogrid performance to justify SEO investments. If moving from position 8 to position 3 in a high-population neighborhood could bring 10 more clients per month at $500 average value, that's $60,000 annual impact. For advanced optimization strategies, multi-location coordination, and sophisticated geogrid campaigns, consider leveraging Forever Booked's professional local SEO expertise.`
+**ROI Example**: Moving from position 8 to 3 in a high-population neighborhood = 10 more clients/month at $500 = $60,000 annual impact
+
+**Service Areas** - Define based on actual ranking strength, not arbitrary radiuses
+
+**Customer Acquisition** - Focus efforts in neighborhoods where people already see you organically`
                     }
                 ]
             }
