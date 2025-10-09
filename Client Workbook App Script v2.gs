@@ -310,12 +310,12 @@ function getDashboardOverview(spreadsheet) {
         const hours = formatOpeningHours(hoursRaw);
 
         // --- Ads Data Extraction with Hyperlinks ---
-        const gAdsStatus = (linksRow[19] || 'Unknown').trim();      // Google Ads status (col T)
-        const fbAdsStatus = (linksRow[18] || 'Unknown').trim();     // Facebook Ads status (col S)
+        const gAdsStatus = (linksRow[18] || 'Unknown').trim();      // Google Ads status (col S)
+        const fbAdsStatus = (linksRow[17] || 'Unknown').trim();     // Facebook Ads status (col R)
 
-        // Get link from the hyperlink formula in status cell (S/T), with a fallback to dedicated link columns (U/V)
-        const gAdsLink = (richTextLinksRow[19] ? richTextLinksRow[19].getLinkUrl() : null) || (linksRow[21] || '').trim();
-        const fbAdsLink = (richTextLinksRow[18] ? richTextLinksRow[18].getLinkUrl() : null) || (linksRow[20] || '').trim();
+        // Get link from the hyperlink formula in status cell (R/S), with a fallback to dedicated link columns (T/U)
+        const gAdsLink = (richTextLinksRow[18] ? richTextLinksRow[18].getLinkUrl() : null) || (linksRow[20] || '').trim();
+        const fbAdsLink = (richTextLinksRow[17] ? richTextLinksRow[17].getLinkUrl() : null) || (linksRow[19] || '').trim();
 
         // --- Social Links (Facebook / Instagram / YouTube) ---
         function extractUrl(idx){
