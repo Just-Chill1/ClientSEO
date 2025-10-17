@@ -5263,7 +5263,11 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
             if (cachedData) {
                 try {
                     const parsed = JSON.parse(cachedData);
-                    const medspaNearMe = parsed['medspa near me'] || [];
+                    // Try "medspa near me" first, fallback to "medical spa marketing & advertising"
+                    let medspaNearMe = parsed['medspa near me'] || [];
+                    if (medspaNearMe.length === 0) {
+                        medspaNearMe = parsed['medical spa marketing & advertising'] || [];
+                    }
                     
                     // Apply same date formatting as fresh data
                     const fixDateFormatting = (monthlyData) => {
@@ -5516,9 +5520,13 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                         });
                     };
 
-                    // Get the geogrid data for 'medspa near me' with all months
+                    // Get the geogrid data for 'medspa near me' with all months (with fallback)
                     const allGeogridData = data.geogridData || {};
-                    const medspaNearMe = allGeogridData['medspa near me'] || [];
+                    // Try "medspa near me" first, fallback to "medical spa marketing & advertising"
+                    let medspaNearMe = allGeogridData['medspa near me'] || [];
+                    if (medspaNearMe.length === 0) {
+                        medspaNearMe = allGeogridData['medical spa marketing & advertising'] || [];
+                    }
                     
                     // Apply date formatting to the dashboard data
                     const processedMedspaNearMe = medspaNearMe.length > 0 ? fixDateFormatting(medspaNearMe) : [];
