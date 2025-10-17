@@ -137,8 +137,13 @@ function getDashboardData(spreadsheet) {
     const allGeogridData = getGeogridData(spreadsheet);
     console.log('All geogrid keywords:', Object.keys(allGeogridData));
     
-    const medspaNearMeData = allGeogridData['medspa near me'] || [];
-    console.log('Medspa near me data length:', medspaNearMeData.length);
+    // Try "medspa near me" first, fallback to "medical spa marketing & advertising" if not found
+    let medspaNearMeData = allGeogridData['medspa near me'] || [];
+    if (medspaNearMeData.length === 0) {
+        medspaNearMeData = allGeogridData['medical spa marketing & advertising'] || [];
+        console.log('Medspa near me not found, using medical spa marketing & advertising fallback');
+    }
+    console.log('Geogrid data length:', medspaNearMeData.length);
     
     const latestGeogrid = medspaNearMeData.length > 0 ? medspaNearMeData[0] : null;
     console.log('Latest geogrid data:', latestGeogrid);
