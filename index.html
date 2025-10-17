@@ -5247,6 +5247,7 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
         const [loading, setLoading] = useState(true);
         const [error, setError] = useState(null);
         const [dashboardMonthIndex, setDashboardMonthIndex] = useState(0);
+        const [geogridKeyword, setGeogridKeyword] = useState('Medspa Near Me'); // Track which keyword is displayed
 
         useEffect(() => {
             const params = new URLSearchParams(window.location.search);
@@ -5265,9 +5266,14 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                     const parsed = JSON.parse(cachedData);
                     // Try "medspa near me" first, fallback to "medical spa marketing & advertising"
                     let medspaNearMe = parsed['medspa near me'] || [];
+                    let keywordName = 'Medspa Near Me';
                     if (medspaNearMe.length === 0) {
                         medspaNearMe = parsed['medical spa marketing & advertising'] || [];
+                        if (medspaNearMe.length > 0) {
+                            keywordName = 'Medical Spa Marketing & Advertising';
+                        }
                     }
+                    setGeogridKeyword(keywordName);
                     
                     // Apply same date formatting as fresh data
                     const fixDateFormatting = (monthlyData) => {
@@ -5524,9 +5530,14 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                     const allGeogridData = data.geogridData || {};
                     // Try "medspa near me" first, fallback to "medical spa marketing & advertising"
                     let medspaNearMe = allGeogridData['medspa near me'] || [];
+                    let keywordName = 'Medspa Near Me';
                     if (medspaNearMe.length === 0) {
                         medspaNearMe = allGeogridData['medical spa marketing & advertising'] || [];
+                        if (medspaNearMe.length > 0) {
+                            keywordName = 'Medical Spa Marketing & Advertising';
+                        }
                     }
+                    setGeogridKeyword(keywordName);
                     
                     // Apply date formatting to the dashboard data
                     const processedMedspaNearMe = medspaNearMe.length > 0 ? fixDateFormatting(medspaNearMe) : [];
@@ -5695,8 +5706,8 @@ const Dashboard = ({ setActiveTab, webhooks, setData }) => {
                     <div className="lg:col-span-3">
                         <div className="flex justify-between items-center mb-4">
                             <div className="flex items-center space-x-2">
-                                <h2 className="text-xl font-bold text-gray-800">Medspa Near Me</h2>
-                                <InfoTooltip text="A snapshot of your Geogrid map for the keyword 'medspa near me'." />
+                                <h2 className="text-xl font-bold text-gray-800">{geogridKeyword}</h2>
+                                <InfoTooltip text={`A snapshot of your Geogrid map for the keyword '${geogridKeyword.toLowerCase()}'.`} />
                                 <button onClick={() => setActiveTab('Geogrid Maps')} className="text-xs font-normal text-blue-600 hover:text-blue-800">(See More)</button>
                             </div>
                             
